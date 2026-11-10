@@ -85,43 +85,52 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: cd apps/mobile && flutter test integration_test/app_smoke_test.dart -d emulator-5554
+          script: cd apps/mobile && flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d emulator-5554
 
       - name: Build debug APK
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: flutter build apk --debug
       - name: Report debug APK size
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: du -h build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Build split profile APKs for physical-device profiling
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: flutter build apk --profile --split-per-abi
       - name: Report profile APK sizes
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: ls -lh build/app/outputs/flutter-apk/*-profile.apk
 
       - name: Build split release APKs
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: flutter build apk --release --split-per-abi
 
       - name: Report release APK sizes
+        if: always() && !cancelled()
         working-directory: apps/mobile
         run: ls -lh build/app/outputs/flutter-apk/*-release.apk
 
       - name: Upload debug APK
+        if: always() && !cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: ludo-lovers-foundation-debug-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload split profile APKs
+        if: always() && !cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: ludo-lovers-profile-apks
           path: apps/mobile/build/app/outputs/flutter-apk/*-profile.apk
 
       - name: Upload split release APKs
+        if: always() && !cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: ludo-lovers-release-apks
