@@ -110,5 +110,94 @@ void main() {
       expect(() => LudoGame.initial().roll(0), throwsArgumentError);
       expect(() => LudoGame.initial().roll(7), throwsArgumentError);
     });
+
+    test('Classic profile ends the turn on the third consecutive six', () {
+      var game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1);
+      game = game.roll(6).movePawn(0);
+      game = game.roll(6).movePawn(0);
+
+      final penalized = game.roll(6);
+      expect(penalized.activePlayer, PlayerColor.green);
+      expect(penalized.diceValue, isNull);
+      expect(penalized.consecutiveSixes, 0);
+      expect(penalized.events, [
+        isA<DiceRolled>(),
+        isA<ConsecutiveSixPenalty>(),
+        isA<TurnChanged>(),
+      ]);
+      expect(penalized.stateVersion, game.stateVersion + 1);
+    });
+
+    test('Classic profile grants an extra turn for reaching final home', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [55, -1, -1, -1],
+        },
+      );
+
+      final moved = game.roll(1).movePawn(0);
+      expect(moved.currentPlayer.pawnProgress[0], 56);
+      expect(moved.activePlayer, PlayerColor.orange);
+      expect(moved.winner, isNull);
+      expect(moved.events.first, isA<PawnMoved>());
+    });
+
+    test('accepted transitions increment state version and reject stale commands', () {
+      final initial = LudoGame.initial();
+      final rolled = initial.roll(
+        6,
+        expectedStateVersion: 0,
+        commandId: 'roll-orange-1',
+      );
+      expect(rolled.stateVersion, 1);
+      expect(rolled.events.single, isA<DiceRolled>());
+      expect(
+        () => rolled.movePawn(0, expectedStateVersion: 0),
+        throwsStateError,
+      );
+      expect(
+        () => rolled.movePawn(0, commandId: 'roll-orange-1'),
+        throwsStateError,
+      );
+
+      final moved = rolled.movePawn(
+        0,
+        expectedStateVersion: 1,
+        commandId: 'move-orange-pawn-0',
+      );
+      expect(moved.stateVersion, 2);
+      expect(moved.appliedCommandIds, {
+        'roll-orange-1',
+        'move-orange-pawn-0',
+      });
+    });
+
+    test('transition event ordering is deterministic for a capture', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          PlayerColor.green: [44, -1, -1, -1],
+        },
+      );
+
+      final moved = game.roll(2).movePawn(0);
+      expect(moved.events.map((event) => event.runtimeType).toList(), [
+        PawnMoved,
+        PawnCaptured,
+      ]);
+      expect(moved.events.map((event) => event.sequence).toList(), [0, 1]);
+    });
+
+    test('default compatibility profile preserves existing six behaviour', () {
+      var game = LudoGame.initial();
+      game = game.roll(6).movePawn(0);
+      game = game.roll(6).movePawn(0);
+      final thirdSix = game.roll(6);
+      expect(thirdSix.activePlayer, PlayerColor.orange);
+      expect(thirdSix.diceValue, 6);
+    });
   });
 }
