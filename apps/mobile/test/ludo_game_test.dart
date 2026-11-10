@@ -43,6 +43,33 @@ void main() {
       expect(passed.diceValue, isNull);
     });
 
+    test('skips players whose four pawns are already finished', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [0, -1, -1, -1],
+          PlayerColor.green: [56, 56, 56, 56],
+        },
+      );
+
+      final moved = game.roll(1).movePawn(0);
+      expect(moved.activePlayer, PlayerColor.magenta);
+      expect(moved.events.whereType<TurnChanged>().single.to,
+          PlayerColor.magenta);
+    });
+
+    test('skips a completed player when passing after an unplayable roll', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.green: [56, 56, 56, 56],
+        },
+      );
+
+      final passed = game.roll(4).passTurn();
+      expect(passed.activePlayer, PlayerColor.magenta);
+    });
+
     test('rejects passing while a legal pawn move exists', () {
       final rolled = LudoGame.initial().roll(6);
       expect(() => rolled.passTurn(), throwsStateError);
