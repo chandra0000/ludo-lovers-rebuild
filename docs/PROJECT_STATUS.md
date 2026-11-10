@@ -90,6 +90,13 @@ See [four-phase gameplay verification](quality/four-phase-gameplay-verification.
 - Added domain codec tests, store persistence/corruption tests, a home-to-resumed-match widget test, and coverage for a restored AI turn with a pending unplayable roll.
 - These changes are committed directly to `main`. CI validation is pending for the latest commit; do not mark persistence acceptance complete until strict analysis, all Flutter tests and profile/release builds pass. Android process-kill/device validation remains outstanding.
 
+## Accessibility improvements — 2026-11-10
+
+- Dice semantics now explain whether the dice can be rolled, whether an animation is in progress, and what action is available next.
+- Pawn semantics expose player colour, pawn number, yard/home/progress state, and whether the pawn can be moved, is AI-controlled, or belongs to a shared movable stack.
+- Added widget tests for dice action hints and movable-pawn position/action announcements.
+- This is a screen-reader semantics improvement, not complete accessibility acceptance. TalkBack navigation on a physical Android device, text scaling, contrast review and all modal/result flows remain to be checked.
+
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
