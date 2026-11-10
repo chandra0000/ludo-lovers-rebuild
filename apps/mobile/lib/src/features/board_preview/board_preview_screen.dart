@@ -22,7 +22,7 @@ class BoardPreviewScreen extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
                 child: Text(
-                  'Canonical artwork preview · overlay positions are provisional',
+                  'Canonical artwork · geometry audit overlay · provisional',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
@@ -39,6 +39,44 @@ class BoardPreviewScreen extends StatelessWidget {
                             'assets/images/board/ludo_board_glass.webp',
                             fit: BoxFit.contain,
                             filterQuality: FilterQuality.high,
+                          ),
+                          for (var index = 0;
+                              index < BoardGeometry.sharedTrack.length;
+                              index++)
+                            _cellMarker(
+                              BoardGeometry.sharedTrack[index],
+                              constraints.maxWidth,
+                              constraints.maxHeight,
+                              color: BoardGeometry.safeTrackCells.contains(index)
+                                  ? const Color(0xFFFFC857)
+                                  : BoardGeometry.cornerConnectorIndexes
+                                          .contains(index)
+                                      ? Colors.redAccent
+                                      : Colors.white70,
+                              size: BoardGeometry.safeTrackCells.contains(index)
+                                  ? 9
+                                  : 5,
+                              key: Key('preview_track_$index'),
+                            ),
+                          for (final color in PlayerColor.turnOrder)
+                            for (var lane = 0;
+                                lane < BoardGeometry.seats[color]!.homeLane.length;
+                                lane++)
+                              _cellMarker(
+                                BoardGeometry.seats[color]!.homeLane[lane],
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                                color: color.color,
+                                size: 7,
+                                key: Key('preview_lane_${color.name}_$lane'),
+                              ),
+                          _cellMarker(
+                            BoardGeometry.finishCell,
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                            color: const Color(0xFFFFC857),
+                            size: 13,
+                            key: const Key('preview_finish'),
                           ),
                           for (final color in PlayerColor.turnOrder)
                             for (var index = 0; index < 4; index++)
@@ -57,8 +95,10 @@ class BoardPreviewScreen extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 20),
                 child: Text(
-                  'Diagnostic only — track, connector, safe-cell, lane and yard '
-                  'anchors require pixel measurement and device verification.',
+                  'White = shared route · Gold = safe/finish · Red = candidate '
+                  'connector · Player colour = home lane and yard sockets. '
+                  'Diagnostic only; source-pixel calibration and device '
+                  'verification are still required.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white54, fontSize: 11),
                 ),
@@ -67,6 +107,36 @@ class BoardPreviewScreen extends StatelessWidget {
           ),
         ),
       );
+
+  Widget _cellMarker(
+    BoardCell cell,
+    double width,
+    double height, {
+    required Color color,
+    required double size,
+    required Key key,
+  }) {
+    final point = BoardGeometry.canvasPosition(cell.normalizedCenter);
+    return Positioned(
+      left: point.x / BoardGeometry.canvasWidth * width - size / 2,
+      top: point.y / BoardGeometry.canvasHeight * height - size / 2,
+      child: IgnorePointer(
+        child: Container(
+          key: key,
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withValues(alpha: .9),
+            border: Border.all(color: Colors.black, width: .7),
+            boxShadow: const [
+              BoxShadow(color: Color(0x88000000), blurRadius: 2),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _yardMarker(
     PlayerColor color,
