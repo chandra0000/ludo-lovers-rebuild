@@ -203,4 +203,49 @@ void main() {
     },
   );
 
+
+  testWidgets('shows capture feedback after a capturing move', (tester) async {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [4, -1, -1, -1],
+        PlayerColor.green: [44, -1, -1, -1],
+      },
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(initialGame: game, rollDice: () => 1),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CAPTURE! EXTRA TURN'), findsOneWidget);
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+  });
+
+  testWidgets('shows home feedback when a pawn reaches the finish', (tester) async {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [55, -1, -1, -1],
+      },
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(initialGame: game, rollDice: () => 1),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PAWN HOME!'), findsOneWidget);
+  });
+
 }
