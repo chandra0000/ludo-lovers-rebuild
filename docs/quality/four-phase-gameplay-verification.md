@@ -18,7 +18,7 @@ Still required:
 ## Phase 2 — board geometry
 
 Automated evidence:
-- Geometry tests cover the 52 unique shared-track cells, player-relative routes, five-cell home lanes, separate finish, safe-cell metadata, connector indexes, and all 16 yard overlays.
+- Geometry tests cover the 52 unique shared-track cells, player-relative routes, five-cell home lanes, separate finish, safe-cell metadata, connector indexes, all 16 yard overlays, all 52 source-pixel route anchors, and all 20 source-pixel lane anchors.
 - Responsive widget tests cover 360×800, 393×873, 412×915, and 800×360.
 
 Still required:
@@ -29,12 +29,12 @@ Still required:
 ## Phase 3 — engine correctness
 
 Automated evidence:
-- Focused tests cover turn order, six-to-enter, legal movement, exact finish, capture/safe cells, winner detection, compatibility and opt-in Classic profile behaviour.
+- Focused tests cover turn order, six-to-enter, legal movement, exact finish/overshoot, capture from all four seat orientations, every configured safe cell, winner detection, compatibility and opt-in Classic profile behaviour. Snapshot tests also verify profile-aware consecutive-six restoration.
 - State-version guards, in-memory duplicate command IDs, typed ordered events, and immutable snapshots have regression coverage.
 - A deterministic 2,500-transition stress test checks snapshot invariants and event sequencing.
 
 Still required:
-- Decide and document the product's accepted Classic rules, including blockade and stack semantics.
+- Decide and document the product's accepted Classic rules, including own-pawn stacking, opponent blockades, safe-star identity and match-completion mode.
 - Add durable serialization/replay and a complete command/result/error boundary before claiming parity with the legacy engine.
 
 ## Phase 4 — integration, stress, and device QA
