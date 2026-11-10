@@ -36,7 +36,7 @@ Last updated: 2026-11-10
 
 ## Validation state
 
-- Latest CI validation for the current `main` head is pending; do not claim the debug APK is ready until the workflow completes.
+- Verified CI run `42753848250` on commit `f8420520190b5f5a0830540236bbfa6c34359e92` passed formatting, static analysis, all 27 unit/widget tests, Android project generation, debug APK build, and artifact upload. The subsequent responsive-layout and release-size changes are awaiting their own CI run.
 - No real Android device test has been performed/recorded.
 - Board geometry remains provisional and has not been accepted through pixel-level visual calibration.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
@@ -52,8 +52,8 @@ Last updated: 2026-11-10
 
 ## Next implementation sequence
 
-1. Confirm the latest `main` CI is green and obtain a debug APK artifact.
-2. Implement responsive portrait layout while preserving the complete supplied composition.
+1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
+2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
 3. Calibrate the 15×15 board grid and every yard/track/home-lane coordinate from the source image.
 4. Complete capture/finish feedback and tune animation timing using visual QA.
 5. Make player labels, turn status, and interactions dynamic rather than relying on text baked into the static image.
