@@ -431,7 +431,7 @@ void main() {
         PawnCaptured,
         ExtraTurnGranted,
       ]);
-      expect(moved.events.map((event) => event.sequence).toList(), [0, 1]);
+      expect(moved.events.map((event) => event.sequence).toList(), [0, 1, 2]);
     });
 
 
