@@ -201,7 +201,8 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     final pattern = _tumblePatterns[widget.rollId % _tumblePatterns.length];
     final frame = (_controller.value * pattern.length)
         .floor()
-        .clamp(0, pattern.length - 1);
+        .clamp(0, pattern.length - 1)
+        .toInt();
     return pattern[frame];
   }
 
@@ -227,7 +228,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
         behavior: HitTestBehavior.opaque,
         onTap: interactive ? _handleTap : null,
         child: SizedBox(
-          width: math.max(widget.size, 48),
+          width: math.max(widget.size, 48.0),
           height: math.max(widget.size, 48),
           child: Center(
             child: AnimatedBuilder(
