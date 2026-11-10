@@ -129,7 +129,12 @@ class PlayerWon extends LudoGameEvent {
 }
 
 class NoLegalMoveEvent extends LudoGameEvent {
-  const NoLegalMoveEvent(super.sequence, super.stateVersion, this.player, this.diceValue);
+  const NoLegalMoveEvent(
+    super.sequence,
+    super.stateVersion,
+    this.player,
+    this.diceValue,
+  );
   final PlayerColor player;
   final int diceValue;
 }
@@ -140,7 +145,12 @@ class ExtraTurnGranted extends LudoGameEvent {
 }
 
 class PawnFinished extends LudoGameEvent {
-  const PawnFinished(super.sequence, super.stateVersion, this.player, this.pawnIndex);
+  const PawnFinished(
+    super.sequence,
+    super.stateVersion,
+    this.player,
+    this.pawnIndex,
+  );
   final PlayerColor player;
   final int pawnIndex;
 }
@@ -338,6 +348,17 @@ class LudoGame {
       throw const FormatException('Malformed Ludo snapshot.');
     }
 
+    PlayerColor parseColor(Object? value, String field) {
+      if (value is! String) {
+        throw FormatException('Invalid player field: $field.');
+      }
+      try {
+        return PlayerColor.values.byName(value);
+      } on ArgumentError {
+        throw FormatException('Unknown player color: $value.');
+      }
+    }
+
     final progressByColor = <PlayerColor, List<int>>{};
     for (final rawPlayer in rawPlayers) {
       if (rawPlayer is! Map ||
@@ -366,15 +387,6 @@ class LudoGame {
         throw FormatException('Invalid rule profile field: $key.');
       }
       return value;
-    }
-
-    PlayerColor parseColor(Object? value, String field) {
-      if (value is! String) throw FormatException('Invalid player field: $field.');
-      try {
-        return PlayerColor.values.byName(value);
-      } on ArgumentError {
-        throw FormatException('Unknown player color: $value.');
-      }
     }
 
     final profileId = rawProfile['id'];
@@ -631,7 +643,9 @@ class LudoGame {
       stateVersion: version,
       consecutiveSixes: nextSixes,
       appliedCommandIds: _nextCommandIds(commandId),
-      events: List<LudoGameEvent>.unmodifiable([DiceRolled(0, version, activePlayer, value)]),
+      events: List<LudoGameEvent>.unmodifiable([
+        DiceRolled(0, version, activePlayer, value),
+      ]),
       winner: winner,
     );
     if (!nextGame.awaitingPass) return nextGame;
@@ -642,9 +656,14 @@ class LudoGame {
   }
 
   LudoGame _withEvents(List<LudoGameEvent> nextEvents) => LudoGame._(
-        players: players, activePlayer: activePlayer, diceValue: diceValue,
-        winner: winner, ruleProfile: ruleProfile, stateVersion: stateVersion,
-        consecutiveSixes: consecutiveSixes, appliedCommandIds: appliedCommandIds,
+        players: players,
+        activePlayer: activePlayer,
+        diceValue: diceValue,
+        winner: winner,
+        ruleProfile: ruleProfile,
+        stateVersion: stateVersion,
+        consecutiveSixes: consecutiveSixes,
+        appliedCommandIds: appliedCommandIds,
         events: List<LudoGameEvent>.unmodifiable(nextEvents),
       );
 
@@ -763,7 +782,14 @@ class LudoGame {
     final gameWinner = updatedCurrent.hasWon ? activePlayer : null;
     final finishedPawn = nextProgress == finishProgress;
     if (finishedPawn) {
-      emitted.add(PawnFinished(emitted.length, stateVersion + 1, activePlayer, pawnIndex));
+      emitted.add(
+        PawnFinished(
+          emitted.length,
+          stateVersion + 1,
+          activePlayer,
+          pawnIndex,
+        ),
+      );
     }
     final bonusTurn = (ruleProfile.extraTurnOnSix && rollValue == 6) ||
         (ruleProfile.extraTurnOnCapture && captured) ||
@@ -771,10 +797,16 @@ class LudoGame {
     final nextPlayer =
         gameWinner != null || bonusTurn ? activePlayer : _nextActivePlayer();
     if (gameWinner != null) {
-      emitted.add(PlayerWon(emitted.length, stateVersion + 1, activePlayer));
-      emitted.add(GameCompleted(emitted.length, stateVersion + 1, activePlayer));
+      emitted.add(
+        PlayerWon(emitted.length, stateVersion + 1, activePlayer),
+      );
+      emitted.add(
+        GameCompleted(emitted.length, stateVersion + 1, activePlayer),
+      );
     } else if (bonusTurn) {
-      emitted.add(ExtraTurnGranted(emitted.length, stateVersion + 1, activePlayer));
+      emitted.add(
+        ExtraTurnGranted(emitted.length, stateVersion + 1, activePlayer),
+      );
     } else if (nextPlayer != activePlayer) {
       emitted.add(
         TurnChanged(emitted.length, stateVersion + 1, activePlayer, nextPlayer),
