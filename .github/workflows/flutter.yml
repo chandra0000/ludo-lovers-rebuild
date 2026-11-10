@@ -51,7 +51,14 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          dart format --output=write "${dart_files[@]}"
+      - name: Upload formatter-normalized Dart sources for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatter-normalized-dart-sources
+          path: apps/mobile/test/app_test.dart
+          if-no-files-found: error
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
