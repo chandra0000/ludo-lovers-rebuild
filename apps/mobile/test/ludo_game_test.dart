@@ -278,11 +278,14 @@ void main() {
       ).roll(2);
 
       final result = rolled.evaluatePawnMove(0);
-      expect(result, isA<InvalidMove>().having(
-        (move) => move.reason,
-        'reason',
-        MoveInvalidReason.landingOnProtectedStack,
-      ));
+      expect(
+        result,
+        isA<InvalidMove>().having(
+          (move) => move.reason,
+          'reason',
+          MoveInvalidReason.landingOnProtectedStack,
+        ),
+      );
       expect(rolled.legalPawnIndices(), isEmpty);
       expect(rolled.currentPlayer.pawnProgress[0], 3);
       expect(
