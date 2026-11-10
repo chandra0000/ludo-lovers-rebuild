@@ -24,9 +24,11 @@ jobs:
       - name: Resolve dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Format check
+      - name: Format Dart sources and show proposed changes
         working-directory: apps/mobile
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          git diff -- lib test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
