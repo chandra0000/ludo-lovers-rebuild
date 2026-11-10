@@ -35,7 +35,7 @@ This keeps game state separate from static artwork and avoids a large collection
 
 ## Repository asset hygiene
 
-The current tree contains the runtime board WebP and launcher WebP plus a reference-path copy of the board. The reference copy has the same Git blob SHA as the runtime board and is not registered in `pubspec.yaml`; it is not packaged as a Flutter asset. Keep only one working-tree copy unless a separate original source file is supplied. The current runtime manifest is intentionally explicit rather than including the entire asset directory.
+The repository previously contained a reference-path copy of the board with the same Git blob SHA as the runtime board. That redundant working-tree copy has been removed; the canonical runtime board remains at `apps/mobile/assets/images/board/ludo_board_glass.webp`. The current tree contains only the board WebP and launcher WebP. The runtime manifest is intentionally explicit rather than including the entire asset directory.
 
 ## Asset verification checklist
 
