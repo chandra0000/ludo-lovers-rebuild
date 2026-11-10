@@ -157,12 +157,19 @@ void main() {
 
       final moved = game.roll(2).movePawn(0);
       expect(moved.currentPlayer.pawnProgress[0], 5);
-      expect(moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0], -1);
+      expect(
+        moved.players
+            .firstWhere((p) => p.color == PlayerColor.green)
+            .pawnProgress[0],
+        -1,
+      );
       expect(moved.activePlayer, PlayerColor.orange);
       expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
     });
 
-    test('Classic profile rejects overshooting exact finish and passes the turn', () {
+    test(
+      'Classic profile rejects overshooting exact finish and passes the turn',
+      () {
       final game = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         ruleProfile: LudoRuleProfile.classicV1,
@@ -178,7 +185,8 @@ void main() {
         passed.currentPlayer.pawnProgress,
         [-1, -1, -1, -1],
       );
-    });
+      },
+    );
 
     test('Classic consecutive-six counter resets after a non-six roll', () {
       var game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1);
