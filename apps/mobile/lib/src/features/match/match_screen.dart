@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/presentation/player_color_theme.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({super.key});
@@ -158,7 +159,7 @@ class _MatchScreenState extends State<MatchScreen> {
                                   key: const Key('turn_status'),
                                   maxLines: 1,
                                   style: TextStyle(
-                                    color: _game.activePlayer.value,
+                                    color: _game.activePlayer.color,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.5,
@@ -216,8 +217,8 @@ class _MatchScreenState extends State<MatchScreen> {
       pawnIndex,
     );
     final center = Offset(
-      _boardRect.left + normalized.dx * _boardRect.width,
-      _boardRect.top + normalized.dy * _boardRect.height,
+      _boardRect.left + normalized.x * _boardRect.width,
+      _boardRect.top + normalized.y * _boardRect.height,
     );
     final diameter = progress == -1 ? 34.0 : 30.0;
     final canMove = color == _game.activePlayer &&
@@ -236,7 +237,7 @@ class _MatchScreenState extends State<MatchScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             decoration: BoxDecoration(
-              color: color.value,
+              color: color.color,
               shape: BoxShape.circle,
               border: Border.all(
                 color: canMove ? const Color(0xFFFFD700) : Colors.white,
