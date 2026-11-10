@@ -2,16 +2,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
-import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/animated_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
-  const MatchScreen({super.key, this.rollDice, this.initialGame, this.aiPlayers = const {}, this.aiSeed = 1});
+  const MatchScreen({
+    super.key,
+    this.rollDice,
+    this.initialGame,
+    this.aiPlayers = const {},
+    this.aiSeed = 1,
+  });
 
   @visibleForTesting
   final int Function()? rollDice;
@@ -29,7 +35,7 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
-  final math.Random _random = math.Random();
+  late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
