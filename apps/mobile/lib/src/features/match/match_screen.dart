@@ -44,6 +44,7 @@ class _MatchScreenState extends State<MatchScreen>
   bool _isDiceAnimating = false;
   bool _isAppResumed = true;
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
+  Future<void> _persistenceQueue = Future<void>.value();
   int _diceRollId = 0;
   late final AnimationController _movementController = AnimationController(
     vsync: this,
@@ -127,18 +128,22 @@ class _MatchScreenState extends State<MatchScreen>
     }
   }
 
-  Future<void> _persistMatch() async {
-    try {
-      await _savedMatchStore.save(
-        SavedMatch(
-          game: _game,
-          aiPlayers: widget.aiPlayers,
-          aiSeed: widget.aiSeed,
-        ),
-      );
-    } catch (error) {
-      debugPrint('Could not persist local match: $error');
-    }
+  Future<void> _persistMatch() {
+    // Serialize writes so a slower earlier preference write can never
+    // overwrite a newer accepted game state.
+    final snapshot = SavedMatch(
+      game: _game,
+      aiPlayers: widget.aiPlayers,
+      aiSeed: widget.aiSeed,
+    );
+    _persistenceQueue = _persistenceQueue.then((_) async {
+      try {
+        await _savedMatchStore.save(snapshot);
+      } catch (error) {
+        debugPrint('Could not persist local match: $error');
+      }
+    });
+    return _persistenceQueue;
   }
 
   @override
