@@ -28,7 +28,7 @@ class SeededLudoAi {
         pawn: pawnIndex,
         score: score,
         tieBreak: random.nextInt(1 << 20),
-      ));
+      ),);
     }
     scored.sort((a, b) {
       final byScore = b.score.compareTo(a.score);
