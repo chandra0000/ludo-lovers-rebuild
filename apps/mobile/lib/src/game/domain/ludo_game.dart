@@ -224,9 +224,9 @@ class LudoGame {
   /// so stale/duplicate commands remain rejectable after an app restart.
   Map<String, Object?> toSnapshot() => {
         'schemaVersion': 2,
-        'players': [
+        'players': <Map<String, Object?>>[
           for (final player in players)
-            {
+            <String, Object?>{
               'color': player.color.name,
               'pawnProgress': player.pawnProgress,
             },
@@ -234,7 +234,7 @@ class LudoGame {
         'activePlayer': activePlayer.name,
         'diceValue': diceValue,
         'winner': winner?.name,
-        'ruleProfile': {
+        'ruleProfile': <String, Object?>{
           'id': ruleProfile.id,
           'version': ruleProfile.version,
           'extraTurnOnSix': ruleProfile.extraTurnOnSix,
