@@ -37,6 +37,9 @@ Last updated: 2026-11-10
 
 ## Validation state
 
+- Latest CI run [42793354362](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42793354362) passed on commit `643e6dfa6b990c513252c7488d60e42dd6603285`: formatting, strict analysis, unit/widget tests, deterministic screenshot upload, Android emulator integration, debug APK, split profile APKs, split release APKs, and all artifact uploads.
+- The successful run's match-canvas screenshot artifact is `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`). It has been inspected alongside the canonical board artwork; yard pawn placement appears close to the socket wells, but no source-pixel calibration or visual approval is claimed.
+
 - Verified CI run [42754693581](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581) on commit `a8c80bbc1b4799630b14e49230baddf52ae99fb8` passed formatting, static analysis, all 27 unit/widget tests, Android project generation, debug APK build, split release APK builds, and both artifact uploads.
 - Measured package outputs on that verified baseline: debug APK 144 MB; split release APKs 13.4 MB (armeabi-v7a), 16.2 MB (arm64-v8a), and 17.5 MB (x86_64). The arm64 release APK is the likely Android-phone target; use release rather than the large debug APK for device installation/performance checks.
 - Downloadable CI artifacts: [debug APK](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734718462) and [split release APKs](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734504994).
