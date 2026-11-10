@@ -661,6 +661,18 @@ class _MatchScreenState extends State<MatchScreen>
           label: stacked
               ? 'Choose a movable pawn from this shared cell'
               : '${color.name} pawn ${pawnIndex + 1}',
+          value: progress == -1
+              ? 'In yard'
+              : progress == 56
+                  ? 'Home'
+                  : 'Progress $progress of 56',
+          hint: stacked
+              ? 'Double tap to choose which movable pawn to move.'
+              : canMove
+                  ? 'Double tap to move this pawn.'
+                  : widget.aiPlayers.contains(color)
+                      ? 'Controlled by the AI opponent.'
+                      : 'Not movable on this turn.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,
