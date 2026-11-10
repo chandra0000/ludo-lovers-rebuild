@@ -82,7 +82,11 @@ class _MatchScreenState extends State<MatchScreen>
     }
     setState(() {
       final value = widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-      final rolled = _game.roll(value);
+      final rolled = _game.roll(
+        value,
+        expectedStateVersion: _game.stateVersion,
+        commandId: 'match-${_game.stateVersion}-roll',
+      );
       _game = rolled;
     });
   }
@@ -97,7 +101,11 @@ class _MatchScreenState extends State<MatchScreen>
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
     final stepCount = endProgress - startProgress;
-    final nextGame = _game.movePawn(pawnIndex);
+    final nextGame = _game.movePawn(
+      pawnIndex,
+      expectedStateVersion: _game.stateVersion,
+      commandId: 'match-${_game.stateVersion}-move-$pawnIndex',
+    );
     var capturedCount = 0;
     for (final previousPlayer in _game.players) {
       if (previousPlayer.color == movingColor) {
@@ -255,7 +263,10 @@ class _MatchScreenState extends State<MatchScreen>
                                     _isDiceAnimating = false;
                                     if (_game.diceValue != null &&
                                         _game.legalPawnIndices().isEmpty) {
-                                      _game = _game.passTurn();
+                                      _game = _game.passTurn(
+                                        expectedStateVersion: _game.stateVersion,
+                                        commandId: 'match-${_game.stateVersion}-pass',
+                                      );
                                     }
                                   });
                                 }
