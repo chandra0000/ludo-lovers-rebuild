@@ -67,7 +67,12 @@ class _MatchScreenState extends State<MatchScreen>
       _isDiceAnimating = true;
       _diceRollId = 1;
     }
-    _isAppResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    // Treat the initial detached/null state as active until the first
+    // lifecycle notification. This also keeps widget-test bindings usable.
+    _isAppResumed = lifecycleState == null ||
+        lifecycleState == AppLifecycleState.resumed ||
+        lifecycleState == AppLifecycleState.detached;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_persistMatch());
