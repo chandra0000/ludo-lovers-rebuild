@@ -44,6 +44,7 @@ void main() {
       expect(find.text('GREEN · AI TURN'), findsOneWidget);
       // Observe the in-flight pawn hop without advancing far enough to schedule
       // the AI's next delayed roll; AI legality is covered in the domain test.
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(tester.getCenter(blockedPawn), blockedPawnBefore);
       expect(tester.getCenter(onlyLegalPawn), isNot(legalPawnBefore));
