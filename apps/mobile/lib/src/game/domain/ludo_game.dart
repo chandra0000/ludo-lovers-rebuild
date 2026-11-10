@@ -132,8 +132,8 @@ class LudoPlayer {
         ) {
     if (this.pawnProgress.length != 4 ||
         this.pawnProgress.any(
-          (step) => step < -1 || step > finishProgress,
-        )) {
+              (step) => step < -1 || step > finishProgress,
+            )) {
       throw ArgumentError(
         'Each player must have four pawns with progress -1..$finishProgress.',
       );
@@ -386,8 +386,7 @@ class LudoGame {
     int? expectedStateVersion,
     String? commandId,
   }) {
-    if (expectedStateVersion != null &&
-        expectedStateVersion != stateVersion) {
+    if (expectedStateVersion != null && expectedStateVersion != stateVersion) {
       throw StateError(
         'Stale command: expected state $expectedStateVersion, current state is $stateVersion.',
       );
@@ -594,9 +593,8 @@ class LudoGame {
     final bonusTurn = (ruleProfile.extraTurnOnSix && rollValue == 6) ||
         (ruleProfile.extraTurnOnCapture && captured) ||
         (ruleProfile.extraTurnOnFinish && finishedPawn);
-    final nextPlayer = gameWinner != null || bonusTurn
-        ? activePlayer
-        : _nextActivePlayer();
+    final nextPlayer =
+        gameWinner != null || bonusTurn ? activePlayer : _nextActivePlayer();
     if (gameWinner != null) {
       emitted.add(
         PlayerWon(emitted.length, stateVersion + 1, activePlayer),
