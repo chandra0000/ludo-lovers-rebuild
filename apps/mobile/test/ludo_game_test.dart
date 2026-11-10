@@ -54,8 +54,10 @@ void main() {
 
       final moved = game.roll(1).movePawn(0);
       expect(moved.activePlayer, PlayerColor.magenta);
-      expect(moved.events.whereType<TurnChanged>().single.to,
-          PlayerColor.magenta);
+      expect(
+        moved.events.whereType<TurnChanged>().single.to,
+        PlayerColor.magenta,
+      );
     });
 
     test('skips a completed player when passing after an unplayable roll', () {
