@@ -1,0 +1,19 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:ludo_lovers/src/app.dart';
+
+void main() {
+  testWidgets('renders the home screen on the first frame', (tester) async {
+    await tester.pumpWidget(const LudoLoversApp());
+    expect(find.text('LUDO LOVERS'), findsOneWidget);
+    expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+  });
+
+  testWidgets('opens a local match from the home screen', (tester) async {
+    await tester.pumpWidget(const LudoLoversApp());
+    await tester.tap(find.byKey(const Key('start_local_match')));
+    await tester.pumpAndSettle();
+    expect(find.text('LOCAL MATCH'), findsOneWidget);
+    expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+  });
+}

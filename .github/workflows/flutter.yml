@@ -1,0 +1,46 @@
+name: Flutter foundation checks
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Flutter version
+        run: flutter --version
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Format check
+        working-directory: apps/mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        working-directory: apps/mobile
+        run: flutter analyze --fatal-infos
+      - name: Unit and widget tests
+        working-directory: apps/mobile
+        run: flutter test --reporter expanded
+      - name: Generate Android project files
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Build debug APK
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-foundation-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
