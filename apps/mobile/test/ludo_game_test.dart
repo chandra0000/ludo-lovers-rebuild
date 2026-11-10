@@ -174,7 +174,7 @@ void main() {
       expect(game.legalPawnIndices(), isEmpty);
       final passed = game.passTurn();
       expect(passed.activePlayer, PlayerColor.green);
-      expect(passed.currentPlayer.pawnProgress, [-1, -1, -1, -1]);
+      expect(passed.currentPlayer.pawnProgress, [-1, -1, -1, -1],);
     });
 
     test('Classic consecutive-six counter resets after a non-six roll', () {
