@@ -156,11 +156,12 @@ class BoardGeometry {
     ),
   };
 
-  static const List<Offset> _yardOffsets = <Offset>[
-    Offset(2.22, 2.22),
-    Offset(3.78, 2.22),
-    Offset(2.22, 3.78),
-    Offset(3.78, 3.78),
+  static const List<NormalizedBoardPoint> _yardOffsets =
+      <NormalizedBoardPoint>[
+    NormalizedBoardPoint(2.22, 2.22),
+    NormalizedBoardPoint(3.78, 2.22),
+    NormalizedBoardPoint(2.22, 3.78),
+    NormalizedBoardPoint(3.78, 3.78),
   ];
 
   static NormalizedBoardPoint normalizedPosition(
@@ -175,8 +176,8 @@ class BoardGeometry {
     if (progress == -1) {
       final offset = _yardOffsets[pawnIndex];
       return NormalizedBoardPoint(
-        (seat.yardColumn + offset.dx) / gridSize,
-        (seat.yardRow + offset.dy) / gridSize,
+        (seat.yardColumn + offset.x) / gridSize,
+        (seat.yardRow + offset.y) / gridSize,
       );
     }
     if (progress < -1 || progress > 56) {
