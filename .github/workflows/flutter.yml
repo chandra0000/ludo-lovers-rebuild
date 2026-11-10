@@ -45,6 +45,15 @@ jobs:
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Android emulator integration smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: cd apps/mobile && flutter test integration_test/app_smoke_test.dart -d emulator-5554
+
       - name: Build debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
