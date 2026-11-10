@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/presentation/player_color_theme.dart';
 
 /// Read-only diagnostic view. Coordinates are provisional until pixel-measured.
 class BoardPreviewScreen extends StatelessWidget {
@@ -41,8 +42,12 @@ class BoardPreviewScreen extends StatelessWidget {
                           ),
                           for (final color in PlayerColor.turnOrder)
                             for (var index = 0; index < 4; index++)
-                              _yardMarker(color, index, constraints.maxWidth,
-                                  constraints.maxHeight),
+                              _yardMarker(
+                                color,
+                                index,
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                              ),
                         ],
                       ),
                     ),
