@@ -28,7 +28,7 @@ All values below are implementation estimates pending comparison with the CI-ren
 | Design canvas | 576×1024 | Exact 9:16 canvas contract |
 | Logical grid | 15×15 | Product geometry contract |
 | Board left | 17.78 | Provisional |
-| Board top | 213.33 | Provisional |
+| Board top | 199.1 | Provisional source-art alignment estimate |
 | Board width | 540.44 | Provisional |
 | Board height | 540.44 (tied to width) | Square-grid constraint implemented |
 | Yard socket x offsets | 1.8, 3.8 grid units | Provisional |
