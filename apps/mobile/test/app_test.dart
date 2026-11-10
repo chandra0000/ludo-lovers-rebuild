@@ -137,10 +137,12 @@ void main() {
       var rollCount = 0;
       await tester.pumpWidget(
         MaterialApp(
-          home: MatchScreen(rollDice: () {
-            rollCount++;
-            return 6;
-          }),
+          home: MatchScreen(
+            rollDice: () {
+              rollCount++;
+              return 6;
+            },
+          ),
         ),
       );
 
