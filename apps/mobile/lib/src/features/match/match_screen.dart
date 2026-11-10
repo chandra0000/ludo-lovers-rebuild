@@ -249,16 +249,16 @@ class _MatchScreenState extends State<MatchScreen> {
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
     const offsets = <Offset>[
-      Offset(-.24, -.20),
-      Offset(.24, -.20),
-      Offset(-.24, .20),
-      Offset(.24, .20),
+      Offset(-.48, -.48),
+      Offset(.48, -.48),
+      Offset(-.48, .48),
+      Offset(.48, .48),
     ];
     final stacked = occupants.length > 1;
     final position = stacked
         ? center + offsets[stackIndex % offsets.length] * 18
         : center;
-    final size = stacked ? 19.0 : (progress == -1 ? 30.0 : 27.0);
+    final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final canMove = color == _game.activePlayer &&
         _game.legalPawnIndices().contains(pawnIndex);
     final isCurrentPlayer = color == _game.activePlayer;
