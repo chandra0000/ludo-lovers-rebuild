@@ -17,7 +17,11 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.casino_outlined, size: 76, color: Color(0xFFFFC857)),
+                  const Icon(
+                    Icons.casino_outlined,
+                    size: 76,
+                    color: Color(0xFFFFC857),
+                  ),
                   const SizedBox(height: 18),
                   const Text(
                     'LUDO LOVERS',
@@ -31,7 +35,10 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   const Text(
                     'PLAY • CONNECT • LOVE',
-                    style: TextStyle(color: Colors.white70, letterSpacing: 2),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      letterSpacing: 2,
+                    ),
                   ),
                   const SizedBox(height: 44),
                   SizedBox(
@@ -52,7 +59,10 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   const Text(
                     'Foundation build · Local play only',
-                    style: TextStyle(color: Colors.white38, fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
