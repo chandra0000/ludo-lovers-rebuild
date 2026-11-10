@@ -221,43 +221,49 @@ class _MatchScreenState extends State<MatchScreen> {
       _boardRect.top + normalized.y * _boardRect.height,
     );
     final diameter = progress == -1 ? 34.0 : 30.0;
+    const hitTarget = 44.0;
     final canMove = color == _game.activePlayer &&
         _game.legalPawnIndices().contains(pawnIndex);
     return Positioned(
-      left: center.dx - diameter / 2,
-      top: center.dy - diameter / 2,
-      width: diameter,
-      height: diameter,
+      left: center.dx - hitTarget / 2,
+      top: center.dy - hitTarget / 2,
+      width: hitTarget,
+      height: hitTarget,
       child: Semantics(
         button: canMove,
         label: '${color.name} pawn ${pawnIndex + 1}',
         child: GestureDetector(
           key: Key('pawn_${color.name}_$pawnIndex'),
+          behavior: HitTestBehavior.opaque,
           onTap: canMove ? () => _move(pawnIndex) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            decoration: BoxDecoration(
-              color: color.color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: canMove ? const Color(0xFFFFD700) : Colors.white,
-                width: canMove ? 3.5 : 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: color.color.withValues(alpha: 0.7),
-                  blurRadius: canMove ? 13 : 5,
-                  spreadRadius: canMove ? 2 : 0,
+          child: Center(
+            child: AnimatedContainer(
+              width: diameter,
+              height: diameter,
+              duration: const Duration(milliseconds: 180),
+              decoration: BoxDecoration(
+                color: color.color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: canMove ? const Color(0xFFFFD700) : Colors.white,
+                  width: canMove ? 3.5 : 1.5,
                 ),
-              ],
-            ),
-            child: Center(
-              child: Container(
-                width: diameter * 0.28,
-                height: diameter * 0.28,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.color.withValues(alpha: 0.7),
+                    blurRadius: canMove ? 13 : 5,
+                    spreadRadius: canMove ? 2 : 0,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Container(
+                  width: diameter * 0.28,
+                  height: diameter * 0.28,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
