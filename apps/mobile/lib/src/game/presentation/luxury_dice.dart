@@ -220,7 +220,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
       label: _isAnimating
           ? 'Dice rolling'
           : 'Dice, value $valueLabel',
-      button: true,
+      button: interactive,
       enabled: interactive,
       child: GestureDetector(
         key: const Key('luxury_dice_gesture'),
