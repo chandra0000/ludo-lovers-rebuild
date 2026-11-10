@@ -118,3 +118,12 @@ Important corrections:
 - Team Up remains deferred from the rebuild's first milestone.
 - The legacy four-phase verification plan is adopted: asset/render stability, board geometry, engine correctness, integration/stress/device QA.
 - Old CI run numbers and old repository implementation status are historical only; rebuild validation must be evidenced on the current rebuild commit.
+
+
+## Legacy feature recovery — plan established
+
+- Added [Legacy Feature Recovery Plan](LEGACY_FEATURE_RECOVERY_PLAN.md), an actionable old-to-new feature inventory with target modules, priority, and acceptance criteria.
+- The plan separates implemented foundations from provisional geometry/rules, missing onboarding/setup and local AI, and deliberately deferred Team Up/online multiplayer.
+- Migration guardrails remain in force: one engine, one BoardGeometry source, canonical full-screen artwork unchanged, and approved glass-cone pawn design preserved.
+- Immediate implementation focus is P0 board calibration/topology and opt-in Classic rules parity. P1 onboarding/setup and seeded local AI follow after the board and rule acceptance gates.
+- This documentation commit does not claim that missing features have been implemented or visually/device validated. Each feature will be recorded as complete only with its own tests and CI evidence.
