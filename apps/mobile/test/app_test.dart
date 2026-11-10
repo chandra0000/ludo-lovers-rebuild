@@ -195,15 +195,14 @@ void main() {
       2,
     );
 
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pump(const Duration(milliseconds: 40));
-    expect(
-      tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
-          .properties.button,
-      isFalse,
-    );
-    await tester.pumpAndSettle();
+    // Only the pawn already on the track can use a non-six roll, so it moves
+    // automatically after the dice reveal and 350 ms anticipation window.
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 349));
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    await tester.pumpAndSettle();
   });
   
   testWidgets(
