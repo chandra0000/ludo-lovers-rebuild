@@ -26,8 +26,9 @@ class HomeScreen extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 440),
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       width: 224,
@@ -127,6 +128,7 @@ class HomeScreen extends StatelessWidget {
                       style: TextStyle(color: Colors.white38, fontSize: 11),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
