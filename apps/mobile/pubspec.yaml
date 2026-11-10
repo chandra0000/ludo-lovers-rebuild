@@ -19,4 +19,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/reference/ludo_lovers_full_screen_reference.webp
+    - assets/images/board/ludo_board_glass.webp
+    - assets/images/branding/ludo_lovers_icon.webp
