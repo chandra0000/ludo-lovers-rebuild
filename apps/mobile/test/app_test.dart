@@ -38,7 +38,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    expect(tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value, 6);
+    expect(
+      tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value,
+      6,
+    );
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
@@ -46,14 +49,19 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    expect(tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value, 2);
+    expect(
+      tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value,
+      2,
+    );
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
   
-  testWidgets('offers a chooser when multiple legal pawns share a cell', (tester) async {
+  testWidgets(
+    'offers a chooser when multiple legal pawns share a cell',
+    (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
       pawnProgress: {
@@ -79,7 +87,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });  
-  testWidgets('passes a turn after the animated roll when no pawn can move', (tester) async {
+  testWidgets(
+    'passes a turn after the animated roll when no pawn can move',
+    (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: MatchScreen(rollDice: () => 4),
