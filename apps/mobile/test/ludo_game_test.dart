@@ -144,6 +144,70 @@ void main() {
       expect(moved.events.first, isA<PawnMoved>());
     });
 
+    test('Classic profile grants one bonus turn after a capture', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          // Green progress 44 maps to the same physical cell as Orange 5.
+          PlayerColor.green: [44, -1, -1, -1],
+        },
+      );
+
+      final moved = game.roll(2).movePawn(0);
+      expect(moved.currentPlayer.pawnProgress[0], 5);
+      expect(moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0], -1);
+      expect(moved.activePlayer, PlayerColor.orange);
+      expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
+    });
+
+    test('Classic profile rejects overshooting exact finish and passes the turn', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [55, -1, -1, -1],
+        },
+      ).roll(2);
+
+      expect(game.legalPawnIndices(), isEmpty);
+      final passed = game.passTurn();
+      expect(passed.activePlayer, PlayerColor.green);
+      expect(passed.currentPlayer.pawnProgress, [-1, -1, -1, -1]);
+    });
+
+    test('Classic consecutive-six counter resets after a non-six roll', () {
+      var game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1);
+      game = game.roll(6).movePawn(0);
+      game = game.roll(6).movePawn(0);
+      game = game.roll(2).movePawn(0);
+      expect(game.consecutiveSixes, 0);
+
+      game = game.roll(6).movePawn(0);
+      game = game.roll(6).movePawn(0);
+      final nextSix = game.roll(6);
+      expect(nextSix.activePlayer, PlayerColor.green);
+      expect(nextSix.currentPlayer.pawnProgress, [-1, -1, -1, -1]);
+    });
+
+    test('Classic bonus conditions produce only one retained turn', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          PlayerColor.green: [44, -1, -1, -1],
+        },
+      );
+
+      // A six and a capture are both bonus conditions; the turn is not stacked.
+      final moved = game.roll(6).movePawn(0);
+      expect(moved.activePlayer, PlayerColor.orange);
+      expect(moved.diceValue, isNull);
+      expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
+    });
+
     test('accepted transitions increment state version and reject stale commands', () {
       final initial = LudoGame.initial();
       final rolled = initial.roll(
