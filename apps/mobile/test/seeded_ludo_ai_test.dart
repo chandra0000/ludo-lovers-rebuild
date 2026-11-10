@@ -174,4 +174,24 @@ void main() {
     expect(game.currentPlayer.pawnProgress, originalProgress);
   });
 
+  test('seeded AI follows the supplied Classic profile blockade legality', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      ruleProfile: LudoRuleProfile.classicV1,
+      pawnProgress: {
+        PlayerColor.orange: [3, 10, -1, -1],
+        PlayerColor.green: [44, 44, -1, -1],
+      },
+    ).roll(3);
+
+    // The first pawn is blocked mid-route; the second is the only legal move.
+    expect(game.legalPawnIndices(), [1]);
+    final selected = ai.choosePawn(game, seed: 2026);
+    expect(selected, 1);
+
+    final moved = game.movePawn(selected!);
+    expect(moved.ruleProfile, LudoRuleProfile.classicV1);
+    expect(moved.currentPlayer.pawnProgress[1], 13);
+  });
+
 }
