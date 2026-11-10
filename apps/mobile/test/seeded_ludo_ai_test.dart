@@ -55,21 +55,34 @@ void main() {
 
     while (game.winner == null && transitions < 100000) {
       if (game.diceValue == null) {
-        game = game.roll(random.nextInt(6) + 1);
+        game = game.roll(
+          random.nextInt(6) + 1,
+          expectedStateVersion: game.stateVersion,
+          commandId: 'ai-$seed-${transitions}-roll',
+        );
         transitions++;
       }
       final legal = game.legalPawnIndices();
       if (legal.isEmpty) {
-        game = game.passTurn();
+        game = game.passTurn(
+          expectedStateVersion: game.stateVersion,
+          commandId: 'ai-$seed-${transitions}-pass',
+        );
       } else {
         final selected = ai.choosePawn(
           game,
           seed: seed ^ game.stateVersion,
         );
         expect(legal, contains(selected));
-        game = game.movePawn(selected!);
+        game = game.movePawn(
+          selected!,
+          expectedStateVersion: game.stateVersion,
+          commandId: 'ai-$seed-${transitions}-move',
+        );
       }
       transitions++;
+      expect(game.stateVersion, transitions);
+      expect(game.appliedCommandIds.length, transitions);
       expect(
         game.players.every(
           (player) => player.pawnProgress.every(
@@ -81,6 +94,7 @@ void main() {
     }
 
     expect(game.winner, isNotNull);
+    expect(transitions, greaterThan(100));
     expect(transitions, lessThan(100000));
     expect(game.currentPlayer.hasWon, isTrue);
   });
