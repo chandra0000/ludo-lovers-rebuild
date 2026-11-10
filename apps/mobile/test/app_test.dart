@@ -35,7 +35,8 @@ void main() {
       expect(canvas.height, lessThanOrEqualTo(viewport.height));
       expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
       expect(artwork.width / artwork.height, closeTo(9 / 16, 0.001));
-      expect(artwork, canvas);
+      expect(artwork.width, 576);
+      expect(artwork.height, 1024);
     }
   });
 
