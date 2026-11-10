@@ -12,9 +12,11 @@ void main() {
     await tester.pumpWidget(const LudoLoversApp());
 
     expect(find.text('LUDO LOVERS'), findsOneWidget);
-    expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
     for (var cycle = 0; cycle < 3; cycle++) {
+      await tester.tap(find.byKey(const Key('open_game_setup')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('start_local_match')));
       await tester.pumpAndSettle();
 
@@ -29,7 +31,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('LUDO LOVERS'), findsOneWidget);
-      expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
     }
   });
 }
