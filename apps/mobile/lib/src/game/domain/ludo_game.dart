@@ -411,9 +411,8 @@ class LudoGame {
           : requiredBool('captureOnlySingleOpponentPawn'),
       // Hard-blockade semantics were added in schema v3. Older saves retain
       // their previous pass-through behaviour.
-      enableHardBlockade: schemaVersion < 3
-          ? false
-          : requiredBool('enableHardBlockade'),
+      enableHardBlockade:
+          schemaVersion < 3 ? false : requiredBool('enableHardBlockade'),
     );
 
     final activeName = snapshot['activePlayer'];
@@ -434,9 +433,8 @@ class LudoGame {
       throw const FormatException('Invalid Ludo snapshot state.');
     }
     final activeColor = parseColor(activeName, 'activePlayer');
-    final winnerColor = winnerName == null
-        ? null
-        : parseColor(winnerName, 'winner');
+    final winnerColor =
+        winnerName == null ? null : parseColor(winnerName, 'winner');
     final restoredPlayers = <LudoPlayer>[
       for (final color in PlayerColor.turnOrder)
         LudoPlayer(color, pawnProgress: progressByColor[color]),
@@ -565,7 +563,8 @@ class LudoGame {
       if (player.color == activePlayer) continue;
       for (var index = 0; index < player.pawnProgress.length; index++) {
         final progress = player.pawnProgress[index];
-        if (progress >= 0 && progress < playerTrackLength &&
+        if (progress >= 0 &&
+            progress < playerTrackLength &&
             _trackCell(player.color, progress) == destination) {
           occupants.add((color: player.color, pawnIndex: index));
         }
