@@ -110,7 +110,10 @@ class _DiceFacePainter extends CustomPainter {
     [Offset(.28, .28), Offset(.5, .5), Offset(.72, .72)],
     [Offset(.28, .28), Offset(.72, .28), Offset(.28, .72), Offset(.72, .72)],
     [Offset(.28, .28), Offset(.72, .28), Offset(.5, .5), Offset(.28, .72), Offset(.72, .72)],
-    [Offset(.28, .24), Offset(.72, .24), Offset(.28, .5), Offset(.72, .5), Offset(.28, .76), Offset(.72, .76)],
+    [
+      Offset(.28, .24), Offset(.72, .24), Offset(.28, .5),
+      Offset(.72, .5), Offset(.28, .76), Offset(.72, .76),
+    ],
   ];
 
   @override
@@ -129,7 +132,11 @@ class _DiceFacePainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFFFF6D9), Color(0xFFFFD36B), Color(0xFFD99A2B)],
+        colors: [
+          Color(0xFFFFF6D9),
+          Color(0xFFFFD36B),
+          Color(0xFFD99A2B),
+        ],
       ).createShader(faceRect);
     canvas.drawRRect(face, facePaint);
 
