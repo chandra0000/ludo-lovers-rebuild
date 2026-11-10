@@ -787,7 +787,9 @@ void main() {
       final moved = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         ruleProfile: LudoRuleProfile.classicV1,
-        pawnProgress: {PlayerColor.orange: [55, -1, -1, -1]},
+        pawnProgress: {
+          PlayerColor.orange: [55, -1, -1, -1],
+        },
       ).roll(1).movePawn(0);
 
       expect(moved.currentPlayer.pawnProgress[0], 56);
@@ -801,7 +803,9 @@ void main() {
     test('winning emits both compatibility and explicit game-completed events', () {
       final moved = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
-        pawnProgress: {PlayerColor.orange: [56, 56, 56, 55]},
+        pawnProgress: {
+            PlayerColor.orange: [56, 56, 56, 55],
+          },
       ).roll(1).movePawn(3);
 
       expect(moved.winner, PlayerColor.orange);
@@ -837,7 +841,9 @@ void main() {
     test('snapshot rejects a winner with a pending dice roll', () {
       final snapshot = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
-        pawnProgress: {PlayerColor.orange: [56, 56, 56, 56]},
+        pawnProgress: {
+          PlayerColor.orange: [56, 56, 56, 56],
+        },
       ).toSnapshot()
         ..['winner'] = 'orange'
         ..['diceValue'] = 2;
