@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../game/domain/persistence/saved_match_store.dart';
+
 import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
@@ -34,12 +36,14 @@ class MatchScreen extends StatefulWidget {
 }
 
 class _MatchScreenState extends State<MatchScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
+  bool _isAppResumed = true;
+  final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   int _diceRollId = 0;
   late final AnimationController _movementController = AnimationController(
     vsync: this,
@@ -55,6 +59,8 @@ class _MatchScreenState extends State<MatchScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _isAppResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _scheduleAiTurn();
     });
@@ -90,13 +96,44 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppResumed = state == AppLifecycleState.resumed;
+    if (!_isAppResumed) {
+      unawaited(_persistMatch());
+      return;
+    }
+    // Flutter's ticker lifecycle handling pauses the in-flight visual
+    // animation. Resume AI scheduling only after the app is foregrounded.
+    if (!_isDiceAnimating && !_movementController.isAnimating) {
+      _scheduleAiTurn();
+    }
+  }
+
+  Future<void> _persistMatch() async {
+    try {
+      await _savedMatchStore.save(
+        SavedMatch(
+          game: _game,
+          aiPlayers: widget.aiPlayers,
+          aiSeed: widget.aiSeed,
+        ),
+      );
+    } catch (error) {
+      debugPrint('Could not persist local match: $error');
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_persistMatch());
     _movementController.dispose();
     super.dispose();
   }
 
   void _scheduleAiTurn() {
-    if (!widget.aiPlayers.contains(_game.activePlayer) ||
+    if (!_isAppResumed ||
+        !widget.aiPlayers.contains(_game.activePlayer) ||
         _game.winner != null ||
         _game.diceValue != null ||
         _aiTurnScheduled ||
@@ -111,6 +148,7 @@ class _MatchScreenState extends State<MatchScreen>
         () {
           _aiTurnScheduled = false;
           if (!mounted ||
+              !_isAppResumed ||
               !widget.aiPlayers.contains(_game.activePlayer) ||
               _game.winner != null ||
               _game.diceValue != null ||
@@ -128,6 +166,7 @@ class _MatchScreenState extends State<MatchScreen>
             _isDiceAnimating = true;
             _diceRollId++;
           });
+          unawaited(_persistMatch());
         },
       ),
     );
@@ -155,11 +194,12 @@ class _MatchScreenState extends State<MatchScreen>
       _isDiceAnimating = true;
       _diceRollId++;
     });
+    unawaited(_persistMatch());
     return true;
   }
 
   void _handleDiceAnimationComplete() {
-    if (!mounted || !_isDiceAnimating) return;
+    if (!mounted || !_isAppResumed || !_isDiceAnimating) return;
     final legal = _game.legalPawnIndices();
     setState(() => _isDiceAnimating = false);
 
@@ -171,6 +211,7 @@ class _MatchScreenState extends State<MatchScreen>
           commandId: 'match-${_game.stateVersion}-pass',
         );
       });
+      unawaited(_persistMatch());
       _scheduleAiTurn();
       return;
     }
@@ -235,6 +276,7 @@ class _MatchScreenState extends State<MatchScreen>
           ? Duration.zero
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
     });
+    unawaited(_persistMatch());
     _movementController.forward(from: 0);
   }
 
@@ -417,6 +459,7 @@ class _MatchScreenState extends State<MatchScreen>
                                   setState(() {
                                     _game = LudoGame.initial();
                                   });
+                                  unawaited(_persistMatch());
                                 },
                                 child: const Text('PLAY AGAIN'),
                               ),
