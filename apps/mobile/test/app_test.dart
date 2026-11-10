@@ -78,6 +78,21 @@ void main() {
     await tester.tap(find.text('Pawn 2'));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+  });  
+  testWidgets('passes a turn after the animated roll when no pawn can move', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(rollDice: () => 4),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pump();
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pumpAndSettle();
+    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
+
 }
 
