@@ -15,6 +15,18 @@ Deliver one reliable local match with a stable first frame, faithful board artwo
 - Keep game rules and board geometry independent from Flutter widgets.
 - Never mark device acceptance complete without a real Android device test.
 
+## Local Android setup
+
+```bash
+cd apps/mobile
+flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+flutter pub get
+flutter test
+flutter run
+```
+
+The Android platform scaffold is generated in CI and can be generated locally with the command above.
+
 ## Current status
 
-The first Flutter foundation is under review in [PR #1](https://github.com/chandra0000/ludo-lovers-rebuild/pull/1). It is not yet a release-ready board or device-validated build.
+The first Flutter foundation is under review in [PR #1](https://github.com/chandra0000/ludo-lovers-rebuild/pull/1). The portrait artwork is bundled with interactive pawn/dice overlays and a provisional local rules engine. Board geometry still needs visual acceptance, and no physical-device validation has been performed yet.
