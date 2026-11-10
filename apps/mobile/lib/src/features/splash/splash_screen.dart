@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../home/home_screen.dart';
+import '../onboarding/onboarding_screen.dart';
 
 /// Displays the approved splash artwork without cropping or stretching it.
 class SplashScreen extends StatefulWidget {
@@ -18,12 +20,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigationTimer = Timer(const Duration(milliseconds: 1800), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
-      );
-    });
+    _navigationTimer = Timer(const Duration(milliseconds: 1800), _navigate);
+  }
+
+  Future<void> _navigate() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final completed = preferences.getBool('onboarding_completed_v1') ?? false;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            completed ? const HomeScreen() : const OnboardingScreen(),
+      ),
+    );
   }
 
   @override
