@@ -54,7 +54,7 @@ void main() {
     var transitions = 0;
     var turns = 0;
 
-    while (game.winner == null && transitions < 100000) {
+    while (game.winner == null && transitions < 5000) {
       if (game.diceValue == null) {
         game = game.roll(
           random.nextInt(6) + 1,
@@ -97,7 +97,7 @@ void main() {
 
     expect(game.winner, isNotNull);
     expect(turns, greaterThan(100));
-    expect(transitions, lessThan(100000));
+    expect(transitions, lessThan(5000));
     expect(game.currentPlayer.hasWon, isTrue);
   });
 
