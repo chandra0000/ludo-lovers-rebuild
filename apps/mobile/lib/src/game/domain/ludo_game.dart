@@ -840,3 +840,5 @@ class LudoGame {
   int _trackCell(PlayerColor color, int progress) =>
       BoardGeometry.physicalTrackCell(color, progress);
 }
+
+// Temporary formatter diagnostic marker.
