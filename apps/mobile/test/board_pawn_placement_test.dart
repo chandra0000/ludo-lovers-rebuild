@@ -46,9 +46,11 @@ void main() {
         find.byKey(Key('pawn_${entry.key.name}_0')),
       );
       expect(actual.dx, closeTo(expected.dx, 0.5),
-          reason: '${entry.key} pawn horizontal placement');
+          reason: '${entry.key} pawn horizontal placement',
+      );
       expect(actual.dy, closeTo(expected.dy, 0.5),
-          reason: '${entry.key} pawn vertical placement');
+          reason: '${entry.key} pawn vertical placement',
+      );
     }
   });
 }
