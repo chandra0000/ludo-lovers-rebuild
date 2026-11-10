@@ -266,6 +266,27 @@ void main() {
       expect(penalized.stateVersion, game.stateVersion + 1);
     });
 
+    test('Classic protects a stacked pair of opponent pawns from capture', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          // Both Green pawns occupy the same physical cell as Orange 5.
+          PlayerColor.green: [44, 44, -1, -1],
+        },
+      );
+
+      final moved = game.roll(2).movePawn(0);
+      final green = moved.players.firstWhere(
+        (player) => player.color == PlayerColor.green,
+      );
+
+      expect(green.pawnProgress, [44, 44, -1, -1]);
+      expect(moved.events.whereType<PawnCaptured>(), isEmpty);
+      expect(moved.activePlayer, PlayerColor.green);
+    });
+
     test('Classic profile grants an extra turn for reaching final home', () {
       final game = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
@@ -533,6 +554,20 @@ void main() {
         ),
         throwsStateError,
       );
+    });
+
+    test('schema-v1 snapshots migrate with their original capture behaviour', () {
+      final snapshot = LudoGame.initial(
+        ruleProfile: LudoRuleProfile.classicV1,
+      ).toSnapshot();
+      snapshot['schemaVersion'] = 1;
+      final profile = snapshot['ruleProfile']! as Map<String, Object?>;
+      profile.remove('captureOnlySingleOpponentPawn');
+
+      final restored = LudoGame.fromSnapshot(snapshot);
+
+      expect(restored.ruleProfile.id, 'classic');
+      expect(restored.ruleProfile.captureOnlySingleOpponentPawn, isFalse);
     });
 
     test('snapshot codec rejects unsupported schema and malformed progress', () {
