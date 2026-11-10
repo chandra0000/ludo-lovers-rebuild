@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'features/home/home_screen.dart';
+import 'features/splash/splash_screen.dart';
 
 class LudoLoversApp extends StatelessWidget {
   const LudoLoversApp({super.key});
@@ -21,7 +21,7 @@ class LudoLoversApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
