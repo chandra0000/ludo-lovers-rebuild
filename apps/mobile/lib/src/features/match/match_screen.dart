@@ -8,7 +8,7 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
-import '../../game/presentation/animated_dice.dart';
+import '../../game/presentation/luxury_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
@@ -40,6 +40,7 @@ class _MatchScreenState extends State<MatchScreen>
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
+  int _diceRollId = 0;
   late final AnimationController _movementController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 160),
@@ -305,38 +306,49 @@ class _MatchScreenState extends State<MatchScreen>
                           height: 90,
                           child: KeyedSubtree(
                             key: const Key('roll_dice'),
-                            child: AnimatedDice(
+                            child: LuxuryDiceButton(
                               key: const Key('animated_dice'),
-                              value: _game.diceValue,
-                              enabled: !widget.aiPlayers.contains(_game.activePlayer) &&
+                              targetValue: _game.diceValue,
+                              rollId: _diceRollId,
+                              canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
                                   _game.diceValue == null &&
                                   !_isDiceAnimating &&
                                   !_movementController.isAnimating &&
                                   _game.winner == null,
-                              onTap: () {
+                              isWaitingForRoll: _game.diceValue == null &&
+                                  _game.winner == null &&
+                                  !_movementController.isAnimating,
+                              onRollRequested: () {
                                 if (_movementController.isAnimating ||
                                     _isDiceAnimating ||
                                     _game.diceValue != null ||
-                                    _game.winner != null) {
+                                    _game.winner != null ||
+                                    widget.aiPlayers.contains(_game.activePlayer)) {
                                   return;
                                 }
                                 setState(() => _isDiceAnimating = true);
                                 _roll();
-                              },
-                              onRollCompleted: () {
-                                if (mounted) {
-                                  setState(() {
-                                    _isDiceAnimating = false;
-                                    if (_game.diceValue != null &&
-                                        _game.legalPawnIndices().isEmpty) {
-                                      _game = _game.passTurn(
-                                        expectedStateVersion: _game.stateVersion,
-                                        commandId: 'match-${_game.stateVersion}-pass',
-                                      );
-                                      _scheduleAiTurn();
-                                    }
-                                  });
+                                // Increment even when the new face matches the
+                                // previous face; rollId identifies the event.
+                                if (_game.diceValue != null) {
+                                  setState(() => _diceRollId++);
+                                } else {
+                                  setState(() => _isDiceAnimating = false);
                                 }
+                              },
+                              onAnimationComplete: () {
+                                if (!mounted) return;
+                                setState(() {
+                                  _isDiceAnimating = false;
+                                  if (_game.diceValue != null &&
+                                      _game.legalPawnIndices().isEmpty) {
+                                    _game = _game.passTurn(
+                                      expectedStateVersion: _game.stateVersion,
+                                      commandId: 'match-${_game.stateVersion}-pass',
+                                    );
+                                    _scheduleAiTurn();
+                                  }
+                                });
                               },
                             ),
                           ),
