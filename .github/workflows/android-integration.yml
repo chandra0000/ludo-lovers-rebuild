@@ -1,0 +1,37 @@
+name: Android integration (checkpoint)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  android-integration:
+    # Run manually, or add the "run-android-integration" label to a PR.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-android-integration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Generate Android project files
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Android emulator integration smoke test
+        timeout-minutes: 30
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: cd apps/mobile && flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d emulator-5554
