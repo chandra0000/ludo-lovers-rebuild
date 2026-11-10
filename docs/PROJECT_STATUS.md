@@ -17,6 +17,7 @@ Last updated: 2026-11-10
 - Programmatically painted glossy glass-finish cone pawns.
 - Gold vector dice with animated rotation, scale and bounce reveal; the game engine supplies the final roll.
 - Pawn movement interpolates through each intermediate board cell, including release from the yard.
+- Dice input is guarded at both the rendered control and roll handler while pawn movement is in progress; a widget regression verifies a second roll cannot be consumed mid-animation.
 - Pawn input is disabled during the dice reveal; turns with no legal move pass after the reveal completes.
 - Current-player halo and legal-move highlighting.
 - Compact 2×2 arrangement for pawns sharing a cell.
@@ -72,3 +73,4 @@ Only mark a task complete when the repository change and validation evidence exi
 - The rebuild currently has not yet reached parity with the legacy engine's typed command/event and versioned transition protections. This is tracked as a risk, not represented as completed work.
 - The runtime board asset remains `apps/mobile/assets/images/board/ludo_board_glass.webp`. The distinct requested spelling `ludo_board_glassy.webp` is not present in either repository tree and has not been substituted or renamed without confirmation.
 - Removed redundant root-level copies of the board and brand WebP assets; the app-local asset paths are the sole runtime copies.
+- Added a regression test for the dice-during-movement race found during the legacy-risk review.
