@@ -30,7 +30,7 @@ The current engine sends an opponent pawn back to its yard when a pawn lands on 
 Before calling the rules release-ready, confirm:
 - Whether the intended variant grants an extra turn on every six and on capture.
 - Exact safe-cell/star locations on the approved board.
-- Whether multiple pawns may share a cell and how blockades behave.
+- Whether own-pawn stacking should remain enabled in every future profile, and whether an opponent stack must block movement through its cell.
 - Whether a six is required to start and whether three consecutive sixes have a penalty.
 - Exact finish rule and whether an exact roll is required.
 - Team/2-player variants are out of scope for the first milestone.
@@ -72,7 +72,7 @@ The automated suite now exercises capture from all four seat orientations and ch
 Remaining implementation gaps:
 - The engine currently exposes typed events but still uses direct `roll`, `movePawn`, and `passTurn` methods rather than a closed typed command/result/error API.
 - State versions and command IDs protect in-memory transitions, but durable idempotency, serialized snapshots, deterministic replay, and event history across process restarts are not implemented.
-- Capture currently returns opponent pawns on an unsafe shared-track cell to the yard. Advanced blockade/stack policies are not implemented.
+- The compatibility profile returns all opponent pawns on an unsafe shared-track cell to the yard. Classic captures a single opponent pawn, but a cell occupied by a pair of opponent pawns is protected from capture. Own-pawn sharing is permitted. Blocking movement through an opponent stack (a true blockade) is not implemented.
 - The current progress model is 0–50 on the player's 51 traversed shared positions, 51–55 on five private lane cells, and 56 at the separate centre finish. This is consistent with the legacy five-lane-plus-centre decision; do not reinterpret it as 52 player-relative steps.
 - Player elimination/skip logic and match-completion modes beyond winner-takes-all remain unimplemented.
 
@@ -93,4 +93,11 @@ The remaining release blockers are product decisions and visual/device evidence,
 - Confirm the exact safe-star cells against the canonical artwork.
 - Confirm the intended match completion mode after the first player wins.
 - Obtain product-owner acceptance of the Classic profile before making it the default.
+
+## Classic capture and snapshot schema update — 2026-11-10
+
+- `classic@1` now captures an opponent only when exactly one opponent pawn occupies the unsafe destination cell. A stacked pair is protected; the move does not return either pawn to the yard and does not earn a capture bonus.
+- `ludo-lovers-current@1` retains the earlier compatibility behaviour of capturing all opponent pawns on the destination cell.
+- The rule is part of the immutable profile and snapshot. The game snapshot schema is now v2. Schema-v1 snapshots remain readable and retain their original capture-all behaviour, avoiding a silent rules change for already-saved matches.
+- Own-pawn sharing remains allowed. The engine does not yet treat an opponent stack as a path-blocking blockade; that is a separate rule decision and acceptance requirement.
 
