@@ -77,7 +77,8 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Android emulator integration smoke test
-        timeout-minutes: 15
+        # Hosted Android emulators can take 10+ minutes to boot on cold runners.
+        timeout-minutes: 25
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
