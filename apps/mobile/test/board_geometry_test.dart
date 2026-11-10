@@ -70,6 +70,52 @@ void main() {
       }
     });
 
+    test('validates every route edge and isolates the four diagonal connectors', () {
+      final connectors = <int>{};
+      for (var index = 0; index < BoardGeometry.trackLength; index++) {
+        final from = BoardGeometry.sharedTrack[index];
+        final to = BoardGeometry.sharedTrack[(index + 1) % BoardGeometry.trackLength];
+        final distance = (from.column - to.column).abs() +
+            (from.row - to.row).abs();
+        if (distance == 2) {
+          connectors.add(index);
+          expect((from.column - to.column).abs(), 1);
+          expect((from.row - to.row).abs(), 1);
+        } else {
+          expect(distance, 1, reason: 'Unexpected route gap at edge $index');
+        }
+      }
+      expect(connectors, {4, 17, 30, 43});
+      expect(connectors, BoardGeometry.cornerConnectorIndexes);
+    });
+
+    test('keeps safe-cell indexes stable under every player entry offset', () {
+      for (final color in PlayerColor.turnOrder) {
+        for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++) {
+          final physical = BoardGeometry.physicalTrackCell(color, progress);
+          final isSafe = BoardGeometry.safeTrackCells.contains(physical);
+          expect(
+            BoardGeometry.sharedTrack[physical],
+            isA<BoardCell>(),
+          );
+          expect(isSafe, BoardGeometry.safeTrackCells.contains(physical));
+        }
+      }
+    });
+
+    test('defines sixteen distinct yard sockets inside their player yards', () {
+      final sockets = <NormalizedBoardPoint>{};
+      for (final color in PlayerColor.turnOrder) {
+        for (var pawn = 0; pawn < 4; pawn++) {
+          final point = BoardGeometry.normalizedPosition(color, -1, pawn);
+          expect(point.x, inInclusiveRange(0, 1));
+          expect(point.y, inInclusiveRange(0, 1));
+          expect(sockets.add(point), isTrue);
+        }
+      }
+      expect(sockets, hasLength(16));
+    });
+
     test('maps each seat home lane to five unique cells', () {
       for (final color in PlayerColor.turnOrder) {
         final lane = BoardGeometry.seats[color]!.homeLane;
