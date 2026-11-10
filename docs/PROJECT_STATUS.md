@@ -35,10 +35,19 @@ Last updated: 2026-11-10
 - The source assets are preserved unchanged. The app uses the canonical Flutter copies.
 - Preserve the full composition and aspect ratio; place interactive overlays intentionally and calibrate pawn coordinates only against the board region inside the full-screen image.
 
+## Board calibration implementation — 2026-11-10
+
+- Replaced the single uniform 15×15 rendering transform with explicit source-artwork anchors for the 52 shared-track positions, 20 home-lane positions, centre finish and 16 yard sockets. The logical route order and game rules remain unchanged.
+- The artwork's horizontal arms, vertical arms and centre hub have different proportions; the renderer now maps those regions independently while preserving one 9:16 source-to-canvas scale.
+- Yard socket centres were measured independently from the original 810×1440 WebP. The board preview and live match now use the same centralized anchor functions.
+- Added numeric tests for all 16 yard socket coordinates, representative shared-route anchors, finish position and full-artwork canvas mapping.
+- CI now uploads the canonical source artwork alongside the 393×873 board preview and match screenshot. The Android emulator smoke-test step is bounded to 15 minutes to prevent a stalled emulator from consuming the full job timeout.
+- The source-pixel overlay has been inspected and markers appear centred in their cells/wells. Final visual approval and physical Android validation remain pending; BoardGeometry.visualApprovalPending stays true.
+- Latest implementation commits are on main. The latest CI run must pass before this calibration implementation is considered validated.
+
 ## Validation state
 
-- Latest CI run [42793354362](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42793354362) passed on commit `643e6dfa6b990c513252c7488d60e42dd6603285`: formatting, strict analysis, unit/widget tests, deterministic screenshot upload, Android emulator integration, debug APK, split profile APKs, split release APKs, and all artifact uploads.
-- The successful run's match-canvas screenshot artifact is `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`). It has been inspected alongside the canonical board artwork; yard pawn placement appears close to the socket wells, but no source-pixel calibration or visual approval is claimed.
+- Latest fully verified baseline run [42793354362](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42793354362) passed all analysis, test, emulator and APK build stages on commit `643e6dfa6b990c513252c7488d60e42dd6603285`. Newer source-anchor calibration commits require their own green CI run.
 
 - Verified CI run [42754693581](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581) on commit `a8c80bbc1b4799630b14e49230baddf52ae99fb8` passed formatting, static analysis, all 27 unit/widget tests, Android project generation, debug APK build, split release APK builds, and both artifact uploads.
 - Measured package outputs on that verified baseline: debug APK 144 MB; split release APKs 13.4 MB (armeabi-v7a), 16.2 MB (arm64-v8a), and 17.5 MB (x86_64). The arm64 release APK is the likely Android-phone target; use release rather than the large debug APK for device installation/performance checks.
