@@ -21,7 +21,7 @@ The source is an 810×1440 portrait WebP (9:16). The Flutter design canvas is 57
 - The four yard quadrants share one four-socket offset pattern: x offsets 1.8/3.8 and y offsets 1.8/3.8 grid units. The pattern is mirrored by the seat's yard origin.
 - The 52-cell shared route, per-seat entry indexes (Orange 0, Green 13, Magenta 26, Blue 39), five-cell private lanes, separate centre finish, and safe-cell metadata remain centralized in `BoardGeometry`.
 - Tests cover route uniqueness and bounds, per-seat route traversal, lane separation, finish mapping, safe-cell index bounds, square grid scaling, and all 16 starting pawn positions.
-- The 393×873 match-canvas capture test runs rasterization outside the widget test's fake-async zone, then writes `test-artifacts/match-canvas-393x873.png` for CI upload.
+- The 393×873 match-canvas capture test runs rasterization outside the widget test's fake-async zone, then writes `test-artifacts/match-canvas-393x873.png` for CI upload. Successful run #356 (commit `643e6dfa6b990c513252c7488d60e42dd6603285`) produced artifact `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`); the rendered capture and canonical source artwork were visually inspected together. The yard pawns appear close to their socket wells, but this visual inspection is not a substitute for source-pixel anchor measurements.
 
 ## Calibration values — provisional, not visually approved
 
@@ -56,10 +56,16 @@ The square-grid constraint is a correctness improvement: the 15×15 route must n
 
 ## Current blockers / boundaries
 
-- The latest pipeline failure was caused by the screenshot test waiting indefinitely during `RenderRepaintBoundary.toImage`; static analysis had already passed. The capture now uses `tester.runAsync` for the raster operation. A fresh successful run is required to validate this fix.
-- The previous failed run did not produce a screenshot artifact. Do not use that run as visual evidence.
+- The screenshot capture now uses `tester.runAsync` for the raster operation. Run #356 passed the screenshot capture and uploaded the 393×873 diagnostic artifact. Earlier failed runs without an artifact are not visual evidence.
 - Safe-cell identity, route orientation, connector placement, home-lane alignment, stack placement, and real-device rendering remain unapproved until pixel comparison and device QA are complete.
 - Do not redraw or modify the canonical artwork as a shortcut to make overlay coordinates appear correct.
+
+## Evidence from successful CI run #356
+
+- Commit: `643e6dfa6b990c513252c7488d60e42dd6603285`.
+- Formatting, strict static analysis, unit/widget tests, Android emulator integration, debug APK, split profile APKs, split release APKs, and artifact uploads all passed.
+- Match-canvas screenshot artifact: `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`).
+- Screenshot inspection confirms the app renders the canonical full-screen composition and all 16 yard pawns. It does not establish exact source-pixel alignment for the route, lanes, safe stars, or yard socket centres.
 
 ## Phase 2 completion gate
 
