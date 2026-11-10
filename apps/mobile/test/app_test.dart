@@ -6,7 +6,7 @@ import 'package:ludo_lovers/src/features/onboarding/onboarding_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
-import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
+import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
@@ -149,7 +149,7 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value,
+      tester.widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice'))).targetValue,
       6,
     );
 
@@ -160,7 +160,7 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value,
+      tester.widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice'))).targetValue,
       2,
     );
 
@@ -267,20 +267,20 @@ void main() {
       await tester.tap(pawn);
       await tester.pump(const Duration(milliseconds: 40));
 
-      final dice = tester.widget<AnimatedDice>(
+      final dice = tester.widget<LuxuryDiceButton>(
         find.byKey(const Key('animated_dice')),
       );
-      expect(dice.enabled, isFalse);
+      expect(dice.canRoll, isFalse);
 
       await tester.tap(find.byKey(const Key('roll_dice')));
       await tester.pump(const Duration(milliseconds: 40));
       expect(rollCount, 1);
 
       await tester.pumpAndSettle();
-      final readyDice = tester.widget<AnimatedDice>(
+      final readyDice = tester.widget<LuxuryDiceButton>(
         find.byKey(const Key('animated_dice')),
       );
-      expect(readyDice.enabled, isTrue);
+      expect(readyDice.canRoll, isTrue);
       await tester.tap(find.byKey(const Key('roll_dice')));
       await tester.pump();
       expect(rollCount, 2);
