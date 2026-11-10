@@ -15,7 +15,7 @@ import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 import '../../game/presentation/destination_preview_painter.dart';
 
-class MatchScreen extends StatefulWidget {
+  class MatchScreen extends StatefulWidget {
   const MatchScreen({
     super.key,
     this.rollDice,
