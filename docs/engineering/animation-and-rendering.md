@@ -9,7 +9,7 @@ The board artwork is static. Dynamic game pieces are rendered by Flutter. The ga
 - Draw four player colours using the approved palette.
 - Render classic cone-shaped pawns with a glossy translucent/glass-finish gradient, specular highlight, bright rim, elliptical foot, and soft ground shadow using `GlassyPawn` (`apps/mobile/lib/src/game/presentation/glassy_pawn.dart`). No separate pawn images or 3D models are required.
 - Highlight every pawn belonging to the active player with a subtle colour-matched halo; apply a stronger gold highlight and slight scale-up only to legally movable pawns.
-- When multiple players share one cell, arrange their pawns in a compact 2×2 formation and reduce their rendered size so each colour remains visible. Keep each pawn's tap target and semantic label independent.
+- When multiple players share one cell, arrange their pawns in a compact 2×2 formation and reduce their rendered size so each colour remains visible. Use one unambiguous stack hit target; if multiple legal pawns from the active player share the cell, show a chooser instead of relying on overlapping tap targets. Preserve semantic labels for every pawn.
 - Animate between cell-center coordinates with an animation controller.
 - Move through intermediate cells for a multi-step roll rather than teleporting to the destination.
 - Add selection pulse/glow only for legal pawns.

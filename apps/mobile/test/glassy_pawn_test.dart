@@ -23,7 +23,13 @@ void main() {
     );
 
     expect(find.byType(GlassyPawn), findsOneWidget);
-    expect(find.byType(CustomPaint), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(GlassyPawn),
+        matching: find.byType(CustomPaint),
+      ),
+      findsOneWidget,
+    );
     expect(tester.getSize(find.byType(GlassyPawn)), const Size(30, 35.4));
     expect(tester.takeException(), isNull);
   });
