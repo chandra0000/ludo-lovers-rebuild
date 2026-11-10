@@ -214,7 +214,6 @@ void main() {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(360, 640);
 
-    (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
       pawnProgress: {
