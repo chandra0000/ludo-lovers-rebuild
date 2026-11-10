@@ -58,6 +58,12 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Verify visual capture artifacts
+        if: success()
+        working-directory: apps/mobile
+        run: |
+          test -s test-artifacts/match-canvas-393x873.png
+          test -s test-artifacts/board-preview-calibration-393x873.png
       - name: Upload deterministic match screenshot
         if: always()
         uses: actions/upload-artifact@v4
