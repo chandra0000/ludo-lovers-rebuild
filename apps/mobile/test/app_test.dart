@@ -12,7 +12,7 @@ void main() {
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
-    expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
   });
 
   testWidgets('keeps the complete board composition responsive', (tester) async {
@@ -88,6 +88,9 @@ void main() {
 
   testWidgets('opens a local match from the home screen', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
+    await tester.tap(find.byKey(const Key('open_game_setup')));
+    await tester.pumpAndSettle();
+    expect(find.text('TEAM UP · 2 VS 2'), findsOneWidget);
     await tester.tap(find.byKey(const Key('start_local_match')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
@@ -295,3 +298,19 @@ void main() {
   });
 
 }
+
+  testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
+    await tester.pumpWidget(const LudoLoversApp());
+    await tester.tap(find.byKey(const Key('open_game_setup')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open_board_preview')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BOARD PREVIEW'), findsOneWidget);
+    for (final color in PlayerColor.turnOrder) {
+      for (var pawn = 0; pawn < 4; pawn++) {
+        expect(find.byKey(Key('preview_${color.name}_$pawn')), findsOneWidget);
+      }
+    }
+    expect(find.textContaining('Diagnostic only'), findsOneWidget);
+  });
