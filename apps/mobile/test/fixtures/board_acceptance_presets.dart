@@ -30,7 +30,12 @@ abstract final class BoardAcceptancePresets {
           -1,
           -1,
         ],
-        PlayerColor.green: [_progressForCell(PlayerColor.green, 21), -1, -1, -1],
+        PlayerColor.green: [
+          _progressForCell(PlayerColor.green, 21),
+          -1,
+          -1,
+          -1,
+        ],
         PlayerColor.magenta: [
           _progressForCell(PlayerColor.magenta, 21),
           -1,
