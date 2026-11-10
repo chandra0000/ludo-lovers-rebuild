@@ -55,7 +55,10 @@ void main() {
         expect(cells.first, BoardGeometry.seats[color]!.entryIndex);
         for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++) {
           final point = BoardGeometry.normalizedPosition(color, progress, 0);
-          expect(point, BoardGeometry.sharedTrack[cells[progress]].normalizedCenter);
+          expect(
+            point,
+            BoardGeometry.sharedTrack[cells[progress]].normalizedCenter,
+          );
         }
       }
     });
@@ -74,7 +77,10 @@ void main() {
         expect(lane.toSet(), hasLength(BoardGeometry.homeLaneLength));
         expect(lane.every((cell) => cell.isInside), isTrue);
         for (var index = 0; index < lane.length; index++) {
-          expect(BoardGeometry.normalizedPosition(color, 51 + index, 0), lane[index].normalizedCenter);
+          expect(
+            BoardGeometry.normalizedPosition(color, 51 + index, 0),
+            lane[index].normalizedCenter,
+          );
         }
       }
     });
@@ -82,8 +88,14 @@ void main() {
     test('maps board-relative points through one canvas contract', () {
       const point = NormalizedBoardPoint(0.5, 0.5);
       final canvas = BoardGeometry.canvasPosition(point);
-      expect(canvas.x, closeTo(BoardGeometry.boardLeft + BoardGeometry.boardWidth / 2, 1e-9));
-      expect(canvas.y, closeTo(BoardGeometry.boardTop + BoardGeometry.boardHeight / 2, 1e-9));
+      expect(
+        canvas.x,
+        closeTo(BoardGeometry.boardLeft + BoardGeometry.boardWidth / 2, 1e-9),
+      );
+      expect(
+        canvas.y,
+        closeTo(BoardGeometry.boardTop + BoardGeometry.boardHeight / 2, 1e-9),
+      );
       expect(BoardGeometry.canvasWidth, 576);
       expect(BoardGeometry.canvasHeight, 1024);
     });
