@@ -23,3 +23,4 @@ flutter:
   assets:
     - assets/images/board/ludo_board_glass.webp
     - assets/images/branding/ludo_lovers_icon.webp
+    - assets/images/splash/splash_background.webp
