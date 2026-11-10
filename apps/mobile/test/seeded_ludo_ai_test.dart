@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/domain/ai/seeded_ludo_ai.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
@@ -45,4 +47,42 @@ void main() {
     ).roll(1);
     expect(ai.choosePawn(game, seed: 9), 0);
   });
+  test('four seeded AI seats complete a deterministic full match', () {
+    const seed = 731;
+    final random = Random(seed);
+    var game = LudoGame.initial();
+    var transitions = 0;
+
+    while (game.winner == null && transitions < 100000) {
+      if (game.diceValue == null) {
+        game = game.roll(random.nextInt(6) + 1);
+        transitions++;
+      }
+      final legal = game.legalPawnIndices();
+      if (legal.isEmpty) {
+        game = game.passTurn();
+      } else {
+        final selected = ai.choosePawn(
+          game,
+          seed: seed ^ game.stateVersion,
+        );
+        expect(legal, contains(selected));
+        game = game.movePawn(selected!);
+      }
+      transitions++;
+      expect(
+        game.players.every(
+          (player) => player.pawnProgress.every(
+            (progress) => progress >= -1 && progress <= 56,
+          ),
+        ),
+        isTrue,
+      );
+    }
+
+    expect(game.winner, isNotNull);
+    expect(transitions, lessThan(100000));
+    expect(game.currentPlayer.hasWon, isTrue);
+  });
+
 }
