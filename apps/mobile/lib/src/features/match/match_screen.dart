@@ -63,7 +63,11 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _roll() {
-    if (_game.diceValue != null || _game.winner != null) {
+    // A new roll must not overlap the previous pawn's movement animation.
+    // Keep this guard in the domain-facing handler as well as the button state.
+    if (_game.diceValue != null ||
+        _game.winner != null ||
+        _movementController.isAnimating) {
       return;
     }
     setState(() {
@@ -193,8 +197,15 @@ class _MatchScreenState extends State<MatchScreen>
                               value: _game.diceValue,
                               enabled: _game.diceValue == null &&
                                   !_isDiceAnimating &&
+                                  !_movementController.isAnimating &&
                                   _game.winner == null,
                               onTap: () {
+                                if (_movementController.isAnimating ||
+                                    _isDiceAnimating ||
+                                    _game.diceValue != null ||
+                                    _game.winner != null) {
+                                  return;
+                                }
                                 setState(() => _isDiceAnimating = true);
                                 _roll();
                               },
