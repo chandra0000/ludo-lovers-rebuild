@@ -700,6 +700,8 @@ class LudoGame {
     final events = <LudoGameEvent>[];
     if (nextPlayer != activePlayer) {
       events.add(TurnChanged(0, stateVersion + 1, activePlayer, nextPlayer));
+    } else if (ruleProfile.extraTurnOnSix && diceValue == 6) {
+      events.add(ExtraTurnGranted(0, stateVersion + 1, activePlayer));
     }
     return LudoGame._(
       players: players,
