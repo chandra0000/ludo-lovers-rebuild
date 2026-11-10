@@ -312,6 +312,25 @@ void main() {
   });
 
 
+
+  testWidgets('starts a one-human match with three AI-controlled seats', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
+    await tester.pumpWidget(const LudoLoversApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open_game_setup')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start_ai_match')));
+    await tester.pumpAndSettle();
+
+    final match = tester.widget<MatchScreen>(find.byType(MatchScreen));
+    expect(
+      match.aiPlayers,
+      {PlayerColor.green, PlayerColor.magenta, PlayerColor.blue},
+    );
+    expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+  });
+
   testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
     SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
     await tester.pumpWidget(const LudoLoversApp());
