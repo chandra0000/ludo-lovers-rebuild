@@ -168,10 +168,10 @@ class BoardGeometry {
   // to each 6x6 home quadrant. Keep this mapping centralized for all seats.
   static const List<NormalizedBoardPoint> _yardOffsets =
       <NormalizedBoardPoint>[
-    NormalizedBoardPoint(1.8, 1.8),
-    NormalizedBoardPoint(3.8, 1.8),
-    NormalizedBoardPoint(1.8, 3.8),
-    NormalizedBoardPoint(3.8, 3.8),
+    NormalizedBoardPoint(1.8, 2.0),
+    NormalizedBoardPoint(3.8, 2.0),
+    NormalizedBoardPoint(1.8, 3.9),
+    NormalizedBoardPoint(3.8, 3.9),
   ];
 
   static NormalizedBoardPoint normalizedPosition(
