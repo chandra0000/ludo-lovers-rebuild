@@ -101,3 +101,19 @@ The remaining release blockers are product decisions and visual/device evidence,
 - The rule is part of the immutable profile and snapshot. The game snapshot schema is now v2. Schema-v1 snapshots remain readable and retain their original capture-all behaviour, avoiding a silent rules change for already-saved matches.
 - Own-pawn sharing remains allowed. The engine does not yet treat an opponent stack as a path-blocking blockade; that is a separate rule decision and acceptance requirement.
 
+
+
+## Structured move evaluation and Classic blockades — 2026-11-10
+
+The engine now exposes `evaluatePawnMove(pawnIndex, roll: ...)`, a pure evaluation API returning a sealed `MoveEvaluationResult`:
+
+- `ValidMove` contains the full player-relative progress path, capture status, and the first captured pawn identity where applicable.
+- `InvalidMove` provides a typed reason: yard requires six, overshoots home, path blocked by blockade, protected destination stack, no pending roll, or invalid pawn index.
+- `legalPawnIndices` and `movePawn` both use this evaluator, so UI highlighting and accepted transitions share the same legality rules. Rejected moves do not mutate the immutable game state.
+- `pathTiles` are progress positions, not physical pixel coordinates or global tile IDs. The presentation layer maps them through the canonical board geometry.
+
+The proposed `classic@1` profile now enables hard blockades: two or more pawns belonging to the same opponent on an intermediate shared-track cell prevent a pawn from passing through. The destination is evaluated separately: a Classic opponent pair is protected from landing/capture, a single opponent on a safe cell coexists without capture, and a single opponent on an unsafe cell can be captured. The compatibility profile retains pass-through behaviour and its prior capture semantics.
+
+Snapshot schema v3 persists the new `enableHardBlockade` profile setting. Schema v1 and v2 snapshots remain readable and migrate with hard blockade disabled, preserving their historical movement behaviour.
+
+This is a code-level implementation of the proposed Classic blockade semantics, not product sign-off. Confirm the blockade rule, safe-cell identities, and full route behaviour against the intended Classic rules before enabling Classic as the default.
