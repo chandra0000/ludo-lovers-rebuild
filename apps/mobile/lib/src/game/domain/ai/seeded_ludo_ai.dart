@@ -69,16 +69,39 @@ class SeededLudoAi {
       // A modest progress incentive breaks ties between similarly safe moves.
       score += movedProgress * 8;
 
-      // Move a vulnerable pawn when an opponent is close behind it.
+      // Prefer escaping a threatened cell, but do not reward a move that
+      // simply carries the pawn into another cell an opponent can capture.
       if (previousProgress >= 0 &&
           previousProgress < playerTrackLength) {
         final previousTrackCell = BoardGeometry.physicalTrackCell(
           game.activePlayer,
           previousProgress,
         );
-        if (!BoardGeometry.safeTrackCells.contains(previousTrackCell) &&
-            _isThreatened(game, previousTrackCell)) {
-          score += 200;
+        final wasThreatened =
+            !BoardGeometry.safeTrackCells.contains(previousTrackCell) &&
+                _isThreatened(game, previousTrackCell);
+        if (wasThreatened && movedProgress < playerTrackLength) {
+          final destination = BoardGeometry.physicalTrackCell(
+            game.activePlayer,
+            movedProgress,
+          );
+          final destinationIsSafe =
+              BoardGeometry.safeTrackCells.contains(destination);
+          final remainsThreatened =
+              !destinationIsSafe && _isThreatened(game, destination);
+          if (!remainsThreatened) score += 200;
+        }
+      }
+
+      // Avoid unsafe landing cells within an opponent's next-roll reach.
+      if (movedProgress >= 0 && movedProgress < playerTrackLength) {
+        final destination = BoardGeometry.physicalTrackCell(
+          game.activePlayer,
+          movedProgress,
+        );
+        if (!BoardGeometry.safeTrackCells.contains(destination) &&
+            _isThreatened(game, destination)) {
+          score -= 180;
         }
       }
 
