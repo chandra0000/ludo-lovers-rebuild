@@ -55,4 +55,38 @@ void main() {
     await tester.tap(find.byType(AnimatedDice));
     expect(rolls, 0);
   });
+  testWidgets('skips the dice animation when reduced motion is enabled',
+      (tester) async {
+    var value = 0;
+    var completed = false;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) => Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 90,
+                  height: 90,
+                  child: AnimatedDice(
+                    value: value == 0 ? null : value,
+                    onTap: () => setState(() => value = 4),
+                    onRollCompleted: () => completed = true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(AnimatedDice));
+    await tester.pump();
+    await tester.pump();
+    expect(value, 4);
+    expect(completed, isTrue);
+  });
+
 }
