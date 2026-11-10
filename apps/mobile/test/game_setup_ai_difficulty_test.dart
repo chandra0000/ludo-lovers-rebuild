@@ -8,6 +8,10 @@ void main() {
   testWidgets('player can select a seeded AI difficulty before starting', (
     tester,
   ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 873);
     await tester.pumpWidget(
       const MaterialApp(home: GameSetupScreen()),
     );
@@ -28,6 +32,10 @@ void main() {
       LudoAiDifficulty.hard,
     );
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('start_ai_match')),
+      250,
+    );
     await tester.tap(find.byKey(const Key('start_ai_match')));
     await tester.pumpAndSettle();
     expect(find.byType(MatchScreen), findsOneWidget);
