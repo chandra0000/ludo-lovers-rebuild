@@ -42,13 +42,13 @@ Last updated: 2026-11-10
 - Downloadable CI artifacts: [debug APK](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734718462) and [split release APKs](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734504994).
 - Subsequent commits add capture/finish feedback and artwork-based yard/board calibration; their CI runs are still in progress and must pass before those changes are considered validated.
 - No real Android device test has been performed/recorded.
-- Board geometry remains provisional and has not been accepted through pixel-level visual calibration.
+- Board geometry remains provisional: the 15×15 route, four candidate diagonal connectors, board rectangle, yard slots, start cells and safe-cell mapping have not been signed off against a cell-level reference.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
 
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
-- Pawn positions use the measured board-grid bounds and four yard-socket centers from the canonical 810×1440 artwork; multi-pawn stack spacing and the calibration still need real-device visual sign-off.
+- Pawn positions still use provisional board bounds and symmetric yard slots. A prior inferred calibration was reverted because the legacy acceptance docs explicitly prohibit guessed coordinates. Exact cell-centre calibration remains blocked on the owner-approved straight-on board reference.
 - Dice and step-by-step pawn animations are implemented; animation timing and positioning still need real-device visual QA.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
@@ -58,7 +58,7 @@ Last updated: 2026-11-10
 
 1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
 2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
-3. Validate the calibrated 15×15 board grid, yard sockets, track, and home-lane overlays on a real Android device.
+3. Obtain the exact owner-approved straight-on board reference; reconcile the 15×15 track, four entries, diagonal connectors, yard sockets, home lanes and safe cells before changing geometry.
 4. Tune capture/finish feedback placement and animation timing using visual QA.
 5. Replace the baked-in player names/status with dynamic player labels and online/offline indicators without altering the artwork.
 6. Configure Android launcher icon generation from the canonical icon artwork.
@@ -78,3 +78,16 @@ Only mark a task complete when the repository change and validation evidence exi
 - The runtime board asset remains `apps/mobile/assets/images/board/ludo_board_glass.webp`. The distinct requested spelling `ludo_board_glassy.webp` is not present in either repository tree and has not been substituted or renamed without confirmation.
 - Removed redundant root-level copies of the board and brand WebP assets; the app-local asset paths are the sole runtime copies.
 - Added a regression test for the dice-during-movement race found during the legacy-risk review.
+
+
+## Legacy repository requirements audit — 2026-11-10
+
+The old repository's product baseline, route acceptance, immutable board/route decisions, engine consolidation decision, rule specification, Team Up acceptance, and four-phase gameplay verification plan have been reviewed. The durable requirements and a code-vs-document gap matrix are now recorded in [legacy repository isolation and migration guardrails](architecture/legacy-repository-isolation.md).
+
+Important corrections:
+- No guessed yard/board coordinate calibration is accepted. The recent inferred coordinate edits were reverted; current geometry remains provisional.
+- The rebuild's compact engine does not yet have the legacy typed command/event/error and versioned transition contract.
+- The rebuild currently lacks the third-consecutive-six penalty, finish bonus roll, and a named/versioned rule profile.
+- Team Up remains deferred from the rebuild's first milestone.
+- The legacy four-phase verification plan is adopted: asset/render stability, board geometry, engine correctness, integration/stress/device QA.
+- Old CI run numbers and old repository implementation status are historical only; rebuild validation must be evidenced on the current rebuild commit.
