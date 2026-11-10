@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'package:ludo_lovers/src/features/onboarding/onboarding_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
@@ -24,6 +25,27 @@ void main() {
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+  });
+
+
+  testWidgets('onboarding next and get started complete first-run setup', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(const MaterialApp(home: OnboardingScreen()));
+    expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('onboarding_next')));
+    await tester.pumpAndSettle();
+    expect(find.text('PLAY YOUR WAY'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('onboarding_next')));
+    await tester.pumpAndSettle();
+    expect(find.text('FOUR COLOURS. ONE BOARD.'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('onboarding_next')));
+    await tester.pumpAndSettle();
+    expect(find.text('LUDO LOVERS'), findsOneWidget);
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool('onboarding_completed_v1'), isTrue);
   });
 
   testWidgets('keeps the complete board composition responsive', (tester) async {
