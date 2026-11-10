@@ -476,8 +476,14 @@ void main() {
     },
   );
 
-  testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
+  testWidgets(
+    'board preview shows all sixteen provisional yard anchors',
+    (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(393, 873);
+      SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
