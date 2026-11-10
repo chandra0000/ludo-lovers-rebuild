@@ -61,18 +61,19 @@ class LudoRuleProfile {
 }
 
 sealed class LudoGameEvent {
-  const LudoGameEvent(this.sequence);
+  const LudoGameEvent(this.sequence, this.stateVersion);
   final int sequence;
+  final int stateVersion;
 }
 
 class DiceRolled extends LudoGameEvent {
-  const DiceRolled(super.sequence, this.player, this.value);
+  const DiceRolled(super.sequence, super.stateVersion, this.player, this.value);
   final PlayerColor player;
   final int value;
 }
 
 class PawnMoved extends LudoGameEvent {
-  const PawnMoved(super.sequence, this.player, this.pawnIndex, this.from, this.to);
+  const PawnMoved(super.sequence, super.stateVersion, this.player, this.pawnIndex, this.from, this.to);
   final PlayerColor player;
   final int pawnIndex;
   final int from;
@@ -80,25 +81,25 @@ class PawnMoved extends LudoGameEvent {
 }
 
 class PawnCaptured extends LudoGameEvent {
-  const PawnCaptured(super.sequence, this.by, this.victim, this.pawnIndex);
+  const PawnCaptured(super.sequence, super.stateVersion, this.by, this.victim, this.pawnIndex);
   final PlayerColor by;
   final PlayerColor victim;
   final int pawnIndex;
 }
 
 class TurnChanged extends LudoGameEvent {
-  const TurnChanged(super.sequence, this.from, this.to);
+  const TurnChanged(super.sequence, super.stateVersion, this.from, this.to);
   final PlayerColor from;
   final PlayerColor to;
 }
 
 class ConsecutiveSixPenalty extends LudoGameEvent {
-  const ConsecutiveSixPenalty(super.sequence, this.player);
+  const ConsecutiveSixPenalty(super.sequence, super.stateVersion, this.player);
   final PlayerColor player;
 }
 
 class PlayerWon extends LudoGameEvent {
-  const PlayerWon(super.sequence, this.player);
+  const PlayerWon(super.sequence, super.stateVersion, this.player);
   final PlayerColor player;
 }
 
@@ -263,9 +264,9 @@ class LudoGame {
         consecutiveSixes: 0,
         appliedCommandIds: _nextCommandIds(commandId),
         events: List<LudoGameEvent>.unmodifiable([
-          DiceRolled(0, activePlayer, value),
-          ConsecutiveSixPenalty(1, activePlayer),
-          TurnChanged(2, activePlayer, activePlayer.next),
+          DiceRolled(0, stateVersion + 1, activePlayer, value),
+          ConsecutiveSixPenalty(1, stateVersion + 1, activePlayer),
+          TurnChanged(2, stateVersion + 1, activePlayer, activePlayer.next),
         ]),
       );
     }
@@ -279,7 +280,7 @@ class LudoGame {
       consecutiveSixes: nextSixes,
       appliedCommandIds: _nextCommandIds(commandId),
       events: List<LudoGameEvent>.unmodifiable([
-        DiceRolled(0, activePlayer, value),
+        DiceRolled(0, stateVersion + 1, activePlayer, value),
       ]),
       winner: winner,
     );
@@ -304,7 +305,7 @@ class LudoGame {
         : activePlayer.next;
     final events = <LudoGameEvent>[];
     if (nextPlayer != activePlayer) {
-      events.add(TurnChanged(0, activePlayer, nextPlayer));
+      events.add(TurnChanged(0, stateVersion + 1, activePlayer, nextPlayer));
     }
     return LudoGame._(
       players: players,
@@ -346,7 +347,7 @@ class LudoGame {
     updatedPlayers[playerIndex] = player.withPawn(pawnIndex, nextProgress);
 
     final emitted = <LudoGameEvent>[
-      PawnMoved(0, activePlayer, pawnIndex, previous, nextProgress),
+      PawnMoved(0, stateVersion + 1, activePlayer, pawnIndex, previous, nextProgress),
     ];
     var captured = false;
     if (nextProgress < playerTrackLength &&
@@ -366,6 +367,7 @@ class LudoGame {
             changed = changed.withPawn(pawn, -1);
             emitted.add(PawnCaptured(
               emitted.length,
+              stateVersion + 1,
               activePlayer,
               opponent.color,
               pawn,
@@ -387,9 +389,9 @@ class LudoGame {
         ? activePlayer
         : activePlayer.next;
     if (gameWinner != null) {
-      emitted.add(PlayerWon(emitted.length, activePlayer));
+      emitted.add(PlayerWon(emitted.length, stateVersion + 1, activePlayer));
     } else if (nextPlayer != activePlayer) {
-      emitted.add(TurnChanged(emitted.length, activePlayer, nextPlayer));
+      emitted.add(TurnChanged(emitted.length, stateVersion + 1, activePlayer, nextPlayer));
     }
 
     return LudoGame._(
