@@ -1,4 +1,5 @@
 import 'board_geometry.dart';
+import 'dart:convert';
 import 'player_color.dart';
 
 const int sharedTrackLength = BoardGeometry.trackLength;
@@ -209,6 +210,147 @@ class LudoGame {
 
   LudoPlayer get currentPlayer =>
       players.firstWhere((player) => player.color == activePlayer);
+
+  /// Encodes the authoritative match state for durable local resume.
+  ///
+  /// Presentation-only animation progress and transient events are purposely
+  /// excluded. The state version and accepted command IDs survive restoration
+  /// so stale/duplicate commands remain rejectable after an app restart.
+  Map<String, Object?> toSnapshot() => {
+        'schemaVersion': 1,
+        'players': [
+          for (final player in players)
+            {
+              'color': player.color.name,
+              'pawnProgress': player.pawnProgress,
+            },
+        ],
+        'activePlayer': activePlayer.name,
+        'diceValue': diceValue,
+        'winner': winner?.name,
+        'ruleProfile': {
+          'id': ruleProfile.id,
+          'version': ruleProfile.version,
+          'extraTurnOnSix': ruleProfile.extraTurnOnSix,
+          'extraTurnOnCapture': ruleProfile.extraTurnOnCapture,
+          'extraTurnOnFinish': ruleProfile.extraTurnOnFinish,
+          'threeConsecutiveSixesPenalty':
+              ruleProfile.threeConsecutiveSixesPenalty,
+        },
+        'stateVersion': stateVersion,
+        'consecutiveSixes': consecutiveSixes,
+        'appliedCommandIds': appliedCommandIds.toList()..sort(),
+      };
+
+  String encodeSnapshot() => jsonEncode(toSnapshot());
+
+  /// Restores a validated schema-v1 snapshot. Unknown or malformed snapshots
+  /// fail closed; callers should offer a fresh match rather than guess state.
+  factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
+    if (snapshot['schemaVersion'] != 1) {
+      throw const FormatException('Unsupported Ludo snapshot schema.');
+    }
+    final rawPlayers = snapshot['players'];
+    final rawProfile = snapshot['ruleProfile'];
+    final rawCommandIds = snapshot['appliedCommandIds'];
+    if (rawPlayers is! List ||
+        rawPlayers.length != PlayerColor.turnOrder.length ||
+        rawProfile is! Map ||
+        rawCommandIds is! List) {
+      throw const FormatException('Malformed Ludo snapshot.');
+    }
+
+    final progressByColor = <PlayerColor, List<int>>{};
+    for (final rawPlayer in rawPlayers) {
+      if (rawPlayer is! Map ||
+          rawPlayer['color'] is! String ||
+          rawPlayer['pawnProgress'] is! List) {
+        throw const FormatException('Malformed player snapshot.');
+      }
+      final color = PlayerColor.values.byName(rawPlayer['color'] as String);
+      final rawProgress = rawPlayer['pawnProgress'] as List;
+      if (rawProgress.length != 4 || rawProgress.any((value) => value is! int)) {
+        throw const FormatException('Malformed pawn progress snapshot.');
+      }
+      if (progressByColor.containsKey(color)) {
+        throw const FormatException('Duplicate player in Ludo snapshot.');
+      }
+      progressByColor[color] = rawProgress.cast<int>();
+    }
+    if (!PlayerColor.turnOrder.every(progressByColor.containsKey)) {
+      throw const FormatException('Ludo snapshot is missing a player.');
+    }
+
+    bool requiredBool(String key) {
+      final value = rawProfile[key];
+      if (value is! bool) {
+        throw FormatException('Invalid rule profile field: $key.');
+      }
+      return value;
+    }
+
+    final profileId = rawProfile['id'];
+    final profileVersion = rawProfile['version'];
+    if (profileId is! String || profileVersion is! int || profileVersion < 1) {
+      throw const FormatException('Invalid Ludo rule profile.');
+    }
+    final profile = LudoRuleProfile(
+      id: profileId,
+      version: profileVersion,
+      extraTurnOnSix: requiredBool('extraTurnOnSix'),
+      extraTurnOnCapture: requiredBool('extraTurnOnCapture'),
+      extraTurnOnFinish: requiredBool('extraTurnOnFinish'),
+      threeConsecutiveSixesPenalty:
+          requiredBool('threeConsecutiveSixesPenalty'),
+    );
+
+    final activeName = snapshot['activePlayer'];
+    final winnerName = snapshot['winner'];
+    final savedDice = snapshot['diceValue'];
+    final savedVersion = snapshot['stateVersion'];
+    final savedSixes = snapshot['consecutiveSixes'];
+    if (activeName is! String ||
+        (winnerName != null && winnerName is! String) ||
+        (savedDice != null &&
+            (savedDice is! int || savedDice < 1 || savedDice > 6)) ||
+        savedVersion is! int ||
+        savedVersion < 0 ||
+        savedSixes is! int ||
+        savedSixes < 0 ||
+        savedSixes > 2 ||
+        rawCommandIds.any((value) => value is! String || value.trim().isEmpty)) {
+      throw const FormatException('Invalid Ludo snapshot state.');
+    }
+    final commands = rawCommandIds.cast<String>();
+    if (commands.toSet().length != commands.length) {
+      throw const FormatException('Duplicate command IDs in Ludo snapshot.');
+    }
+
+    return LudoGame._(
+      players: List<LudoPlayer>.unmodifiable([
+        for (final color in PlayerColor.turnOrder)
+          LudoPlayer(color, pawnProgress: progressByColor[color]),
+      ]),
+      activePlayer: PlayerColor.values.byName(activeName),
+      diceValue: savedDice as int?,
+      winner: winnerName == null
+          ? null
+          : PlayerColor.values.byName(winnerName as String),
+      ruleProfile: profile,
+      stateVersion: savedVersion,
+      consecutiveSixes: savedSixes,
+      appliedCommandIds: Set<String>.unmodifiable(commands),
+      events: const <LudoGameEvent>[],
+    );
+  }
+
+  factory LudoGame.decodeSnapshot(String encoded) {
+    final decoded = jsonDecode(encoded);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Ludo snapshot must be a JSON object.');
+    }
+    return LudoGame.fromSnapshot(decoded);
+  }
 
   /// Selects the next player who has not already completed all four pawns.
   /// This also keeps restored/custom snapshots with completed players safe.
