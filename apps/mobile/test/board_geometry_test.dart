@@ -101,12 +101,12 @@ void main() {
     });
 
     test('uses value equality for physical board cells', () {
-      expect(BoardCell(3, 7), BoardCell(3, 7));
+      expect(const BoardCell(3, 7), const BoardCell(3, 7));
       expect(
-        <BoardCell>{BoardCell(3, 7), BoardCell(3, 7)},
+        <BoardCell>{const BoardCell(3, 7), const BoardCell(3, 7)},
         hasLength(1),
       );
-      expect(BoardCell(3, 7), isNot(BoardCell(7, 3)));
+      expect(const BoardCell(3, 7), isNot(const BoardCell(7, 3)));
     });
 
     test('rejects invalid pawn indexes and progress values', () {
