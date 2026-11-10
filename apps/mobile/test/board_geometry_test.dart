@@ -31,6 +31,25 @@ void main() {
       expect(BoardGeometry.seats[PlayerColor.blue]!.entryIndex, 39);
     });
 
+    test('anchors yard pawns to the four artwork socket centers', () {
+      expect(
+        BoardGeometry.normalizedPosition(PlayerColor.orange, -1, 0),
+        const NormalizedBoardPoint(1.76 / 15, 2.01 / 15),
+      );
+      expect(
+        BoardGeometry.normalizedPosition(PlayerColor.orange, -1, 1),
+        const NormalizedBoardPoint(3.73 / 15, 2.01 / 15),
+      );
+      expect(
+        BoardGeometry.normalizedPosition(PlayerColor.orange, -1, 2),
+        const NormalizedBoardPoint(1.76 / 15, 4.01 / 15),
+      );
+      expect(
+        BoardGeometry.normalizedPosition(PlayerColor.orange, -1, 3),
+        const NormalizedBoardPoint(3.73 / 15, 4.01 / 15),
+      );
+    });
+
     test('maps home yards, shared track, lanes and finish to normalized points', () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
