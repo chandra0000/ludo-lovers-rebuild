@@ -104,11 +104,14 @@ void main() {
           point.y * BoardGeometry.sourceHeight,
         );
         expect(actual.dx, closeTo(trackAnchors[index].dx, 0.001),
-            reason: 'Track anchor $index horizontal pixel drift');
+            reason: 'Track anchor $index horizontal pixel drift',
+        );
         expect(actual.dy, closeTo(trackAnchors[index].dy, 0.001),
-            reason: 'Track anchor $index vertical pixel drift');
+            reason: 'Track anchor $index vertical pixel drift',
+        );
         expect(observed.add(actual), isTrue,
-            reason: 'Track anchor $index overlaps another route centre');
+            reason: 'Track anchor $index overlaps another route centre',
+        );
       }
       expect(observed, hasLength(52));
     });
@@ -125,11 +128,14 @@ void main() {
             point.y * BoardGeometry.sourceHeight,
           );
           expect(actual.dx, closeTo(expected[index].dx, 0.001),
-              reason: '$color lane $index horizontal pixel drift');
+              reason: '$color lane $index horizontal pixel drift',
+          );
           expect(actual.dy, closeTo(expected[index].dy, 0.001),
-              reason: '$color lane $index vertical pixel drift');
+              reason: '$color lane $index vertical pixel drift',
+          );
           expect(observed.add(actual), isTrue,
-              reason: '$color lane $index overlaps another lane centre');
+              reason: '$color lane $index overlaps another lane centre',
+          );
         }
       }
       expect(observed, hasLength(20));
@@ -142,8 +148,8 @@ void main() {
         final canvas = BoardGeometry.canvasPosition(
           BoardGeometry.trackPosition(index),
         );
-        expect(canvas.dx, closeTo(source.dx * scale, 0.001));
-        expect(canvas.dy, closeTo(source.dy * scale, 0.001));
+        expect(canvas.x, closeTo(source.dx * scale, 0.001));
+        expect(canvas.y, closeTo(source.dy * scale, 0.001));
       }
       for (final color in PlayerColor.turnOrder) {
         for (var index = 0; index < BoardGeometry.homeLaneLength; index++) {
