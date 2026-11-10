@@ -34,7 +34,7 @@ class HomeScreen extends StatelessWidget {
                       height: 224,
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(32),
                         border: Border.all(
                           color: const Color(0xFFFFC857).withValues(alpha: .65),
                           width: 1.5,
@@ -47,13 +47,11 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/branding/ludo_lovers_icon.webp',
-                          key: const Key('brand_logo'),
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
-                        ),
+                      child: Image.asset(
+                        'assets/images/branding/ludo_lovers_icon.webp',
+                        key: const Key('brand_logo'),
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
                       ),
                     ),
                     const SizedBox(height: 28),
