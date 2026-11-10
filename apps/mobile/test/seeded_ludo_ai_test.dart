@@ -59,7 +59,7 @@ void main() {
         game = game.roll(
           random.nextInt(6) + 1,
           expectedStateVersion: game.stateVersion,
-          commandId: 'ai-$seed-${transitions}-roll',
+          commandId: 'ai-$seed-$transitions-roll',
         );
         transitions++;
         turns++;
@@ -68,7 +68,7 @@ void main() {
       if (legal.isEmpty) {
         game = game.passTurn(
           expectedStateVersion: game.stateVersion,
-          commandId: 'ai-$seed-${transitions}-pass',
+          commandId: 'ai-$seed-$transitions-pass',
         );
       } else {
         final selected = ai.choosePawn(
@@ -79,7 +79,7 @@ void main() {
         game = game.movePawn(
           selected!,
           expectedStateVersion: game.stateVersion,
-          commandId: 'ai-$seed-${transitions}-move',
+          commandId: 'ai-$seed-$transitions-move',
         );
       }
       transitions++;
