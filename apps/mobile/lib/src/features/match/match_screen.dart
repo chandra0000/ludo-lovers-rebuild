@@ -276,7 +276,11 @@ class _MatchScreenState extends State<MatchScreen>
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
       unawaited(Future<void>.delayed(const Duration(milliseconds: 600), () {
-        if (!mounted || token != _turnResolutionToken || _game.diceValue == null) return;
+        if (!mounted ||
+            token != _turnResolutionToken ||
+            _game.diceValue == null) {
+          return;
+        }
         setState(() {
           _game = _game.passTurn(
             expectedStateVersion: _game.stateVersion,
@@ -300,8 +304,12 @@ class _MatchScreenState extends State<MatchScreen>
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
       unawaited(Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (!mounted || token != _turnResolutionToken ||
-            _game.diceValue == null || _movementController.isAnimating) return;
+        if (!mounted ||
+            token != _turnResolutionToken ||
+            _game.diceValue == null ||
+            _movementController.isAnimating) {
+          return;
+        }
         setState(() => _isAutoMovePending = false);
         _move(selected);
       }));
@@ -311,7 +319,9 @@ class _MatchScreenState extends State<MatchScreen>
   void _showInvalidMoveFeedback(int pawnIndex) {
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     if (evaluation is! InvalidMove || !mounted) return;
-    _shakeKeys['${_game.activePlayer.name}-$pawnIndex']?.currentState?.triggerShake();
+    _shakeKeys['${_game.activePlayer.name}-$pawnIndex']
+        ?.currentState
+        ?.triggerShake();
     final message = switch (evaluation.reason) {
       MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
       MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
@@ -332,7 +342,9 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _move(int pawnIndex) {
-    if (_isDiceAnimating || _isAutoMovePending || !_game.legalPawnIndices().contains(pawnIndex)) {
+    if (_isDiceAnimating ||
+        _isAutoMovePending ||
+        !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
     final movingColor = _game.activePlayer;
@@ -482,7 +494,8 @@ class _MatchScreenState extends State<MatchScreen>
                           ),
                         ),
                         ..._buildPawnsWithClusters(scale),
-                        if (_selectedPawnIndex != null) _buildDestinationPreview(),
+                        if (_selectedPawnIndex != null)
+                          _buildDestinationPreview(),
                         Positioned(
                           left: 243,
                           top: 795,
@@ -616,10 +629,16 @@ class _MatchScreenState extends State<MatchScreen>
       final cell = BoardGeometry.physicalTrackCell(_game.activePlayer, target);
       final hasOpponent = _game.players.any((player) =>
           player.color != _game.activePlayer &&
-          player.pawnProgress.any((opponentProgress) =>
-              opponentProgress >= 0 &&
-              opponentProgress < BoardGeometry.playerTrackLength &&
-              BoardGeometry.physicalTrackCell(player.color, opponentProgress) == cell));
+          player.pawnProgress.any(
+            (opponentProgress) =>
+                opponentProgress >= 0 &&
+                opponentProgress < BoardGeometry.playerTrackLength &&
+                BoardGeometry.physicalTrackCell(
+                      player.color,
+                      opponentProgress,
+                    ) ==
+                    cell,
+          ));
       if (hasOpponent && BoardGeometry.safeTrackCells.contains(cell)) {
         type = DestinationPreviewType.safeCoexist;
       }
