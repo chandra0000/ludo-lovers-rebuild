@@ -281,19 +281,19 @@ class _MatchScreenState extends State<MatchScreen>
         Future<void>.delayed(
           const Duration(milliseconds: 600),
           () {
-        if (!mounted ||
-            token != _turnResolutionToken ||
-            _game.diceValue == null) {
-          return;
-        }
-        setState(() {
-          _game = _game.passTurn(
-            expectedStateVersion: _game.stateVersion,
-            commandId: 'match-${_game.stateVersion}-pass',
-          );
-          _isAutoMovePending = false;
-        });
-        unawaited(_persistMatch());
+            if (!mounted ||
+                token != _turnResolutionToken ||
+                _game.diceValue == null) {
+              return;
+            }
+            setState(() {
+              _game = _game.passTurn(
+                expectedStateVersion: _game.stateVersion,
+                commandId: 'match-${_game.stateVersion}-pass',
+              );
+              _isAutoMovePending = false;
+            });
+            unawaited(_persistMatch());
             _scheduleAiTurn();
           },
         ),
@@ -314,13 +314,13 @@ class _MatchScreenState extends State<MatchScreen>
         Future<void>.delayed(
           const Duration(milliseconds: 350),
           () {
-        if (!mounted ||
-            token != _turnResolutionToken ||
-            _game.diceValue == null ||
-            _movementController.isAnimating) {
-          return;
-        }
-        setState(() => _isAutoMovePending = false);
+            if (!mounted ||
+                token != _turnResolutionToken ||
+                _game.diceValue == null ||
+                _movementController.isAnimating) {
+              return;
+            }
+            setState(() => _isAutoMovePending = false);
             _move(selected);
           },
         ),
