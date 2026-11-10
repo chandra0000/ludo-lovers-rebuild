@@ -55,6 +55,12 @@ jobs:
           name: ludo-lovers-board-calibration-preview
           path: apps/mobile/test-artifacts/board-preview-calibration-393x873.png
           if-no-files-found: warn
+      - name: Upload canonical board artwork for pixel calibration
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-canonical-board-artwork
+          path: apps/mobile/assets/images/board/ludo_board_glass.webp
+          if-no-files-found: error
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
@@ -71,6 +77,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Android emulator integration smoke test
+        timeout-minutes: 15
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
