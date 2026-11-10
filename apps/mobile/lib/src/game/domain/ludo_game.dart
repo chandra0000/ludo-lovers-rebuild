@@ -88,7 +88,13 @@ class PawnMoved extends LudoGameEvent {
 }
 
 class PawnCaptured extends LudoGameEvent {
-  const PawnCaptured(super.sequence, super.stateVersion, this.by, this.victim, this.pawnIndex);
+  const PawnCaptured(
+    super.sequence,
+    super.stateVersion,
+    this.by,
+    this.victim,
+    this.pawnIndex,
+  );
   final PlayerColor by;
   final PlayerColor victim;
   final int pawnIndex;
@@ -354,7 +360,14 @@ class LudoGame {
     updatedPlayers[playerIndex] = player.withPawn(pawnIndex, nextProgress);
 
     final emitted = <LudoGameEvent>[
-      PawnMoved(0, stateVersion + 1, activePlayer, pawnIndex, previous, nextProgress),
+      PawnMoved(
+        0,
+        stateVersion + 1,
+        activePlayer,
+        pawnIndex,
+        previous,
+        nextProgress,
+      ),
     ];
     var captured = false;
     if (nextProgress < playerTrackLength &&
@@ -398,9 +411,13 @@ class LudoGame {
         ? activePlayer
         : activePlayer.next;
     if (gameWinner != null) {
-      emitted.add(PlayerWon(emitted.length, stateVersion + 1, activePlayer));
+      emitted.add(
+        PlayerWon(emitted.length, stateVersion + 1, activePlayer),
+      );
     } else if (nextPlayer != activePlayer) {
-      emitted.add(TurnChanged(emitted.length, stateVersion + 1, activePlayer, nextPlayer));
+      emitted.add(
+        TurnChanged(emitted.length, stateVersion + 1, activePlayer, nextPlayer),
+      );
     }
 
     return LudoGame._(
