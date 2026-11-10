@@ -182,6 +182,11 @@ void main() {
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(
+      tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
+          .properties.button,
+      isTrue,
+    );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
@@ -191,6 +196,12 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(
+      tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
+          .properties.button,
+      isFalse,
+    );
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
