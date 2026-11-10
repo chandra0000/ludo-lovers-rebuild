@@ -224,7 +224,7 @@ class InvalidMove extends MoveEvaluationResult {
   final MoveInvalidReason reason;
 }
 
-class LudoGame {
+class LudoGame {  
   LudoGame._({
     required this.players,
     required this.activePlayer,
