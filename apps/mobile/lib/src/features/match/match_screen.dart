@@ -18,7 +18,10 @@ class _MatchScreenState extends State<MatchScreen> {
 
   void _roll() {
     if (_game.diceValue != null || _game.winner != null) return;
-    setState(() => _game = _game.roll(_random.nextInt(6) + 1));
+    setState(() {
+      final rolled = _game.roll(_random.nextInt(6) + 1);
+      _game = rolled.legalPawnIndices().isEmpty ? rolled.passTurn() : rolled;
+    });
   }
 
   void _move(int index) {
@@ -59,7 +62,7 @@ class _MatchScreenState extends State<MatchScreen> {
                           return Container(
                             margin: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: color.value.withValues(alpha: 0.14),
+                              color: color.value.withOpacity(0.14),
                               border: Border.all(color: color.value, width: 2),
                               borderRadius: BorderRadius.circular(16),
                             ),
