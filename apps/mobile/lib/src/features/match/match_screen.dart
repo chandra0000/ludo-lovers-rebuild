@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../game/domain/persistence/saved_match_store.dart';
 
@@ -280,6 +281,29 @@ class _MatchScreenState extends State<MatchScreen>
       );
       if (selected != null) _move(selected);
     }
+  }
+
+  void _showInvalidMoveFeedback(int pawnIndex) {
+    final evaluation = _game.evaluatePawnMove(pawnIndex);
+    if (evaluation is! InvalidMove || !mounted) return;
+    HapticFeedback.lightImpact();
+    final message = switch (evaluation.reason) {
+      MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
+      MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
+      MoveInvalidReason.pathBlockedByBlockade => 'PATH BLOCKED BY A PAWN BLOCKADE',
+      MoveInvalidReason.landingOnProtectedStack => 'THAT STACK IS PROTECTED',
+      MoveInvalidReason.noPendingRoll => 'ROLL THE DICE FIRST',
+      MoveInvalidReason.invalidPawnIndex => 'INVALID PAWN SELECTION',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('invalid_move_feedback'),
+        content: Text(message),
+        duration: const Duration(milliseconds: 1300),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF211A0D),
+      ),
+    );
   }
 
   void _move(int pawnIndex) {
@@ -653,11 +677,17 @@ class _MatchScreenState extends State<MatchScreen>
         ? offsets[stackIndex % offsets.length] * 18
         : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
+    final isHumanTurn = !widget.aiPlayers.contains(color) &&
+        color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
-        !widget.aiPlayers.contains(color) &&
-        color == _game.activePlayer &&
+        isHumanTurn &&
         legalIndices.contains(pawnIndex);
+    final canExplainInvalidMove = !_isDiceAnimating &&
+        !_movementController.isAnimating &&
+        isHumanTurn &&
+        _game.diceValue != null &&
+        !legalIndices.contains(pawnIndex);
     final movableStackIndices = occupants
         .where(
           (item) =>
@@ -689,9 +719,13 @@ class _MatchScreenState extends State<MatchScreen>
       child: IgnorePointer(
         // Inactive/non-legal pawns must not cover a legal pawn's enlarged
         // touch target when adjacent cells overlap on compact screens.
-        ignoring: !canMove || (stacked && !isStackTapTarget),
+        ignoring: stacked
+            ? !isStackTapTarget
+            : !canMove && !canExplainInvalidMove,
         child: Semantics(
-          button: stacked ? isStackTapTarget : canMove,
+          button: stacked
+              ? isStackTapTarget
+              : canMove || canExplainInvalidMove,
           label: stacked
               ? 'Choose a movable pawn from this shared cell'
               : '${color.name} pawn ${pawnIndex + 1}',
@@ -704,7 +738,9 @@ class _MatchScreenState extends State<MatchScreen>
               ? 'Double tap to choose which movable pawn to move.'
               : canMove
                   ? 'Double tap to move this pawn.'
-                  : widget.aiPlayers.contains(color)
+                  : canExplainInvalidMove
+                      ? 'Double tap to hear why this pawn cannot move.'
+                      : widget.aiPlayers.contains(color)
                       ? 'Controlled by the AI opponent.'
                       : 'Not movable on this turn.',
           child: GestureDetector(
@@ -714,7 +750,11 @@ class _MatchScreenState extends State<MatchScreen>
                 ? (isStackTapTarget
                     ? () => _handleStackTap(movableStackIndices)
                     : null)
-                : (canMove ? () => _move(pawnIndex) : null),
+                : canMove
+                    ? () => _move(pawnIndex)
+                    : canExplainInvalidMove
+                        ? () => _showInvalidMoveFeedback(pawnIndex)
+                        : null,
             child: Center(
               child: Transform.translate(
                 offset: visualOffset,
