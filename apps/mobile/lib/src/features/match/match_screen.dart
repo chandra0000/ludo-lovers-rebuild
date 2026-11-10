@@ -26,7 +26,14 @@ class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
   static const double _canvasWidth = 576;
   static const double _canvasHeight = 1024;
-  static const Rect _boardRect = Rect.fromLTWH(17, 205, 542, 542);
+  // Board-grid bounds measured against the canonical 810x1440 portrait artwork,
+  // then mapped into the 576x1024 design canvas (uniform 576/810 scale).
+  static const Rect _boardRect = Rect.fromLTWH(
+    17.78,
+    213.33,
+    540.44,
+    561.78,
+  );
 
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
