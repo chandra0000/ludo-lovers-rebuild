@@ -109,7 +109,13 @@ class _DiceFacePainter extends CustomPainter {
     [Offset(.28, .28), Offset(.72, .72)],
     [Offset(.28, .28), Offset(.5, .5), Offset(.72, .72)],
     [Offset(.28, .28), Offset(.72, .28), Offset(.28, .72), Offset(.72, .72)],
-    [Offset(.28, .28), Offset(.72, .28), Offset(.5, .5), Offset(.28, .72), Offset(.72, .72)],
+    [
+      Offset(.28, .28),
+      Offset(.72, .28),
+      Offset(.5, .5),
+      Offset(.28, .72),
+      Offset(.72, .72),
+    ],
     [
       Offset(.28, .24), Offset(.72, .24), Offset(.28, .5),
       Offset(.72, .5), Offset(.28, .76), Offset(.72, .76),
