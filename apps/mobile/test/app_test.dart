@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
@@ -67,6 +70,34 @@ void main() {
         expect(actual.dx, closeTo(expected.dx, 0.5));
         expect(actual.dy, closeTo(expected.dy, 0.5));
       }
+    }
+  });
+
+
+  testWidgets('captures the canonical match canvas at a 393x873 viewport', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 873);
+
+    await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(const Key('match_canvas_capture')),
+    );
+    final renderedImage = await boundary.toImage(pixelRatio: 1);
+    try {
+      final png = await renderedImage.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      expect(png, isNotNull);
+      final output = File('test-artifacts/match-canvas-393x873.png');
+      await output.parent.create(recursive: true);
+      await output.writeAsBytes(png!.buffer.asUint8List());
+      expect(await output.length(), greaterThan(10000));
+    } finally {
+      renderedImage.dispose();
     }
   });
 
