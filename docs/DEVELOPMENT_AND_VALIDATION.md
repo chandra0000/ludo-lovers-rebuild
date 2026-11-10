@@ -51,11 +51,13 @@ Before treating a build as release-ready:
 
 Do not mark physical-device checks complete from emulator or widget-test results alone. Keep `BoardGeometry.visualApprovalPending` true until the owner has visually approved the board on a physical device.
 
-## 4. Golden screenshot changes
+## 4. Diagnostic screenshot artifacts
 
-Normal CI runs `flutter test` and compares golden images against the checked-in expected images. It must not rewrite them automatically.
+The current board-preview and match-canvas screenshot tests are diagnostic captures, not approved visual-regression baselines. No checked-in golden baseline is currently maintained for these two captures.
 
-When a deliberate visual change is approved, run the relevant test locally with `--update-goldens`, inspect the generated before/after image, and commit the reviewed golden file with the code change. Never update goldens merely to make a failing test pass.
+Routine CI runs `flutter test --update-goldens` so those tests can generate fresh PNG captures, then uploads them as artifacts for human inspection. This does not prove that the current board artwork or pawn anchors are visually correct; it only records the rendered output.
+
+Do not describe these captures as automated visual approval. If stable visual-regression baselines are introduced later, check them in separately and run those comparison tests without `--update-goldens`. Update a baseline only after reviewing and approving the visual change.
 
 ## 5. Engineering guardrails
 
