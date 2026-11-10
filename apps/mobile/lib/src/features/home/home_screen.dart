@@ -167,6 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   initialGame: _savedMatch!.game,
                                   aiPlayers: _savedMatch!.aiPlayers,
                                   aiSeed: _savedMatch!.aiSeed,
+                                  aiDifficulty: _savedMatch!.aiDifficulty,
                                 ),
                               ),
                             ).then((_) => _loadSavedMatch()),
