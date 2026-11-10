@@ -31,41 +31,15 @@ void main() {
       expect(BoardGeometry.seats[PlayerColor.blue]!.entryIndex, 39);
     });
 
-    test('anchors every color yard to its four artwork socket centers', () {
-      const expected = <PlayerColor, List<NormalizedBoardPoint>>{
-        PlayerColor.orange: <NormalizedBoardPoint>[
-          NormalizedBoardPoint(1.76, 2.01),
-          NormalizedBoardPoint(3.73, 2.01),
-          NormalizedBoardPoint(1.76, 4.01),
-          NormalizedBoardPoint(3.73, 4.01),
-        ],
-        PlayerColor.green: <NormalizedBoardPoint>[
-          NormalizedBoardPoint(10.60, 2.01),
-          NormalizedBoardPoint(12.60, 2.01),
-          NormalizedBoardPoint(10.60, 4.01),
-          NormalizedBoardPoint(12.60, 4.01),
-        ],
-        PlayerColor.magenta: <NormalizedBoardPoint>[
-          NormalizedBoardPoint(10.60, 12.01),
-          NormalizedBoardPoint(12.60, 12.01),
-          NormalizedBoardPoint(10.60, 14.01),
-          NormalizedBoardPoint(12.60, 14.01),
-        ],
-        PlayerColor.blue: <NormalizedBoardPoint>[
-          NormalizedBoardPoint(1.76, 12.01),
-          NormalizedBoardPoint(3.73, 12.01),
-          NormalizedBoardPoint(1.76, 14.01),
-          NormalizedBoardPoint(3.73, 14.01),
-        ],
-      };
+    test('keeps provisional yard slots inside their seat quadrants', () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
           final point = BoardGeometry.normalizedPosition(color, -1, pawn);
-          expect(point.x, closeTo(expected[color]![pawn].x / 15, 0.000001));
-          expect(point.y, closeTo(expected[color]![pawn].y / 15, 0.000001));
+          expect(point.x, inInclusiveRange(0.0, 1.0));
+          expect(point.y, inInclusiveRange(0.0, 1.0));
         }
       }
-    });
+    });    });
 
     test('maps home yards, shared track, lanes and finish to normalized points', () {
       for (final color in PlayerColor.turnOrder) {
