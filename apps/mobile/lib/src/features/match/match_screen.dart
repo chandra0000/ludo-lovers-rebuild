@@ -315,8 +315,11 @@ class _MatchScreenState extends State<MatchScreen>
                             height: 80,
                             child: Center(
                               child: FilledButton(
-                                onPressed: () =>
-                                    setState(() => _game = LudoGame.initial()),
+                                onPressed: () {
+                                  setState(() {
+                                    _game = LudoGame.initial();
+                                  });
+                                },
                                 child: const Text('PLAY AGAIN'),
                               ),
                             ),
