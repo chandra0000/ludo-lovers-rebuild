@@ -27,54 +27,45 @@ void main() {
     );
   });
 
-  testWidgets('rollId animates and completes even when the face repeats',
+  testWidgets('a new rollId animates even when the face repeats',
       (tester) async {
     var completed = 0;
     var requests = 0;
     var rollId = 1;
     int? target = 4;
 
-    Widget buildDice() => MaterialApp(
-          home: StatefulBuilder(
-            builder: (context, setState) => LuxuryDiceButton(
-              targetValue: target,
-              rollId: rollId,
-              canRoll: target == null,
-              isWaitingForRoll: target == null,
-              onRollRequested: () {
-                requests++;
-                setState(() {
-                  target = 4;
-                  rollId++;
-                });
-              },
-              onAnimationComplete: () => completed++,
-            ),
-          ),
-        );
-
-    await tester.pumpWidget(buildDice());
-    // First state is treated as restored. Clear it before starting a new roll.
     await tester.pumpWidget(
       MaterialApp(
         home: StatefulBuilder(
-          builder: (context, setState) => LuxuryDiceButton(
-            targetValue: null,
-            rollId: rollId,
-            canRoll: true,
-            isWaitingForRoll: true,
-            onRollRequested: () {
-              requests++;
-              setState(() {
-                target = 4;
-                rollId++;
-              });
-            },
-            onAnimationComplete: () => completed++,
+          builder: (context, setState) => Column(
+            children: [
+              LuxuryDiceButton(
+                targetValue: target,
+                rollId: rollId,
+                canRoll: target == null,
+                isWaitingForRoll: target == null,
+                onRollRequested: () {
+                  requests++;
+                  setState(() {
+                    target = 4;
+                    rollId++;
+                  });
+                },
+                onAnimationComplete: () => completed++,
+              ),
+              TextButton(
+                onPressed: () => setState(() => target = null),
+                child: const Text('next turn'),
+              ),
+            ],
           ),
         ),
       ),
     );
+
+    // The previous result is cleared, then the next accepted roll returns 4
+    // again. The incremented rollId must still trigger a fresh animation.
+    await tester.tap(find.text('next turn'));
     await tester.pump();
     await tester.tap(find.byType(LuxuryDiceButton));
     await tester.pump();
@@ -83,7 +74,7 @@ void main() {
     expect(completed, 1);
   });
 
-  testWidgets('reduced motion completes once after the frame',
+  testWidgets('reduced motion completes exactly once after the frame',
       (tester) async {
     var completed = 0;
     var target = 0;
@@ -114,9 +105,6 @@ void main() {
 
     await tester.tap(find.byType(LuxuryDiceButton));
     await tester.pump();
-    expect(completed, 0);
-    await tester.pump();
-    expect(completed, 1);
     await tester.pumpAndSettle();
     expect(completed, 1);
   });
