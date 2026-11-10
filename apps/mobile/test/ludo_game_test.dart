@@ -170,21 +170,21 @@ void main() {
     test(
       'Classic profile rejects overshooting exact finish and passes the turn',
       () {
-      final game = LudoGame.fromProgress(
-        activePlayer: PlayerColor.orange,
-        ruleProfile: LudoRuleProfile.classicV1,
-        pawnProgress: {
-          PlayerColor.orange: [55, -1, -1, -1],
-        },
-      ).roll(2);
+        final game = LudoGame.fromProgress(
+          activePlayer: PlayerColor.orange,
+          ruleProfile: LudoRuleProfile.classicV1,
+          pawnProgress: {
+            PlayerColor.orange: [55, -1, -1, -1],
+          },
+        ).roll(2);
 
-      expect(game.legalPawnIndices(), isEmpty);
-      final passed = game.passTurn();
-      expect(passed.activePlayer, PlayerColor.green);
-      expect(
-        passed.currentPlayer.pawnProgress,
-        [-1, -1, -1, -1],
-      );
+        expect(game.legalPawnIndices(), isEmpty);
+        final passed = game.passTurn();
+        expect(passed.activePlayer, PlayerColor.green);
+        expect(
+          passed.currentPlayer.pawnProgress,
+          [-1, -1, -1, -1],
+        );
       },
     );
 
