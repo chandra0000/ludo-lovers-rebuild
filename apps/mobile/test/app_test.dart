@@ -297,7 +297,6 @@ void main() {
     expect(find.text('PAWN HOME!'), findsOneWidget);
   });
 
-}
 
   testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
@@ -314,3 +313,4 @@ void main() {
     }
     expect(find.textContaining('Diagnostic only'), findsOneWidget);
   });
+}
