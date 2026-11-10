@@ -226,16 +226,28 @@ class _MatchScreenState extends State<MatchScreen> {
     // Keep each pawn independently tappable and visually identifiable.
     final occupants = <({PlayerColor color, int pawnIndex, Offset center})>[];
     for (final otherColor in PlayerColor.turnOrder) {
-      final otherPlayer = _game.players.firstWhere((item) => item.color == otherColor);
-      for (var otherIndex = 0; otherIndex < otherPlayer.pawnProgress.length; otherIndex++) {
+      final otherPlayer = _game.players.firstWhere(
+        (item) => item.color == otherColor,
+      );
+      for (
+        var otherIndex = 0;
+        otherIndex < otherPlayer.pawnProgress.length;
+        otherIndex++
+      ) {
         final otherProgress = otherPlayer.pawnProgress[otherIndex];
-        final otherPoint = BoardGeometry.normalizedPosition(otherColor, otherProgress, otherIndex);
+        final otherPoint = BoardGeometry.normalizedPosition(
+          otherColor,
+          otherProgress,
+          otherIndex,
+        );
         final otherCenter = Offset(
           _boardRect.left + otherPoint.x * _boardRect.width,
           _boardRect.top + otherPoint.y * _boardRect.height,
         );
         if ((otherCenter - center).distance < 0.5) {
-          occupants.add((color: otherColor, pawnIndex: otherIndex, center: otherCenter));
+          occupants.add(
+            (color: otherColor, pawnIndex: otherIndex, center: otherCenter),
+          );
         }
       }
     }
