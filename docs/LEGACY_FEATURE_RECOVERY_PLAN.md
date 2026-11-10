@@ -39,8 +39,8 @@ This is an implementation backlog and acceptance contract, not a claim that the 
 | Pawn step animation, capture/finish feedback, stack selection | Partially implemented | `features/match/` | Movement follows engine-resolved intermediate positions; no input during transition; correct shared-cell pawn selection |
 | Sound and haptics | Not yet recovered / verify exact legacy behaviour before port | `game/presentation/feedback/` | User preference toggle, lifecycle-safe playback, no sound in widget tests by default |
 | Accessibility and responsive layout | Partial / not fully accepted | App presentation layer | Semantics labels, minimum touch targets, text scaling, portrait/landscape viewport tests |
-| Pause/resume and app lifecycle resilience | Partial / needs acceptance | Match coordinator + persistence | Background/foreground and process recreation tests; no duplicate roll or lost accepted transition |
-| Save/resume, event replay and durable idempotency | Missing | `game/domain/persistence/` | Versioned snapshot serialization, deterministic replay equivalence, duplicate command rejection after reload |
+| Pause/resume and app lifecycle resilience | Local snapshot recovery implemented; physical lifecycle acceptance pending | `features/match/`, `game/domain/persistence/saved_match_store.dart` | Accepted state saved after transitions and on app background; home offers resume/discard; verify process recreation and foreground AI/animation behaviour on Android |
+| Save/resume, snapshot schema and durable idempotency | Snapshot codec and local persistence implemented; event replay missing | `game/domain/ludo_game.dart`, `game/domain/persistence/saved_match_store.dart` | Versioned schema, corrupt snapshot rejection, AI configuration restored, duplicate command rejection after reload; event replay remains future work |
 | Launcher icon / release branding | Partial | Android app config + canonical branding asset | Generated launcher icon inspected on Android launcher; no duplicated brand artwork |
 | Online multiplayer/backend | Not in current recovery scope | Future architecture only | Separate security, authority, reconnect, anti-cheat and integration plan; do not block local milestone |
 
@@ -102,4 +102,4 @@ P2 acceptance: restart/resume produces the same state as uninterrupted play; no 
 
 ## Current execution focus
 
-P0 artwork calibration and Classic rule acceptance remain open. P1 onboarding, human/AI setup, seeded legal-action AI, and expanded board diagnostics are now implemented in the rebuild; the next slice is CI validation, complete navigation/AI regression coverage, and visual/device review. Team Up remains deliberately deferred until Classic acceptance.
+P0 artwork calibration and Classic rule acceptance remain open. P1 onboarding, human/AI setup, seeded legal-action AI, and expanded board diagnostics are implemented. A first local save/resume slice now persists versioned game snapshots, AI seats and seed, and exposes resume/discard on Home; event replay and Android process-recreation acceptance remain open. Next: validate current CI, test background/foreground and process-kill recovery on Android, then close the remaining rule and artwork acceptance gates. Team Up remains deliberately deferred until Classic acceptance.
