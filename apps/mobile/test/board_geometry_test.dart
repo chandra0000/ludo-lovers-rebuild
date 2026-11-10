@@ -243,17 +243,17 @@ void main() {
         }
         expect(
           BoardGeometry.normalizedPosition(color, 0, 0),
-          BoardGeometry.sharedTrack[
-            BoardGeometry.seats[color]!.entryIndex
-          ].normalizedCenter,
+          BoardGeometry.trackPosition(
+            BoardGeometry.seats[color]!.entryIndex,
+          ),
         );
         expect(
           BoardGeometry.normalizedPosition(color, 55, 0),
-          BoardGeometry.seats[color]!.homeLane.last.normalizedCenter,
+          BoardGeometry.homeLanePosition(color, 4),
         );
         expect(
           BoardGeometry.normalizedPosition(color, 56, 0),
-          BoardGeometry.finishCell.normalizedCenter,
+          BoardGeometry.finishPosition,
         );
       }
     });
