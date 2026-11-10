@@ -197,7 +197,8 @@ void main() {
         ruleProfile: LudoRuleProfile.classicV1,
         pawnProgress: {
           PlayerColor.orange: [3, -1, -1, -1],
-          PlayerColor.green: [44, -1, -1, -1],
+          // Green progress 48 maps to Orange's landing cell after a six.
+          PlayerColor.green: [48, -1, -1, -1],
         },
       );
 
