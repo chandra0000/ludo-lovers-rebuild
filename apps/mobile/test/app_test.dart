@@ -11,7 +11,9 @@ import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
-  testWidgets('home branding and primary action fit a compact phone', (tester) async {
+  testWidgets(
+    'home branding and primary action fit a compact phone',
+    (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -27,9 +29,12 @@ void main() {
     final logoSize = tester.getSize(find.byKey(const Key('brand_logo')));
     expect(logoSize.width, lessThan(160));
     expect(logoSize.height, lessThan(160));
-    expect(tester.getSize(find.byKey(const Key('open_game_setup'))).width,
-        lessThanOrEqualTo(312));
-  });
+      expect(
+        tester.getSize(find.byKey(const Key('open_game_setup'))).width,
+        lessThanOrEqualTo(312),
+      );
+    },
+  );
 
   testWidgets('first launch shows onboarding and skip reaches home', (tester) async {
     SharedPreferences.setMockInitialValues({});
