@@ -30,7 +30,10 @@ void main() {
 
     test('advances to the next player after a non-six move', () {
       final moved = LudoGame.initial().roll(6).movePawn(0).roll(3).movePawn(0);
-      expect(moved.currentPlayer.pawnProgress[0], 3);
+      expect(
+        moved.players.firstWhere((p) => p.color == PlayerColor.orange).pawnProgress[0],
+        3,
+      );
       expect(moved.activePlayer, PlayerColor.green);
     });
 
@@ -86,7 +89,10 @@ void main() {
         },
       );
       final moved = game.roll(1).movePawn(0);
-      expect(moved.currentPlayer.pawnProgress[0], 51);
+      expect(
+        moved.players.firstWhere((p) => p.color == PlayerColor.orange).pawnProgress[0],
+        51,
+      );
     });
 
     test('marks the winner only after all four pawns finish', () {
