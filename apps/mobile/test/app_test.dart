@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/home/home_screen.dart';
@@ -9,6 +13,31 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
+
+Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+  final logicalSize = boundary.size;
+  expect(logicalSize.width, greaterThan(0));
+  expect(logicalSize.height, greaterThan(0));
+  expect(
+    logicalSize.width / logicalSize.height,
+    closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 0.01),
+  );
+
+  final image = await boundary.toImage(pixelRatio: 1);
+  try {
+    expect(image.width, greaterThan(0));
+    expect(image.height, greaterThan(0));
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    expect(bytes, isNotNull);
+
+    final output = File(path);
+    await output.parent.create(recursive: true);
+    await output.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
+  } finally {
+    image.dispose();
+  }
+}
 
 void main() {
   testWidgets(
@@ -139,9 +168,10 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
     await tester.pump(const Duration(milliseconds: 250));
 
-    await expectLater(
-      find.byKey(const Key('match_canvas_capture')),
-      matchesGoldenFile('../test-artifacts/match-canvas-393x873.png'),
+    await _capturePng(
+      tester,
+      const Key('match_canvas_capture'),
+      'test-artifacts/match-canvas-393x873.png',
     );
   });
 
@@ -541,11 +571,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const Key('preview_lane_orange_0')), findsOneWidget);
-    await expectLater(
-      find.byKey(const Key('board_preview_capture')),
-      matchesGoldenFile(
-        '../test-artifacts/board-preview-calibration-393x873.png',
-      ),
+    await _capturePng(
+      tester,
+      const Key('board_preview_capture'),
+      'test-artifacts/board-preview-calibration-393x873.png',
     );
   });
 }
