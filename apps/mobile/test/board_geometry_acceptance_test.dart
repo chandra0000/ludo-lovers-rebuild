@@ -101,8 +101,14 @@ void main() {
         final seat = BoardGeometry.seats[color]!;
         for (var pawn = 0; pawn < 4; pawn++) {
           final point = BoardGeometry.normalizedPosition(color, -1, pawn);
-          expect(point.x, inInclusiveRange(seat.yardColumn / 15, (seat.yardColumn + 6) / 15));
-          expect(point.y, inInclusiveRange(seat.yardRow / 15, (seat.yardRow + 6) / 15));
+          expect(
+            point.x,
+            inInclusiveRange(seat.yardColumn / 15, (seat.yardColumn + 6) / 15),
+          );
+          expect(
+            point.y,
+            inInclusiveRange(seat.yardRow / 15, (seat.yardRow + 6) / 15),
+          );
         }
       }
     });
