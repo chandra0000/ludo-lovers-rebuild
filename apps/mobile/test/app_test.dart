@@ -288,6 +288,25 @@ void main() {
   );
 
 
+
+  testWidgets('completes pawn movement immediately with reduced motion',
+      (tester) async {
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp(home: MatchScreen(rollDice: () => 6)),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pump();
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
+  });
+
   testWidgets('shows capture feedback after a capturing move', (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
