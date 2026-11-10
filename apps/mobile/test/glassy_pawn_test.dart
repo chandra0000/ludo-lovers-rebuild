@@ -11,7 +11,7 @@ void main() {
           body: Center(
             child: Semantics(
               label: 'Green pawn 1',
-              child: GlassyPawn(
+              child: const GlassyPawn(
                 color: Color(0xFF33FF28),
                 isCurrentPlayer: true,
                 isMovable: true,
