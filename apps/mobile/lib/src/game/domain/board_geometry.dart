@@ -163,12 +163,14 @@ class BoardGeometry {
     ),
   };
 
+  // Centers measured from the four yard sockets in the canonical
+  // 810×1440 artwork, expressed in 15×15 grid units.
   static const List<NormalizedBoardPoint> _yardOffsets =
       <NormalizedBoardPoint>[
-    NormalizedBoardPoint(2.22, 2.22),
-    NormalizedBoardPoint(3.78, 2.22),
-    NormalizedBoardPoint(2.22, 3.78),
-    NormalizedBoardPoint(3.78, 3.78),
+    NormalizedBoardPoint(1.76, 2.01),
+    NormalizedBoardPoint(3.73, 2.01),
+    NormalizedBoardPoint(1.76, 4.01),
+    NormalizedBoardPoint(3.73, 4.01),
   ];
 
   static NormalizedBoardPoint normalizedPosition(
