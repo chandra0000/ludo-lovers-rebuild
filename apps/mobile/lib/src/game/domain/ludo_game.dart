@@ -507,9 +507,13 @@ class LudoGame {
     if (ruleProfile.captureOnlySingleOpponentPawn && occupants.length >= 2) {
       return const InvalidMove(MoveInvalidReason.landingOnProtectedStack);
     }
-    if (occupants.length == 1 &&
+    if (occupants.isNotEmpty &&
         !BoardGeometry.safeTrackCells.contains(destination)) {
-      final victim = occupants.single;
+      // Classic has already rejected a protected pair above. The legacy
+      // compatibility profile can capture a whole stack, so expose that
+      // destination as a capture even though the result's singular victim
+      // fields identify only the first target for concise UI feedback.
+      final victim = occupants.first;
       return ValidMove(
         pathTiles: path,
         isCapture: true,
