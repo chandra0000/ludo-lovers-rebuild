@@ -36,3 +36,27 @@ Before calling the rules release-ready, confirm:
 - Team/2-player variants are out of scope for the first milestone.
 
 Change the engine and this document together whenever the rules profile is approved or revised.
+
+
+## Compatibility requirements carried forward from the original repository
+
+The legacy rule specification records the following proposed Classic defaults. They remain **pending product acceptance** and must be implemented through a named/versioned domain rule profile, not widget conditionals:
+
+- Three consecutive sixes end the turn; the third six cannot move a pawn.
+- Reaching final home grants one extra roll.
+- If a move satisfies more than one bonus condition, bonuses do not stack into multiple immediate rolls.
+- Own-pawn stacking is an explicit profile choice; opponent stacking/blockades must have explicit, tested semantics.
+- A player who has finished all pawns is skipped; winner-takes-all versus placement-mode match completion is mode-specific.
+- Domain transitions should emit typed events with deterministic sequence/state-version metadata. A rejected or stale command must not mutate state.
+
+## Current implementation gaps (confirmed by source review)
+
+The current `LudoGame` is a small immutable-state model, not yet the legacy typed transition engine:
+- It currently grants a bonus for six and capture, but does not grant a finish bonus.
+- It does not track consecutive sixes.
+- It hard-codes rules and safe cells rather than consuming an immutable, named/versioned rule profile.
+- It has no typed command/event/error stream, expected-state-version guard, idempotency key, or deterministic replay contract.
+- Capture currently returns opponent pawns on an unsafe shared-track cell to the yard. Advanced blockade/stack policies are not implemented.
+- The current engine's progress model is 0–50 on the player's 51 traversed shared positions, 51–55 on five private lane cells, and 56 at the separate centre finish. This is consistent with the legacy five-lane-plus-centre decision; do not reinterpret it as 52 player-relative steps.
+
+Do not silently change any of these behaviours. Implement the missing rules only after the product owner confirms the intended Classic profile. The route and safe-cell constants are also still provisional pending visual board approval.
