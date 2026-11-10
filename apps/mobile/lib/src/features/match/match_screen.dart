@@ -91,7 +91,9 @@ class _MatchScreenState extends State<MatchScreen>
     if (!widget.aiPlayers.contains(_game.activePlayer) ||
         _game.winner != null ||
         _game.diceValue != null ||
-        _aiTurnScheduled) {
+        _aiTurnScheduled ||
+        _movementController.isAnimating ||
+        _isDiceAnimating) {
       return;
     }
     _aiTurnScheduled = true;
@@ -103,7 +105,9 @@ class _MatchScreenState extends State<MatchScreen>
           if (!mounted ||
               !widget.aiPlayers.contains(_game.activePlayer) ||
               _game.winner != null ||
-              _game.diceValue != null) {
+              _game.diceValue != null ||
+              _movementController.isAnimating ||
+              _isDiceAnimating) {
             return;
           }
           final rolled = _game.roll(
@@ -111,47 +115,65 @@ class _MatchScreenState extends State<MatchScreen>
             expectedStateVersion: _game.stateVersion,
             commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
           );
-          setState(() => _game = rolled);
-          final legal = _game.legalPawnIndices();
-          if (legal.isEmpty) {
-            setState(() {
-              _game = _game.passTurn(
-                expectedStateVersion: _game.stateVersion,
-                commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-pass',
-              );
-            });
-            _scheduleAiTurn();
-            return;
-          }
-          final selected = _ai.choosePawn(
-            _game,
-            seed: widget.aiSeed ^ _game.stateVersion,
-          );
-          if (selected != null) {
-            _move(selected);
-          }
+          setState(() {
+            _game = rolled;
+            _isDiceAnimating = true;
+            _diceRollId++;
+          });
         },
       ),
     );
   }
 
-  void _roll() {
-    // A new roll must not overlap the previous pawn's movement animation.
-    // Keep this guard in the domain-facing handler as well as the button state.
+  bool _roll({required bool isAi}) {
+    // The game engine remains authoritative; UI animation only presents
+    // the accepted result and cannot alter rules or generate another value.
     if (_game.diceValue != null ||
         _game.winner != null ||
-        _movementController.isAnimating) {
+        _movementController.isAnimating ||
+        _isDiceAnimating) {
+      return false;
+    }
+    final value = isAi
+        ? _random.nextInt(6) + 1
+        : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
+    final rolled = _game.roll(
+      value,
+      expectedStateVersion: _game.stateVersion,
+      commandId: '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+    );
+    setState(() {
+      _game = rolled;
+      _isDiceAnimating = true;
+      _diceRollId++;
+    });
+    return true;
+  }
+
+  void _handleDiceAnimationComplete() {
+    if (!mounted || !_isDiceAnimating) return;
+    final legal = _game.legalPawnIndices();
+    setState(() => _isDiceAnimating = false);
+
+    if (_game.diceValue == null) return;
+    if (legal.isEmpty) {
+      setState(() {
+        _game = _game.passTurn(
+          expectedStateVersion: _game.stateVersion,
+          commandId: 'match-${_game.stateVersion}-pass',
+        );
+      });
+      _scheduleAiTurn();
       return;
     }
-    setState(() {
-      final value = widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-      final rolled = _game.roll(
-        value,
-        expectedStateVersion: _game.stateVersion,
-        commandId: 'match-${_game.stateVersion}-roll',
+
+    if (widget.aiPlayers.contains(_game.activePlayer)) {
+      final selected = _ai.choosePawn(
+        _game,
+        seed: widget.aiSeed ^ _game.stateVersion,
       );
-      _game = rolled;
-    });
+      if (selected != null) _move(selected);
+    }
   }
 
   void _move(int pawnIndex) {
@@ -237,9 +259,14 @@ class _MatchScreenState extends State<MatchScreen>
       toProgress,
       pawnIndex,
     );
+    // A small parabolic lift makes each square-to-square step read as a hop.
+    // It is presentation-only; the engine has already committed the move.
+    const hopHeight = 10.0;
+    final hopArc = 4 * hopHeight * fraction * (1 - fraction);
     return NormalizedBoardPoint(
       from.x + (to.x - from.x) * fraction,
-      from.y + (to.y - from.y) * fraction,
+      from.y + (to.y - from.y) * fraction -
+          hopArc / BoardGeometry.canvasHeight,
     );
   }
 
@@ -296,9 +323,7 @@ class _MatchScreenState extends State<MatchScreen>
                             ),
                           ),
                         ),
-                        for (final color in PlayerColor.turnOrder)
-                          for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-                            _buildPawn(color, pawnIndex),
+                        ..._buildPawnsWithClusters(),
                         Positioned(
                           left: 243,
                           top: 795,
@@ -319,37 +344,12 @@ class _MatchScreenState extends State<MatchScreen>
                                   _game.winner == null &&
                                   !_movementController.isAnimating,
                               onRollRequested: () {
-                                if (_movementController.isAnimating ||
-                                    _isDiceAnimating ||
-                                    _game.diceValue != null ||
-                                    _game.winner != null ||
-                                    widget.aiPlayers.contains(_game.activePlayer)) {
+                                if (widget.aiPlayers.contains(_game.activePlayer)) {
                                   return;
                                 }
-                                setState(() => _isDiceAnimating = true);
-                                _roll();
-                                // Increment even when the new face matches the
-                                // previous face; rollId identifies the event.
-                                if (_game.diceValue != null) {
-                                  setState(() => _diceRollId++);
-                                } else {
-                                  setState(() => _isDiceAnimating = false);
-                                }
+                                _roll(isAi: false);
                               },
-                              onAnimationComplete: () {
-                                if (!mounted) return;
-                                setState(() {
-                                  _isDiceAnimating = false;
-                                  if (_game.diceValue != null &&
-                                      _game.legalPawnIndices().isEmpty) {
-                                    _game = _game.passTurn(
-                                      expectedStateVersion: _game.stateVersion,
-                                      commandId: 'match-${_game.stateVersion}-pass',
-                                    );
-                                    _scheduleAiTurn();
-                                  }
-                                });
-                              },
+                              onAnimationComplete: _handleDiceAnimationComplete,
                             ),
                           ),
                         ),
@@ -484,31 +484,41 @@ class _MatchScreenState extends State<MatchScreen>
     });
   }
 
-  Widget _buildPawn(PlayerColor color, int pawnIndex) {
+  List<Widget> _buildPawnsWithClusters() {
+    final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
+    for (final color in PlayerColor.turnOrder) {
+      final player = _game.players.firstWhere((item) => item.color == color);
+      for (var pawnIndex = 0; pawnIndex < player.pawnProgress.length; pawnIndex++) {
+        final point = _pawnPosition(color, pawnIndex);
+        final key = _clusterKey(point);
+        clusters.putIfAbsent(key, () => []).add(
+          (color: color, pawnIndex: pawnIndex),
+        );
+      }
+    }
+    return [
+      for (final color in PlayerColor.turnOrder)
+        for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
+          _buildPawn(color, pawnIndex, clusters),
+    ];
+  }
+
+  int _clusterKey(NormalizedBoardPoint point) =>
+      (point.x * 1000).round() * 10000 + (point.y * 1000).round();
+
+  Widget _buildPawn(
+    PlayerColor color,
+    int pawnIndex,
+    Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
+  ) {
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
     final center = Offset(canvasPoint.x, canvasPoint.y);
-
-    final occupants = <({PlayerColor color, int pawnIndex, Offset center})>[];
-    for (final otherColor in PlayerColor.turnOrder) {
-      final otherPlayer = _game.players.firstWhere(
-        (item) => item.color == otherColor,
-      );
-      for (var otherIndex = 0;
-          otherIndex < otherPlayer.pawnProgress.length;
-          otherIndex++) {
-        final otherPoint = _pawnPosition(otherColor, otherIndex);
-        final otherCanvasPoint = BoardGeometry.canvasPosition(otherPoint);
-        final otherCenter = Offset(otherCanvasPoint.x, otherCanvasPoint.y);
-        if ((otherCenter - center).distance < 0.5) {
-          occupants.add(
-            (color: otherColor, pawnIndex: otherIndex, center: otherCenter),
-          );
-        }
-      }
-    }
+    final occupants = clusters[_clusterKey(normalized)] ?? [
+      (color: color, pawnIndex: pawnIndex),
+    ];
     occupants.sort((a, b) {
       final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
         PlayerColor.turnOrder.indexOf(b.color),
@@ -532,6 +542,7 @@ class _MatchScreenState extends State<MatchScreen>
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final legalIndices = _game.legalPawnIndices();
     final canMove = !_isDiceAnimating &&
+        !_movementController.isAnimating &&
         color == _game.activePlayer &&
         legalIndices.contains(pawnIndex);
     final movableStackIndices = occupants
