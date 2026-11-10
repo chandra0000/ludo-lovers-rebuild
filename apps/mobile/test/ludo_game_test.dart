@@ -485,6 +485,73 @@ void main() {
       expect(totalTransitions, greaterThanOrEqualTo(2500));
     });
 
+    test('versioned snapshot round-trips an accepted match and pending roll', () {
+      final game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1)
+          .roll(
+            6,
+            expectedStateVersion: 0,
+            commandId: 'persisted-roll-1',
+          )
+          .movePawn(
+            0,
+            expectedStateVersion: 1,
+            commandId: 'persisted-move-1',
+          )
+          .roll(
+            3,
+            expectedStateVersion: 2,
+            commandId: 'persisted-roll-2',
+          );
+
+      final restored = LudoGame.decodeSnapshot(game.encodeSnapshot());
+
+      expect(restored.players, hasLength(4));
+      for (final color in PlayerColor.turnOrder) {
+        expect(
+          restored.players
+              .firstWhere((player) => player.color == color)
+              .pawnProgress,
+          game.players
+              .firstWhere((player) => player.color == color)
+              .pawnProgress,
+        );
+      }
+      expect(restored.activePlayer, game.activePlayer);
+      expect(restored.diceValue, game.diceValue);
+      expect(restored.winner, game.winner);
+      expect(restored.ruleProfile, LudoRuleProfile.classicV1);
+      expect(restored.stateVersion, game.stateVersion);
+      expect(restored.consecutiveSixes, game.consecutiveSixes);
+      expect(restored.appliedCommandIds, game.appliedCommandIds);
+      expect(restored.events, isEmpty);
+
+      expect(
+        () => restored.movePawn(
+          0,
+          expectedStateVersion: restored.stateVersion,
+          commandId: 'persisted-roll-1',
+        ),
+        throwsStateError,
+      );
+    });
+
+    test('snapshot codec rejects unsupported schema and malformed progress', () {
+      expect(
+        () => LudoGame.fromSnapshot({'schemaVersion': 99}),
+        throwsFormatException,
+      );
+      final snapshot = LudoGame.initial().toSnapshot();
+      final players = snapshot['players']! as List<Map<String, Object?>>;
+      players[0] = {
+        'color': 'orange',
+        'pawnProgress': [57, -1, -1, -1],
+      };
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsArgumentError,
+      );
+    });
+
     test('published game snapshots and collections cannot be mutated', () {
       final game = LudoGame.initial().roll(6);
       expect(
