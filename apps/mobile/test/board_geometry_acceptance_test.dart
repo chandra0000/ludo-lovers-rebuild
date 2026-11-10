@@ -114,6 +114,31 @@ void main() {
       }
     });
 
+    test('representative route anchors match measured source pixels', () {
+      const expected = <int, Offset>{
+        0: Offset(96.5, 625),
+        5: Offset(341, 577),
+        11: Offset(404, 326),
+        18: Offset(520.5, 625),
+        24: Offset(760, 677),
+        31: Offset(466.5, 785.5),
+        37: Offset(403, 1045),
+        44: Offset(287.5, 729),
+        51: Offset(48, 625),
+      };
+      for (final entry in expected.entries) {
+        final point = BoardGeometry.trackPosition(entry.key);
+        expect(
+          point.x * BoardGeometry.sourceWidth,
+          closeTo(entry.value.dx, 1e-9),
+        );
+        expect(
+          point.y * BoardGeometry.sourceHeight,
+          closeTo(entry.value.dy, 1e-9),
+        );
+      }
+    });
+
     test('yard sockets remain in their artwork quadrants', () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
