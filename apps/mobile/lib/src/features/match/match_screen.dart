@@ -186,10 +186,18 @@ class _MatchScreenState extends State<MatchScreen>
           );
           setState(() {
             _game = rolled;
-            _isDiceAnimating = true;
-            _diceRollId++;
+            _isDiceAnimating = rolled.diceValue != null;
+            if (rolled.diceValue != null) {
+              _diceRollId++;
+            }
           });
           unawaited(_persistMatch());
+          // A third-six penalty is an accepted turn transition, not a dice
+          // result to animate. Continue immediately if the next seat is AI.
+          if (rolled.diceValue == null) {
+            _showConsecutiveSixPenalty();
+            _scheduleAiTurn();
+          }
         },
       ),
     );
@@ -212,13 +220,34 @@ class _MatchScreenState extends State<MatchScreen>
       expectedStateVersion: _game.stateVersion,
       commandId: '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
     );
+    final wasPenalized =
+        rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
     setState(() {
       _game = rolled;
-      _isDiceAnimating = true;
-      _diceRollId++;
+      _isDiceAnimating = rolled.diceValue != null;
+      if (rolled.diceValue != null) {
+        _diceRollId++;
+      }
     });
     unawaited(_persistMatch());
+    if (wasPenalized) {
+      _showConsecutiveSixPenalty();
+      _scheduleAiTurn();
+    }
     return true;
+  }
+
+  void _showConsecutiveSixPenalty() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        key: Key('consecutive_six_penalty'),
+        content: Text('THREE SIXES — TURN PASSED'),
+        duration: Duration(milliseconds: 1600),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Color(0xFF211A0D),
+      ),
+    );
   }
 
   void _handleDiceAnimationComplete() {
@@ -226,7 +255,12 @@ class _MatchScreenState extends State<MatchScreen>
     final legal = _game.legalPawnIndices();
     setState(() => _isDiceAnimating = false);
 
-    if (_game.diceValue == null) return;
+    if (_game.diceValue == null) {
+      // Defensive recovery: a penalty or restored transition may already
+      // have advanced the turn without leaving a pending dice result.
+      _scheduleAiTurn();
+      return;
+    }
     if (legal.isEmpty) {
       setState(() {
         _game = _game.passTurn(
