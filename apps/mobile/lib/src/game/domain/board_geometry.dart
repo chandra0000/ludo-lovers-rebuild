@@ -169,6 +169,14 @@ class BoardGeometry {
   ];
 
   static const Set<int> cornerConnectorIndexes = <int>{4, 17, 30, 43};
+
+  /// Player-coloured entry/start squares visible in the canonical artwork.
+  static const Set<int> startTrackCells = <int>{0, 13, 26, 39};
+
+  /// Gold star squares visible in the canonical artwork.
+  static const Set<int> starTrackCells = <int>{8, 21, 34, 47};
+
+  /// All safe shared-track cells for the current board artwork.
   static const Set<int> safeTrackCells = <int>{0, 8, 13, 21, 26, 34, 39, 47};
   static const BoardCell finishCell = BoardCell(7, 7);
 
