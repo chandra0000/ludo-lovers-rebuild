@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
@@ -37,6 +38,33 @@ void main() {
       expect(artwork.width / artwork.height, closeTo(9 / 16, 0.001));
       expect(artwork.width, 576);
       expect(artwork.height, 1024);
+    }
+  });
+
+  testWidgets('places each starting pawn at its calibrated artwork socket', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 873);
+
+    await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+    await tester.pump();
+
+    final canvasRect = tester.getRect(find.byKey(const Key('match_canvas')));
+    final scale = canvasRect.width / 576;
+    const boardRect = Rect.fromLTWH(17.78, 213.33, 540.44, 561.78);
+
+    for (final color in PlayerColor.turnOrder) {
+      final point = BoardGeometry.normalizedPosition(color, -1, 0);
+      final expected = Offset(
+        canvasRect.left + (boardRect.left + point.x * boardRect.width) * scale,
+        canvasRect.top + (boardRect.top + point.y * boardRect.height) * scale,
+      );
+      final actual = tester.getCenter(
+        find.byKey(Key('pawn_${color.name}_0')),
+      );
+      expect(actual.dx, closeTo(expected.dx, 0.5));
+      expect(actual.dy, closeTo(expected.dy, 0.5));
     }
   });
 
