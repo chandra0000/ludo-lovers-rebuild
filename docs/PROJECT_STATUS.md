@@ -127,3 +127,13 @@ Important corrections:
 - Migration guardrails remain in force: one engine, one BoardGeometry source, canonical full-screen artwork unchanged, and approved glass-cone pawn design preserved.
 - Immediate implementation focus is P0 board calibration/topology and opt-in Classic rules parity. P1 onboarding/setup and seeded local AI follow after the board and rule acceptance gates.
 - This documentation commit does not claim that missing features have been implemented or visually/device validated. Each feature will be recorded as complete only with its own tests and CI evidence.
+
+
+## P1 — local product experience implementation (2026-11-10)
+
+- Added a three-page first-run onboarding flow after the approved splash. Skip and Get Started persist completion locally with `shared_preferences`; returning launches bypass onboarding and open Home.
+- Expanded game setup with 1–4 human seats. Remaining seats are assigned to seeded local AI; the existing four-player pass-and-play path remains available. Team Up remains visibly disabled and is not represented as playable.
+- Added `SeededLudoAi`: it evaluates only pawn indexes returned by the authoritative engine's legal-action API, scores resulting engine states, prioritizes captures/finishes/progress, and resolves ties deterministically. Match orchestration runs AI rolls and moves through the same engine transitions and animation path.
+- Expanded board preview into a read-only geometry audit overlay showing all 52 shared-track cells, candidate connector locations, safe cells, home lanes, centre finish and all 16 provisional yard sockets. It reuses the single `BoardGeometry` map and canonical board artwork unchanged.
+- Added AI strategy regression tests and widget coverage for first-launch onboarding and human-vs-AI seat assignment.
+- This P1 slice is committed directly to `main`. Automated CI validation is pending; deterministic full-match coverage, visual calibration, responsive/device review, and physical Android acceptance remain open. Do not treat the preview as pixel approval or the P1 milestone as fully accepted until these gates pass.
