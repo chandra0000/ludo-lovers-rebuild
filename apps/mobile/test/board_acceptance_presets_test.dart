@@ -10,7 +10,9 @@ void main() {
       for (final color in PlayerColor.turnOrder) {
         expect(game.players
             .firstWhere((player) => player.color == color)
-            .pawnProgress, everyElement(-1));
+            .pawnProgress,
+            everyElement(-1),
+          );
         for (var pawn = 0; pawn < 4; pawn++) {
           expect(BoardGeometry.yardPosition(color, pawn), isNotNull);
         }
@@ -21,7 +23,9 @@ void main() {
       final game = BoardAcceptancePresets.singlePawnOnTrack;
       expect(game.players
           .firstWhere((player) => player.color == PlayerColor.orange)
-          .pawnProgress.first, 5);
+          .pawnProgress.first,
+          5,
+        );
       expect(BoardGeometry.physicalTrackCell(PlayerColor.orange, 5), 5);
     });
 
