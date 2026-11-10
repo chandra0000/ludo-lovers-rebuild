@@ -24,11 +24,13 @@ class SeededLudoAi {
       if (previous == -1) score += 80;
       score += next.events.whereType<PawnCaptured>().length * 500;
       if (next.winner != null) score += 100000;
-      scored.add((
-        pawn: pawnIndex,
-        score: score,
-        tieBreak: random.nextInt(1 << 20),
-      ),);
+      scored.add(
+        (
+          pawn: pawnIndex,
+          score: score,
+          tieBreak: random.nextInt(1 << 20),
+        ),
+      );
     }
     scored.sort((a, b) {
       final byScore = b.score.compareTo(a.score);
