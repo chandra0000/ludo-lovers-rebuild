@@ -330,9 +330,8 @@ class LudoGame {
 
   String encodeSnapshot() => jsonEncode(toSnapshot());
 
-  /// Restores a validated schema-v1, schema-v2 or schema-v3 snapshot. Unknown or
-  /// malformed snapshots fail closed; callers should offer a fresh match
-  /// rather than guess state.
+  /// Restores schema-v1, schema-v2 or schema-v3 snapshots. Malformed
+  /// snapshots fail closed; callers should offer a fresh match rather than guess.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
     final schemaVersion = snapshot['schemaVersion'];
     if (schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) {
