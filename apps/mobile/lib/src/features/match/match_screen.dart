@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -91,7 +92,7 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     _aiTurnScheduled = true;
-    Future<void>.delayed(const Duration(milliseconds: 450), () {
+    unawaited(Future<void>.delayed(const Duration(milliseconds: 450), () {
       _aiTurnScheduled = false;
       if (!mounted || !widget.aiPlayers.contains(_game.activePlayer) ||
           _game.winner != null || _game.diceValue != null) {
@@ -119,7 +120,7 @@ class _MatchScreenState extends State<MatchScreen>
         seed: widget.aiSeed ^ _game.stateVersion,
       );
       if (selected != null) _move(selected);
-    });
+    }));
   }
 
   void _roll() {
