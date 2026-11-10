@@ -83,8 +83,7 @@ void main() {
     );
 
     await tester.tap(find.byType(AnimatedDice));
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(value, 4);
     expect(completed, isTrue);
   });
