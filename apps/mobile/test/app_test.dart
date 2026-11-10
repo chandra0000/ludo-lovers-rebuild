@@ -401,6 +401,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
   });
