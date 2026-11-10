@@ -302,7 +302,8 @@ void main() {
     await tester.pump();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 800));
+    // 600 ms dice reveal plus 600 ms visible no-move result.
+    await tester.pump(const Duration(milliseconds: 1200));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
