@@ -118,6 +118,20 @@ void main() {
       expect((result as ValidMove).isCapture, isFalse);
     });
 
+    test('schema-v2 snapshots migrate with hard blockades disabled', () {
+      final snapshot = LudoGame.initial(
+        ruleProfile: LudoRuleProfile.classicV1,
+      ).toSnapshot();
+      snapshot['schemaVersion'] = 2;
+      final profile = snapshot['ruleProfile']! as Map<String, Object?>;
+      profile.remove('enableHardBlockade');
+
+      final restored = LudoGame.fromSnapshot(snapshot);
+
+      expect(restored.ruleProfile.captureOnlySingleOpponentPawn, isTrue);
+      expect(restored.ruleProfile.enableHardBlockade, isFalse);
+    });
+
     test('overshooting home returns a structured reason', () {
       final game = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
