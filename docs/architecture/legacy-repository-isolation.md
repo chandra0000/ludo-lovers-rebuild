@@ -62,3 +62,48 @@ For each feature considered from the legacy repository:
 ## Release gate
 
 A change is complete only when the relevant tests pass on the committed `main` revision, the CI run is green, and documentation distinguishes automated evidence from visual/device verification. Board geometry and rule-profile acceptance remain separate gates.
+
+
+## Legacy documentation reconciliation — 2026-11-10
+
+The old repository was reviewed beyond its README. The following documents contain durable decisions that must be carried into the rebuild; their historical implementation status and CI links are not current rebuild evidence:
+
+- `docs/product/approved-visual-reference-baseline.md`: fixed logo, exact brand palette, premium dark/gold visual language, and a strict warning that a composite screen reference is not a cell-coordinate specification.
+- `docs/board-route-acceptance.md` and `docs/architecture/step-11-board-route-and-safe-cell-approval-gate.md`: 15×15 logical grid; 52 physical shared cells; Orange/Green/Magenta/Blue entry indexes 0/13/26/39; five private lane cells plus a separate centre finish; safe-cell IDs {0, 8, 13, 21, 26, 34, 39, 47} remain owner-recorded but still require visual confirmation; the four candidate diagonal links are 4→5, 17→18, 30→31 and 43→44.
+- `docs/architecture/step-09b-route-orientation-reconciliation.md`: route IDs, seat-relative progress, physical cells, safe-cell metadata and presentation mapping must remain distinct. A structurally valid route is not automatically visually approved.
+- `docs/architecture/step-07-canonical-engine-consolidation-decision.md`: one pure canonical engine; immutable state; typed commands/events and errors; one state-version increment per accepted command; stale/duplicate action rejection; deterministic replay; rendering/animation never decides rules.
+- `docs/game-rules/ludo-game-rules.md`: named/versioned rule profile; six-to-enter; bonus roll on six/capture/finish; third consecutive six ends turn without moving; exact finish; safe cells; explicit own/opponent stack semantics; deterministic event sequence; mode-specific match completion. These defaults were explicitly provisional pending product acceptance.
+- `docs/quality/four-phase-gameplay-verification.md`: four independent gates—asset/render stability, board geometry, engine rules, and integration/stress/device testing. A green CI run is not visual or device acceptance.
+- `docs/team-up-mode-acceptance.md`: a substantial local 2-vs-2 ruleset exists in the legacy project, but Team Up is outside the rebuild's agreed first milestone and must not be copied in by implication.
+
+### Rebuild gap assessment
+
+| Legacy requirement | Rebuild position after review |
+|---|---|
+| One canonical engine and immutable player snapshots | Present in the compact `LudoGame`; it is not yet equivalent to the legacy typed command/transition contract |
+| Typed commands, typed events/errors, state versions, stale/duplicate rejection, deterministic replay | Not implemented in the rebuild |
+| 52 physical track cells; player-relative progress 0–50; five home-lane cells 51–55; separate finish 56 | Present in the current model/geometry; the physical coordinate map is still provisional |
+| Recorded safe IDs and four diagonal connector candidates | Present as provisional constants/tests; not visually approved |
+| Six-to-enter, bonus on six and capture, exact finish, capture on unsafe cells | Present in the current compact engine |
+| Bonus on finish and third-consecutive-six penalty | Not implemented in the current rebuild engine |
+| Explicit versioned configurable rules profile and mode isolation | Not implemented; rules are currently hard-coded in `LudoGame` |
+| Complete capture/stack policy including own/opponent stacks | Only basic unsafe-cell opponent capture is implemented; blockade/stack variants are not accepted |
+| Five-cell lane plus distinct centre finish | Present in current progress mapping |
+| Four-phase asset/geometry/engine/integration acceptance | Adopt as the rebuild's milestone gate; device and full-match evidence remain outstanding |
+| Team Up mode | Intentionally deferred; do not port until the four-player Classic milestone is accepted |
+
+### Corrective geometry note
+
+A recent implementation attempt changed the board rectangle and yard offsets using inferred measurements from the full-screen composition. That conflicts with the legacy project's explicit no-guessing gate. Those inferred values have been reverted to the prior provisional values. The existing 15×15 route, board rectangle and yard slots must all remain labelled **provisional** until compared with the exact owner-approved straight-on board reference. Do not treat new coordinate assertions as visual approval.
+
+### Migration order
+
+1. Freeze coordinate edits and keep the gameplay-readiness gate closed.
+2. Confirm the exact source image and derive a cell-by-cell 15×15 coordinate diagram with the user.
+3. Reconcile all four seat paths, corner connectors, start cells, home lanes and safe cells in one canonical definition and one reviewed change.
+4. Upgrade the compact engine incrementally: immutable transition result, typed commands/events/errors, expected-version guard, one version increment per accepted command, then deterministic replay tests.
+5. Add a named/versioned rules profile and explicitly decide the missing Classic rules before implementation.
+6. Complete the four verification phases and record device evidence separately from CI.
+7. Only after Classic local acceptance, consider porting Team Up and later online architecture.
+
+Do not copy the old repository's code wholesale. Its documentation is a source of requirements and regression scenarios; its historical code and old workflow results are not proof of rebuild correctness.
