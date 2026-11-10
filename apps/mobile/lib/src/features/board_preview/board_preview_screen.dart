@@ -22,7 +22,7 @@ class BoardPreviewScreen extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
                 child: Text(
-                  'Canonical artwork · geometry audit overlay · provisional',
+                  'Canonical artwork · coordinate crosshairs · provisional',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
@@ -69,6 +69,9 @@ class BoardPreviewScreen extends StatelessWidget {
                               size: BoardGeometry.safeTrackCells.contains(index)
                                   ? 9
                                   : 5,
+                              crosshairKey: BoardGeometry.safeTrackCells.contains(index)
+                                  ? Key('preview_track_${index}_crosshair')
+                                  : null,
                               key: Key('preview_track_$index'),
                             ),
                           for (final color in PlayerColor.turnOrder)
@@ -89,6 +92,7 @@ class BoardPreviewScreen extends StatelessWidget {
                             constraints.maxHeight,
                             color: const Color(0xFFFFC857),
                             size: 13,
+                            crosshairKey: const Key('preview_finish_crosshair'),
                             key: const Key('preview_finish'),
                           ),
                           for (final color in PlayerColor.turnOrder)
@@ -127,6 +131,7 @@ class BoardPreviewScreen extends StatelessWidget {
     double height, {
     required Color color,
     required double size,
+    Key? crosshairKey,
     required Key key,
   }) {
     final point = BoardGeometry.canvasPosition(cell.normalizedCenter);
@@ -134,16 +139,30 @@ class BoardPreviewScreen extends StatelessWidget {
       left: point.x / BoardGeometry.canvasWidth * width - size / 2,
       top: point.y / BoardGeometry.canvasHeight * height - size / 2,
       child: IgnorePointer(
-        child: Container(
-          key: key,
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withValues(alpha: .9),
-            border: Border.all(color: Colors.black, width: .7),
-            boxShadow: const [
-              BoxShadow(color: Color(0x88000000), blurRadius: 2),
+        child: SizedBox(
+          width: size + (crosshairKey == null ? 0 : 8),
+          height: size + (crosshairKey == null ? 0 : 8),
+          child: Stack(
+            key: crosshairKey,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                key: key,
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: .9),
+                  border: Border.all(color: Colors.black, width: .7),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x88000000), blurRadius: 2),
+                  ],
+                ),
+              ),
+              if (crosshairKey != null) ...[
+                Container(width: size + 8, height: 1, color: color),
+                Container(width: 1, height: size + 8, color: color),
+              ],
             ],
           ),
         ),
