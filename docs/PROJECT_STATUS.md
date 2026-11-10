@@ -97,6 +97,15 @@ See [four-phase gameplay verification](quality/four-phase-gameplay-verification.
 - Added widget tests for dice action hints and movable-pawn position/action announcements.
 - This is a screen-reader semantics improvement, not complete accessibility acceptance. TalkBack navigation on a physical Android device, text scaling, contrast review and all modal/result flows remain to be checked.
 
+## Critical Classic gameplay and board geometry review — 2026-11-10
+
+- Fixed a snapshot validation mismatch: the compatibility profile has no three-consecutive-six penalty, so its counter is not capped at two during restore. The cap now applies only when the active profile enables that penalty.
+- Fixed a match-coordinator deadlock on a Classic third consecutive six. The engine intentionally advances the turn without producing a pending dice value; the UI now avoids starting an animation that cannot complete, shows penalty feedback, and schedules the next AI seat.
+- Added regression coverage for compatibility snapshot restoration after three consecutive sixes, invalid Classic counters, and a human third-six penalty handing off to an AI player.
+- Added a full source-pixel regression fixture for all 52 shared-track anchors and all 20 home-lane anchors. Added live widget placement coverage for track, lane and finish; existing yard placement coverage checks all 16 yard sockets.
+- The canonical artwork asset test continues to enforce the original 810×1440 WebP dimensions and portrait aspect ratio. The artwork itself has not been replaced or modified.
+- These changes improve code-level correctness and guard against coordinate drift. They do not close Classic product acceptance, visual approval, or physical-device QA. Own-pawn stacking, opponent blockade behaviour, safe-star identity and match-completion mode still require explicit product decisions; board anchors still require owner inspection against the full-resolution artwork and a physical phone.
+
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
