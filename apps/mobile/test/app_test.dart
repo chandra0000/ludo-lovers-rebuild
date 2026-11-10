@@ -104,5 +104,31 @@ void main() {
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
 
+  testWidgets(
+    'animates a released pawn through its route instead of teleporting',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MatchScreen(rollDice: () => 6),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('roll_dice')));
+      await tester.pumpAndSettle();
+
+      final pawn = find.byKey(const Key('pawn_orange_0'));
+      final start = tester.getTopLeft(pawn);
+      await tester.tap(pawn);
+      await tester.pump(const Duration(milliseconds: 55));
+      final inMotion = tester.getTopLeft(pawn);
+      expect(inMotion, isNot(start));
+
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      final finish = tester.getTopLeft(pawn);
+      expect(finish, isNot(inMotion));
+      expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    },
+  );
+
 }
 
