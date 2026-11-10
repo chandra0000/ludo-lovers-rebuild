@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../match/match_screen.dart';
+import '../setup/game_setup_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -76,20 +76,42 @@ class HomeScreen extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 46),
+                    const SizedBox(height: 30),
+                    const Text(
+                      'Bring everyone to one board.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Roll the dice, move your glass pawns and race all four '
+                      'colours home. More modes are being added after their '
+                      'rules are verified.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 34),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        key: const Key('start_local_match'),
+                        key: const Key('open_game_setup'),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const MatchScreen(),
+                            builder: (_) => const GameSetupScreen(),
                           ),
                         ),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Text(
-                            'START LOCAL MATCH',
+                            'PLAY NOW',
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.1,
@@ -100,12 +122,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Four players · One board · Endless fun',
+                      'Four colours · Four pawns each · One shared board',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white38, fontSize: 11),
                     ),
                   ],
                 ),
