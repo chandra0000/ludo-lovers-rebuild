@@ -58,7 +58,14 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          if ! dart format --output=none --set-exit-if-changed "${dart_files[@]}"; then
+            echo "Formatter diff follows:"
+            for file in "${dart_files[@]}"; do
+              dart format --output=write "$file"
+            done
+            git --no-pager diff -- "${dart_files[@]}"
+            exit 1
+          fi
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
