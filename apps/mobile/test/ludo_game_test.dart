@@ -192,9 +192,12 @@ void main() {
     });
 
 
-    test('stress-runs 2500 deterministic transitions without invariant drift', () {
+    test('stress-runs at least 2500 deterministic transitions without invariant drift', () {
       var game = LudoGame.initial();
       var commandNumber = 0;
+      var totalTransitions = 0;
+      var matchNumber = 0;
+      var turn = 0;
 
       void verifySnapshot(LudoGame snapshot) {
         expect(snapshot.players.length, 4);
@@ -205,60 +208,67 @@ void main() {
         for (final player in snapshot.players) {
           expect(player.pawnProgress.length, 4);
           expect(
-            player.pawnProgress.every((progress) => progress >= -1 && progress <= 56),
+            player.pawnProgress.every(
+              (progress) => progress >= -1 && progress <= 56,
+            ),
             isTrue,
           );
         }
         expect(snapshot.stateVersion, commandNumber);
-        expect(
-          snapshot.appliedCommandIds.length,
-          commandNumber,
-        );
+        expect(snapshot.appliedCommandIds.length, commandNumber);
         expect(
           snapshot.events.map((event) => event.sequence).toList(),
           List<int>.generate(snapshot.events.length, (index) => index),
         );
         expect(
-          snapshot.events.every((event) => event.stateVersion == snapshot.stateVersion),
+          snapshot.events.every(
+            (event) => event.stateVersion == snapshot.stateVersion,
+          ),
           isTrue,
         );
       }
 
-      for (var turn = 0; turn < 2500 && game.winner == null; turn++) {
+      while (totalTransitions < 2500) {
         final roll = (turn * 17 + 5) % 6 + 1;
         final beforeRollVersion = game.stateVersion;
         game = game.roll(
           roll,
           expectedStateVersion: beforeRollVersion,
-          commandId: 'stress-roll-$turn',
+          commandId: 'stress-$matchNumber-roll-$turn',
         );
         commandNumber++;
+        totalTransitions++;
         verifySnapshot(game);
 
-        if (game.diceValue == null) {
-          continue; // Classic third-six penalty consumed the turn.
+        if (game.diceValue != null) {
+          final legal = game.legalPawnIndices();
+          final beforeActionVersion = game.stateVersion;
+          if (legal.isEmpty) {
+            game = game.passTurn(
+              expectedStateVersion: beforeActionVersion,
+              commandId: 'stress-$matchNumber-pass-$turn',
+            );
+          } else {
+            game = game.movePawn(
+              legal[turn % legal.length],
+              expectedStateVersion: beforeActionVersion,
+              commandId: 'stress-$matchNumber-move-$turn',
+            );
+          }
+          commandNumber++;
+          totalTransitions++;
+          verifySnapshot(game);
         }
 
-        final legal = game.legalPawnIndices();
-        final beforeActionVersion = game.stateVersion;
-        if (legal.isEmpty) {
-          game = game.passTurn(
-            expectedStateVersion: beforeActionVersion,
-            commandId: 'stress-pass-$turn',
-          );
-        } else {
-          game = game.movePawn(
-            legal[turn % legal.length],
-            expectedStateVersion: beforeActionVersion,
-            commandId: 'stress-move-$turn',
-          );
+        if (game.winner != null) {
+          matchNumber++;
+          commandNumber = 0;
+          game = LudoGame.initial();
         }
-        commandNumber++;
-        verifySnapshot(game);
+        turn++;
       }
 
-      expect(game.stateVersion, commandNumber);
-      expect(commandNumber, greaterThan(1000));
+      expect(totalTransitions, greaterThanOrEqualTo(2500));
     });
 
     test('published game snapshots and collections cannot be mutated', () {
