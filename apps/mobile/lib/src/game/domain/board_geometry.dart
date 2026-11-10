@@ -50,8 +50,8 @@ class BoardGeometry {
   static const int playerTrackLength = 51;
   static const int homeLaneLength = 5;
 
-  // Physical cell centers mapped to the approved 15×15 board artwork.
-  // The four documented corner connectors are diagonal by design.
+  // Provisional physical cell centers on a 15×15 grid; not visually approved.
+  // Four candidate diagonal corner connectors are documented; visual approval is pending.
   static const List<BoardCell> sharedTrack = <BoardCell>[
     BoardCell(1, 6),
     BoardCell(2, 6),
