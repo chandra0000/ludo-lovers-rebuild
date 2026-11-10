@@ -36,8 +36,8 @@ void main() {
       expect(canvas.height, lessThanOrEqualTo(viewport.height));
       expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
       expect(artwork.width / artwork.height, closeTo(9 / 16, 0.001));
-      expect(artwork.width, 576);
-      expect(artwork.height, 1024);
+      expect(artwork.width, BoardGeometry.canvasWidth);
+      expect(artwork.height, BoardGeometry.canvasHeight);
     }
   });
 
@@ -51,20 +51,22 @@ void main() {
     await tester.pump();
 
     final canvasRect = tester.getRect(find.byKey(const Key('match_canvas')));
-    final scale = canvasRect.width / 576;
-    const boardRect = Rect.fromLTWH(17.78, 213.33, 540.44, 561.78);
+    final scale = canvasRect.width / BoardGeometry.canvasWidth;
 
     for (final color in PlayerColor.turnOrder) {
-      final point = BoardGeometry.normalizedPosition(color, -1, 0);
-      final expected = Offset(
-        canvasRect.left + (boardRect.left + point.x * boardRect.width) * scale,
-        canvasRect.top + (boardRect.top + point.y * boardRect.height) * scale,
-      );
-      final actual = tester.getCenter(
-        find.byKey(Key('pawn_${color.name}_0')),
-      );
-      expect(actual.dx, closeTo(expected.dx, 0.5));
-      expect(actual.dy, closeTo(expected.dy, 0.5));
+      for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++) {
+        final point = BoardGeometry.normalizedPosition(color, -1, pawnIndex);
+        final canvasPoint = BoardGeometry.canvasPosition(point);
+        final expected = Offset(
+          canvasRect.left + canvasPoint.x * scale,
+          canvasRect.top + canvasPoint.y * scale,
+        );
+        final actual = tester.getCenter(
+          find.byKey(Key('pawn_${color.name}_$pawnIndex')),
+        );
+        expect(actual.dx, closeTo(expected.dx, 0.5));
+        expect(actual.dy, closeTo(expected.dy, 0.5));
+      }
     }
   });
 
