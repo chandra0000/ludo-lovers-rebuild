@@ -39,7 +39,7 @@ void main() {
           expect(point.y, inInclusiveRange(0.0, 1.0));
         }
       }
-    });    });
+    });
 
     test('maps home yards, shared track, lanes and finish to normalized points', () {
       for (final color in PlayerColor.turnOrder) {
