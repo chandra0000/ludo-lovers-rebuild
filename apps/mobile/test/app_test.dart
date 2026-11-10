@@ -1,8 +1,4 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
@@ -84,27 +80,10 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
     await tester.pump(const Duration(milliseconds: 250));
 
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
+    await expectLater(
       find.byKey(const Key('match_canvas_capture')),
+      matchesGoldenFile('../test-artifacts/match-canvas-393x873.png'),
     );
-    final renderedImage = await tester.runAsync(
-      () => boundary.toImage(pixelRatio: 1),
-    );
-    expect(renderedImage, isNotNull);
-    try {
-      final png = await tester.runAsync(
-        () => renderedImage!.toByteData(
-          format: ui.ImageByteFormat.png,
-        ),
-      );
-      expect(png, isNotNull);
-      final output = File('test-artifacts/match-canvas-393x873.png');
-      await output.parent.create(recursive: true);
-      await output.writeAsBytes(png!.buffer.asUint8List());
-      expect(await output.length(), greaterThan(10000));
-    } finally {
-      renderedImage!.dispose();
-    }
   });
 
   testWidgets('opens a local match from the home screen', (tester) async {
