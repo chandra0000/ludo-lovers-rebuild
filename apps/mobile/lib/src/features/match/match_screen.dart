@@ -51,8 +51,9 @@ class _MatchScreenState extends State<MatchScreen>
   late final AnimationController _movementController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 160),
-  )..addListener(_handleMovementTick)
-      ..addStatusListener(_handleMovementStatus);
+  )
+    ..addListener(_handleMovementTick)
+    ..addStatusListener(_handleMovementStatus);
   PlayerColor? _movingColor;
   int? _movingPawnIndex;
   int _movementStartProgress = 0;
@@ -229,7 +230,8 @@ class _MatchScreenState extends State<MatchScreen>
     final rolled = _game.roll(
       value,
       expectedStateVersion: _game.stateVersion,
-      commandId: '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+      commandId:
+          '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
     );
     final wasPenalized =
         rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
@@ -275,22 +277,27 @@ class _MatchScreenState extends State<MatchScreen>
     if (legal.isEmpty) {
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 600), () {
-        if (!mounted ||
-            token != _turnResolutionToken ||
-            _game.diceValue == null) {
-          return;
-        }
-        setState(() {
-          _game = _game.passTurn(
-            expectedStateVersion: _game.stateVersion,
-            commandId: 'match-${_game.stateVersion}-pass',
-          );
-          _isAutoMovePending = false;
-        });
-        unawaited(_persistMatch());
-        _scheduleAiTurn();
-      }));
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 600),
+          () {
+            if (!mounted ||
+                token != _turnResolutionToken ||
+                _game.diceValue == null) {
+              return;
+            }
+            setState(() {
+              _game = _game.passTurn(
+                expectedStateVersion: _game.stateVersion,
+                commandId: 'match-${_game.stateVersion}-pass',
+              );
+              _isAutoMovePending = false;
+            });
+            unawaited(_persistMatch());
+            _scheduleAiTurn();
+          },
+        ),
+      );
       return;
     }
 
@@ -303,16 +310,21 @@ class _MatchScreenState extends State<MatchScreen>
     if (selected != null) {
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (!mounted ||
-            token != _turnResolutionToken ||
-            _game.diceValue == null ||
-            _movementController.isAnimating) {
-          return;
-        }
-        setState(() => _isAutoMovePending = false);
-        _move(selected);
-      }));
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 350),
+          () {
+            if (!mounted ||
+                token != _turnResolutionToken ||
+                _game.diceValue == null ||
+                _movementController.isAnimating) {
+              return;
+            }
+            setState(() => _isAutoMovePending = false);
+            _move(selected);
+          },
+        ),
+      );
     }
   }
 
@@ -325,7 +337,8 @@ class _MatchScreenState extends State<MatchScreen>
     final message = switch (evaluation.reason) {
       MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
       MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
-      MoveInvalidReason.pathBlockedByBlockade => 'PATH BLOCKED BY A PAWN BLOCKADE',
+      MoveInvalidReason.pathBlockedByBlockade =>
+        'PATH BLOCKED BY A PAWN BLOCKADE',
       MoveInvalidReason.landingOnProtectedStack => 'THAT STACK IS PROTECTED',
       MoveInvalidReason.noPendingRoll => 'ROLL THE DICE FIRST',
       MoveInvalidReason.invalidPawnIndex => 'INVALID PAWN SELECTION',
@@ -353,7 +366,8 @@ class _MatchScreenState extends State<MatchScreen>
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
     final stepCount = endProgress - startProgress;
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final nextGame = _game.movePawn(
       pawnIndex,
       expectedStateVersion: _game.stateVersion,
@@ -435,8 +449,7 @@ class _MatchScreenState extends State<MatchScreen>
     final hopArc = 4 * hopHeight * fraction * (1 - fraction);
     return NormalizedBoardPoint(
       from.x + (to.x - from.x) * fraction,
-      from.y + (to.y - from.y) * fraction -
-          hopArc / BoardGeometry.canvasHeight,
+      from.y + (to.y - from.y) * fraction - hopArc / BoardGeometry.canvasHeight,
     );
   }
 
@@ -466,131 +479,134 @@ class _MatchScreenState extends State<MatchScreen>
               child: RepaintBoundary(
                 key: const Key('match_canvas_capture'),
                 child: SizedBox(
-                key: const Key('match_canvas'),
-                width: width,
-                height: height,
-                child: FittedBox(
-                  fit: BoxFit.fill,
-                  child: SizedBox(
-                    width: BoardGeometry.canvasWidth,
-                    height: BoardGeometry.canvasHeight,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/images/board/ludo_board_glass.webp',
-                            key: const Key('board_artwork'),
-                            fit: BoxFit.fill,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const ColoredBox(
-                              color: Color(0xFF111111),
-                              child: Center(
-                                child: Text(
-                                  'Game artwork could not be loaded.',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        ..._buildPawnsWithClusters(scale),
-                        if (_selectedPawnIndex != null)
-                          _buildDestinationPreview(),
-                        Positioned(
-                          left: 243,
-                          top: 795,
-                          width: 90,
-                          height: 90,
-                          child: KeyedSubtree(
-                            key: const Key('roll_dice'),
-                            child: LuxuryDiceButton(
-                              key: const Key('animated_dice'),
-                              targetValue: _game.diceValue,
-                              rollId: _diceRollId,
-                              canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
-                                  _game.diceValue == null &&
-                                  !_isDiceAnimating &&
-                                  !_movementController.isAnimating &&
-                                  _game.winner == null,
-                              isWaitingForRoll: _game.diceValue == null &&
-                                  _game.winner == null &&
-                                  !_movementController.isAnimating,
-                              onRollRequested: () {
-                                if (widget.aiPlayers.contains(_game.activePlayer)) {
-                                  return;
-                                }
-                                _roll(isAi: false);
-                              },
-                              onAnimationComplete: _handleDiceAnimationComplete,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 200,
-                          top: 924,
-                          width: 176,
-                          height: 32,
-                          child: IgnorePointer(
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xE6080808),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  _statusText,
-                                  key: const Key('turn_status'),
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    color: _game.activePlayer.color,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
+                  key: const Key('match_canvas'),
+                  width: width,
+                  height: height,
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    child: SizedBox(
+                      width: BoardGeometry.canvasWidth,
+                      height: BoardGeometry.canvasHeight,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/board/ludo_board_glass.webp',
+                              key: const Key('board_artwork'),
+                              fit: BoxFit.fill,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const ColoredBox(
+                                color: Color(0xFF111111),
+                                child: Center(
+                                  child: Text(
+                                    'Game artwork could not be loaded.',
+                                    style: TextStyle(color: Colors.white),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: 12,
-                          top: 12,
-                          child: IconButton(
-                            key: const Key('exit_match'),
-                            tooltip: 'Exit match',
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: Color(0xFFFFC857),
-                            ),
-                          ),
-                        ),
-                        if (_game.winner != null)
+                          ..._buildPawnsWithClusters(scale),
+                          if (_selectedPawnIndex != null)
+                            _buildDestinationPreview(),
                           Positioned(
-                            left: 150,
-                            top: 480,
-                            width: 276,
-                            height: 80,
-                            child: Center(
-                              child: FilledButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _game = LudoGame.initial();
-                                  });
-                                  unawaited(_persistMatch());
+                            left: 243,
+                            top: 795,
+                            width: 90,
+                            height: 90,
+                            child: KeyedSubtree(
+                              key: const Key('roll_dice'),
+                              child: LuxuryDiceButton(
+                                key: const Key('animated_dice'),
+                                targetValue: _game.diceValue,
+                                rollId: _diceRollId,
+                                canRoll: !widget.aiPlayers
+                                        .contains(_game.activePlayer) &&
+                                    _game.diceValue == null &&
+                                    !_isDiceAnimating &&
+                                    !_movementController.isAnimating &&
+                                    _game.winner == null,
+                                isWaitingForRoll: _game.diceValue == null &&
+                                    _game.winner == null &&
+                                    !_movementController.isAnimating,
+                                onRollRequested: () {
+                                  if (widget.aiPlayers
+                                      .contains(_game.activePlayer)) {
+                                    return;
+                                  }
+                                  _roll(isAi: false);
                                 },
-                                child: const Text('PLAY AGAIN'),
+                                onAnimationComplete:
+                                    _handleDiceAnimationComplete,
                               ),
                             ),
                           ),
-                      ],
+                          Positioned(
+                            left: 200,
+                            top: 924,
+                            width: 176,
+                            height: 32,
+                            child: IgnorePointer(
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xE6080808),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _statusText,
+                                    key: const Key('turn_status'),
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      color: _game.activePlayer.color,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 12,
+                            top: 12,
+                            child: IconButton(
+                              key: const Key('exit_match'),
+                              tooltip: 'Exit match',
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Color(0xFFFFC857),
+                              ),
+                            ),
+                          ),
+                          if (_game.winner != null)
+                            Positioned(
+                              left: 150,
+                              top: 480,
+                              width: 276,
+                              height: 80,
+                              child: Center(
+                                child: FilledButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _game = LudoGame.initial();
+                                    });
+                                    unawaited(_persistMatch());
+                                  },
+                                  child: const Text('PLAY AGAIN'),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 ),
               ),
             );
@@ -733,7 +749,9 @@ class _MatchScreenState extends State<MatchScreen>
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
     for (final color in PlayerColor.turnOrder) {
       final player = _game.players.firstWhere((item) => item.color == color);
-      for (var pawnIndex = 0; pawnIndex < player.pawnProgress.length; pawnIndex++) {
+      for (var pawnIndex = 0;
+          pawnIndex < player.pawnProgress.length;
+          pawnIndex++) {
         final point = _pawnPosition(color, pawnIndex);
         final key = _clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
@@ -744,8 +762,8 @@ class _MatchScreenState extends State<MatchScreen>
     for (final occupants in clusters.values) {
       occupants.sort((a, b) {
         final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
-          PlayerColor.turnOrder.indexOf(b.color),
-        );
+              PlayerColor.turnOrder.indexOf(b.color),
+            );
         return colorOrder != 0
             ? colorOrder
             : a.pawnIndex.compareTo(b.pawnIndex);
@@ -773,9 +791,10 @@ class _MatchScreenState extends State<MatchScreen>
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
-    final occupants = clusters[_clusterKey(normalized)] ?? [
-      (color: color, pawnIndex: pawnIndex),
-    ];
+    final occupants = clusters[_clusterKey(normalized)] ??
+        [
+          (color: color, pawnIndex: pawnIndex),
+        ];
     final stackIndex = occupants.indexWhere(
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
@@ -786,12 +805,11 @@ class _MatchScreenState extends State<MatchScreen>
       Offset(.48, .48),
     ];
     final stacked = occupants.length > 1;
-    final visualOffset = stacked
-        ? offsets[stackIndex % offsets.length] * 18
-        : Offset.zero;
+    final visualOffset =
+        stacked ? offsets[stackIndex % offsets.length] * 18 : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
-    final isHumanTurn = !widget.aiPlayers.contains(color) &&
-        color == _game.activePlayer;
+    final isHumanTurn =
+        !widget.aiPlayers.contains(color) && color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
         !_isAutoMovePending &&
@@ -838,13 +856,10 @@ class _MatchScreenState extends State<MatchScreen>
       child: IgnorePointer(
         // Inactive/non-legal pawns must not cover a legal pawn's enlarged
         // touch target when adjacent cells overlap on compact screens.
-        ignoring: stacked
-            ? !isStackTapTarget
-            : !canMove && !canExplainInvalidMove,
+        ignoring:
+            stacked ? !isStackTapTarget : !canMove && !canExplainInvalidMove,
         child: Semantics(
-          button: stacked
-              ? isStackTapTarget
-              : canMove || canExplainInvalidMove,
+          button: stacked ? isStackTapTarget : canMove || canExplainInvalidMove,
           label: stacked
               ? 'Choose a movable pawn from this shared cell'
               : '${color.name} pawn ${pawnIndex + 1}',
@@ -860,8 +875,8 @@ class _MatchScreenState extends State<MatchScreen>
                   : canExplainInvalidMove
                       ? 'Double tap to hear why this pawn cannot move.'
                       : widget.aiPlayers.contains(color)
-                      ? 'Controlled by the AI opponent.'
-                      : 'Not movable on this turn.',
+                          ? 'Controlled by the AI opponent.'
+                          : 'Not movable on this turn.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,

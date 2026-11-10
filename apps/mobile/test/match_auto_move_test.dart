@@ -21,6 +21,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    // Establish the dice ticker's start frame before advancing its duration.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 610));
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
 
