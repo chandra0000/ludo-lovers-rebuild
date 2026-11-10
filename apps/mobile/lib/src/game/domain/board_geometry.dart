@@ -22,6 +22,13 @@ class BoardCell {
 
   bool get isInside => column >= 0 && column < 15 && row >= 0 && row < 15;
 
+  @override
+  bool operator ==(Object other) =>
+      other is BoardCell && other.column == column && other.row == row;
+
+  @override
+  int get hashCode => Object.hash(column, row);
+
   NormalizedBoardPoint get normalizedCenter => NormalizedBoardPoint(
         (column + 0.5) / 15,
         (row + 0.5) / 15,
@@ -225,16 +232,44 @@ class BoardGeometry {
     return (seats[color]!.entryIndex + progress) % trackLength;
   }
 
-  static bool get isStructurallyValid =>
-      sharedTrack.length == trackLength &&
-      sharedTrack.toSet().length == trackLength &&
-      sharedTrack.every((cell) => cell.isInside) &&
-      seats.values.every(
-        (seat) =>
-            seat.homeLane.length == homeLaneLength &&
-            seat.homeLane.toSet().length == homeLaneLength &&
-            seat.homeLane.every((cell) => cell.isInside),
-      );
+  static bool get isStructurallyValid {
+    if (sharedTrack.length != trackLength ||
+        sharedTrack.toSet().length != trackLength ||
+        !sharedTrack.every((cell) => cell.isInside) ||
+        seats.length != PlayerColor.turnOrder.length ||
+        !finishCell.isInside) {
+      return false;
+    }
+
+    final trackCells = sharedTrack.toSet();
+    final allHomeLaneCells = <BoardCell>{};
+    for (final color in PlayerColor.turnOrder) {
+      final seat = seats[color];
+      if (seat == null ||
+          seat.entryIndex != color.entryIndex ||
+          seat.homeLane.length != homeLaneLength) {
+        return false;
+      }
+      for (final cell in seat.homeLane) {
+        if (!cell.isInside ||
+            trackCells.contains(cell) ||
+            cell == finishCell ||
+            !allHomeLaneCells.add(cell)) {
+          return false;
+        }
+      }
+    }
+
+    return safeTrackCells.every(
+          (index) => index >= 0 && index < trackLength,
+        ) &&
+        nonOrthogonalTransitions.toSet().length ==
+            nonOrthogonalTransitions.length &&
+        nonOrthogonalTransitions.toSet().containsAll(
+          cornerConnectorIndexes,
+        ) &&
+        cornerConnectorIndexes.containsAll(nonOrthogonalTransitions);
+  }
 
   static List<int> get nonOrthogonalTransitions {
     final result = <int>[];
