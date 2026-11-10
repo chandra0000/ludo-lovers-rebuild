@@ -46,6 +46,15 @@ Last updated: 2026-11-10
 - Board geometry remains provisional. Phase 2 now enforces a square 15×15 playfield transform and a consistent four-socket yard pattern across all four quadrants. Automated tests cover all 52 unique shared-track cells, each seat's 51-cell route, five home-lane positions, separate finish, safe-cell metadata, four candidate diagonal connectors, and all 16 starting-yard pawn overlay positions. These are structural and coordinate-contract checks, not pixel-level proof that the route or safe cells match the artwork.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
 
+
+## Phase 3 — engine correctness implementation
+
+- Added immutable named rule profiles: `ludo-lovers-current@1` remains the default compatibility behaviour; `classic@1` is opt-in and implements the proposed finish bonus and third-consecutive-six penalty. Classic remains pending product acceptance and is not silently enabled.
+- Added immutable game state versions. Accepted roll, move, and pass transitions increment the version once; callers can provide an expected version to reject stale actions and a unique command ID to reject duplicate submissions.
+- Added deterministic typed transition events for dice rolls, pawn movement, captures, turn changes, third-six penalties, and wins. Events carry an ordered sequence and resulting state version.
+- Added regression tests for the opt-in Classic rules, version increments, stale/duplicate rejection, deterministic capture event ordering, and compatibility-profile behaviour.
+- These changes are committed to `main`; their CI validation is pending. Do not mark Phase 3 complete until the latest commit passes analysis, all tests, and Android builds.
+
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
