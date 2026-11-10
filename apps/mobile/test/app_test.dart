@@ -14,6 +14,31 @@ void main() {
     expect(find.byKey(const Key('start_local_match')), findsOneWidget);
   });
 
+  testWidgets('keeps the complete board composition responsive', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+
+    for (final viewport in <Size>[
+      const Size(360, 800),
+      const Size(393, 873),
+      const Size(412, 915),
+      const Size(800, 360),
+    ]) {
+      tester.view.physicalSize = viewport;
+      await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+      await tester.pump();
+
+      final canvas = tester.getSize(find.byKey(const Key('match_canvas')));
+      final artwork = tester.getSize(find.byKey(const Key('board_artwork')));
+      expect(canvas.width, lessThanOrEqualTo(viewport.width));
+      expect(canvas.height, lessThanOrEqualTo(viewport.height));
+      expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
+      expect(artwork.width / artwork.height, closeTo(9 / 16, 0.001));
+      expect(artwork, canvas);
+    }
+  });
+
   testWidgets('opens a local match from the home screen', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
     await tester.tap(find.byKey(const Key('start_local_match')));
