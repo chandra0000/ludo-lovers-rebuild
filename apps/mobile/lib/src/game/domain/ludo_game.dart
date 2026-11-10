@@ -73,7 +73,14 @@ class DiceRolled extends LudoGameEvent {
 }
 
 class PawnMoved extends LudoGameEvent {
-  const PawnMoved(super.sequence, super.stateVersion, this.player, this.pawnIndex, this.from, this.to);
+  const PawnMoved(
+    super.sequence,
+    super.stateVersion,
+    this.player,
+    this.pawnIndex,
+    this.from,
+    this.to,
+  );
   final PlayerColor player;
   final int pawnIndex;
   final int from;
@@ -365,13 +372,15 @@ class LudoGame {
               progress < playerTrackLength &&
               _trackCell(opponent.color, progress) == landingCell) {
             changed = changed.withPawn(pawn, -1);
-            emitted.add(PawnCaptured(
-              emitted.length,
-              stateVersion + 1,
-              activePlayer,
-              opponent.color,
-              pawn,
-            ));
+            emitted.add(
+              PawnCaptured(
+                emitted.length,
+                stateVersion + 1,
+                activePlayer,
+                opponent.color,
+                pawn,
+              ),
+            );
             captured = true;
           }
         }
