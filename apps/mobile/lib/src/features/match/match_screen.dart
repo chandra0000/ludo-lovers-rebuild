@@ -192,7 +192,9 @@ class _MatchScreenState extends State<MatchScreen>
             final width = BoardGeometry.canvasWidth * scale;
             final height = BoardGeometry.canvasHeight * scale;
             return Center(
-              child: SizedBox(
+              child: RepaintBoundary(
+                key: const Key('match_canvas_capture'),
+                child: SizedBox(
                 key: const Key('match_canvas'),
                 width: width,
                 height: height,
@@ -322,6 +324,7 @@ class _MatchScreenState extends State<MatchScreen>
                       ],
                     ),
                   ),
+                ),
                 ),
               ),
             );
