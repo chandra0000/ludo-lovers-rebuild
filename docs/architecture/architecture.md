@@ -56,3 +56,8 @@ The current code contains a deterministic `LudoGame` domain model and a `BoardGe
 ## Rendering contract
 
 The game artwork is a visual layer. Pawns, dice, selection states, and transient effects are separate Flutter-rendered layers above it. Do not bake changing game state into a static board image.
+
+
+## Legacy repository boundary
+
+The older `chandra0000/ludo-lovers` repository is reference-only. Current app code, game state, geometry, assets, and tests must live in this rebuild. See [legacy repository isolation and migration guardrails](legacy-repository-isolation.md) before porting any old behavior. Do not introduce a second engine or coordinate table to preserve compatibility with the old app.
