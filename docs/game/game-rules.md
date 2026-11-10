@@ -49,7 +49,21 @@ The legacy rule specification records the following proposed Classic defaults. T
 - A player who has finished all pawns is skipped; winner-takes-all versus placement-mode match completion is mode-specific.
 - Domain transitions should emit typed events with deterministic sequence/state-version metadata. A rejected or stale command must not mutate state.
 
-## Current implementation gaps (confirmed by source review)
+
+## Versioned rule profiles and transition contract
+
+The rebuild now exposes immutable, named profiles:
+
+- `ludo-lovers-current@1` is the default compatibility profile. It preserves the existing six/capture bonus behaviour and does not add finish bonuses or a three-sixes penalty.
+- `classic@1` is an opt-in proposed profile based on the legacy Classic defaults. It adds a finish bonus and makes the third consecutive six consume the roll and pass the turn without moving a pawn.
+
+The Classic profile is deliberately **not the default**. Its rule choices, safe-cell identity, and stack/blockade semantics remain pending product acceptance. Do not silently switch an existing match or new match to Classic.
+
+Every accepted roll, pass, or pawn move increments the immutable game `stateVersion` exactly once. Callers may supply `expectedStateVersion` to reject stale actions and a unique `commandId` to reject duplicate submissions. Each transition exposes an immutable, deterministically ordered typed event list; every event carries its sequence number and resulting state version. Current event types cover dice rolls, pawn movement, captures, turn changes, the consecutive-six penalty, and wins.
+
+The game snapshots and player pawn-progress lists are immutable. Rejected commands throw before producing a new state and therefore cannot partially mutate the prior snapshot. Command IDs are retained in the snapshot for in-match idempotency; persistence/replay across process restarts is not yet implemented.
+
+## Remaining implementation gaps
 
 The current `LudoGame` is a small immutable-state model, not yet the legacy typed transition engine:
 - It currently grants a bonus for six and capture, but does not grant a finish bonus.
