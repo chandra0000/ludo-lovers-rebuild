@@ -60,10 +60,10 @@ void main() {
     var value = 0;
     var completed = false;
     await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: MaterialApp(
-          home: StatefulBuilder(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: StatefulBuilder(
             builder: (context, setState) => Scaffold(
               body: Center(
                 child: SizedBox(
