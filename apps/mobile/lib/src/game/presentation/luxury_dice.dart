@@ -220,6 +220,13 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
       label: _isAnimating
           ? 'Dice rolling'
           : 'Dice, value $valueLabel',
+      hint: _isAnimating
+          ? 'Wait for the dice result.'
+          : interactive
+              ? 'Double tap to roll the dice.'
+              : widget.targetValue == null
+                  ? 'Dice is unavailable right now.'
+                  : 'Choose one of the highlighted movable pawns.',
       button: interactive,
       enabled: interactive,
       child: GestureDetector(
