@@ -644,6 +644,11 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _handleStackTap(List<int> movablePawnIndices) {
+    if (_selectedPawnIndex != null &&
+        movablePawnIndices.contains(_selectedPawnIndex)) {
+      _selectOrMovePawn(_selectedPawnIndex!);
+      return;
+    }
     if (movablePawnIndices.isEmpty) {
       return;
     }
