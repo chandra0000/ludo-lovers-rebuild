@@ -398,7 +398,7 @@ void main() {
       activePlayer: PlayerColor.orange,
       pawnProgress: {
         PlayerColor.orange: [4, -1, -1, -1],
-        PlayerColor.green: [43, -1, -1, -1],
+        PlayerColor.green: [44, -1, -1, -1],
       },
     );
     await tester.pumpWidget(
