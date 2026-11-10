@@ -13,6 +13,7 @@ import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/luxury_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
+import '../../game/presentation/shake_feedback_wrapper.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -37,7 +38,7 @@ class MatchScreen extends StatefulWidget {
 }
 
 class _MatchScreenState extends State<MatchScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
@@ -57,6 +58,9 @@ class _MatchScreenState extends State<MatchScreen>
   int _movementStartProgress = 0;
   int _movementEndProgress = 0;
   String? _pendingMoveFeedback;
+  bool _isAutoMovePending = false;
+  int _turnResolutionToken = 0;
+  final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
 
   @override
   void initState() {
@@ -263,29 +267,45 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
-      setState(() {
-        _game = _game.passTurn(
-          expectedStateVersion: _game.stateVersion,
-          commandId: 'match-${_game.stateVersion}-pass',
-        );
-      });
-      unawaited(_persistMatch());
-      _scheduleAiTurn();
+      final token = ++_turnResolutionToken;
+      setState(() => _isAutoMovePending = true);
+      unawaited(Future<void>.delayed(const Duration(milliseconds: 600), () {
+        if (!mounted || token != _turnResolutionToken || _game.diceValue == null) return;
+        setState(() {
+          _game = _game.passTurn(
+            expectedStateVersion: _game.stateVersion,
+            commandId: 'match-${_game.stateVersion}-pass',
+          );
+          _isAutoMovePending = false;
+        });
+        unawaited(_persistMatch());
+        _scheduleAiTurn();
+      }));
       return;
     }
 
-    if (widget.aiPlayers.contains(_game.activePlayer)) {
-      final selected = _ai.choosePawn(
-        _game,
-        seed: widget.aiSeed ^ _game.stateVersion,
-      );
-      if (selected != null) _move(selected);
+    final isAiTurn = widget.aiPlayers.contains(_game.activePlayer);
+    final selected = isAiTurn
+        ? _ai.choosePawn(_game, seed: widget.aiSeed ^ _game.stateVersion)
+        : legal.length == 1
+            ? legal.single
+            : null;
+    if (selected != null) {
+      final token = ++_turnResolutionToken;
+      setState(() => _isAutoMovePending = true);
+      unawaited(Future<void>.delayed(const Duration(milliseconds: 350), () {
+        if (!mounted || token != _turnResolutionToken ||
+            _game.diceValue == null || _movementController.isAnimating) return;
+        setState(() => _isAutoMovePending = false);
+        _move(selected);
+      }));
     }
   }
 
   void _showInvalidMoveFeedback(int pawnIndex) {
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     if (evaluation is! InvalidMove || !mounted) return;
+    _shakeKeys['${_game.activePlayer.name}-$pawnIndex']?.currentState?.triggerShake();
     HapticFeedback.lightImpact();
     final message = switch (evaluation.reason) {
       MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
@@ -307,7 +327,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _move(int pawnIndex) {
-    if (_isDiceAnimating || !_game.legalPawnIndices().contains(pawnIndex)) {
+    if (_isDiceAnimating || _isAutoMovePending || !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
     final movingColor = _game.activePlayer;
@@ -681,10 +701,12 @@ class _MatchScreenState extends State<MatchScreen>
         color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
+        !_isAutoMovePending &&
         isHumanTurn &&
         legalIndices.contains(pawnIndex);
     final canExplainInvalidMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
+        !_isAutoMovePending &&
         isHumanTurn &&
         _game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
@@ -711,6 +733,10 @@ class _MatchScreenState extends State<MatchScreen>
     // inversely so its transformed physical bounds never fall below 44×48 dp.
     final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
+    final shakeKey = _shakeKeys.putIfAbsent(
+      '${color.name}-$pawnIndex',
+      GlobalKey<ShakeFeedbackWrapperState>.new,
+    );
     return Positioned(
       left: tapPosition.dx - hitTargetWidth / 2,
       top: tapPosition.dy - hitTargetHeight / 2,
@@ -758,14 +784,17 @@ class _MatchScreenState extends State<MatchScreen>
             child: Center(
               child: Transform.translate(
                 offset: visualOffset,
-                child: AnimatedScale(
-                  scale: canMove ? 1.12 : 1,
-                  duration: const Duration(milliseconds: 180),
-                  child: GlassyPawn(
-                    color: color.color,
-                    size: size,
-                    isCurrentPlayer: isCurrentPlayer,
-                    isMovable: canMove,
+                child: ShakeFeedbackWrapper(
+                  key: shakeKey,
+                  child: AnimatedScale(
+                    scale: canMove ? 1.12 : 1,
+                    duration: const Duration(milliseconds: 180),
+                    child: GlassyPawn(
+                      color: color.color,
+                      size: size,
+                      isCurrentPlayer: isCurrentPlayer,
+                      isMovable: canMove,
+                    ),
                   ),
                 ),
               ),
