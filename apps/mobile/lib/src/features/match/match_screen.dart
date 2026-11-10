@@ -88,39 +88,50 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _scheduleAiTurn() {
     if (!widget.aiPlayers.contains(_game.activePlayer) ||
-        _game.winner != null || _game.diceValue != null || _aiTurnScheduled) {
+        _game.winner != null ||
+        _game.diceValue != null ||
+        _aiTurnScheduled) {
       return;
     }
     _aiTurnScheduled = true;
-    unawaited(Future<void>.delayed(const Duration(milliseconds: 450), () {
-      _aiTurnScheduled = false;
-      if (!mounted || !widget.aiPlayers.contains(_game.activePlayer) ||
-          _game.winner != null || _game.diceValue != null) {
-        return;
-      }
-      final rolled = _game.roll(
-        _random.nextInt(6) + 1,
-        expectedStateVersion: _game.stateVersion,
-        commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
-      );
-      setState(() => _game = rolled);
-      final legal = _game.legalPawnIndices();
-      if (legal.isEmpty) {
-        setState(() {
-          _game = _game.passTurn(
+    unawaited(
+      Future<void>.delayed(
+        const Duration(milliseconds: 450),
+        () {
+          _aiTurnScheduled = false;
+          if (!mounted ||
+              !widget.aiPlayers.contains(_game.activePlayer) ||
+              _game.winner != null ||
+              _game.diceValue != null) {
+            return;
+          }
+          final rolled = _game.roll(
+            _random.nextInt(6) + 1,
             expectedStateVersion: _game.stateVersion,
-            commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-pass',
+            commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
           );
-        });
-        _scheduleAiTurn();
-        return;
-      }
-      final selected = _ai.choosePawn(
-        _game,
-        seed: widget.aiSeed ^ _game.stateVersion,
-      );
-      if (selected != null) _move(selected);
-    }));
+          setState(() => _game = rolled);
+          final legal = _game.legalPawnIndices();
+          if (legal.isEmpty) {
+            setState(() {
+              _game = _game.passTurn(
+                expectedStateVersion: _game.stateVersion,
+                commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-pass',
+              );
+            });
+            _scheduleAiTurn();
+            return;
+          }
+          final selected = _ai.choosePawn(
+            _game,
+            seed: widget.aiSeed ^ _game.stateVersion,
+          );
+          if (selected != null) {
+            _move(selected);
+          }
+        },
+      ),
+    );
   }
 
   void _roll() {
