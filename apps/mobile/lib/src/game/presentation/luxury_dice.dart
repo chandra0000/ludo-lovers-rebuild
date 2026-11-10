@@ -3,133 +3,267 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A premium ivory-and-gold die.
+/// Premium ivory-and-gold dice presentation.
 ///
-/// The game engine remains the source of truth for [value]. While [isRolling]
-/// is true, this widget animates the die and briefly cycles its visible pips;
-/// it never generates or changes the result itself.
-class LuxuryAnimatedDice extends StatefulWidget {
-  const LuxuryAnimatedDice({
+/// [targetValue] and [rollId] are supplied by the match controller. Increment
+/// [rollId] for every accepted roll, even when the new result equals the
+/// previous result. The widget never generates or changes the dice outcome.
+class LuxuryDiceButton extends StatefulWidget {
+  const LuxuryDiceButton({
     super.key,
-    required this.value,
-    required this.isRolling,
+    required this.targetValue,
+    required this.rollId,
     required this.canRoll,
-    required this.onTap,
-    this.onRollCompleted,
+    required this.isWaitingForRoll,
+    required this.onRollRequested,
+    this.onAnimationComplete,
     this.size = 72,
-  }) : assert(value >= 1 && value <= 6);
+  }) : assert(targetValue == null || (targetValue >= 1 && targetValue <= 6));
 
-  /// The authoritative result supplied by the game engine.
-  final int value;
-  final bool isRolling;
+  /// Authoritative engine result, or null while no result is active.
+  final int? targetValue;
+
+  /// Monotonically increasing identifier for each accepted roll.
+  /// It distinguishes consecutive rolls that produce the same face value.
+  final int rollId;
+
   final bool canRoll;
-  final VoidCallback onTap;
-  final VoidCallback? onRollCompleted;
+  final bool isWaitingForRoll;
+  final VoidCallback onRollRequested;
+  final VoidCallback? onAnimationComplete;
   final double size;
 
   @override
-  State<LuxuryAnimatedDice> createState() => _LuxuryAnimatedDiceState();
+  State<LuxuryDiceButton> createState() => _LuxuryDiceButtonState();
 }
 
-class _LuxuryAnimatedDiceState extends State<LuxuryAnimatedDice>
+class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _rollController = AnimationController(
+  static const List<List<int>> _tumblePatterns = [
+    [3, 5, 2, 6, 1, 4, 2, 5, 3, 6, 4, 1],
+    [2, 4, 1, 5, 6, 3, 4, 2, 5, 1, 6, 3],
+    [5, 1, 6, 2, 4, 3, 1, 6, 2, 5, 3, 4],
+    [4, 6, 3, 1, 5, 2, 6, 3, 1, 4, 2, 5],
+  ];
+
+  late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 650),
-  );
+    duration: const Duration(milliseconds: 600),
+  )..addStatusListener(_handleAnimationStatus);
+
+  bool _isAnimating = false;
+  bool _requestPending = false;
+  int _activeRollId = 0;
+  int? _completedRollId;
+  int? _settledValue;
+  int _callbackGeneration = 0;
 
   @override
-  void didUpdateWidget(covariant LuxuryAnimatedDice oldWidget) {
+  void initState() {
+    super.initState();
+    // A restored game state is displayed immediately; it is not a new roll.
+    _activeRollId = widget.rollId;
+    _completedRollId = widget.rollId;
+    _settledValue = widget.targetValue;
+  }
+
+  @override
+  void didUpdateWidget(covariant LuxuryDiceButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.isRolling && !oldWidget.isRolling) {
-      HapticFeedback.mediumImpact();
-      _startRoll();
-    } else if (!widget.isRolling && oldWidget.isRolling) {
-      _rollController.stop();
-      _rollController.value = 0;
+    if (!widget.canRoll || !widget.isWaitingForRoll) {
+      _requestPending = false;
+    }
+
+    if (widget.rollId != oldWidget.rollId) {
+      _requestPending = false;
+      _activeRollId = widget.rollId;
+      _cancelCurrentAnimation();
+      _completedRollId = null;
+      _settledValue = widget.targetValue;
+      if (widget.targetValue != null) {
+        _startTumble(widget.rollId);
+      }
+      return;
+    }
+
+    if (widget.targetValue == null) {
+      if (oldWidget.targetValue != null || _isAnimating) {
+        _cancelCurrentAnimation();
+        _settledValue = null;
+        _requestPending = false;
+      }
+      return;
+    }
+
+    // Supports an asynchronous controller: rollId may arrive before the
+    // authoritative server result. Animate once that result becomes available.
+    if (oldWidget.targetValue == null &&
+        widget.targetValue != null &&
+        _completedRollId != widget.rollId) {
+      _startTumble(widget.rollId);
+      return;
+    }
+
+    // If an in-flight authoritative result is corrected, restart the same
+    // roll's animation. A completed roll is simply updated without re-callback.
+    if (widget.targetValue != oldWidget.targetValue && _isAnimating) {
+      _startTumble(widget.rollId);
+    } else if (!_isAnimating) {
+      _settledValue = widget.targetValue;
     }
   }
 
-  void _startRoll() {
+  void _cancelCurrentAnimation() {
+    _callbackGeneration++;
+    _controller.stop();
+    _controller.value = 0;
+    _isAnimating = false;
+  }
+
+  void _startTumble(int rollId) {
+    if (rollId != _activeRollId || _completedRollId == rollId) return;
+
+    _callbackGeneration++;
+    final generation = _callbackGeneration;
+    _controller.stop();
+    _controller.value = 0;
+
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-
     if (reduceMotion) {
+      _isAnimating = false;
+      _settledValue = widget.targetValue;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.isRolling) {
-          widget.onRollCompleted?.call();
-        }
+        _completeRoll(rollId, generation);
       });
       return;
     }
 
-    _rollController.forward(from: 0).then((_) {
-      if (mounted && widget.isRolling) {
-        widget.onRollCompleted?.call();
-      }
-    });
+    _isAnimating = true;
+    _settledValue = null;
+    HapticFeedback.lightImpact();
+    _controller.forward();
+  }
+
+  void _handleAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed && _isAnimating) {
+      _completeRoll(_activeRollId, _callbackGeneration);
+    }
+  }
+
+  void _completeRoll(int rollId, int generation) {
+    if (!mounted ||
+        generation != _callbackGeneration ||
+        rollId != widget.rollId ||
+        rollId != _activeRollId ||
+        widget.targetValue == null ||
+        _completedRollId == rollId) {
+      return;
+    }
+
+    _completedRollId = rollId;
+    _isAnimating = false;
+    _settledValue = widget.targetValue;
+    _requestPending = false;
+
+    // Settle the face before notifying the match coordinator. The generation
+    // and completed-roll guards ensure this callback is delivered exactly once.
+    setState(() {});
+    widget.onAnimationComplete?.call();
+  }
+
+  void _handleTap() {
+    if (_isAnimating ||
+        _requestPending ||
+        !widget.canRoll ||
+        !widget.isWaitingForRoll) {
+      return;
+    }
+
+    _requestPending = true;
+    HapticFeedback.selectionClick();
+    widget.onRollRequested();
   }
 
   @override
   void dispose() {
-    _rollController.dispose();
+    _callbackGeneration++;
+    _controller.dispose();
     super.dispose();
+  }
+
+  int _visibleFace() {
+    if (!_isAnimating) {
+      return _settledValue ?? widget.targetValue ?? 1;
+    }
+
+    final pattern = _tumblePatterns[widget.rollId % _tumblePatterns.length];
+    final frame = (_controller.value * pattern.length)
+        .floor()
+        .clamp(0, pattern.length - 1);
+    return pattern[frame];
   }
 
   @override
   Widget build(BuildContext context) {
-    final hitTargetSize = math.max(widget.size, 48.0);
+    final interactive = widget.canRoll &&
+        widget.isWaitingForRoll &&
+        !_isAnimating &&
+        !_requestPending;
+    final valueLabel = widget.targetValue == null
+        ? 'not rolled'
+        : widget.targetValue.toString();
 
     return Semantics(
-      button: true,
-      enabled: widget.canRoll && !widget.isRolling,
-      label: widget.isRolling
+      key: const Key('luxury_dice_semantics'),
+      label: _isAnimating
           ? 'Dice rolling'
-          : 'Dice shows ${widget.value}. ${widget.canRoll ? 'Tap to roll' : 'Not your turn'}',
+          : 'Dice, value $valueLabel',
+      button: true,
+      enabled: interactive,
       child: GestureDetector(
+        key: const Key('luxury_dice_gesture'),
         behavior: HitTestBehavior.opaque,
-        onTap: widget.canRoll && !widget.isRolling ? widget.onTap : null,
+        onTap: interactive ? _handleTap : null,
         child: SizedBox(
-          width: hitTargetSize,
-          height: hitTargetSize,
+          width: math.max(widget.size, 48),
+          height: math.max(widget.size, 48),
           child: Center(
             child: AnimatedBuilder(
-              animation: _rollController,
+              animation: _controller,
               builder: (context, child) {
-                final animating = widget.isRolling &&
-                    _rollController.status == AnimationStatus.forward;
                 final progress = Curves.easeOutCubic.transform(
-                  _rollController.value,
+                  _controller.value,
                 );
-                // Derive the temporary face from animation progress rather
-                // than Random() in build, keeping frames reproducible.
-                final rollingValue =
-                    ((_rollController.value * 37).floor() % 6) + 1;
-                final displayedValue =
-                    animating ? rollingValue : widget.value;
-                final bounce = animating
-                    ? _bounceScale(_rollController.value)
-                    : 1.0;
+                final face = _visibleFace();
+                final bounce = !_isAnimating
+                    ? 1.0
+                    : _controller.value < 0.3
+                        ? 1 + (_controller.value / 0.3) * 0.25
+                        : _controller.value < 0.7
+                            ? 1.25 -
+                                ((_controller.value - 0.3) / 0.4) * 0.35
+                            : 0.9 +
+                                ((_controller.value - 0.7) / 0.3) * 0.1;
 
                 return Transform.scale(
                   scale: bounce,
                   child: Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.002)
-                      ..rotateX(animating ? progress * 4 * math.pi : 0)
-                      ..rotateY(animating ? progress * 6 * math.pi : 0)
+                      ..setEntry(3, 2, 0.0018)
+                      ..rotateX(_isAnimating ? progress * 4 * math.pi : 0)
+                      ..rotateY(_isAnimating ? progress * 6 * math.pi : 0)
                       ..rotateZ(
-                        animating
-                            ? math.sin(_rollController.value * math.pi * 2) *
-                                0.2
+                        _isAnimating
+                            ? math.sin(_controller.value * math.pi * 2) * 0.15
                             : 0,
                       ),
-                    child: _LuxuryDiceFace(
+                    child: _DiceFace(
                       size: widget.size,
-                      value: displayedValue,
-                      isGilded: widget.canRoll,
+                      value: face,
+                      isInteractive: interactive,
                     ),
                   ),
                 );
@@ -140,35 +274,21 @@ class _LuxuryAnimatedDiceState extends State<LuxuryAnimatedDice>
       ),
     );
   }
-
-  double _bounceScale(double progress) {
-    if (progress < 0.3) {
-      return 1 + (progress / 0.3) * 0.35;
-    }
-    if (progress < 0.7) {
-      return 1.35 - ((progress - 0.3) / 0.4) * 0.5;
-    }
-    return 0.85 + ((progress - 0.7) / 0.3) * 0.15;
-  }
 }
 
-class _LuxuryDiceFace extends StatelessWidget {
-  const _LuxuryDiceFace({
+class _DiceFace extends StatelessWidget {
+  const _DiceFace({
     required this.size,
     required this.value,
-    required this.isGilded,
+    required this.isInteractive,
   });
 
   final double size;
   final int value;
-  final bool isGilded;
-
-  static const _gold = Color(0xFFFFD36B);
+  final bool isInteractive;
 
   @override
   Widget build(BuildContext context) {
-    final pipSize = size * 0.18;
-
     return Container(
       width: size,
       height: size,
@@ -179,46 +299,45 @@ class _LuxuryDiceFace extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Color(0xFFFFFFFF),
-            Color(0xFFF3EFE0),
-            Color(0xFFDED8C7),
+            Color(0xFFF6F3EA),
+            Color(0xFFE2DCCB),
           ],
         ),
         border: Border.all(
-          color: isGilded ? _gold : const Color(0xFFB0A48A),
-          width: 2.5,
+          color: isInteractive
+              ? const Color(0xFFFFD54F)
+              : const Color(0xFFC7BEA9),
+          width: 2.2,
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
+          const BoxShadow(
+            color: Colors.black45,
+            blurRadius: 10,
+            offset: Offset(0, 5),
           ),
-          if (isGilded)
-            BoxShadow(
-              color: const Color(0xFFFFB300).withValues(alpha: 0.48),
-              blurRadius: 12,
+          if (isInteractive)
+            const BoxShadow(
+              color: Color(0x66FFB300),
+              blurRadius: 14,
               spreadRadius: 2,
             ),
-          const BoxShadow(
-            color: Colors.white70,
-            blurRadius: 2,
-            offset: Offset(-1, -1),
-          ),
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(size * 0.16),
-        child: _DicePips(value: value, pipSize: pipSize),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(size * 0.16),
+          child: _DicePips(value: value, size: size),
+        ),
       ),
     );
   }
 }
 
 class _DicePips extends StatelessWidget {
-  const _DicePips({required this.value, required this.pipSize});
+  const _DicePips({required this.value, required this.size});
 
   final int value;
-  final double pipSize;
+  final double size;
 
   static const _positions = <int, Set<int>>{
     1: {4},
@@ -232,6 +351,7 @@ class _DicePips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = _positions[value]!;
+    final pipSize = size * 0.17;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -241,7 +361,10 @@ class _DicePips extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               for (var column = 0; column < 3; column++)
-                _Pip(active: active.contains(row * 3 + column), size: pipSize),
+                _Pip(
+                  active: active.contains(row * 3 + column),
+                  size: pipSize,
+                ),
             ],
           ),
       ],
@@ -257,9 +380,7 @@ class _Pip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!active) {
-      return SizedBox(width: size, height: size);
-    }
+    if (!active) return SizedBox(width: size, height: size);
 
     return Container(
       width: size,
@@ -270,7 +391,7 @@ class _Pip extends StatelessWidget {
           center: Alignment(-0.3, -0.3),
           colors: [Color(0xFF37474F), Color(0xFF080A0D)],
         ),
-        border: Border.all(color: const Color(0xFFB57C1E), width: 1.1),
+        border: Border.all(color: const Color(0xFFB57C1E), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black45,
