@@ -103,13 +103,15 @@ cd apps/mobile
 flutter test --reporter expanded
 ```
 
-Only when an intentional visual change is approved, update references locally:
+Only when an intentional visual change is approved, update references locally from PowerShell:
 
-```sh
+```powershell
 cd apps/mobile
-flutter test --update-goldens --reporter expanded
+.\\tool\\update_goldens.ps1
 git diff -- test
 ```
+
+Or run the equivalent Flutter command directly: `flutter test --update-goldens --reporter expanded`.
 
 Review every changed PNG before committing. Never add `--update-goldens` to
 the normal CI test command.
