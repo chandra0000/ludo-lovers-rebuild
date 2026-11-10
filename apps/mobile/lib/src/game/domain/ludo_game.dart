@@ -391,8 +391,10 @@ class LudoGame {
 
     final profileId = rawProfile['id'];
     final profileVersion = rawProfile['version'];
-    if (profileId is! String || profileId.trim().isEmpty ||
-        profileVersion is! int || profileVersion < 1) {
+    if (profileId is! String ||
+        profileId.trim().isEmpty ||
+        profileVersion is! int ||
+        profileVersion < 1) {
       throw const FormatException('Invalid Ludo rule profile.');
     }
     final profile = LudoRuleProfile(
@@ -422,24 +424,36 @@ class LudoGame {
     final savedSixes = snapshot['consecutiveSixes'];
     if ((savedDice != null &&
             (savedDice is! int || savedDice < 1 || savedDice > 6)) ||
-        savedVersion is! int || savedVersion < 0 ||
-        savedSixes is! int || savedSixes < 0 ||
+        savedVersion is! int ||
+        savedVersion < 0 ||
+        savedSixes is! int ||
+        savedSixes < 0 ||
         (profile.threeConsecutiveSixesPenalty && savedSixes > 2) ||
-        rawCommandIds.any((value) => value is! String || value.trim().isEmpty)) {
+        rawCommandIds.any(
+          (value) => value is! String || value.trim().isEmpty,
+        )) {
       throw const FormatException('Invalid Ludo snapshot state.');
     }
     final activeColor = parseColor(activeName, 'activePlayer');
-    final winnerColor = winnerName == null ? null : parseColor(winnerName, 'winner');
+    final winnerColor = winnerName == null
+        ? null
+        : parseColor(winnerName, 'winner');
     final restoredPlayers = <LudoPlayer>[
       for (final color in PlayerColor.turnOrder)
         LudoPlayer(color, pawnProgress: progressByColor[color]),
     ];
-    final completed = restoredPlayers.where((player) => player.hasWon).toList();
+    final completed = restoredPlayers
+        .where((player) => player.hasWon)
+        .toList();
     if ((winnerColor == null && completed.isNotEmpty) ||
         (winnerColor != null &&
-            (completed.length != 1 || completed.single.color != winnerColor ||
-                activeColor != winnerColor || savedDice != null))) {
-      throw const FormatException('Inconsistent winner/completed-player snapshot state.');
+            (completed.length != 1 ||
+                completed.single.color != winnerColor ||
+                activeColor != winnerColor ||
+                savedDice != null))) {
+      throw const FormatException(
+        'Inconsistent winner/completed-player snapshot state.',
+      );
     }
     final commands = rawCommandIds.cast<String>();
     if (commands.toSet().length != commands.length) {
