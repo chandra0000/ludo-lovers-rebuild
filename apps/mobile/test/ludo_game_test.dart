@@ -34,6 +34,17 @@ void main() {
       expect(moved.activePlayer, PlayerColor.green);
     });
 
+    test('passes to the next player when no pawn can move', () {
+      final passed = LudoGame.initial().roll(4).passTurn();
+      expect(passed.activePlayer, PlayerColor.green);
+      expect(passed.diceValue, isNull);
+    });
+
+    test('rejects passing while a legal pawn move exists', () {
+      final rolled = LudoGame.initial().roll(6);
+      expect(() => rolled.passTurn(), throwsStateError);
+    });
+
     test('rejects dice values outside 1..6', () {
       expect(() => LudoGame.initial().roll(0), throwsArgumentError);
       expect(() => LudoGame.initial().roll(7), throwsArgumentError);
