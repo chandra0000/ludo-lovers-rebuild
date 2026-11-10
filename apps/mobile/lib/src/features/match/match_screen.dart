@@ -9,10 +9,13 @@ import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
-  const MatchScreen({super.key, this.rollDice});
+  const MatchScreen({super.key, this.rollDice, this.initialGame});
 
   @visibleForTesting
   final int Function()? rollDice;
+
+  @visibleForTesting
+  final LudoGame? initialGame;
 
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -23,7 +26,7 @@ class _MatchScreenState extends State<MatchScreen> {
   static const double _canvasHeight = 1024;
   static const Rect _boardRect = Rect.fromLTWH(17, 205, 542, 542);
 
-  LudoGame _game = LudoGame.initial();
+  late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
 
   void _roll() {
@@ -213,6 +216,63 @@ class _MatchScreenState extends State<MatchScreen> {
     );
   }
 
+  void _handleStackTap(List<int> movablePawnIndices) {
+    if (movablePawnIndices.isEmpty) {
+      return;
+    }
+    if (movablePawnIndices.length == 1) {
+      _move(movablePawnIndices.single);
+      return;
+    }
+
+    showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: const Color(0xFF17120B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'CHOOSE A PAWN',
+                style: TextStyle(
+                  color: Color(0xFFFFC857),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final index in movablePawnIndices)
+                ListTile(
+                  leading: Icon(
+                    Icons.circle,
+                    color: _game.activePlayer.color,
+                  ),
+                  title: Text(
+                    'Pawn ${index + 1}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFFFFC857),
+                  ),
+                  onTap: () => Navigator.of(sheetContext).pop(index),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ).then((selectedIndex) {
+      if (selectedIndex != null && mounted) {
+        _move(selectedIndex);
+      }
+    });
+  }
+
   Widget _buildPawn(PlayerColor color, int pawnIndex) {
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
@@ -226,18 +286,14 @@ class _MatchScreenState extends State<MatchScreen> {
       _boardRect.top + normalized.y * _boardRect.height,
     );
 
-    // Fan out pieces sharing a track cell into a compact 2x2 formation.
-    // Keep each pawn independently tappable and visually identifiable.
     final occupants = <({PlayerColor color, int pawnIndex, Offset center})>[];
     for (final otherColor in PlayerColor.turnOrder) {
       final otherPlayer = _game.players.firstWhere(
         (item) => item.color == otherColor,
       );
-      for (
-        var otherIndex = 0;
-        otherIndex < otherPlayer.pawnProgress.length;
-        otherIndex++
-      ) {
+      for (var otherIndex = 0;
+          otherIndex < otherPlayer.pawnProgress.length;
+          otherIndex++) {
         final otherProgress = otherPlayer.pawnProgress[otherIndex];
         final otherPoint = BoardGeometry.normalizedPosition(
           otherColor,
@@ -261,6 +317,7 @@ class _MatchScreenState extends State<MatchScreen> {
       );
       return colorOrder != 0 ? colorOrder : a.pawnIndex.compareTo(b.pawnIndex);
     });
+
     final stackIndex = occupants.indexWhere(
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
@@ -271,35 +328,61 @@ class _MatchScreenState extends State<MatchScreen> {
       Offset(.48, .48),
     ];
     final stacked = occupants.length > 1;
-    final position = stacked
-        ? center + offsets[stackIndex % offsets.length] * 18
-        : center;
+    final visualOffset = stacked ? offsets[stackIndex % offsets.length] * 18 : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
+    final legalIndices = _game.legalPawnIndices();
     final canMove = color == _game.activePlayer &&
-        _game.legalPawnIndices().contains(pawnIndex);
+        legalIndices.contains(pawnIndex);
+    final movableStackIndices = occupants
+        .where(
+          (item) =>
+              item.color == _game.activePlayer &&
+              legalIndices.contains(item.pawnIndex),
+        )
+        .map((item) => item.pawnIndex)
+        .toList(growable: false);
+    final stackTapIndex = occupants.indexWhere(
+      (item) =>
+          item.color == _game.activePlayer &&
+          legalIndices.contains(item.pawnIndex),
+    );
+    final isStackTapTarget = stacked && stackIndex == stackTapIndex;
     final isCurrentPlayer = color == _game.activePlayer;
+    final tapPosition = stacked ? center : center + visualOffset;
 
     return Positioned(
-      left: position.dx - 22,
-      top: position.dy - 24,
+      left: tapPosition.dx - 22,
+      top: tapPosition.dy - 24,
       width: 44,
       height: 48,
-      child: Semantics(
-        button: canMove,
-        label: '${color.name} pawn ${pawnIndex + 1}',
-        child: GestureDetector(
-          key: Key('pawn_${color.name}_$pawnIndex'),
-          behavior: HitTestBehavior.opaque,
-          onTap: canMove ? () => _move(pawnIndex) : null,
-          child: Center(
-            child: AnimatedScale(
-              scale: canMove ? 1.12 : 1,
-              duration: const Duration(milliseconds: 180),
-              child: GlassyPawn(
-                color: color.color,
-                size: size,
-                isCurrentPlayer: isCurrentPlayer,
-                isMovable: canMove,
+      child: IgnorePointer(
+        ignoring: stacked && !isStackTapTarget,
+        child: Semantics(
+          button: stacked ? isStackTapTarget : canMove,
+          label: stacked
+              ? 'Choose a movable pawn from this shared cell'
+              : '${color.name} pawn ${pawnIndex + 1}',
+          child: GestureDetector(
+            key: Key('pawn_${color.name}_$pawnIndex'),
+            behavior: HitTestBehavior.opaque,
+            onTap: stacked
+                ? (isStackTapTarget
+                    ? () => _handleStackTap(movableStackIndices)
+                    : null)
+                : (canMove ? () => _move(pawnIndex) : null),
+            child: Center(
+              child: Transform.translate(
+                offset: visualOffset,
+                child: AnimatedScale(
+                  scale: canMove ? 1.12 : 1,
+                  duration: const Duration(milliseconds: 180),
+                  child: GlassyPawn(
+                    color: color.color,
+                    size: size,
+                    isCurrentPlayer: isCurrentPlayer,
+                    isMovable: canMove,
+                  ),
+                ),
               ),
             ),
           ),
@@ -307,4 +390,4 @@ class _MatchScreenState extends State<MatchScreen> {
       ),
     );
   }
-}
+}}
