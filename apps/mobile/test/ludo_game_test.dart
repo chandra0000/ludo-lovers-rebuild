@@ -290,7 +290,7 @@ void main() {
       // The player must choose another legal pawn when one exists.
       expect(rolled.legalPawnIndices(), [1]);
       final moved = rolled.movePawn(1);
-      expect(moved.currentPlayer.pawnProgress[1], 13);
+      expect(moved.players.firstWhere((player) => player.color == PlayerColor.orange).pawnProgress[1], 13);
       expect(moved.activePlayer, PlayerColor.green);
     });
 
