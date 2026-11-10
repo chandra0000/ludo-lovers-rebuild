@@ -12,6 +12,24 @@ import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
+  testWidgets('restored pending AI roll passes without getting stranded', (tester) async {
+    final pendingAiTurn = LudoGame.initial().roll(2);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(
+          initialGame: pendingAiTurn,
+          aiPlayers: const {PlayerColor.orange},
+          aiSeed: 42,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('home offers resume for a persisted local match', (tester) async {
     SharedPreferences.setMockInitialValues({});
     const store = SavedMatchStore();
