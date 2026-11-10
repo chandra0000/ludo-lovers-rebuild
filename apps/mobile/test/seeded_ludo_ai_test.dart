@@ -52,6 +52,7 @@ void main() {
     final random = Random(seed);
     var game = LudoGame.initial();
     var transitions = 0;
+    var turns = 0;
 
     while (game.winner == null && transitions < 100000) {
       if (game.diceValue == null) {
@@ -61,6 +62,7 @@ void main() {
           commandId: 'ai-$seed-${transitions}-roll',
         );
         transitions++;
+        turns++;
       }
       final legal = game.legalPawnIndices();
       if (legal.isEmpty) {
@@ -94,7 +96,7 @@ void main() {
     }
 
     expect(game.winner, isNotNull);
-    expect(transitions, greaterThan(100));
+    expect(turns, greaterThan(100));
     expect(transitions, lessThan(100000));
     expect(game.currentPlayer.hasWon, isTrue);
   });
