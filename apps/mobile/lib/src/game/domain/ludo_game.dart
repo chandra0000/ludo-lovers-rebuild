@@ -5,11 +5,19 @@ const int finishProgress = 56;
 const Set<int> safeTrackCells = <int>{0, 8, 13, 21, 26, 34, 39, 47};
 
 class LudoPlayer {
-  LudoPlayer(this.color, {List<int>? pawnProgress})
-      : pawnProgress = List<int>.unmodifiable(pawnProgress ?? List<int>.filled(4, -1)) {
+  LudoPlayer(
+    this.color, {
+    List<int>? pawnProgress,
+  }) : pawnProgress = List<int>.unmodifiable(
+          pawnProgress ?? List<int>.filled(4, -1),
+        ) {
     if (this.pawnProgress.length != 4 ||
-        this.pawnProgress.any((step) => step < -1 || step > finishProgress)) {
-      throw ArgumentError('Each player must have four pawns with progress -1..$finishProgress.');
+        this.pawnProgress.any(
+          (step) => step < -1 || step > finishProgress,
+        )) {
+      throw ArgumentError(
+        'Each player must have four pawns with progress -1..$finishProgress.',
+      );
     }
   }
 
@@ -44,11 +52,14 @@ class LudoGame {
   final int? diceValue;
   final PlayerColor? winner;
 
-  LudoPlayer get currentPlayer => players.firstWhere((p) => p.color == activePlayer);
+  LudoPlayer get currentPlayer =>
+      players.firstWhere((player) => player.color == activePlayer);
 
   List<int> legalPawnIndices({int? roll}) {
     final value = roll ?? diceValue;
-    if (value == null || winner != null) return const [];
+    if (value == null || winner != null) {
+      return const [];
+    }
     final result = <int>[];
     for (var i = 0; i < currentPlayer.pawnProgress.length; i++) {
       final progress = currentPlayer.pawnProgress[i];
@@ -60,9 +71,15 @@ class LudoGame {
   }
 
   LudoGame roll(int value) {
-    if (winner != null) throw StateError('The game has already finished.');
-    if (diceValue != null) throw StateError('Move a pawn before rolling again.');
-    if (value < 1 || value > 6) throw ArgumentError.value(value, 'value', 'Dice must be 1..6.');
+    if (winner != null) {
+      throw StateError('The game has already finished.');
+    }
+    if (diceValue != null) {
+      throw StateError('Move a pawn before rolling again.');
+    }
+    if (value < 1 || value > 6) {
+      throw ArgumentError.value(value, 'value', 'Dice must be 1..6.');
+    }
     return LudoGame._(
       players: players,
       activePlayer: activePlayer,
@@ -72,7 +89,9 @@ class LudoGame {
   }
 
   LudoGame passTurn() {
-    if (diceValue == null) throw StateError('Roll the dice first.');
+    if (diceValue == null) {
+      throw StateError('Roll the dice first.');
+    }
     if (legalPawnIndices().isNotEmpty) {
       throw StateError('A legal pawn move is available.');
     }
@@ -84,23 +103,32 @@ class LudoGame {
 
   LudoGame movePawn(int pawnIndex) {
     final rollValue = diceValue;
-    if (rollValue == null) throw StateError('Roll the dice first.');
+    if (rollValue == null) {
+      throw StateError('Roll the dice first.');
+    }
     if (!legalPawnIndices().contains(pawnIndex)) {
-      throw StateError('Pawn $pawnIndex cannot move with a roll of $rollValue.');
+      throw StateError(
+        'Pawn $pawnIndex cannot move with a roll of $rollValue.',
+      );
     }
 
     final updatedPlayers = List<LudoPlayer>.of(players);
-    final playerIndex = updatedPlayers.indexWhere((p) => p.color == activePlayer);
+    final playerIndex = updatedPlayers.indexWhere(
+      (player) => player.color == activePlayer,
+    );
     final player = updatedPlayers[playerIndex];
     final previous = player.pawnProgress[pawnIndex];
     final nextProgress = previous == -1 ? 0 : previous + rollValue;
     updatedPlayers[playerIndex] = player.withPawn(pawnIndex, nextProgress);
 
     var captured = false;
-    if (nextProgress < sharedTrackLength && !safeTrackCells.contains(_trackCell(activePlayer, nextProgress))) {
+    if (nextProgress < sharedTrackLength &&
+        !safeTrackCells.contains(_trackCell(activePlayer, nextProgress))) {
       final landingCell = _trackCell(activePlayer, nextProgress);
       for (var i = 0; i < updatedPlayers.length; i++) {
-        if (updatedPlayers[i].color == activePlayer) continue;
+        if (updatedPlayers[i].color == activePlayer) {
+          continue;
+        }
         final opponent = updatedPlayers[i];
         var changed = opponent;
         for (var pawn = 0; pawn < opponent.pawnProgress.length; pawn++) {
