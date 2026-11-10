@@ -176,3 +176,15 @@ Important corrections:
 - Expanded board preview into a read-only geometry audit overlay showing all 52 shared-track cells, candidate connector locations, safe cells, home lanes, centre finish and all 16 provisional yard sockets. It reuses the single `BoardGeometry` map and canonical board artwork unchanged.
 - Added AI strategy regression tests and widget coverage for first-launch onboarding and human-vs-AI seat assignment.
 - This P1 slice is committed directly to `main`. Automated CI validation is pending; deterministic full-match coverage, visual calibration, responsive/device review, and physical Android acceptance remain open. Do not treat the preview as pixel approval or the P1 milestone as fully accepted until these gates pass.
+
+
+## Competitive review and pawn validation — 2026-11-10
+
+See [the Ludo King competitive gap review](competitive-gap-review-2026-11-10.md) for the full repository comparison, scorecard, market baseline, and prioritized roadmap.
+
+- The glass-finish cone pawn is implemented in `GlassyPawn` and integrated into the live match.
+- Automated widget tests verify rendering and standard/compact sizing. Live match placement tests verify representative track, home-lane and finish anchors; numeric fixtures cover all 16 yard socket centres.
+- Full rendered yard/stack footprint verification, pawn pixel-golden comparison, physical Android inspection and owner visual approval remain outstanding. The board is **not visually approved**.
+- Rebuild is rated 8.0/10 for engineering quality versus 7.6/10 for the legacy repository. The legacy repo has broader gameplay/test coverage; rebuild has stronger architecture and artwork-specific geometry.
+- Competitive readiness against Ludo King is rated 3.0/10 because online multiplayer, social systems, live operations and full Classic acceptance are not yet shipped.
+- Routine CI run [#453](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42822538282) completed successfully and uploaded profile/release APKs and diagnostic board screenshots. This is not physical-device acceptance.
