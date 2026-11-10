@@ -69,7 +69,7 @@ class _MatchScreenState extends State<MatchScreen>
     setState(() {
       final value = widget.rollDice?.call() ?? _random.nextInt(6) + 1;
       final rolled = _game.roll(value);
-      _game = rolled.legalPawnIndices().isEmpty ? rolled.passTurn() : rolled;
+      _game = rolled;
     });
   }
 
@@ -90,7 +90,7 @@ class _MatchScreenState extends State<MatchScreen>
       _movementEndProgress = endProgress;
       _game = _game.movePawn(pawnIndex);
       _movementController.duration = Duration(
-        milliseconds: math.max(180, stepCount * 125),
+        milliseconds: math.max(180, stepCount * 125).toInt(),
       );
     });
     _movementController.forward(from: 0);
@@ -111,8 +111,8 @@ class _MatchScreenState extends State<MatchScreen>
       return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
     }
     final travelled = _movementController.value * steps;
-    final stepIndex = math.min(travelled.floor(), steps - 1);
-    final fraction = (travelled - stepIndex).clamp(0.0, 1.0);
+    final stepIndex = math.min(travelled.floor(), steps - 1).toInt();
+    final fraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
     final fromProgress = _movementStartProgress + stepIndex;
     final toProgress = fromProgress + 1;
     final from = BoardGeometry.normalizedPosition(
@@ -198,7 +198,13 @@ class _MatchScreenState extends State<MatchScreen>
                             },
                             onRollCompleted: () {
                               if (mounted) {
-                                setState(() => _isDiceAnimating = false);
+                                setState(() {
+                                  _isDiceAnimating = false;
+                                  if (_game.diceValue != null &&
+                                      _game.legalPawnIndices().isEmpty) {
+                                    _game = _game.passTurn();
+                                  }
+                                });
                               }
                             },
                           ),
@@ -347,7 +353,6 @@ class _MatchScreenState extends State<MatchScreen>
       for (var otherIndex = 0;
           otherIndex < otherPlayer.pawnProgress.length;
           otherIndex++) {
-        final otherProgress = otherPlayer.pawnProgress[otherIndex];
         final otherPoint = _pawnPosition(otherColor, otherIndex);
         final otherCenter = Offset(
           _boardRect.left + otherPoint.x * _boardRect.width,
