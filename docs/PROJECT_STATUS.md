@@ -62,3 +62,13 @@ Last updated: 2026-11-10
 ## Completion policy
 
 Only mark a task complete when the repository change and validation evidence exist. Keep assumptions and pending visual sign-off explicit.
+
+
+## Legacy repository isolation and regression prevention
+
+- Added [legacy repository isolation and migration guardrails](architecture/legacy-repository-isolation.md). The old repository is a reference only; the rebuild remains the sole runtime source.
+- The migration policy explicitly prevents parallel engines, duplicate board coordinate tables, widget-owned game rules, mutable/stale actions, and duplicated runtime assets.
+- Legacy tests and rule decisions are treated as scenarios to translate into focused rebuild tests, not as proof that the rebuild already has equivalent behavior.
+- The rebuild currently has not yet reached parity with the legacy engine's typed command/event and versioned transition protections. This is tracked as a risk, not represented as completed work.
+- The runtime board asset remains `apps/mobile/assets/images/board/ludo_board_glass.webp`. The distinct requested spelling `ludo_board_glassy.webp` is not present in either repository tree and has not been substituted or renamed without confirmation.
+- Removed redundant root-level copies of the board and brand WebP assets; the app-local asset paths are the sole runtime copies.
