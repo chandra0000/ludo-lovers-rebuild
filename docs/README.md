@@ -12,6 +12,7 @@ This folder is the project handbook. Start here when joining the project or resu
 - [Engine behavior reference](game/game-rules.md) — compatibility profile behavior, engine contracts, and implementation gaps.
 - [Artwork and assets](assets/artwork-and-assets.md) — canonical image paths, formats, sizing, and preservation rules.
 - [Animation and rendering](engineering/animation-and-rendering.md) — how the board, pawns, dice, and effects are rendered.
+- [Physical Android acceptance and performance](DEVICE_ACCEPTANCE_AND_PERFORMANCE.md) — device-only P0 visual/gameplay and P1 profiling protocol.
 - [Development and testing](engineering/development-and-testing.md) — setup, commands, CI, and quality gates.
 - [Project status](PROJECT_STATUS.md) — implemented work, known gaps, and next steps.
 - [Decision log](DECISIONS.md) — durable technical/product decisions and their rationale.
