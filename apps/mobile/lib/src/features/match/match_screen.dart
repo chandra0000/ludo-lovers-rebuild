@@ -148,6 +148,7 @@ class _MatchScreenState extends State<MatchScreen>
       game: _game,
       aiPlayers: widget.aiPlayers,
       aiSeed: widget.aiSeed,
+      aiDifficulty: widget.aiDifficulty,
     );
     _persistenceQueue = _persistenceQueue.then((_) async {
       try {
