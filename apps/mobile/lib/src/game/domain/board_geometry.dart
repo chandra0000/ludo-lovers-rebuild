@@ -62,7 +62,7 @@ class BoardGeometry {
   static const double canvasWidth = 576;
   static const double canvasHeight = 1024;
   static const double boardLeft = 17.78;
-  static const double boardTop = 213.33;
+  static const double boardTop = 199.1;
   static const double boardWidth = 540.44;
   // The 15×15 playfield is square: every logical cell must have equal
   // horizontal and vertical scale. Keep this tied to boardWidth so a future
