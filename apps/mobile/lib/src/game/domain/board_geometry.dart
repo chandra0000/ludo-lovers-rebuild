@@ -163,14 +163,15 @@ class BoardGeometry {
     ),
   };
 
-  // Provisional symmetric yard slots. These are not visually approved;
-  // replace only after cell-center coordinates are confirmed from the owner reference.
+  // First-pass yard socket centres measured from the four circular sockets
+  // in ludo_board_glass.webp. Coordinates are in 15x15 grid units, relative
+  // to each 6x6 home quadrant. Keep this mapping centralized for all seats.
   static const List<NormalizedBoardPoint> _yardOffsets =
       <NormalizedBoardPoint>[
-    NormalizedBoardPoint(2.22, 2.22),
-    NormalizedBoardPoint(3.78, 2.22),
-    NormalizedBoardPoint(2.22, 3.78),
-    NormalizedBoardPoint(3.78, 3.78),
+    NormalizedBoardPoint(1.8, 1.8),
+    NormalizedBoardPoint(3.8, 1.8),
+    NormalizedBoardPoint(1.8, 3.8),
+    NormalizedBoardPoint(3.8, 3.8),
   ];
 
   static NormalizedBoardPoint normalizedPosition(
