@@ -85,6 +85,53 @@ void main() {
       }
     });
 
+    test('keeps home lanes disjoint from the shared track and each other', () {
+      final trackCells = BoardGeometry.sharedTrack.toSet();
+      final laneCells = <BoardCell>{};
+
+      for (final color in PlayerColor.turnOrder) {
+        for (final cell in BoardGeometry.seats[color]!.homeLane) {
+          expect(trackCells, isNot(contains(cell)));
+          expect(cell, isNot(BoardGeometry.finishCell));
+          expect(laneCells.add(cell), isTrue);
+        }
+      }
+
+      expect(laneCells, hasLength(4 * BoardGeometry.homeLaneLength));
+    });
+
+    test('uses value equality for physical board cells', () {
+      expect(BoardCell(3, 7), BoardCell(3, 7));
+      expect(
+        <BoardCell>{BoardCell(3, 7), BoardCell(3, 7)},
+        hasLength(1),
+      );
+      expect(BoardCell(3, 7), isNot(BoardCell(7, 3)));
+    });
+
+    test('rejects invalid pawn indexes and progress values', () {
+      expect(
+        () => BoardGeometry.normalizedPosition(
+          PlayerColor.orange,
+          -1,
+          4,
+        ),
+        throwsRangeError,
+      );
+      expect(
+        () => BoardGeometry.normalizedPosition(
+          PlayerColor.orange,
+          57,
+          0,
+        ),
+        throwsRangeError,
+      );
+      expect(
+        () => BoardGeometry.physicalTrackCell(PlayerColor.orange, 51),
+        throwsRangeError,
+      );
+    });
+
     test('maps board-relative points through one canvas contract', () {
       const point = NormalizedBoardPoint(0.5, 0.5);
       final canvas = BoardGeometry.canvasPosition(point);
