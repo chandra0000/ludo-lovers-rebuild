@@ -117,37 +117,28 @@ class _DiceFacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final radius = size.width * .2;
-    final shape = RRect.fromRectAndRadius(
-      rect,
-      Radius.circular(radius),
-    );
-    canvas.drawRRect(
-      shape.shift(const Offset(0, 3)),
-      Paint()
-        ..color = Colors.black.withValues(alpha: .55)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-    );
+    final shape = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: .55)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawRRect(shape.shift(const Offset(0, 3)), shadowPaint);
+
     final faceRect = rect.deflate(2);
-    final face = RRect.fromRectAndRadius(
-      faceRect,
-      Radius.circular(radius),
-    );
-    canvas.drawRRect(
-      face,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF6D9), Color(0xFFFFD36B), Color(0xFFD99A2B)],
-        ).createShader(faceRect),
-    );
-    canvas.drawRRect(
-      face,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = const Color(0xFFFFF0BD),
-    );
+    final face = RRect.fromRectAndRadius(faceRect, Radius.circular(radius));
+    final facePaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFFFF6D9), Color(0xFFFFD36B), Color(0xFFD99A2B)],
+      ).createShader(faceRect);
+    canvas.drawRRect(face, facePaint);
+
+    final outlinePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = const Color(0xFFFFF0BD);
+    canvas.drawRRect(face, outlinePaint);
+
     final pipPaint = Paint()..color = const Color(0xFF21180C);
     for (final point in _pips[value.clamp(1, 6)]) {
       canvas.drawCircle(
