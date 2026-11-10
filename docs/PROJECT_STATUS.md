@@ -188,3 +188,15 @@ See [the Ludo King competitive gap review](competitive-gap-review-2026-11-10.md)
 - Rebuild is rated 8.0/10 for engineering quality versus 7.6/10 for the legacy repository. The legacy repo has broader gameplay/test coverage; rebuild has stronger architecture and artwork-specific geometry.
 - Competitive readiness against Ludo King is rated 3.0/10 because online multiplayer, social systems, live operations and full Classic acceptance are not yet shipped.
 - Routine CI run [#453](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42822538282) completed successfully and uploaded profile/release APKs and diagnostic board screenshots. This is not physical-device acceptance.
+
+
+## Structured move evaluation and Classic blockade implementation — 2026-11-10
+
+- Added a pure, typed `evaluatePawnMove` domain API with `ValidMove` / `InvalidMove` outcomes and explicit invalid reasons.
+- Evaluation returns the complete player-relative progress path and capture metadata. It checks intermediate shared-track cells for opponent blockades, then evaluates destination stack protection, safe-cell sanctuary and single-pawn capture.
+- `legalPawnIndices` and `movePawn` now use the same evaluator, keeping UI eligibility and authoritative engine transitions consistent.
+- The opt-in Classic profile enables hard blockades. The compatibility profile preserves its prior pass-through behaviour.
+- Snapshot schema v3 persists the blockade flag. Schema v1/v2 snapshots migrate with blockade disabled, preserving the movement rules under which those matches were saved.
+- Added a focused evaluator test matrix for soft pass-through, hard blockade interception, protected destination stacks, friendly reinforcement, unsafe capture, safe-cell sanctuary, yard entry, pending-roll validation and exact-finish overshoot.
+- The evaluator returns progress positions, not board pixel coordinates. Existing match animation already interpolates through each progress step using `BoardGeometry`; a later UI pass can use the typed invalid reason for tap feedback/haptics without duplicating legality rules.
+- This implementation codifies the supplied Classic blockade proposal, but the Classic profile remains opt-in pending owner acceptance and real-device validation.
