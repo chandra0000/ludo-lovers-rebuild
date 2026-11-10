@@ -496,10 +496,21 @@ class _MatchScreenState extends State<MatchScreen>
         );
       }
     }
+    for (final occupants in clusters.values) {
+      occupants.sort((a, b) {
+        final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
+          PlayerColor.turnOrder.indexOf(b.color),
+        );
+        return colorOrder != 0
+            ? colorOrder
+            : a.pawnIndex.compareTo(b.pawnIndex);
+      });
+    }
+    final legalIndices = _game.legalPawnIndices().toSet();
     return [
       for (final color in PlayerColor.turnOrder)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(color, pawnIndex, clusters),
+          _buildPawn(color, pawnIndex, clusters, legalIndices),
     ];
   }
 
@@ -510,6 +521,7 @@ class _MatchScreenState extends State<MatchScreen>
     PlayerColor color,
     int pawnIndex,
     Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
+    Set<int> legalIndices,
   ) {
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
@@ -519,13 +531,6 @@ class _MatchScreenState extends State<MatchScreen>
     final occupants = clusters[_clusterKey(normalized)] ?? [
       (color: color, pawnIndex: pawnIndex),
     ];
-    occupants.sort((a, b) {
-      final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
-        PlayerColor.turnOrder.indexOf(b.color),
-      );
-      return colorOrder != 0 ? colorOrder : a.pawnIndex.compareTo(b.pawnIndex);
-    });
-
     final stackIndex = occupants.indexWhere(
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
@@ -540,7 +545,6 @@ class _MatchScreenState extends State<MatchScreen>
         ? offsets[stackIndex % offsets.length] * 18
         : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
-    final legalIndices = _game.legalPawnIndices();
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
         color == _game.activePlayer &&
