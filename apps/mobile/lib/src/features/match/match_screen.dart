@@ -277,7 +277,10 @@ class _MatchScreenState extends State<MatchScreen>
     if (legal.isEmpty) {
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 600), () {
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 600),
+          () {
         if (!mounted ||
             token != _turnResolutionToken ||
             _game.diceValue == null) {
@@ -291,8 +294,10 @@ class _MatchScreenState extends State<MatchScreen>
           _isAutoMovePending = false;
         });
         unawaited(_persistMatch());
-        _scheduleAiTurn();
-      },));
+            _scheduleAiTurn();
+          },
+        ),
+      );
       return;
     }
 
@@ -305,7 +310,10 @@ class _MatchScreenState extends State<MatchScreen>
     if (selected != null) {
       final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 350), () {
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 350),
+          () {
         if (!mounted ||
             token != _turnResolutionToken ||
             _game.diceValue == null ||
@@ -313,8 +321,10 @@ class _MatchScreenState extends State<MatchScreen>
           return;
         }
         setState(() => _isAutoMovePending = false);
-        _move(selected);
-      },));
+            _move(selected);
+          },
+        ),
+      );
     }
   }
 
