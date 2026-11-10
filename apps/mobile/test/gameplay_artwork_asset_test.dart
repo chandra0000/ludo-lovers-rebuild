@@ -8,7 +8,7 @@ void main() {
 
   test('bundled approved gameplay artwork stays complete and portrait', () async {
     final data = await rootBundle.load(
-      'assets/reference/ludo_lovers_full_screen_reference.webp',
+      'assets/images/board/ludo_board_glass.webp',
     );
     final bytes = data.buffer.asUint8List(
       data.offsetInBytes,
