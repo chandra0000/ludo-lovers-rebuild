@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ludo_lovers/src/features/home/home_screen.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/features/onboarding/onboarding_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
@@ -10,6 +11,26 @@ import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
+  testWidgets('home branding and primary action fit a compact phone', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 640);
+
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+    expect(find.text('LUDO LOVERS'), findsOneWidget);
+    expect(find.text('PLAY • CONNECT • LOVE'), findsOneWidget);
+    expect(find.byKey(const Key('brand_logo')), findsOneWidget);
+    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+
+    final logoSize = tester.getSize(find.byKey(const Key('brand_logo')));
+    expect(logoSize.width, lessThan(160));
+    expect(logoSize.height, lessThan(160));
+    expect(tester.getSize(find.byKey(const Key('open_game_setup'))).width,
+        lessThanOrEqualTo(312));
+  });
+
   testWidgets('first launch shows onboarding and skip reaches home', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const LudoLoversApp());
