@@ -42,6 +42,7 @@ Last updated: 2026-11-10
 - Downloadable CI artifacts: [debug APK](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734718462) and [split release APKs](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734504994).
 - Latest verified CI run [42758341034](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42758341034) passed formatting, static analysis, unit/widget tests, Android project generation, debug APK build, split release APK builds, and artifact uploads on commit `c6742c444f392a2cd5e60f43448eba66a007eb71`. Later geometry-centralization and expanded regression-test commits are newer than that run; their CI must pass before they are considered validated.
 - No real Android device test or screenshot-based pixel-calibration review has been performed/recorded.
+- The geometry-invariant and regression-test changes initially exposed six `prefer_const_constructors` analyzer infos under the repository's `--fatal-infos` CI policy. These were fixed in commit `7c485e50cd54e7db23aa7aab29dc34d754ba8182`; CI run [42760362218](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42760362218) is the validation run for that fix and must finish green before the code is considered validated.
 - Board geometry remains provisional. Automated tests cover all 52 unique shared-track cells, each seat's 51-cell route, five home-lane positions, separate finish, safe-cell metadata, four candidate diagonal connectors, and all 16 starting-yard pawn overlay positions. These are structural and coordinate-contract checks, not pixel-level proof that the route or safe cells match the artwork.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
 
@@ -58,7 +59,7 @@ Last updated: 2026-11-10
 
 1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
 2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
-3. Capture rendered screenshots with pawns at yard, all four entries, representative straight/connector track cells, safe cells, each home lane, finish and stacked positions. Compare against the unchanged 9:16 board artwork and adjust only centralized `BoardGeometry` constants from measured screenshot evidence.
+3. Run the geometry diagnostic on a 393×873 logical viewport and capture a device/emulator screenshot. Record the exact artwork-to-canvas transform and measure the 15×15 grid boundary and each of the 16 yard socket centres from source pixels; do not infer them from a cropped preview. Compare rendered pawn centres at all 16 yards, four entries, representative straight/connector track cells, safe cells, each home lane, finish and stacked positions. Adjust only centralized `BoardGeometry` constants from measured screenshot evidence, then retain numeric anchor regression tests.
 4. Tune capture/finish feedback placement and animation timing using visual QA.
 5. Replace the baked-in player names/status with dynamic player labels and online/offline indicators without altering the artwork.
 6. Configure Android launcher icon generation from the canonical icon artwork.
