@@ -15,5 +15,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
+    expect(find.byKey(const Key('pawn_green_0')), findsOneWidget);
+    expect(find.byKey(const Key('pawn_magenta_0')), findsOneWidget);
+    expect(find.byKey(const Key('pawn_blue_0')), findsOneWidget);
   });
 }
