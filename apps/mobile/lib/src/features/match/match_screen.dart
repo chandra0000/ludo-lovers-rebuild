@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../game/domain/persistence/saved_match_store.dart';
 
@@ -306,7 +305,6 @@ class _MatchScreenState extends State<MatchScreen>
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     if (evaluation is! InvalidMove || !mounted) return;
     _shakeKeys['${_game.activePlayer.name}-$pawnIndex']?.currentState?.triggerShake();
-    HapticFeedback.lightImpact();
     final message = switch (evaluation.reason) {
       MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
       MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
