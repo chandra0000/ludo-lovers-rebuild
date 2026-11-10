@@ -17,6 +17,7 @@ class LudoRuleProfile {
     this.extraTurnOnCapture = true,
     this.extraTurnOnFinish = false,
     this.threeConsecutiveSixesPenalty = false,
+    this.captureOnlySingleOpponentPawn = false,
   });
 
   /// Compatibility profile: preserves the behaviour of the original rebuild.
@@ -32,6 +33,7 @@ class LudoRuleProfile {
     version: 1,
     extraTurnOnFinish: true,
     threeConsecutiveSixesPenalty: true,
+    captureOnlySingleOpponentPawn: true,
   );
 
   final String id;
@@ -40,6 +42,7 @@ class LudoRuleProfile {
   final bool extraTurnOnCapture;
   final bool extraTurnOnFinish;
   final bool threeConsecutiveSixesPenalty;
+  final bool captureOnlySingleOpponentPawn;
 
   @override
   bool operator ==(Object other) =>
@@ -49,7 +52,8 @@ class LudoRuleProfile {
       other.extraTurnOnSix == extraTurnOnSix &&
       other.extraTurnOnCapture == extraTurnOnCapture &&
       other.extraTurnOnFinish == extraTurnOnFinish &&
-      other.threeConsecutiveSixesPenalty == threeConsecutiveSixesPenalty;
+      other.threeConsecutiveSixesPenalty == threeConsecutiveSixesPenalty &&
+      other.captureOnlySingleOpponentPawn == captureOnlySingleOpponentPawn;
 
   @override
   int get hashCode => Object.hash(
@@ -59,6 +63,7 @@ class LudoRuleProfile {
         extraTurnOnCapture,
         extraTurnOnFinish,
         threeConsecutiveSixesPenalty,
+        captureOnlySingleOpponentPawn,
       );
 }
 
@@ -218,7 +223,7 @@ class LudoGame {
   /// excluded. The state version and accepted command IDs survive restoration
   /// so stale/duplicate commands remain rejectable after an app restart.
   Map<String, Object?> toSnapshot() => {
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'players': [
           for (final player in players)
             {
@@ -237,6 +242,8 @@ class LudoGame {
           'extraTurnOnFinish': ruleProfile.extraTurnOnFinish,
           'threeConsecutiveSixesPenalty':
               ruleProfile.threeConsecutiveSixesPenalty,
+          'captureOnlySingleOpponentPawn':
+              ruleProfile.captureOnlySingleOpponentPawn,
         },
         'stateVersion': stateVersion,
         'consecutiveSixes': consecutiveSixes,
@@ -248,7 +255,8 @@ class LudoGame {
   /// Restores a validated schema-v1 snapshot. Unknown or malformed snapshots
   /// fail closed; callers should offer a fresh match rather than guess state.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
-    if (snapshot['schemaVersion'] != 1) {
+    final schemaVersion = snapshot['schemaVersion'];
+    if (schemaVersion != 1 && schemaVersion != 2) {
       throw const FormatException('Unsupported Ludo snapshot schema.');
     }
     final rawPlayers = snapshot['players'];
@@ -303,6 +311,11 @@ class LudoGame {
       extraTurnOnFinish: requiredBool('extraTurnOnFinish'),
       threeConsecutiveSixesPenalty:
           requiredBool('threeConsecutiveSixesPenalty'),
+      // Schema v1 predates this rule field and retains its old
+      // capture-all-opponents behaviour when restored.
+      captureOnlySingleOpponentPawn: schemaVersion == 1
+          ? false
+          : requiredBool('captureOnlySingleOpponentPawn'),
     );
 
     final activeName = snapshot['activePlayer'];
@@ -536,29 +549,38 @@ class LudoGame {
           _trackCell(activePlayer, nextProgress),
         )) {
       final landingCell = _trackCell(activePlayer, nextProgress);
+      final opponentsAtLanding = <({int playerIndex, int pawnIndex})>[];
       for (var i = 0; i < updatedPlayers.length; i++) {
         if (updatedPlayers[i].color == activePlayer) continue;
         final opponent = updatedPlayers[i];
-        var changed = opponent;
         for (var pawn = 0; pawn < opponent.pawnProgress.length; pawn++) {
           final progress = opponent.pawnProgress[pawn];
           if (progress >= 0 &&
               progress < playerTrackLength &&
               _trackCell(opponent.color, progress) == landingCell) {
-            changed = changed.withPawn(pawn, -1);
-            emitted.add(
-              PawnCaptured(
-                emitted.length,
-                stateVersion + 1,
-                activePlayer,
-                opponent.color,
-                pawn,
-              ),
-            );
-            captured = true;
+            opponentsAtLanding.add((playerIndex: i, pawnIndex: pawn));
           }
         }
-        updatedPlayers[i] = changed;
+      }
+
+      final mayCapture = !ruleProfile.captureOnlySingleOpponentPawn ||
+          opponentsAtLanding.length == 1;
+      if (mayCapture) {
+        for (final target in opponentsAtLanding) {
+          final opponent = updatedPlayers[target.playerIndex];
+          updatedPlayers[target.playerIndex] =
+              opponent.withPawn(target.pawnIndex, -1);
+          emitted.add(
+            PawnCaptured(
+              emitted.length,
+              stateVersion + 1,
+              activePlayer,
+              opponent.color,
+              target.pawnIndex,
+            ),
+          );
+          captured = true;
+        }
       }
     }
 
