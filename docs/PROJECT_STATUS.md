@@ -37,7 +37,10 @@ Last updated: 2026-11-10
 
 ## Validation state
 
-- Verified CI run `42753848250` on commit `f8420520190b5f5a0830540236bbfa6c34359e92` passed formatting, static analysis, all 27 unit/widget tests, Android project generation, debug APK build, and artifact upload. The subsequent responsive-layout and release-size changes are awaiting their own CI run.
+- Verified CI run [42754693581](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581) on commit `a8c80bbc1b4799630b14e49230baddf52ae99fb8` passed formatting, static analysis, all 27 unit/widget tests, Android project generation, debug APK build, split release APK builds, and both artifact uploads.
+- Measured package outputs on that verified baseline: debug APK 144 MB; split release APKs 13.4 MB (armeabi-v7a), 16.2 MB (arm64-v8a), and 17.5 MB (x86_64). The arm64 release APK is the likely Android-phone target; use release rather than the large debug APK for device installation/performance checks.
+- Downloadable CI artifacts: [debug APK](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734718462) and [split release APKs](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734504994).
+- Subsequent commits add capture/finish feedback and artwork-based yard/board calibration; their CI runs are still in progress and must pass before those changes are considered validated.
 - No real Android device test has been performed/recorded.
 - Board geometry remains provisional and has not been accepted through pixel-level visual calibration.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
