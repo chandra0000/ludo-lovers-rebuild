@@ -227,7 +227,7 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     final firstHitTarget = tester.getRect(find.byKey(const Key('pawn_orange_0')));
     final secondHitTarget = tester.getRect(find.byKey(const Key('pawn_orange_1')));
     expect(firstHitTarget.width, greaterThanOrEqualTo(44));
