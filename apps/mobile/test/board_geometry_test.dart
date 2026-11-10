@@ -31,12 +31,15 @@ void main() {
       expect(BoardGeometry.seats[PlayerColor.blue]!.entryIndex, 39);
     });
 
-    test('keeps provisional yard slots inside their seat quadrants', () {
+    test('maps the four artwork yard sockets consistently in every quadrant', () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
           final point = BoardGeometry.normalizedPosition(color, -1, pawn);
-          expect(point.x, inInclusiveRange(0.0, 1.0));
-          expect(point.y, inInclusiveRange(0.0, 1.0));
+          final seat = BoardGeometry.seats[color]!;
+          final expectedX = (seat.yardColumn + (pawn.isEven ? 1.8 : 3.8)) / 15;
+          final expectedY = (seat.yardRow + (pawn < 2 ? 1.8 : 3.8)) / 15;
+          expect(point.x, closeTo(expectedX, 1e-9));
+          expect(point.y, closeTo(expectedY, 1e-9));
         }
       }
     });
