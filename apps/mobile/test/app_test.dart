@@ -130,5 +130,46 @@ void main() {
     },
   );
 
-}
 
+  testWidgets(
+    'blocks a new dice roll until pawn movement animation completes',
+    (tester) async {
+      var rollCount = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MatchScreen(rollDice: () {
+            rollCount++;
+            return 6;
+          }),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('roll_dice')));
+      await tester.pumpAndSettle();
+      expect(rollCount, 1);
+
+      final pawn = find.byKey(const Key('pawn_orange_0'));
+      await tester.tap(pawn);
+      await tester.pump(const Duration(milliseconds: 40));
+
+      final dice = tester.widget<AnimatedDice>(
+        find.byKey(const Key('animated_dice')),
+      );
+      expect(dice.enabled, isFalse);
+
+      await tester.tap(find.byKey(const Key('roll_dice')));
+      await tester.pump(const Duration(milliseconds: 40));
+      expect(rollCount, 1);
+
+      await tester.pumpAndSettle();
+      final readyDice = tester.widget<AnimatedDice>(
+        find.byKey(const Key('animated_dice')),
+      );
+      expect(readyDice.enabled, isTrue);
+      await tester.tap(find.byKey(const Key('roll_dice')));
+      await tester.pump();
+      expect(rollCount, 2);
+    },
+  );
+
+}
