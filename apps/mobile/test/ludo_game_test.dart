@@ -572,6 +572,30 @@ void main() {
       );
     });
 
+    test('compatibility profile snapshot preserves more than two consecutive sixes', () {
+      var game = LudoGame.initial();
+      for (var index = 0; index < 3; index++) {
+        game = game.roll(6).movePawn(0);
+      }
+
+      expect(game.consecutiveSixes, 3);
+      final restored = LudoGame.decodeSnapshot(game.encodeSnapshot());
+      expect(restored.consecutiveSixes, 3);
+      expect(restored.ruleProfile, LudoRuleProfile.currentV1);
+    });
+
+    test('Classic snapshot rejects an impossible post-penalty six counter', () {
+      final snapshot = LudoGame.initial(
+        ruleProfile: LudoRuleProfile.classicV1,
+      ).toSnapshot()
+        ..['consecutiveSixes'] = 3;
+
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsFormatException,
+      );
+    });
+
     test('default compatibility profile preserves existing six behaviour', () {
       var game = LudoGame.initial();
       game = game.roll(6).movePawn(0);
