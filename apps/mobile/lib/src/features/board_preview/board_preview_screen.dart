@@ -30,15 +30,28 @@ class BoardPreviewScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: AspectRatio(
-                    aspectRatio: 9 / 16,
+                    aspectRatio: BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
                     child: LayoutBuilder(
                       builder: (context, constraints) => Stack(
+                        key: const Key('board_preview_canvas'),
                         fit: StackFit.expand,
                         children: [
                           Image.asset(
                             'assets/images/board/ludo_board_glass.webp',
+                            key: const Key('board_preview_artwork'),
                             fit: BoxFit.contain,
                             filterQuality: FilterQuality.high,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const ColoredBox(
+                              color: Color(0xFF111111),
+                              child: Center(
+                                child: Text(
+                                  'Canonical board artwork failed to load.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                            ),
                           ),
                           for (var index = 0;
                               index < BoardGeometry.sharedTrack.length;
