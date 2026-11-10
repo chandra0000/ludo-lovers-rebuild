@@ -197,6 +197,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });  
+  testWidgets('AI dice roll animates before its move or turn pass',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(
+          aiPlayers: {PlayerColor.orange},
+          aiSeed: 17,
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 460));
+    await tester.pump();
+
+    final rollingDice = tester.widget<LuxuryDiceButton>(
+      find.byKey(const Key('animated_dice')),
+    );
+    expect(rollingDice.targetValue, isNotNull);
+    expect(
+      tester.widget<Semantics>(
+        find.byKey(const Key('luxury_dice_semantics')),
+      ).properties.label,
+      'Dice rolling',
+    );
+
+    await tester.pump(const Duration(milliseconds: 650));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<Semantics>(
+        find.byKey(const Key('luxury_dice_semantics')),
+      ).properties.label,
+      isNot('Dice rolling'),
+    );
+  });
+
   testWidgets(
     'passes a turn after the animated roll when no pawn can move',
     (tester) async {
