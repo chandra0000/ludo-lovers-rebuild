@@ -280,6 +280,8 @@ void main() {
     );
 
     await tester.pump(const Duration(milliseconds: 650));
+    // A no-legal-move result is held for 600 ms before the turn is passed.
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
 
     expect(
@@ -425,13 +427,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    // Exactly one pawn can move, so the match screen moves it automatically
+    // after the 350 ms anticipation window.
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    // pumpAndSettle would advance through the SnackBar's full display
-    // duration and dismiss the transient capture feedback before asserting.
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('CAPTURE! EXTRA TURN'), findsOneWidget);
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
@@ -452,9 +451,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    // Exactly one pawn can move, so wait for the automatic move and its
+    // completion feedback rather than tapping a temporarily disabled pawn.
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
 
     expect(find.text('PAWN HOME!'), findsOneWidget);
