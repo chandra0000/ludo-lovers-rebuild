@@ -41,7 +41,7 @@ jobs:
         with:
           name: ludo-lovers-match-canvas-393x873
           path: apps/mobile/test-artifacts/match-canvas-393x873.png
-          if-no-files-found: warn
+          if-no-files-found: error
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
