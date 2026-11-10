@@ -50,6 +50,21 @@ class BoardGeometry {
   static const int playerTrackLength = 51;
   static const int homeLaneLength = 5;
 
+  // Shared design-canvas and artwork overlay contract. Pawn coordinates are
+  // relative to the board-grid rectangle inside the full-screen 9:16 artwork.
+  static const double canvasWidth = 576;
+  static const double canvasHeight = 1024;
+  static const double boardLeft = 17.78;
+  static const double boardTop = 213.33;
+  static const double boardWidth = 540.44;
+  static const double boardHeight = 561.78;
+
+  static NormalizedBoardPoint canvasPosition(NormalizedBoardPoint point) =>
+      NormalizedBoardPoint(
+        boardLeft + point.x * boardWidth,
+        boardTop + point.y * boardHeight,
+      );
+
   // Provisional physical cell centers on a 15×15 grid; not visually approved.
   // Four candidate diagonal corner connectors are documented; visual approval is pending.
   static const List<BoardCell> sharedTrack = <BoardCell>[
@@ -163,9 +178,10 @@ class BoardGeometry {
     ),
   };
 
-  // First-pass yard socket centres measured from the four circular sockets
-  // in ludo_board_glass.webp. Coordinates are in 15x15 grid units, relative
-  // to each 6x6 home quadrant. Keep this mapping centralized for all seats.
+  // First-pass estimated yard socket offsets for the visible circular
+  // sockets in ludo_board_glass.webp. These are centralized assumptions, not
+  // pixel-verified measurements or visual approval. Recalibrate from rendered
+  // screenshots before removing the geometry release gate.
   static const List<NormalizedBoardPoint> _yardOffsets =
       <NormalizedBoardPoint>[
     NormalizedBoardPoint(1.8, 2.0),
