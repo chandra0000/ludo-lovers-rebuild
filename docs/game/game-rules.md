@@ -65,12 +65,11 @@ The game snapshots and player pawn-progress lists are immutable. Rejected comman
 
 ## Remaining implementation gaps
 
-The current `LudoGame` is a small immutable-state model, not yet the legacy typed transition engine:
-- It currently grants a bonus for six and capture, but does not grant a finish bonus.
-- It does not track consecutive sixes.
-- It hard-codes rules and safe cells rather than consuming an immutable, named/versioned rule profile.
-- It has no typed command/event/error stream, expected-state-version guard, idempotency key, or deterministic replay contract.
+Remaining implementation gaps:
+- The engine currently exposes typed events but still uses direct `roll`, `movePawn`, and `passTurn` methods rather than a closed typed command/result/error API.
+- State versions and command IDs protect in-memory transitions, but durable idempotency, serialized snapshots, deterministic replay, and event history across process restarts are not implemented.
 - Capture currently returns opponent pawns on an unsafe shared-track cell to the yard. Advanced blockade/stack policies are not implemented.
-- The current engine's progress model is 0–50 on the player's 51 traversed shared positions, 51–55 on five private lane cells, and 56 at the separate centre finish. This is consistent with the legacy five-lane-plus-centre decision; do not reinterpret it as 52 player-relative steps.
+- The current progress model is 0–50 on the player's 51 traversed shared positions, 51–55 on five private lane cells, and 56 at the separate centre finish. This is consistent with the legacy five-lane-plus-centre decision; do not reinterpret it as 52 player-relative steps.
+- Player elimination/skip logic and match-completion modes beyond winner-takes-all remain unimplemented.
 
-Do not silently change any of these behaviours. Implement the missing rules only after the product owner confirms the intended Classic profile. The route and safe-cell constants are also still provisional pending visual board approval.
+Do not silently change the default compatibility profile. The proposed Classic profile remains opt-in until the product owner accepts it. The route and safe-cell constants are also still provisional pending visual board approval.
