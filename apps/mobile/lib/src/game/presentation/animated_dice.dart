@@ -40,6 +40,14 @@ class _AnimatedDiceState extends State<AnimatedDice>
   Future<void> _revealRoll() async {
     _isAnimating = true;
     widget.onRollStarted?.call();
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) {
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      setState(() => _isAnimating = false);
+      widget.onRollCompleted?.call();
+      return;
+    }
     await _controller.forward(from: 0);
     if (!mounted) return;
     setState(() => _isAnimating = false);
