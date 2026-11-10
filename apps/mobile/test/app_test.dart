@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
+import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
@@ -36,16 +37,16 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
-    await tester.pump();
-    expect(find.text('6'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value, 6);
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
-    await tester.pump();
-    expect(find.text('2'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedDice>(find.byKey(const Key('animated_dice'))).value, 2);
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
