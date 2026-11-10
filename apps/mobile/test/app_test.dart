@@ -24,19 +24,21 @@ Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
     closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 0.01),
   );
 
-  final image = await boundary.toImage(pixelRatio: 1);
-  try {
-    expect(image.width, greaterThan(0));
-    expect(image.height, greaterThan(0));
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    expect(bytes, isNotNull);
+  await tester.runAsync(() async {
+    final image = await boundary.toImage(pixelRatio: 1);
+    try {
+      expect(image.width, greaterThan(0));
+      expect(image.height, greaterThan(0));
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      expect(bytes, isNotNull);
 
-    final output = File(path);
-    await output.parent.create(recursive: true);
-    await output.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
-  } finally {
-    image.dispose();
-  }
+      final output = File(path);
+      await output.parent.create(recursive: true);
+      await output.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
+    } finally {
+      image.dispose();
+    }
+  });
 }
 
 void main() {
