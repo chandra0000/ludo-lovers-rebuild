@@ -45,6 +45,61 @@ void main() {
       expect(() => rolled.passTurn(), throwsStateError);
     });
 
+    test('captures an opponent on an unsafe shared-track cell', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          PlayerColor.green: [44, -1, -1, -1],
+        },
+      );
+      final moved = game.roll(2).movePawn(0);
+      expect(moved.currentPlayer.pawnProgress[0], 5);
+      expect(
+        moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0],
+        -1,
+      );
+      expect(moved.activePlayer, PlayerColor.orange);
+    });
+
+    test('does not capture on a safe shared-track cell', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          PlayerColor.green: [47, -1, -1, -1],
+        },
+      );
+      final moved = game.roll(5).movePawn(0);
+      expect(
+        moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0],
+        47,
+      );
+      expect(moved.activePlayer, PlayerColor.green);
+    });
+
+    test('enters the home lane after 51 shared-track positions', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [50, -1, -1, -1],
+        },
+      );
+      final moved = game.roll(1).movePawn(0);
+      expect(moved.currentPlayer.pawnProgress[0], 51);
+    });
+
+    test('marks the winner only after all four pawns finish', () {
+      final game = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [56, 56, 56, 55],
+        },
+      );
+      final moved = game.roll(1).movePawn(3);
+      expect(moved.winner, PlayerColor.orange);
+    });
+
     test('rejects dice values outside 1..6', () {
       expect(() => LudoGame.initial().roll(0), throwsArgumentError);
       expect(() => LudoGame.initial().roll(7), throwsArgumentError);
