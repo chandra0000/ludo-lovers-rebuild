@@ -73,7 +73,7 @@ class _MatchScreenState extends State<MatchScreen> {
                       children: [
                         Positioned.fill(
                           child: Image.asset(
-                            'assets/reference/ludo_lovers_full_screen_reference.webp',
+                            'assets/images/board/ludo_board_glass.webp',
                             fit: BoxFit.fill,
                             errorBuilder: (context, error, stackTrace) =>
                                 const ColoredBox(
