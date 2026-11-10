@@ -10,11 +10,23 @@ on:
 permissions:
   contents: read
 
+# Avoid spending CI minutes on obsolete runs when several commits land quickly.
+concurrency:
+  group: flutter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      # Cache Gradle dependencies used by both debug and release APK builds.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
