@@ -292,7 +292,7 @@ class _MatchScreenState extends State<MatchScreen>
         });
         unawaited(_persistMatch());
         _scheduleAiTurn();
-      }));
+      },));
       return;
     }
 
@@ -314,7 +314,7 @@ class _MatchScreenState extends State<MatchScreen>
         }
         setState(() => _isAutoMovePending = false);
         _move(selected);
-      }));
+      },));
     }
   }
 
