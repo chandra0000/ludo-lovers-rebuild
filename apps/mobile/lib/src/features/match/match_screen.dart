@@ -190,14 +190,14 @@ class _MatchScreenState extends State<MatchScreen>
                             key: const Key('roll_dice'),
                             child: AnimatedDice(
                               key: const Key('animated_dice'),
-                            value: _game.diceValue,
-                            enabled: _game.diceValue == null &&
-                                !_isDiceAnimating &&
-                                _game.winner == null,
-                            onTap: () {
-                              setState(() => _isDiceAnimating = true);
-                              _roll();
-                            },
+                              value: _game.diceValue,
+                              enabled: _game.diceValue == null &&
+                                  !_isDiceAnimating &&
+                                  _game.winner == null,
+                              onTap: () {
+                                setState(() => _isDiceAnimating = true);
+                                _roll();
+                              },
                               onRollCompleted: () {
                                 if (mounted) {
                                   setState(() {
