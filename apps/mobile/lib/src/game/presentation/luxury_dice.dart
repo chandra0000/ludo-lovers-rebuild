@@ -142,7 +142,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
 
     _isAnimating = true;
     _settledValue = null;
-    HapticFeedback.lightImpact();
     _controller.forward();
   }
 
@@ -182,7 +181,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     }
 
     _requestPending = true;
-    HapticFeedback.selectionClick();
+    HapticFeedback.lightImpact();
     widget.onRollRequested();
   }
 
