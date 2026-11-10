@@ -18,7 +18,7 @@ Deliver one reliable local four-player match with a stable first frame, faithful
 
 ## Documentation
 
-The project handbook is in [docs/README.md](docs/README.md). It covers product requirements, architecture, rules, artwork, animation, development, testing, status, and decisions. Update documentation in the same change as any material implementation or product decision.
+The project handbook is in [docs/README.md](docs/README.md). It covers product requirements, architecture, rules, artwork, animation, development, testing, status, and decisions. Update documentation in the same change as any material implementation or product decision. See [the 2026-11-10 competitive gap review](docs/competitive-gap-review-2026-11-10.md) for the rebuild-versus-legacy scorecard, glass-cone pawn/board-alignment validation limits, Ludo King benchmark, and prioritized product gaps.
 
 ## Local Android setup
 
