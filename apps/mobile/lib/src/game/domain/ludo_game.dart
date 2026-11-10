@@ -217,7 +217,7 @@ class LudoGame {
   LudoPlayer get currentPlayer =>
       players.firstWhere((player) => player.color == activePlayer);
 
-  /// Encodes the authoritative match state for durable local resume (schema v2).
+  /// Encodes the authoritative match state for local resume (schema v2).
   ///
   /// Presentation-only animation progress and transient events are purposely
   /// excluded. The state version and accepted command IDs survive restoration
@@ -252,8 +252,9 @@ class LudoGame {
 
   String encodeSnapshot() => jsonEncode(toSnapshot());
 
-  /// Restores a validated schema-v1 or schema-v2 snapshot. Unknown or malformed snapshots
-  /// fail closed; callers should offer a fresh match rather than guess state.
+  /// Restores a validated schema-v1 or schema-v2 snapshot. Unknown or
+  /// malformed snapshots fail closed; callers should offer a fresh match
+  /// rather than guess state.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
     final schemaVersion = snapshot['schemaVersion'];
     if (schemaVersion != 1 && schemaVersion != 2) {
@@ -278,7 +279,8 @@ class LudoGame {
       }
       final color = PlayerColor.values.byName(rawPlayer['color'] as String);
       final rawProgress = rawPlayer['pawnProgress'] as List;
-      if (rawProgress.length != 4 || rawProgress.any((value) => value is! int)) {
+      if (rawProgress.length != 4 ||
+          rawProgress.any((value) => value is! int)) {
         throw const FormatException('Malformed pawn progress snapshot.');
       }
       if (progressByColor.containsKey(color)) {
@@ -332,7 +334,9 @@ class LudoGame {
         savedSixes is! int ||
         savedSixes < 0 ||
         (profile.threeConsecutiveSixesPenalty && savedSixes > 2) ||
-        rawCommandIds.any((value) => value is! String || value.trim().isEmpty)) {
+        rawCommandIds.any(
+          (value) => value is! String || value.trim().isEmpty,
+        )) {
       throw const FormatException('Invalid Ludo snapshot state.');
     }
     final commands = rawCommandIds.cast<String>();
