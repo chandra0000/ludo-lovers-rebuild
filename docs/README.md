@@ -8,7 +8,8 @@ This folder is the project handbook. Start here when joining the project or resu
 - [Architecture](architecture/architecture.md) — app layers, state flow, rendering, and module boundaries.
 - [Legacy repository reconciliation](architecture/legacy-repository-isolation.md) — source-of-truth boundaries, rebuild gap audit, and conflict-prevention rules.
 - [Legacy feature recovery plan](LEGACY_FEATURE_RECOVERY_PLAN.md) — prioritized feature inventory, target modules, acceptance tests, and migration sequence.
-- [Game rules](game/game-rules.md) — current provisional rules profile and rule decisions requiring confirmation.
+- [Ludo Lovers Classic rules v1.0](game/LUDO_LOVERS_CLASSIC_RULES_v1.md) — proposed player-facing four-player rulebook; pending artwork, owner, and device approval.
+- [Engine behavior reference](game/game-rules.md) — compatibility profile behavior, engine contracts, and implementation gaps.
 - [Artwork and assets](assets/artwork-and-assets.md) — canonical image paths, formats, sizing, and preservation rules.
 - [Animation and rendering](engineering/animation-and-rendering.md) — how the board, pawns, dice, and effects are rendered.
 - [Development and testing](engineering/development-and-testing.md) — setup, commands, CI, and quality gates.
