@@ -65,7 +65,7 @@ class _AnimatedDiceState extends State<AnimatedDice>
       enabled: widget.enabled && !_isAnimating && widget.value == null,
       label: widget.value == null
           ? 'Roll dice'
-          : 'Dice shows ' + value.toString() + (_isAnimating ? ', rolling' : ''),
+          : "Dice shows $value${_isAnimating ? ', rolling' : ''}",
       child: GestureDetector(
         onTap: _handleTap,
         behavior: HitTestBehavior.opaque,
@@ -117,7 +117,10 @@ class _DiceFacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final radius = size.width * .2;
-    final shape = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final shape = RRect.fromRectAndRadius(
+      rect,
+      Radius.circular(radius),
+    );
     canvas.drawRRect(
       shape.shift(const Offset(0, 3)),
       Paint()
@@ -125,7 +128,10 @@ class _DiceFacePainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
     final faceRect = rect.deflate(2);
-    final face = RRect.fromRectAndRadius(faceRect, Radius.circular(radius));
+    final face = RRect.fromRectAndRadius(
+      faceRect,
+      Radius.circular(radius),
+    );
     canvas.drawRRect(
       face,
       Paint()
