@@ -45,4 +45,4 @@ These canonical user assets must be verified before visual calibration is accept
 
 ## Current status
 
-The Flutter foundation exists on the feature branch. The game engine, provisional board geometry, home/match screens, tests, and CI workflow are present. The final user-supplied board and app icon still need to be verified and wired into the app; pawn coordinate calibration, step-by-step pawn animation, polished dice animation, rule sign-off, and real Android device testing remain open. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the current checklist.
+The rebuild is maintained directly on `main`. The local four-player foundation, deterministic rules engine, animated dice/pawns, and automated tests are implemented. Board geometry is still provisional pending visual calibration, rule-profile acceptance, and real-device QA. CI builds a debug APK and is being extended to measure split release APKs. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for verified status and remaining gates.
