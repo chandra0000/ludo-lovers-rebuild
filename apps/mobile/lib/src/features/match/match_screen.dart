@@ -6,6 +6,7 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
+import '../../game/presentation/animated_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _MatchScreenState extends State<MatchScreen> {
 
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
+  bool _isDiceAnimating = false;
 
   void _roll() {
     if (_game.diceValue != null || _game.winner != null) {
@@ -102,48 +104,21 @@ class _MatchScreenState extends State<MatchScreen> {
                           top: 795,
                           width: 90,
                           height: 90,
-                          child: Semantics(
-                            button: true,
-                            label: 'Roll dice',
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                key: const Key('roll_dice'),
-                                customBorder: const CircleBorder(),
-                                onTap: _game.diceValue == null ? _roll : null,
-                                child: _game.diceValue == null
-                                    ? const SizedBox.expand()
-                                    : Center(
-                                        child: Container(
-                                          width: 54,
-                                          height: 54,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFFC857),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFF080808),
-                                              width: 3,
-                                            ),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Colors.black54,
-                                                blurRadius: 8,
-                                              ),
-                                            ],
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            '${_game.diceValue}',
-                                            style: const TextStyle(
-                                              color: Color(0xFF080808),
-                                              fontSize: 27,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                            ),
+                          child: AnimatedDice(
+                            key: const Key('animated_dice'),
+                            value: _game.diceValue,
+                            enabled: _game.diceValue == null &&
+                                !_isDiceAnimating &&
+                                _game.winner == null,
+                            onTap: () {
+                              setState(() => _isDiceAnimating = true);
+                              _roll();
+                            },
+                            onRollCompleted: () {
+                              if (mounted) {
+                                setState(() => _isDiceAnimating = false);
+                              }
+                            },
                           ),
                         ),
                         Positioned(
@@ -333,7 +308,8 @@ class _MatchScreenState extends State<MatchScreen> {
         : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final legalIndices = _game.legalPawnIndices();
-    final canMove = color == _game.activePlayer &&
+    final canMove = !_isDiceAnimating &&
+        color == _game.activePlayer &&
         legalIndices.contains(pawnIndex);
     final movableStackIndices = occupants
         .where(
