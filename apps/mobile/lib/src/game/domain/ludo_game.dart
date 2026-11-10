@@ -18,6 +18,7 @@ class LudoRuleProfile {
     this.extraTurnOnFinish = false,
     this.threeConsecutiveSixesPenalty = false,
     this.captureOnlySingleOpponentPawn = false,
+    this.enableHardBlockade = false,
   });
 
   /// Compatibility profile: preserves the behaviour of the original rebuild.
@@ -34,6 +35,7 @@ class LudoRuleProfile {
     extraTurnOnFinish: true,
     threeConsecutiveSixesPenalty: true,
     captureOnlySingleOpponentPawn: true,
+    enableHardBlockade: true,
   );
 
   final String id;
@@ -43,6 +45,7 @@ class LudoRuleProfile {
   final bool extraTurnOnFinish;
   final bool threeConsecutiveSixesPenalty;
   final bool captureOnlySingleOpponentPawn;
+  final bool enableHardBlockade;
 
   @override
   bool operator ==(Object other) =>
@@ -53,7 +56,8 @@ class LudoRuleProfile {
       other.extraTurnOnCapture == extraTurnOnCapture &&
       other.extraTurnOnFinish == extraTurnOnFinish &&
       other.threeConsecutiveSixesPenalty == threeConsecutiveSixesPenalty &&
-      other.captureOnlySingleOpponentPawn == captureOnlySingleOpponentPawn;
+      other.captureOnlySingleOpponentPawn == captureOnlySingleOpponentPawn &&
+      other.enableHardBlockade == enableHardBlockade;
 
   @override
   int get hashCode => Object.hash(
@@ -64,6 +68,7 @@ class LudoRuleProfile {
         extraTurnOnFinish,
         threeConsecutiveSixesPenalty,
         captureOnlySingleOpponentPawn,
+        enableHardBlockade,
       );
 }
 
@@ -151,6 +156,41 @@ class LudoPlayer {
   bool get hasWon => pawnProgress.every((step) => step == finishProgress);
 }
 
+/// Explains why a pawn cannot use the current roll.
+enum MoveInvalidReason {
+  pawnInYardNeedsSix,
+  overshootsHome,
+  pathBlockedByBlockade,
+  landingOnProtectedStack,
+  noPendingRoll,
+  invalidPawnIndex,
+}
+
+/// Result of evaluating one pawn against an immutable game snapshot.
+sealed class MoveEvaluationResult {
+  const MoveEvaluationResult();
+}
+
+/// A legal route. pathTiles contains player-relative progress positions,
+/// including the destination; it is not a list of screen coordinates.
+class ValidMove extends MoveEvaluationResult {
+  const ValidMove({
+    required this.pathTiles,
+    this.isCapture = false,
+    this.capturedPawnColor,
+    this.capturedPawnIndex,
+  });
+  final List<int> pathTiles;
+  final bool isCapture;
+  final PlayerColor? capturedPawnColor;
+  final int? capturedPawnIndex;
+}
+
+class InvalidMove extends MoveEvaluationResult {
+  const InvalidMove(this.reason);
+  final MoveInvalidReason reason;
+}
+
 class LudoGame {
   LudoGame._({
     required this.players,
@@ -223,7 +263,7 @@ class LudoGame {
   /// excluded. The state version and accepted command IDs survive restoration
   /// so stale/duplicate commands remain rejectable after an app restart.
   Map<String, Object?> toSnapshot() => {
-        'schemaVersion': 2,
+        'schemaVersion': 3,
         'players': <Map<String, Object?>>[
           for (final player in players)
             <String, Object?>{
@@ -244,6 +284,7 @@ class LudoGame {
               ruleProfile.threeConsecutiveSixesPenalty,
           'captureOnlySingleOpponentPawn':
               ruleProfile.captureOnlySingleOpponentPawn,
+          'enableHardBlockade': ruleProfile.enableHardBlockade,
         },
         'stateVersion': stateVersion,
         'consecutiveSixes': consecutiveSixes,
@@ -252,12 +293,12 @@ class LudoGame {
 
   String encodeSnapshot() => jsonEncode(toSnapshot());
 
-  /// Restores a validated schema-v1 or schema-v2 snapshot. Unknown or
+  /// Restores a validated schema-v1, schema-v2 or schema-v3 snapshot. Unknown or
   /// malformed snapshots fail closed; callers should offer a fresh match
   /// rather than guess state.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
     final schemaVersion = snapshot['schemaVersion'];
-    if (schemaVersion != 1 && schemaVersion != 2) {
+    if (schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) {
       throw const FormatException('Unsupported Ludo snapshot schema.');
     }
     final rawPlayers = snapshot['players'];
@@ -318,6 +359,11 @@ class LudoGame {
       captureOnlySingleOpponentPawn: schemaVersion == 1
           ? false
           : requiredBool('captureOnlySingleOpponentPawn'),
+      // Hard-blockade semantics were added in schema v3. Older saves retain
+      // their previous pass-through behaviour.
+      enableHardBlockade: schemaVersion < 3
+          ? false
+          : requiredBool('enableHardBlockade'),
     );
 
     final activeName = snapshot['activePlayer'];
@@ -402,6 +448,78 @@ class LudoGame {
     return Set<String>.unmodifiable({...appliedCommandIds, commandId});
   }
 
+  /// Evaluates a pawn move without mutating the game.
+  /// Hard blockades are checked on intermediate shared-track cells only.
+  MoveEvaluationResult evaluatePawnMove(int pawnIndex, {int? roll}) {
+    final value = roll ?? diceValue;
+    if (value == null || winner != null) {
+      return const InvalidMove(MoveInvalidReason.noPendingRoll);
+    }
+    if (pawnIndex < 0 || pawnIndex >= currentPlayer.pawnProgress.length) {
+      return const InvalidMove(MoveInvalidReason.invalidPawnIndex);
+    }
+    final current = currentPlayer.pawnProgress[pawnIndex];
+    if (current == -1 && value != 6) {
+      return const InvalidMove(MoveInvalidReason.pawnInYardNeedsSix);
+    }
+    final target = current == -1 ? 0 : current + value;
+    if (target > finishProgress) {
+      return const InvalidMove(MoveInvalidReason.overshootsHome);
+    }
+    final path = List<int>.unmodifiable(
+      List<int>.generate(target - current, (index) => current + index + 1),
+    );
+    if (ruleProfile.enableHardBlockade) {
+      for (final progress in path) {
+        if (progress >= playerTrackLength || progress == target) break;
+        final cell = _trackCell(activePlayer, progress);
+        for (final opponent in players) {
+          if (opponent.color == activePlayer) continue;
+          var count = 0;
+          for (final opponentProgress in opponent.pawnProgress) {
+            if (opponentProgress >= 0 &&
+                opponentProgress < playerTrackLength &&
+                _trackCell(opponent.color, opponentProgress) == cell) {
+              count++;
+            }
+          }
+          if (count >= 2) {
+            return const InvalidMove(
+              MoveInvalidReason.pathBlockedByBlockade,
+            );
+          }
+        }
+      }
+    }
+    if (target >= playerTrackLength) return ValidMove(pathTiles: path);
+    final destination = _trackCell(activePlayer, target);
+    final occupants = <({PlayerColor color, int pawnIndex})>[];
+    for (final player in players) {
+      if (player.color == activePlayer) continue;
+      for (var index = 0; index < player.pawnProgress.length; index++) {
+        final progress = player.pawnProgress[index];
+        if (progress >= 0 && progress < playerTrackLength &&
+            _trackCell(player.color, progress) == destination) {
+          occupants.add((color: player.color, pawnIndex: index));
+        }
+      }
+    }
+    if (ruleProfile.captureOnlySingleOpponentPawn && occupants.length >= 2) {
+      return const InvalidMove(MoveInvalidReason.landingOnProtectedStack);
+    }
+    if (occupants.length == 1 &&
+        !BoardGeometry.safeTrackCells.contains(destination)) {
+      final victim = occupants.single;
+      return ValidMove(
+        pathTiles: path,
+        isCapture: true,
+        capturedPawnColor: victim.color,
+        capturedPawnIndex: victim.pawnIndex,
+      );
+    }
+    return ValidMove(pathTiles: path);
+  }
+
   List<int> legalPawnIndices({int? roll}) {
     final value = roll ?? diceValue;
     if (value == null || winner != null) {
@@ -409,10 +527,7 @@ class LudoGame {
     }
     final result = <int>[];
     for (var i = 0; i < currentPlayer.pawnProgress.length; i++) {
-      final progress = currentPlayer.pawnProgress[i];
-      if (progress == -1 ? value == 6 : progress + value <= finishProgress) {
-        result.add(i);
-      }
+      if (evaluatePawnMove(i, roll: value) is ValidMove) result.add(i);
     }
     return List<int>.unmodifiable(result);
   }
@@ -521,10 +636,10 @@ class LudoGame {
     if (rollValue == null) {
       throw StateError('Roll the dice first.');
     }
-    if (!legalPawnIndices().contains(pawnIndex)) {
-      throw StateError(
-        'Pawn $pawnIndex cannot move with a roll of $rollValue.',
-      );
+    final evaluation = evaluatePawnMove(pawnIndex, roll: rollValue);
+    if (evaluation is! ValidMove) {
+      final reason = (evaluation as InvalidMove).reason.name;
+      throw StateError('Pawn $pawnIndex cannot move: $reason.');
     }
 
     final updatedPlayers = List<LudoPlayer>.of(players);
