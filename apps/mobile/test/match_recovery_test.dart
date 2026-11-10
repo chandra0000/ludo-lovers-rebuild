@@ -58,6 +58,8 @@ void main() {
     );
     await tester.pump();
     await tester.pumpAndSettle();
+    // The restored roll has no legal move; allow its 600 ms presentation delay.
+    await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
     expect(tester.takeException(), isNull);
