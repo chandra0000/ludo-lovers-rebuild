@@ -55,7 +55,7 @@ For each feature considered from the legacy repository:
 ## Current known risks (not silently marked fixed)
 
 - The rebuild's compact `LudoGame` model is not yet equivalent to the legacy engine's typed command/event and versioned transition contract. Add protections incrementally; do not claim parity.
-- The rebuild's board geometry and fixed canvas overlay coordinates still require pixel-level calibration against the approved artwork.
+- The rebuild's board grid bounds and yard sockets have a first-pass calibration against the canonical full-screen `ludo_board_glass.webp`. Shared-track cell centres, route orientation, safe-cell identity, lane entry, and pawn-on-cell visual alignment still require dedicated visual QA before approval.
 - The artwork file currently present is named `ludo_board_glass.webp`, not `ludo_board_glassy.webp`. Do not rename or substitute it without confirming that the requested name refers to the same approved image.
 - A GitHub CI pass proves only the checks in that workflow. It does not prove physical-device rendering or rule correctness for untested variants.
 
@@ -92,15 +92,15 @@ The old repository was reviewed beyond its README. The following documents conta
 | Four-phase asset/geometry/engine/integration acceptance | Adopt as the rebuild's milestone gate; device and full-match evidence remain outstanding |
 | Team Up mode | Intentionally deferred; do not port until the four-player Classic milestone is accepted |
 
-### Corrective geometry note
+### Artwork-based geometry calibration note
 
-A recent implementation attempt changed the board rectangle and yard offsets using inferred measurements from the full-screen composition. That conflicts with the legacy project's explicit no-guessing gate. Those inferred values have been reverted to the prior provisional values. The existing 15×15 route, board rectangle and yard slots must all remain labelled **provisional** until compared with the exact owner-approved straight-on board reference. Do not treat new coordinate assertions as visual approval.
+The rebuild now uses `ludo_board_glass.webp` as the available canonical visual source. The 15×15 grid rectangle is mapped into the fixed 576×1024 design canvas from the artwork's board bounds; yard socket centres use one shared offset pattern measured from the four circular sockets and applied symmetrically to all seats. The full-screen image is sufficient for this first-pass overlay calibration, but it does not by itself prove every route cell, start square, safe square, connector, or lane transition. Those route details remain provisional until the pawn overlay is checked in rendered screenshots. Tests must verify the single coordinate map and its invariants; they must not be described as owner visual approval.
 
 ### Migration order
 
-1. Freeze coordinate edits and keep the gameplay-readiness gate closed.
-2. Confirm the exact source image and derive a cell-by-cell 15×15 coordinate diagram with the user.
-3. Reconcile all four seat paths, corner connectors, start cells, home lanes and safe cells in one canonical definition and one reviewed change.
+1. Keep the gameplay-readiness gate closed while the first-pass artwork overlay is validated.
+2. Capture rendered board screenshots with pawns placed at yard, entry, track, safe-cell, lane and finish positions.
+3. Reconcile all four seat paths, corner connectors, start cells, home lanes and safe cells in one canonical definition against the screenshot evidence.
 4. Upgrade the compact engine incrementally: immutable transition result, typed commands/events/errors, expected-version guard, one version increment per accepted command, then deterministic replay tests.
 5. Add a named/versioned rules profile and explicitly decide the missing Classic rules before implementation.
 6. Complete the four verification phases and record device evidence separately from CI.
