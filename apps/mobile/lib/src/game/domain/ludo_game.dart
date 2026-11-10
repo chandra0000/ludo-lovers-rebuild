@@ -1,5 +1,6 @@
-import 'board_geometry.dart';
 import 'dart:convert';
+
+import 'board_geometry.dart';
 import 'player_color.dart';
 
 const int sharedTrackLength = BoardGeometry.trackLength;
