@@ -18,8 +18,9 @@ This guide separates automated rule simulation from rendering measurements that 
 2. Record the artwork's actual pixel dimensions from the decoded image (currently guarded by `gameplay_artwork_asset_test.dart`).
 3. Compare the overlay centres with the artwork centres for the finish emblem, all 16 yard sockets, the eight safe stars, and connector transitions 4, 17, 30, and 43.
 4. Convert screenshot pixels back to the 576 × 1024 logical canvas using the measured image scale and letterbox offset. Do not infer offsets from a resized chat preview.
-5. Change `boardLeft`, `boardTop`, and `boardWidth` only when repeatable measurements show a consistent offset. Keep the board square.
-6. Save before/after screenshots and record measured deltas. Remove `visualApprovalPending` only after a human confirms the artwork alignment.
+5. The renderer now uses one source-pixel anchor table for the 52 shared-track cells, 20 home-lane cells, finish centre, and 16 yard sockets. Do not reintroduce a uniform square-grid transform or duplicate coordinate maps in widgets.
+6. Compare every marker against the canonical source at full resolution. Record residual offsets in source pixels and design-canvas units; update only the centralized `BoardGeometry` anchors.
+7. Save before/after screenshots and record measured deltas. Keep `visualApprovalPending` true until a human confirms alignment on a physical device.
 
 ## Android profile-mode measurement
 
