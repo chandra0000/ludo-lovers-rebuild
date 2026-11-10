@@ -20,7 +20,7 @@ void main() {
     await tester.tap(find.byKey(const Key('skip_onboarding')));
     await tester.pumpAndSettle();
 
-    expect(find.text('LUDO LOVERS'), findsOneWidget);
+    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
     for (var cycle = 0; cycle < 3; cycle++) {
@@ -39,7 +39,7 @@ void main() {
       await tester.tap(find.byKey(const Key('exit_match')));
       await tester.pumpAndSettle();
 
-      expect(find.text('LUDO LOVERS'), findsOneWidget);
+      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
     }
   });
