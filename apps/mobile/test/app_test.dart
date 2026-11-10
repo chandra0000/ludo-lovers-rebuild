@@ -196,7 +196,13 @@ void main() {
   });
   
   testWidgets(
-    'offers a chooser when multiple legal pawns share a cell',
+    'offers a chooser when multiple legal pawns share a cell on compact phones',
+    (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 640);
+
     (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
@@ -212,9 +218,17 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump();
+    final firstHitTarget = tester.getSize(find.byKey(const Key('pawn_orange_0')));
+    final secondHitTarget = tester.getSize(find.byKey(const Key('pawn_orange_1')));
+    expect(firstHitTarget.width, greaterThanOrEqualTo(44));
+    expect(firstHitTarget.height, greaterThanOrEqualTo(44));
+    expect(secondHitTarget.width, greaterThanOrEqualTo(44));
+    expect(secondHitTarget.height, greaterThanOrEqualTo(44));
+
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
 
+    expect(tester.takeException(), isNull);
     expect(find.text('CHOOSE A PAWN'), findsOneWidget);
     expect(find.text('Pawn 1'), findsOneWidget);
     expect(find.text('Pawn 2'), findsOneWidget);
