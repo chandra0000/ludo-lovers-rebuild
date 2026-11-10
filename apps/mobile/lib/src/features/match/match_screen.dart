@@ -571,7 +571,7 @@ class _MatchScreenState extends State<MatchScreen>
     );
     final isStackTapTarget = stacked && stackIndex == stackTapIndex;
     final isCurrentPlayer = color == _game.activePlayer;
-    final tapPosition = stacked ? center : center + visualOffset;
+    final tapPosition = stacked ? canvasPoint : canvasPoint + visualOffset;
 
     return Positioned(
       left: tapPosition.dx - 22,
