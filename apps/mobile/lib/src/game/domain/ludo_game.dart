@@ -34,7 +34,7 @@ class LudoGame {
 
   factory LudoGame.initial() => LudoGame._(
         players: List<LudoPlayer>.unmodifiable(
-          PlayerColor.turnOrder.map(LudoPlayer.new),
+          PlayerColor.turnOrder.map((color) => LudoPlayer(color)),
         ),
         activePlayer: PlayerColor.orange,
       );
@@ -68,6 +68,17 @@ class LudoGame {
       activePlayer: activePlayer,
       diceValue: value,
       winner: winner,
+    );
+  }
+
+  LudoGame passTurn() {
+    if (diceValue == null) throw StateError('Roll the dice first.');
+    if (legalPawnIndices().isNotEmpty) {
+      throw StateError('A legal pawn move is available.');
+    }
+    return LudoGame._(
+      players: players,
+      activePlayer: diceValue == 6 ? activePlayer : activePlayer.next,
     );
   }
 
