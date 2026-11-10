@@ -6,6 +6,7 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
+import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({super.key});
@@ -220,15 +221,53 @@ class _MatchScreenState extends State<MatchScreen> {
       _boardRect.left + normalized.x * _boardRect.width,
       _boardRect.top + normalized.y * _boardRect.height,
     );
-    final diameter = progress == -1 ? 34.0 : 30.0;
-    const hitTarget = 44.0;
+
+    // Fan out pieces sharing a track cell into a compact 2x2 formation.
+    // Keep each pawn independently tappable and visually identifiable.
+    final occupants = <({PlayerColor color, int pawnIndex, Offset center})>[];
+    for (final otherColor in PlayerColor.turnOrder) {
+      final otherPlayer = _game.players.firstWhere((item) => item.color == otherColor);
+      for (var otherIndex = 0; otherIndex < otherPlayer.pawnProgress.length; otherIndex++) {
+        final otherProgress = otherPlayer.pawnProgress[otherIndex];
+        final otherPoint = BoardGeometry.normalizedPosition(otherColor, otherProgress, otherIndex);
+        final otherCenter = Offset(
+          _boardRect.left + otherPoint.x * _boardRect.width,
+          _boardRect.top + otherPoint.y * _boardRect.height,
+        );
+        if ((otherCenter - center).distance < 0.5) {
+          occupants.add((color: otherColor, pawnIndex: otherIndex, center: otherCenter));
+        }
+      }
+    }
+    occupants.sort((a, b) {
+      final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
+        PlayerColor.turnOrder.indexOf(b.color),
+      );
+      return colorOrder != 0 ? colorOrder : a.pawnIndex.compareTo(b.pawnIndex);
+    });
+    final stackIndex = occupants.indexWhere(
+      (item) => item.color == color && item.pawnIndex == pawnIndex,
+    );
+    const offsets = <Offset>[
+      Offset(-.24, -.20),
+      Offset(.24, -.20),
+      Offset(-.24, .20),
+      Offset(.24, .20),
+    ];
+    final stacked = occupants.length > 1;
+    final position = stacked
+        ? center + offsets[stackIndex % offsets.length] * 18
+        : center;
+    final size = stacked ? 19.0 : (progress == -1 ? 30.0 : 27.0);
     final canMove = color == _game.activePlayer &&
         _game.legalPawnIndices().contains(pawnIndex);
+    final isCurrentPlayer = color == _game.activePlayer;
+
     return Positioned(
-      left: center.dx - hitTarget / 2,
-      top: center.dy - hitTarget / 2,
-      width: hitTarget,
-      height: hitTarget,
+      left: position.dx - 22,
+      top: position.dy - 24,
+      width: 44,
+      height: 48,
       child: Semantics(
         button: canMove,
         label: '${color.name} pawn ${pawnIndex + 1}',
@@ -237,34 +276,14 @@ class _MatchScreenState extends State<MatchScreen> {
           behavior: HitTestBehavior.opaque,
           onTap: canMove ? () => _move(pawnIndex) : null,
           child: Center(
-            child: AnimatedContainer(
-              width: diameter,
-              height: diameter,
+            child: AnimatedScale(
+              scale: canMove ? 1.12 : 1,
               duration: const Duration(milliseconds: 180),
-              decoration: BoxDecoration(
+              child: GlassyPawn(
                 color: color.color,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: canMove ? const Color(0xFFFFD700) : Colors.white,
-                  width: canMove ? 3.5 : 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.color.withValues(alpha: 0.7),
-                    blurRadius: canMove ? 13 : 5,
-                    spreadRadius: canMove ? 2 : 0,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Container(
-                  width: diameter * 0.28,
-                  height: diameter * 0.28,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+                size: size,
+                isCurrentPlayer: isCurrentPlayer,
+                isMovable: canMove,
               ),
             ),
           ),
