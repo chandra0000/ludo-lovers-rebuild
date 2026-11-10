@@ -186,6 +186,10 @@ void main() {
         },
       ).roll(2);
       expect(overshoot.legalPawnIndices(), isEmpty);
+      expect(() => overshoot.movePawn(0), throwsStateError);
+      // A rejected action cannot mutate the immutable pre-action snapshot.
+      expect(overshoot.diceValue, 2);
+      expect(overshoot.currentPlayer.pawnProgress[0], 55);
       final passed = overshoot.passTurn();
       expect(
         passed.players
