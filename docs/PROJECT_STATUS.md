@@ -19,6 +19,13 @@ Last updated: 2026-11-10
 - Unit, geometry, asset-integrity, and widget tests.
 - Flutter CI workflow for analyze, tests, Android scaffold generation, and debug APK build.
 
+## Pawn visual implementation (in progress)
+
+- Added a programmatically painted glossy glass-finish cone pawn (`GlassyPawn`).
+- Active player's pawns receive a colour-matched halo; legal pawns receive a stronger gold highlight and scale emphasis.
+- Pawns sharing a cell are arranged in a compact 2×2 formation and rendered smaller.
+- Added widget tests for standard and compact pawn rendering. These changes are committed on `feat/flutter-app-foundation`; CI/device visual validation is still pending.
+
 ## Not yet accepted / known gaps
 
 - User's canonical board image and app icon need to be uploaded and verified at the documented paths.
