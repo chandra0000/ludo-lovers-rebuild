@@ -60,11 +60,22 @@ class _MatchScreenState extends State<MatchScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (_game.diceValue != null &&
+        widget.aiPlayers.contains(_game.activePlayer)) {
+      // A saved AI roll is already accepted by the engine. Complete its
+      // presentation callback on restore so the AI cannot become stranded.
+      _isDiceAnimating = true;
+      _diceRollId = 1;
+    }
     _isAppResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_persistMatch());
-      _scheduleAiTurn();
+      if (_isDiceAnimating) {
+        _handleDiceAnimationComplete();
+      } else {
+        _scheduleAiTurn();
+      }
     });
   }
 
@@ -159,7 +170,7 @@ class _MatchScreenState extends State<MatchScreen>
             return;
           }
           final rolled = _game.roll(
-            _random.nextInt(6) + 1,
+            math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
             expectedStateVersion: _game.stateVersion,
             commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
           );
@@ -184,7 +195,7 @@ class _MatchScreenState extends State<MatchScreen>
       return false;
     }
     final value = isAi
-        ? _random.nextInt(6) + 1
+        ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
         : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
     final rolled = _game.roll(
       value,
@@ -600,6 +611,7 @@ class _MatchScreenState extends State<MatchScreen>
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
+        !widget.aiPlayers.contains(color) &&
         color == _game.activePlayer &&
         legalIndices.contains(pawnIndex);
     final movableStackIndices = occupants
