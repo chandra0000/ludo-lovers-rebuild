@@ -22,8 +22,9 @@ void main() {
       final result = game.evaluatePawnMove(0);
 
       expect(result, isA<ValidMove>());
-      expect((result as ValidMove).pathTiles, [4, 5, 6, 7]);
-      expect(result.isCapture, isFalse);
+      final valid = result as ValidMove;
+      expect(valid.pathTiles, [4, 5, 6, 7]);
+      expect(valid.isCapture, isFalse);
     });
 
     test('Classic blockade prevents passing through two opponent pawns', () {
@@ -78,7 +79,8 @@ void main() {
       final result = game.evaluatePawnMove(0);
 
       expect(result, isA<ValidMove>());
-      expect((result as ValidMove).isCapture, isFalse);
+      final valid = result as ValidMove;
+      expect(valid.isCapture, isFalse);
     });
 
     test('a lone opponent on an unsafe cell is captured', () {
@@ -94,9 +96,10 @@ void main() {
       final result = game.evaluatePawnMove(0);
 
       expect(result, isA<ValidMove>());
-      expect((result as ValidMove).isCapture, isTrue);
-      expect(result.capturedPawnColor, PlayerColor.green);
-      expect(result.capturedPawnIndex, 0);
+      final valid = result as ValidMove;
+      expect(valid.isCapture, isTrue);
+      expect(valid.capturedPawnColor, PlayerColor.green);
+      expect(valid.capturedPawnIndex, 0);
     });
 
     test('a lone opponent on a safe cell is not captured', () {
