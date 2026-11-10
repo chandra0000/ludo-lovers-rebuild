@@ -14,7 +14,9 @@ void main() {
     const store = SavedMatchStore();
     final savedGame = LudoGame.initial()
         .roll(6, commandId: 'home-resume-roll')
-        .movePawn(0, commandId: 'home-resume-move');
+        .movePawn(0, commandId: 'home-resume-move')
+        .roll(2, commandId: 'home-resume-next-roll')
+        .movePawn(0, commandId: 'home-resume-next-move');
     await store.save(
       SavedMatch(
         game: savedGame,
