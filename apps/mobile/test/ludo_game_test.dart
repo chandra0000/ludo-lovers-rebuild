@@ -176,7 +176,10 @@ void main() {
 
       expect(exact.legalPawnIndices(), [0]);
       final finished = exact.movePawn(0);
-      expect(finished.currentPlayer.pawnProgress[0], 56);
+      final finishedOrange = finished.players.firstWhere(
+        (player) => player.color == PlayerColor.orange,
+      );
+      expect(finishedOrange.pawnProgress[0], 56);
       expect(finished.winner, isNull);
 
       final overshoot = LudoGame.fromProgress(
