@@ -8,7 +8,9 @@ Record durable product and engineering decisions here. Newest entries go first.
 
 **Reason:** The game pieces are stateful and animated. Drawing them at runtime avoids separate image uploads for every pawn/dice face and keeps visual state synchronized with the game engine.
 
-**Consequences:** Board coordinates must be calibrated against the final board image. Pawn and dice rendering require widget/custom-painter tests and animation QA.
+**Verified source detail:** The supplied 810×1440 portrait WebP is a full-screen game composition, not a board-only image. It includes static player portraits/names, the board, a decorative die, and bottom controls. Preserve the full image; map the actual board region inside it for pawn geometry and place intentional interactive overlays over baked-in UI where needed.
+
+**Consequences:** Board coordinates must be calibrated against the board region inside the full-screen artwork. Pawn and dice rendering require widget/custom-painter tests and animation QA.
 
 ## 2026-11-10 — Only two required user image uploads for the first milestone
 
