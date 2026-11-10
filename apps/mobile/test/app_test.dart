@@ -507,6 +507,12 @@ void main() {
     expect(find.byKey(const Key('preview_track_0')), findsOneWidget);
     expect(find.byKey(const Key('preview_track_51')), findsOneWidget);
     expect(find.byKey(const Key('preview_finish')), findsOneWidget);
+    expect(find.byKey(const Key('preview_finish_crosshair')), findsOneWidget);
+    expect(find.byKey(const Key('preview_track_0_crosshair')), findsOneWidget);
+    expect(
+      find.byKey(const Key('preview_orange_0_crosshair')),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('preview_lane_orange_0')), findsOneWidget);
   });
 }
