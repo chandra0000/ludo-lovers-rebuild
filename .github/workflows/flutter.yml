@@ -35,6 +35,13 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Upload deterministic match screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-match-canvas-393x873
+          path: apps/mobile/test-artifacts/match-canvas-393x873.png
+          if-no-files-found: warn
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
