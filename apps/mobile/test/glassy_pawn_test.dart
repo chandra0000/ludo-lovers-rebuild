@@ -6,7 +6,7 @@ void main() {
   testWidgets('renders a glass-finish cone pawn with semantic wrapper',
       (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: Center(
             child: Semantics(
