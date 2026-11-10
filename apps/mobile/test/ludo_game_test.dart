@@ -130,7 +130,7 @@ void main() {
           final attackerDistance =
               (safeCell - attacker.entryIndex + sharedTrackLength) %
                   sharedTrackLength;
-          if (attackerDistance == 0) continue;
+          if (attackerDistance == 0 || attackerDistance > 50) continue;
 
           final attackerProgress = attackerDistance - 1;
           for (final victim in PlayerColor.turnOrder) {
