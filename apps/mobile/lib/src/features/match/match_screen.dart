@@ -586,7 +586,9 @@ class _MatchScreenState extends State<MatchScreen>
       width: hitTargetWidth,
       height: hitTargetHeight,
       child: IgnorePointer(
-        ignoring: stacked && !isStackTapTarget,
+        // Inactive/non-legal pawns must not cover a legal pawn's enlarged
+        // touch target when adjacent cells overlap on compact screens.
+        ignoring: !canMove || (stacked && !isStackTapTarget),
         child: Semantics(
           button: stacked ? isStackTapTarget : canMove,
           label: stacked
