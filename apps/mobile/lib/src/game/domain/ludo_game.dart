@@ -439,9 +439,7 @@ class LudoGame {
       for (final color in PlayerColor.turnOrder)
         LudoPlayer(color, pawnProgress: progressByColor[color]),
     ];
-    final completed = restoredPlayers
-        .where((player) => player.hasWon)
-        .toList();
+    final completed = restoredPlayers.where((player) => player.hasWon).toList();
     if ((winnerColor == null && completed.isNotEmpty) ||
         (winnerColor != null &&
             (completed.length != 1 ||
