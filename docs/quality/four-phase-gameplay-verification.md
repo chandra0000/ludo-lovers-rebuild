@@ -29,7 +29,7 @@ Still required:
 ## Phase 3 — engine correctness
 
 Automated evidence:
-- Focused tests cover turn order, six-to-enter, legal movement, exact finish/overshoot, capture from all four seat orientations, every configured safe cell, winner detection, compatibility and opt-in Classic profile behaviour. Snapshot tests also verify profile-aware consecutive-six restoration.
+- Focused tests cover turn order, six-to-enter, legal movement, exact finish/overshoot, capture from all four seat orientations, every configured safe cell, single-pawn versus stacked-pair capture, winner detection, compatibility and opt-in Classic profile behaviour. Snapshot tests also verify profile-aware consecutive-six restoration and schema-v1 migration to schema v2.
 - State-version guards, in-memory duplicate command IDs, typed ordered events, and immutable snapshots have regression coverage.
 - A deterministic 2,500-transition stress test checks snapshot invariants and event sequencing.
 
