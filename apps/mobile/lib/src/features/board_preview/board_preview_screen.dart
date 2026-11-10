@@ -29,9 +29,12 @@ class BoardPreviewScreen extends StatelessWidget {
               ),
               Expanded(
                 child: Center(
-                  child: AspectRatio(
-                    aspectRatio: BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
-                    child: LayoutBuilder(
+                  child: RepaintBoundary(
+                    key: const Key('board_preview_capture'),
+                    child: AspectRatio(
+                      aspectRatio:
+                          BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
+                      child: LayoutBuilder(
                       builder: (context, constraints) => Stack(
                         key: const Key('board_preview_canvas'),
                         fit: StackFit.expand,
@@ -104,6 +107,7 @@ class BoardPreviewScreen extends StatelessWidget {
                                 constraints.maxHeight,
                               ),
                         ],
+                      ),
                       ),
                     ),
                   ),
