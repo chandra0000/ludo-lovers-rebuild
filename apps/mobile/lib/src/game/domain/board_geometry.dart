@@ -1,5 +1,6 @@
 import 'player_color.dart';
 
+/// A point normalized against the complete 810×1440 source artwork.
 class NormalizedBoardPoint {
   const NormalizedBoardPoint(this.x, this.y);
 
@@ -14,6 +15,8 @@ class NormalizedBoardPoint {
   int get hashCode => Object.hash(x, y);
 }
 
+/// Logical board topology only. Rendering coordinates live in [BoardGeometry]
+/// because the approved artwork has non-uniform arm and centre proportions.
 class BoardCell {
   const BoardCell(this.column, this.row);
 
@@ -57,27 +60,64 @@ class BoardGeometry {
   static const int playerTrackLength = 51;
   static const int homeLaneLength = 5;
 
-  // Shared design-canvas and artwork overlay contract. Pawn coordinates are
-  // relative to the board-grid rectangle inside the full-screen 9:16 artwork.
+  static const double sourceWidth = 810;
+  static const double sourceHeight = 1440;
   static const double canvasWidth = 576;
   static const double canvasHeight = 1024;
-  static const double boardLeft = 17.78;
-  static const double boardTop = 199.1;
-  static const double boardWidth = 540.44;
-  // The 15×15 playfield is square: every logical cell must have equal
-  // horizontal and vertical scale. Keep this tied to boardWidth so a future
-  // canvas adjustment cannot silently stretch the route.
-  static const double boardHeight = boardWidth;
-  static const double gridCellSize = boardWidth / gridSize;
+
+  // Convert measured source-artwork pixels to the app's uniform 9:16 canvas.
+  // The artwork itself is never cropped, stretched, recoloured, or modified.
+  static NormalizedBoardPoint _sourcePoint(double x, double y) =>
+      NormalizedBoardPoint(x / sourceWidth, y / sourceHeight);
 
   static NormalizedBoardPoint canvasPosition(NormalizedBoardPoint point) =>
       NormalizedBoardPoint(
-        boardLeft + point.x * boardWidth,
-        boardTop + point.y * boardHeight,
+        point.x * canvasWidth,
+        point.y * canvasHeight,
       );
 
-  // Provisional physical cell centers on a 15×15 grid; not visually approved.
-  // Four candidate diagonal corner connectors are documented; visual approval is pending.
+  // Horizontal arm cell centres, measured from the 810×1440 source artwork.
+  static const List<double> _leftArmX = <double>[
+    48,
+    96.5,
+    144.5,
+    192,
+    240,
+    287.5,
+  ];
+  static const List<double> _rightArmX = <double>[
+    520.5,
+    568,
+    616,
+    664,
+    712,
+    760,
+  ];
+  // The vertical arms are slightly wider than the horizontal arm cells and
+  // the lower arm is offset by the artwork's central hub geometry.
+  static const List<double> _topArmX = <double>[341, 404, 466.5];
+  static const List<double> _bottomArmX = <double>[351, 403, 455];
+  static const List<double> _topArmY = <double>[
+    326,
+    377.5,
+    427.5,
+    476.5,
+    525,
+    577,
+  ];
+  static const List<double> _bottomArmY = <double>[
+    785.5,
+    837.5,
+    888,
+    940,
+    991.5,
+    1045,
+  ];
+  static const List<double> _horizontalArmY = <double>[625, 677, 729];
+
+  // Logical route order remains the domain contract. Each cell is rendered
+  // through its measured source-artwork anchor instead of a false uniform
+  // 15×15 transform.
   static const List<BoardCell> sharedTrack = <BoardCell>[
     BoardCell(1, 6),
     BoardCell(2, 6),
@@ -189,44 +229,103 @@ class BoardGeometry {
     ),
   };
 
-  // First-pass estimated yard socket offsets for the visible circular
-  // sockets in ludo_board_glass.webp. These are centralized assumptions, not
-  // pixel-verified measurements or visual approval. Recalibrate from rendered
-  // screenshots before removing the geometry release gate.
-  static const List<NormalizedBoardPoint> _yardOffsets =
-      <NormalizedBoardPoint>[
-    NormalizedBoardPoint(1.8, 1.8),
-    NormalizedBoardPoint(3.8, 1.8),
-    NormalizedBoardPoint(1.8, 3.8),
-    NormalizedBoardPoint(3.8, 3.8),
-  ];
+  // Centres of the sixteen circular yard wells, measured independently from
+  // the canonical source image. Small asymmetries in the artwork are retained.
+  static const Map<PlayerColor, List<NormalizedBoardPoint>> _yardSockets = {
+    PlayerColor.orange: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(114.2 / sourceWidth, 401.4 / sourceHeight),
+      NormalizedBoardPoint(215 / sourceWidth, 402.6 / sourceHeight),
+      NormalizedBoardPoint(115.4 / sourceWidth, 495 / sourceHeight),
+      NormalizedBoardPoint(215 / sourceWidth, 497.4 / sourceHeight),
+    ],
+    PlayerColor.green: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(593 / sourceWidth, 402.6 / sourceHeight),
+      NormalizedBoardPoint(692.6 / sourceWidth, 402.6 / sourceHeight),
+      NormalizedBoardPoint(593 / sourceWidth, 496.2 / sourceHeight),
+      NormalizedBoardPoint(692.6 / sourceWidth, 497.4 / sourceHeight),
+    ],
+    PlayerColor.blue: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(117.8 / sourceWidth, 872.2 / sourceHeight),
+      NormalizedBoardPoint(217.4 / sourceWidth, 873.4 / sourceHeight),
+      NormalizedBoardPoint(117.8 / sourceWidth, 968.2 / sourceHeight),
+      NormalizedBoardPoint(217.4 / sourceWidth, 968.2 / sourceHeight),
+    ],
+    PlayerColor.magenta: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(594.2 / sourceWidth, 874.6 / sourceHeight),
+      NormalizedBoardPoint(691.4 / sourceWidth, 873.4 / sourceHeight),
+      NormalizedBoardPoint(593 / sourceWidth, 967 / sourceHeight),
+      NormalizedBoardPoint(692.6 / sourceWidth, 967 / sourceHeight),
+    ],
+  };
+
+  static NormalizedBoardPoint trackPosition(int index) {
+    if (index < 0 || index >= trackLength) {
+      throw RangeError.range(index, 0, trackLength - 1, 'index');
+    }
+    final cell = sharedTrack[index];
+    final column = cell.column;
+    final row = cell.row;
+
+    if (row >= 6 && row <= 8 && column >= 0 && column <= 5) {
+      return _sourcePoint(_leftArmX[column], _horizontalArmY[row - 6]);
+    }
+    if (row >= 6 && row <= 8 && column >= 9 && column <= 14) {
+      return _sourcePoint(_rightArmX[column - 9], _horizontalArmY[row - 6]);
+    }
+    if (column >= 6 && column <= 8 && row >= 0 && row <= 5) {
+      return _sourcePoint(_topArmX[column - 6], _topArmY[row]);
+    }
+    if (column >= 6 && column <= 8 && row >= 9 && row <= 14) {
+      return _sourcePoint(_bottomArmX[column - 6], _bottomArmY[row - 9]);
+    }
+    throw StateError('No artwork anchor for shared track cell $cell.');
+  }
+
+  static NormalizedBoardPoint homeLanePosition(
+    PlayerColor color,
+    int laneIndex,
+  ) {
+    if (laneIndex < 0 || laneIndex >= homeLaneLength) {
+      throw RangeError.range(laneIndex, 0, homeLaneLength - 1, 'laneIndex');
+    }
+    switch (color) {
+      case PlayerColor.orange:
+        return _sourcePoint(_leftArmX[laneIndex + 1], _horizontalArmY[1]);
+      case PlayerColor.green:
+        return _sourcePoint(_topArmX[1], _topArmY[laneIndex + 1]);
+      case PlayerColor.magenta:
+        return _sourcePoint(_rightArmX[4 - laneIndex], _horizontalArmY[1]);
+      case PlayerColor.blue:
+        return _sourcePoint(_bottomArmX[1], _bottomArmY[4 - laneIndex]);
+    }
+  }
+
+  static NormalizedBoardPoint get finishPosition => _sourcePoint(403, 681);
+
+  static NormalizedBoardPoint yardPosition(PlayerColor color, int pawnIndex) {
+    if (pawnIndex < 0 || pawnIndex > 3) {
+      throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
+    }
+    return _yardSockets[color]![pawnIndex];
+  }
 
   static NormalizedBoardPoint normalizedPosition(
     PlayerColor color,
     int progress,
     int pawnIndex,
   ) {
-    final seat = seats[color]!;
     if (pawnIndex < 0 || pawnIndex > 3) {
       throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
     }
-    if (progress == -1) {
-      final offset = _yardOffsets[pawnIndex];
-      return NormalizedBoardPoint(
-        (seat.yardColumn + offset.x) / gridSize,
-        (seat.yardRow + offset.y) / gridSize,
-      );
-    }
+    if (progress == -1) return yardPosition(color, pawnIndex);
     if (progress < -1 || progress > 56) {
       throw RangeError.range(progress, -1, 56, 'progress');
     }
-    if (progress == 56) {
-      return finishCell.normalizedCenter;
-    }
+    if (progress == 56) return finishPosition;
     if (progress < playerTrackLength) {
-      return sharedTrack[(seat.entryIndex + progress) % trackLength].normalizedCenter;
+      return trackPosition((seats[color]!.entryIndex + progress) % trackLength);
     }
-    return seat.homeLane[progress - playerTrackLength].normalizedCenter;
+    return homeLanePosition(color, progress - playerTrackLength);
   }
 
   static int physicalTrackCell(PlayerColor color, int progress) {
@@ -241,7 +340,8 @@ class BoardGeometry {
         sharedTrack.toSet().length != trackLength ||
         !sharedTrack.every((cell) => cell.isInside) ||
         seats.length != PlayerColor.turnOrder.length ||
-        !finishCell.isInside) {
+        !finishCell.isInside ||
+        _yardSockets.length != PlayerColor.turnOrder.length) {
       return false;
     }
 
@@ -251,7 +351,8 @@ class BoardGeometry {
       final seat = seats[color];
       if (seat == null ||
           seat.entryIndex != color.entryIndex ||
-          seat.homeLane.length != homeLaneLength) {
+          seat.homeLane.length != homeLaneLength ||
+          _yardSockets[color]?.length != 4) {
         return false;
       }
       for (final cell in seat.homeLane) {
@@ -261,6 +362,18 @@ class BoardGeometry {
             !allHomeLaneCells.add(cell)) {
           return false;
         }
+      }
+      for (final point in _yardSockets[color]!) {
+        if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) {
+          return false;
+        }
+      }
+    }
+
+    for (var index = 0; index < trackLength; index++) {
+      final point = trackPosition(index);
+      if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) {
+        return false;
       }
     }
 
@@ -282,14 +395,12 @@ class BoardGeometry {
       final to = sharedTrack[(index + 1) % sharedTrack.length];
       final distance =
           (from.column - to.column).abs() + (from.row - to.row).abs();
-      if (distance != 1) {
-        result.add(index);
-      }
+      if (distance != 1) result.add(index);
     }
     return List<int>.unmodifiable(result);
   }
 
-  // This remains a release gate until visual review is performed on the
-  // original artwork and the intended rules profile is signed off.
+  // Source measurements and tests are committed; final visual approval is
+  // still required before this gate can be closed.
   static const bool visualApprovalPending = true;
 }
