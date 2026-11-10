@@ -20,7 +20,7 @@ void main() {
     test('provides a single pawn baseline on the shared track', () {
       final game = BoardAcceptancePresets.singlePawnOnTrack;
       expect(game.players
-          .firstWhere((player => player.color == PlayerColor.orange))
+          .firstWhere((player) => player.color == PlayerColor.orange)
           .pawnProgress.first, 5);
       expect(BoardGeometry.physicalTrackCell(PlayerColor.orange, 5), 5);
     });
