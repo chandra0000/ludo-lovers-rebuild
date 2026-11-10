@@ -7,8 +7,7 @@ Last updated: 2026-11-10
 - Repository: [chandra0000/ludo-lovers-rebuild](https://github.com/chandra0000/ludo-lovers-rebuild)
 - Folder-structure PR #2 is merged.
 - Flutter foundation PR #3 is merged into `main`.
-- Follow-up implementation branch: `feat/app-polish-and-interaction`.
-- The follow-up branch is intended for PR #4; do not treat it as merged until that PR is accepted.
+- Routine implementation changes are now committed directly to `main`, as requested.
 
 ## Implemented foundation
 
@@ -33,8 +32,7 @@ Last updated: 2026-11-10
 
 ## Validation state
 
-- A CI run on the follow-up source branch completed Dart formatting, static analysis, unit/widget tests, and Android project generation successfully; the debug APK build was still running at the time this status was updated.
-- The follow-up branch has its own CI run pending; use that run as the authoritative validation for PR #4.
+- Latest CI validation for the current `main` head is pending; do not claim the debug APK is ready until the workflow completes.
 - No real Android device test has been performed/recorded.
 - Board geometry remains provisional and has not been accepted through pixel-level visual calibration.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
@@ -44,7 +42,6 @@ Last updated: 2026-11-10
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
 - Pawn positions and multi-pawn stack spacing need visual calibration against the board region.
 - Dice is currently represented by a simple numeric circular overlay; a polished vector dice component and roll animation are still required.
-- Pawn movement updates engine state but does not yet animate step-by-step through intermediate cells.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
 - Real Android device testing and APK installation smoke test remain open.
