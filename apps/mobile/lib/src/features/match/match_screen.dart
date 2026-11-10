@@ -62,7 +62,9 @@ class _MatchScreenState extends State<MatchScreen>
     WidgetsBinding.instance.addObserver(this);
     _isAppResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _scheduleAiTurn();
+      if (!mounted) return;
+      unawaited(_persistMatch());
+      _scheduleAiTurn();
     });
   }
 
