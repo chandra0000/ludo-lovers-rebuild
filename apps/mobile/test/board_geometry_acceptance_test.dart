@@ -45,7 +45,11 @@ void main() {
           expect(cell.isInside, isTrue);
           expect(track.contains(cell), isFalse);
           expect(cell, isNot(BoardGeometry.finishCell));
-          expect(lanes.add(cell), isTrue, reason: 'Overlapping lane cell: $cell');
+          expect(
+            lanes.add(cell),
+            isTrue,
+            reason: 'Overlapping lane cell: $cell',
+          );
         }
       }
       expect(lanes, hasLength(20));
