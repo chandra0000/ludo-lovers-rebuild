@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
@@ -92,6 +93,107 @@ void main() {
         -1,
       );
       expect(moved.activePlayer, PlayerColor.orange);
+    });
+
+    test('captures correctly for every player seat orientation', () {
+      for (final attacker in PlayerColor.turnOrder) {
+        final victim = attacker.next;
+        final game = LudoGame.fromProgress(
+          activePlayer: attacker,
+          pawnProgress: {
+            attacker: [3, -1, -1, -1],
+            // Progress 44 is the same physical cell as the attacker's
+            // landing position at progress 5 for each adjacent seat pair.
+            victim: [44, -1, -1, -1],
+          },
+        );
+
+        final moved = game.roll(2).movePawn(0);
+        expect(moved.currentPlayer.pawnProgress[0], 5);
+        expect(
+          moved.players
+              .firstWhere((player) => player.color == victim)
+              .pawnProgress[0],
+          -1,
+          reason: '$attacker should capture $victim across the shared route.',
+        );
+        expect(moved.activePlayer, attacker);
+        expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
+      }
+    });
+
+    test('every configured safe cell protects a pawn from capture', () {
+      var verifiedSafeCells = <int>{};
+
+      for (final attacker in PlayerColor.turnOrder) {
+        for (final safeCell in BoardGeometry.safeTrackCells) {
+          final attackerDistance =
+              (safeCell - attacker.entryIndex + sharedTrackLength) %
+                  sharedTrackLength;
+          if (attackerDistance == 0) continue;
+
+          final attackerProgress = attackerDistance - 1;
+          for (final victim in PlayerColor.turnOrder) {
+            if (victim == attacker) continue;
+            final victimProgress =
+                (safeCell - victim.entryIndex + sharedTrackLength) %
+                    sharedTrackLength;
+            if (victimProgress >= playerTrackLength) continue;
+
+            final game = LudoGame.fromProgress(
+              activePlayer: attacker,
+              pawnProgress: {
+                attacker: [attackerProgress, -1, -1, -1],
+                victim: [victimProgress, -1, -1, -1],
+              },
+            );
+
+            final moved = game.roll(1).movePawn(0);
+            expect(
+              moved.players
+                  .firstWhere((player) => player.color == victim)
+                  .pawnProgress[0],
+              victimProgress,
+              reason: 'Safe cell $safeCell must protect $victim from $attacker.',
+            );
+            expect(moved.events.whereType<PawnCaptured>(), isEmpty);
+            verifiedSafeCells.add(safeCell);
+            break;
+          }
+        }
+      }
+
+      expect(verifiedSafeCells, BoardGeometry.safeTrackCells);
+    });
+
+    test('default profile requires an exact roll to finish without overshooting', () {
+      final exact = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [55, -1, -1, -1],
+        },
+      ).roll(1);
+
+      expect(exact.legalPawnIndices(), [0]);
+      final finished = exact.movePawn(0);
+      expect(finished.currentPlayer.pawnProgress[0], 56);
+      expect(finished.winner, isNull);
+
+      final overshoot = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [55, -1, -1, -1],
+        },
+      ).roll(2);
+      expect(overshoot.legalPawnIndices(), isEmpty);
+      final passed = overshoot.passTurn();
+      expect(
+        passed.players
+            .firstWhere((player) => player.color == PlayerColor.orange)
+            .pawnProgress[0],
+        55,
+      );
+      expect(passed.activePlayer, PlayerColor.green);
     });
 
     test('does not capture on a safe shared-track cell', () {
