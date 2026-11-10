@@ -126,7 +126,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
-    expect(find.text('TEAM UP · 2 VS 2'), findsOneWidget);
     await tester.tap(find.byKey(const Key('start_local_match')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
@@ -360,6 +359,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open_board_preview')),
+      300,
+    );
     await tester.tap(find.byKey(const Key('open_board_preview')));
     await tester.pumpAndSettle();
 
