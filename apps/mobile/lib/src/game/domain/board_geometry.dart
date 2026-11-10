@@ -64,7 +64,11 @@ class BoardGeometry {
   static const double boardLeft = 17.78;
   static const double boardTop = 213.33;
   static const double boardWidth = 540.44;
-  static const double boardHeight = 561.78;
+  // The 15×15 playfield is square: every logical cell must have equal
+  // horizontal and vertical scale. Keep this tied to boardWidth so a future
+  // canvas adjustment cannot silently stretch the route.
+  static const double boardHeight = boardWidth;
+  static const double gridCellSize = boardWidth / gridSize;
 
   static NormalizedBoardPoint canvasPosition(NormalizedBoardPoint point) =>
       NormalizedBoardPoint(
@@ -191,10 +195,10 @@ class BoardGeometry {
   // screenshots before removing the geometry release gate.
   static const List<NormalizedBoardPoint> _yardOffsets =
       <NormalizedBoardPoint>[
-    NormalizedBoardPoint(1.8, 2.0),
-    NormalizedBoardPoint(3.8, 2.0),
-    NormalizedBoardPoint(1.8, 3.9),
-    NormalizedBoardPoint(3.8, 3.9),
+    NormalizedBoardPoint(1.8, 1.8),
+    NormalizedBoardPoint(3.8, 1.8),
+    NormalizedBoardPoint(1.8, 3.8),
+    NormalizedBoardPoint(3.8, 3.8),
   ];
 
   static NormalizedBoardPoint normalizedPosition(
