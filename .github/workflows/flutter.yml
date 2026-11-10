@@ -51,7 +51,6 @@ jobs:
               'apps/mobile/test/**/*.dart' \
               'apps/mobile/integration_test/**/*.dart'
           )
-          dart_files=("apps/mobile/lib/src/game/domain/ludo_game.dart")
           if [ "${#dart_files[@]}" -eq 0 ]; then
             echo "No Dart source or test files changed."
             exit 0
@@ -59,8 +58,7 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=show apps/mobile/lib/src/game/domain/ludo_game.dart
-          exit 0
+          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
