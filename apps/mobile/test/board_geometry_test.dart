@@ -89,17 +89,20 @@ void main() {
       expect(connectors, BoardGeometry.cornerConnectorIndexes);
     });
 
-    test('keeps safe-cell indexes stable under every player entry offset', () {
-      for (final color in PlayerColor.turnOrder) {
-        for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++) {
-          final physical = BoardGeometry.physicalTrackCell(color, progress);
-          final isSafe = BoardGeometry.safeTrackCells.contains(physical);
-          expect(
-            BoardGeometry.sharedTrack[physical],
-            isA<BoardCell>(),
-          );
-          expect(isSafe, BoardGeometry.safeTrackCells.contains(physical));
-        }
+    test('pins provisional safe-cell IDs to their exact physical route cells', () {
+      const expected = <int, BoardCell>{
+        0: BoardCell(1, 6),
+        8: BoardCell(6, 2),
+        13: BoardCell(8, 1),
+        21: BoardCell(12, 6),
+        26: BoardCell(13, 8),
+        34: BoardCell(8, 12),
+        39: BoardCell(6, 13),
+        47: BoardCell(2, 8),
+      };
+      expect(BoardGeometry.safeTrackCells, expected.keys.toSet());
+      for (final entry in expected.entries) {
+        expect(BoardGeometry.sharedTrack[entry.key], entry.value);
       }
     });
 
