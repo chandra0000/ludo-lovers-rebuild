@@ -31,7 +31,6 @@ class BoardCell {
 
   @override
   int get hashCode => Object.hash(column, row);
-
 }
 
 class PlayerBoardSeat {
