@@ -157,6 +157,7 @@ class _MatchScreenState extends State<MatchScreen>
             final height = _canvasHeight * scale;
             return Center(
               child: SizedBox(
+                key: const Key('match_canvas'),
                 width: width,
                 height: height,
                 child: FittedBox(
@@ -169,6 +170,7 @@ class _MatchScreenState extends State<MatchScreen>
                         Positioned.fill(
                           child: Image.asset(
                             'assets/images/board/ludo_board_glass.webp',
+                            key: const Key('board_artwork'),
                             fit: BoxFit.fill,
                             errorBuilder: (context, error, stackTrace) =>
                                 const ColoredBox(
