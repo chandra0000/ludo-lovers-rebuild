@@ -44,6 +44,50 @@ void main() {
       }
     });
 
+    test('maps every player-relative track progress to 51 unique physical cells', () {
+      for (final color in PlayerColor.turnOrder) {
+        final cells = <int>[
+          for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++)
+            BoardGeometry.physicalTrackCell(color, progress),
+        ];
+        expect(cells, hasLength(51));
+        expect(cells.toSet(), hasLength(51));
+        expect(cells.first, BoardGeometry.seats[color]!.entryIndex);
+        for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++) {
+          final point = BoardGeometry.normalizedPosition(color, progress, 0);
+          expect(point, BoardGeometry.sharedTrack[cells[progress]].normalizedCenter);
+        }
+      }
+    });
+
+    test('keeps safe-cell metadata within the physical shared track', () {
+      expect(BoardGeometry.safeTrackCells, {0, 8, 13, 21, 26, 34, 39, 47});
+      for (final index in BoardGeometry.safeTrackCells) {
+        expect(index, inInclusiveRange(0, BoardGeometry.trackLength - 1));
+      }
+    });
+
+    test('maps each seat home lane to five unique cells', () {
+      for (final color in PlayerColor.turnOrder) {
+        final lane = BoardGeometry.seats[color]!.homeLane;
+        expect(lane, hasLength(BoardGeometry.homeLaneLength));
+        expect(lane.toSet(), hasLength(BoardGeometry.homeLaneLength));
+        expect(lane.every((cell) => cell.isInside), isTrue);
+        for (var index = 0; index < lane.length; index++) {
+          expect(BoardGeometry.normalizedPosition(color, 51 + index, 0), lane[index].normalizedCenter);
+        }
+      }
+    });
+
+    test('maps board-relative points through one canvas contract', () {
+      const point = NormalizedBoardPoint(0.5, 0.5);
+      final canvas = BoardGeometry.canvasPosition(point);
+      expect(canvas.x, closeTo(BoardGeometry.boardLeft + BoardGeometry.boardWidth / 2, 1e-9));
+      expect(canvas.y, closeTo(BoardGeometry.boardTop + BoardGeometry.boardHeight / 2, 1e-9));
+      expect(BoardGeometry.canvasWidth, 576);
+      expect(BoardGeometry.canvasHeight, 1024);
+    });
+
     test('maps home yards, shared track, lanes and finish to normalized points', () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
