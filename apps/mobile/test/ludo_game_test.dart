@@ -691,6 +691,22 @@ void main() {
       expect(moved.events.whereType<ExtraTurnGranted>(), hasLength(1));
     });
 
+    test('passing an unplayable six grants the extra roll explicitly', () {
+      final rolled = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [55, 55, 55, 55],
+        },
+      ).roll(6);
+
+      expect(rolled.awaitingPass, isTrue);
+      final passed = rolled.passTurn();
+      expect(passed.activePlayer, PlayerColor.orange);
+      expect(passed.diceValue, isNull);
+      expect(passed.events, hasLength(1));
+      expect(passed.events.single, isA<ExtraTurnGranted>());
+    });
+
     test('finishing one pawn emits PawnFinished before the bonus event', () {
       final moved = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
