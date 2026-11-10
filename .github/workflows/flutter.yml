@@ -30,17 +30,15 @@ jobs:
       - name: Resolve dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Format Dart sources and show proposed changes
+      - name: Check Dart formatting
         working-directory: apps/mobile
-        run: |
-          dart format lib test integration_test
-          git diff -- lib test integration_test
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
       - name: Unit and widget tests
         working-directory: apps/mobile
-        run: flutter test --update-goldens --reporter expanded
+        run: flutter test --reporter expanded
       - name: Upload deterministic match screenshot
         if: always()
         uses: actions/upload-artifact@v4
