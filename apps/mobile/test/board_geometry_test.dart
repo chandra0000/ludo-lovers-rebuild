@@ -37,7 +37,7 @@ void main() {
           final point = BoardGeometry.normalizedPosition(color, -1, pawn);
           final seat = BoardGeometry.seats[color]!;
           final expectedX = (seat.yardColumn + (pawn.isEven ? 1.8 : 3.8)) / 15;
-          final expectedY = (seat.yardRow + (pawn < 2 ? 2.0 : 3.9)) / 15;
+          final expectedY = (seat.yardRow + (pawn < 2 ? 1.8 : 3.8)) / 15;
           expect(point.x, closeTo(expectedX, 1e-9));
           expect(point.y, closeTo(expectedY, 1e-9));
         }
@@ -129,6 +129,24 @@ void main() {
       expect(
         () => BoardGeometry.physicalTrackCell(PlayerColor.orange, 51),
         throwsRangeError,
+      );
+    });
+
+    test('keeps the 15x15 board grid square and cells isotropic', () {
+      expect(BoardGeometry.boardHeight, BoardGeometry.boardWidth);
+      expect(
+        BoardGeometry.gridCellSize,
+        closeTo(BoardGeometry.boardWidth / BoardGeometry.gridSize, 1e-9),
+      );
+      final horizontal = BoardGeometry.canvasPosition(
+        const NormalizedBoardPoint(1 / 15, 0),
+      );
+      final vertical = BoardGeometry.canvasPosition(
+        const NormalizedBoardPoint(0, 1 / 15),
+      );
+      expect(
+        horizontal.x - BoardGeometry.boardLeft,
+        closeTo(vertical.y - BoardGeometry.boardTop, 1e-9),
       );
     });
 
