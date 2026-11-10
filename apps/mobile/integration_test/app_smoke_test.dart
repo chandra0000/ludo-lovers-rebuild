@@ -15,18 +15,18 @@ void main() {
     await preferences.clear();
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1800));
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
     expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
     await tester.tap(find.byKey(const Key('skip_onboarding')));
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
     for (var cycle = 0; cycle < 3; cycle++) {
       await tester.tap(find.byKey(const Key('open_game_setup')));
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
       await tester.tap(find.byKey(const Key('start_local_match')));
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
       expect(find.byKey(const Key('match_canvas')), findsOneWidget);
       expect(find.byKey(const Key('roll_dice')), findsOneWidget);
@@ -36,12 +36,12 @@ void main() {
       expect(find.byKey(const Key('pawn_blue_0')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('exit_match')));
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
       // Match exits to Game Setup; explicitly return home before the next cycle.
       expect(find.byKey(const Key('start_local_match')), findsOneWidget);
       await tester.pageBack();
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
     }
   });
@@ -57,7 +57,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
     // 1. The real match canvas, board artwork and dice control are rendered.
     expect(find.byKey(const Key('match_canvas')), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
     // 2. Roll a deterministic six and allow the 600 ms dice tumble to finish.
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump(const Duration(milliseconds: 700));
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
     // 3. Confirm the dice settled on the engine-provided result and the turn
     // status remains available after the animation callback.
@@ -89,7 +89,7 @@ void main() {
     await tester.tap(pawn);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 220));
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(timeout: const Duration(seconds: 10));
 
     expect(pawn, findsOneWidget);
     expect(tester.getCenter(pawn), isNot(startingPosition));
