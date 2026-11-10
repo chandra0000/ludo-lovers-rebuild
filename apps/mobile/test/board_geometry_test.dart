@@ -37,7 +37,7 @@ void main() {
           final point = BoardGeometry.normalizedPosition(color, -1, pawn);
           final seat = BoardGeometry.seats[color]!;
           final expectedX = (seat.yardColumn + (pawn.isEven ? 1.8 : 3.8)) / 15;
-          final expectedY = (seat.yardRow + (pawn < 2 ? 1.8 : 3.8)) / 15;
+          final expectedY = (seat.yardRow + (pawn < 2 ? 2.0 : 3.9)) / 15;
           expect(point.x, closeTo(expectedX, 1e-9));
           expect(point.y, closeTo(expectedY, 1e-9));
         }
