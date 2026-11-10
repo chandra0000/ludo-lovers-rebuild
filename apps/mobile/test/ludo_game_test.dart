@@ -249,6 +249,81 @@ void main() {
       expect(() => LudoGame.initial().roll(7), throwsArgumentError);
     });
 
+    test('safe cells are the four coloured starts and four artwork stars', () {
+      expect(BoardGeometry.startTrackCells, {0, 13, 26, 39});
+      expect(BoardGeometry.starTrackCells, {8, 21, 34, 47});
+      expect(
+        BoardGeometry.safeTrackCells,
+        BoardGeometry.startTrackCells.union(BoardGeometry.starTrackCells),
+      );
+
+      // Route IDs and logical 15x15 cells, matched to the canonical artwork.
+      expect(BoardGeometry.sharedTrack[0], const BoardCell(1, 6));
+      expect(BoardGeometry.sharedTrack[8], const BoardCell(6, 2));
+      expect(BoardGeometry.sharedTrack[13], const BoardCell(8, 1));
+      expect(BoardGeometry.sharedTrack[21], const BoardCell(12, 6));
+      expect(BoardGeometry.sharedTrack[26], const BoardCell(13, 8));
+      expect(BoardGeometry.sharedTrack[34], const BoardCell(8, 12));
+      expect(BoardGeometry.sharedTrack[39], const BoardCell(6, 13));
+      expect(BoardGeometry.sharedTrack[47], const BoardCell(2, 8));
+    });
+
+    test('Classic blockade prevents passing through an opponent pair', () {
+      final rolled = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, 10, -1, -1],
+          // Green progress 44 maps to Orange's physical track cell 5.
+          PlayerColor.green: [44, 44, -1, -1],
+        },
+      ).roll(3);
+
+      expect(
+        rolled.evaluatePawnMove(0),
+        isA<InvalidMove>().having(
+          (move) => move.reason,
+          'reason',
+          MoveInvalidReason.pathBlockedByBlockade,
+        ),
+      );
+      // The player must choose another legal pawn when one exists.
+      expect(rolled.legalPawnIndices(), [1]);
+      final moved = rolled.movePawn(1);
+      expect(moved.currentPlayer.pawnProgress[1], 13);
+      expect(moved.activePlayer, PlayerColor.green);
+    });
+
+    test('Classic passes the turn when every pawn is blocked by a blockade', () {
+      final rolled = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, -1, -1, -1],
+          PlayerColor.green: [44, 44, -1, -1],
+        },
+      ).roll(3);
+
+      expect(rolled.legalPawnIndices(), isEmpty);
+      expect(rolled.awaitingPass, isTrue);
+      final passed = rolled.passTurn();
+      expect(passed.activePlayer, PlayerColor.green);
+      expect(passed.diceValue, isNull);
+    });
+
+    test('Classic blockade does not prevent passing through own pawns', () {
+      final rolled = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {
+          PlayerColor.orange: [3, 5, -1, -1],
+        },
+      ).roll(3);
+
+      expect(rolled.legalPawnIndices(), contains(0));
+      expect(rolled.evaluatePawnMove(0), isA<ValidMove>());
+    });
+
     test('Classic profile ends the turn on the third consecutive six', () {
       var game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1);
       game = game.roll(6).movePawn(0);
@@ -384,6 +459,7 @@ void main() {
       expect(moved.activePlayer, PlayerColor.orange);
       expect(moved.diceValue, isNull);
       expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
+      expect(moved.events.whereType<ExtraTurnGranted>(), hasLength(1));
     });
 
     test('accepted transitions increment state version and reject stale commands', () {
