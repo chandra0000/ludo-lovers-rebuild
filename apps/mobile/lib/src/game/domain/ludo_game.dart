@@ -1,6 +1,7 @@
 import 'player_color.dart';
 
 const int sharedTrackLength = 52;
+const int playerTrackLength = 51;
 const int finishProgress = 56;
 const Set<int> safeTrackCells = <int>{0, 8, 13, 21, 26, 34, 39, 47};
 
@@ -39,6 +40,22 @@ class LudoGame {
     this.diceValue,
     this.winner,
   });
+
+  factory LudoGame.fromProgress({
+    required PlayerColor activePlayer,
+    required Map<PlayerColor, List<int>> pawnProgress,
+  }) =>
+      LudoGame._(
+        players: List<LudoPlayer>.unmodifiable(
+          PlayerColor.turnOrder.map(
+            (color) => LudoPlayer(
+              color,
+              pawnProgress: pawnProgress[color] ?? List<int>.filled(4, -1),
+            ),
+          ),
+        ),
+        activePlayer: activePlayer,
+      );
 
   factory LudoGame.initial() => LudoGame._(
         players: List<LudoPlayer>.unmodifiable(
@@ -122,7 +139,7 @@ class LudoGame {
     updatedPlayers[playerIndex] = player.withPawn(pawnIndex, nextProgress);
 
     var captured = false;
-    if (nextProgress < sharedTrackLength &&
+    if (nextProgress < playerTrackLength &&
         !safeTrackCells.contains(_trackCell(activePlayer, nextProgress))) {
       final landingCell = _trackCell(activePlayer, nextProgress);
       for (var i = 0; i < updatedPlayers.length; i++) {
@@ -134,7 +151,7 @@ class LudoGame {
         for (var pawn = 0; pawn < opponent.pawnProgress.length; pawn++) {
           final progress = opponent.pawnProgress[pawn];
           if (progress >= 0 &&
-              progress < sharedTrackLength &&
+              progress < playerTrackLength &&
               _trackCell(opponent.color, progress) == landingCell) {
             changed = changed.withPawn(pawn, -1);
             captured = true;
