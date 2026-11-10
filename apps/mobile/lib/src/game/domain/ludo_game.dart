@@ -1,9 +1,9 @@
+import 'board_geometry.dart';
 import 'player_color.dart';
 
-const int sharedTrackLength = 52;
-const int playerTrackLength = 51;
+const int sharedTrackLength = BoardGeometry.trackLength;
+const int playerTrackLength = BoardGeometry.playerTrackLength;
 const int finishProgress = 56;
-const Set<int> safeTrackCells = <int>{0, 8, 13, 21, 26, 34, 39, 47};
 
 class LudoPlayer {
   LudoPlayer(
@@ -140,7 +140,7 @@ class LudoGame {
 
     var captured = false;
     if (nextProgress < playerTrackLength &&
-        !safeTrackCells.contains(_trackCell(activePlayer, nextProgress))) {
+        !BoardGeometry.safeTrackCells.contains(_trackCell(activePlayer, nextProgress))) {
       final landingCell = _trackCell(activePlayer, nextProgress);
       for (var i = 0; i < updatedPlayers.length; i++) {
         if (updatedPlayers[i].color == activePlayer) {
@@ -176,5 +176,5 @@ class LudoGame {
   }
 
   int _trackCell(PlayerColor color, int progress) =>
-      (color.entryIndex + progress) % sharedTrackLength;
+      BoardGeometry.physicalTrackCell(color, progress);
 }
