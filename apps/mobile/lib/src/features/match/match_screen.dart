@@ -22,6 +22,7 @@ class MatchScreen extends StatefulWidget {
     this.initialGame,
     this.aiPlayers = const {},
     this.aiSeed = 1,
+    this.aiDifficulty = LudoAiDifficulty.medium,
   });
 
   @visibleForTesting
@@ -32,6 +33,7 @@ class MatchScreen extends StatefulWidget {
 
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
+  final LudoAiDifficulty aiDifficulty;
 
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -303,7 +305,11 @@ class _MatchScreenState extends State<MatchScreen>
 
     final isAiTurn = widget.aiPlayers.contains(_game.activePlayer);
     final selected = isAiTurn
-        ? _ai.choosePawn(_game, seed: widget.aiSeed ^ _game.stateVersion)
+        ? _ai.choosePawn(
+            _game,
+            seed: widget.aiSeed ^ _game.stateVersion,
+            difficulty: widget.aiDifficulty,
+          )
         : legal.length == 1
             ? legal.single
             : null;
