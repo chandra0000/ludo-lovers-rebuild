@@ -18,7 +18,9 @@ class SeededLudoAi {
     final scored = <({int pawn, int score, int tieBreak})>[];
     for (final pawnIndex in legal) {
       final next = game.movePawn(pawnIndex);
-      final moved = next.currentPlayer.pawnProgress[pawnIndex];
+      final moved = next.players
+          .firstWhere((player) => player.color == game.activePlayer)
+          .pawnProgress[pawnIndex];
       final previous = game.currentPlayer.pawnProgress[pawnIndex];
       var score = moved == 56 ? 10000 : moved * 10;
       if (previous == -1) score += 80;
