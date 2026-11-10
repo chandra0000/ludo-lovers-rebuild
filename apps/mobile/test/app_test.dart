@@ -6,6 +6,7 @@ void main() {
   testWidgets('renders the home screen on the first frame', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.text('LUDO LOVERS'), findsOneWidget);
+    expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('start_local_match')), findsOneWidget);
   });
 
