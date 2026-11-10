@@ -197,7 +197,11 @@ void main() {
         difficulty: difficulty,
       );
       expect(legal, contains(first), reason: '${difficulty.name} legality');
-      expect(repeated, first, reason: '${difficulty.name} seeded repeatability');
+      expect(
+        repeated,
+        first,
+        reason: '${difficulty.name} seeded repeatability',
+      );
     }
   });
 
