@@ -94,13 +94,13 @@ The old repository was reviewed beyond its README. The following documents conta
 
 ### Artwork-based geometry calibration note
 
-The rebuild now uses `ludo_board_glass.webp` as the available canonical visual source. The 15×15 grid rectangle is mapped into the fixed 576×1024 design canvas from the artwork's board bounds; yard socket centres use one shared offset pattern measured from the four circular sockets and applied symmetrically to all seats. The full-screen image is sufficient for this first-pass overlay calibration, but it does not by itself prove every route cell, start square, safe square, connector, or lane transition. Those route details remain provisional until the pawn overlay is checked in rendered screenshots. Tests must verify the single coordinate map and its invariants; they must not be described as owner visual approval.
+The rebuild preserves `ludo_board_glass.webp` as the unchanged full-screen 9:16 artwork. `BoardGeometry` owns the shared 576×1024 design-canvas contract, board-grid rectangle, yard socket offsets, route cells, home lanes and safe-cell metadata; the match screen no longer carries a second board rectangle. The current board rectangle and yard offsets are first-pass estimates, not pixel-verified measurements. Automated tests cover structural route invariants and that all 16 starting pawn overlays consume this single coordinate map. They do not prove the mapping visually matches the artwork. Route orientation, safe-square identity, connector alignment, lane alignment and stacking still require screenshot-based visual QA and remain provisional.
 
 ### Migration order
 
 1. Keep the gameplay-readiness gate closed while the first-pass artwork overlay is validated.
-2. Capture rendered board screenshots with pawns placed at yard, entry, track, safe-cell, lane and finish positions.
-3. Reconcile all four seat paths, corner connectors, start cells, home lanes and safe cells in one canonical definition against the screenshot evidence.
+2. Capture rendered board screenshots with pawns placed at all 16 yard sockets, each entry, representative straight and connector cells, safe cells, each home lane, finish and shared stacks.
+3. Compare screenshot coordinates against the unchanged full-screen artwork; update only the centralized `BoardGeometry` contract from measured evidence, then retain regression tests for each calibrated anchor.
 4. Upgrade the compact engine incrementally: immutable transition result, typed commands/events/errors, expected-version guard, one version increment per accepted command, then deterministic replay tests.
 5. Add a named/versioned rules profile and explicitly decide the missing Classic rules before implementation.
 6. Complete the four verification phases and record device evidence separately from CI.
