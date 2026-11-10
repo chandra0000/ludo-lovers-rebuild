@@ -51,7 +51,9 @@ The current Flutter source lives under `apps/mobile`. Keep Flutter-specific code
 
 ## Current implementation note
 
-The current code contains a deterministic `LudoGame` domain model and a `BoardGeometry` mapping. The match screen currently owns a random dice source and directly renders pawn overlays. As the UI grows, move dice generation behind an injectable interface and extract pawn/dice widgets and animation controllers from the match screen. Keep game state immutable.
+The current code contains a deterministic `LudoGame` domain model and a `BoardGeometry` mapping. Dice values are injectable for deterministic widget tests; production rolls currently use a local random source in the match screen. Pawn overlays and movement animation are currently orchestrated by the match screen. Extract presentation responsibilities only when that reduces complexity without creating duplicate state or geometry. Keep game state immutable.
+
+The match composition uses a fixed 9:16 design canvas scaled uniformly to the available safe area. This preserves the full-screen board artwork on portrait and landscape viewports; responsive viewport tests protect that contract.
 
 ## Rendering contract
 
