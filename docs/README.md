@@ -6,7 +6,8 @@ This folder is the project handbook. Start here when joining the project or resu
 
 - [Product specification](product/product-specification.md) — product goals, visual identity, scope, and acceptance criteria.
 - [Architecture](architecture/architecture.md) — app layers, state flow, rendering, and module boundaries.
-- [Legacy repository reconciliation](architecture/legacy-repository-isolation.md) — requirements carried forward, rebuild gap audit, migration order, and conflict-prevention rules.
+- [Legacy repository reconciliation](architecture/legacy-repository-isolation.md) — source-of-truth boundaries, rebuild gap audit, and conflict-prevention rules.
+- [Legacy feature recovery plan](LEGACY_FEATURE_RECOVERY_PLAN.md) — prioritized feature inventory, target modules, acceptance tests, and migration sequence.
 - [Game rules](game/game-rules.md) — current provisional rules profile and rule decisions requiring confirmation.
 - [Artwork and assets](assets/artwork-and-assets.md) — canonical image paths, formats, sizing, and preservation rules.
 - [Animation and rendering](engineering/animation-and-rendering.md) — how the board, pawns, dice, and effects are rendered.
