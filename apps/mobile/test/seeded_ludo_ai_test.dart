@@ -191,7 +191,7 @@ void main() {
 
     final moved = game.movePawn(selected!);
     expect(moved.ruleProfile, LudoRuleProfile.classicV1);
-    expect(moved.currentPlayer.pawnProgress[1], 13);
+    expect(moved.players.firstWhere((player) => player.color == PlayerColor.orange).pawnProgress[1], 13);
   });
 
 }
