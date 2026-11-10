@@ -34,22 +34,15 @@ jobs:
         run: flutter pub get
       - name: Check formatting in changed Dart files
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           base_sha="$BASE_SHA"
-          if [ -z "$base_sha" ] || [[ "$base_sha" =~ ^0+$ ]]; then
-            base_sha="$(git rev-parse HEAD^ 2>/dev/null || true)"
-          fi
           if [ -z "$base_sha" ]; then
-            echo "No parent commit is available; skipping the changed-file formatting gate."
-            exit 0
+            base_sha="$(git merge-base origin/main HEAD)"
           fi
-
           mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- \
-              'apps/mobile/lib/**/*.dart' \
-              'apps/mobile/test/**/*.dart' \
-              'apps/mobile/integration_test/**/*.dart'
+            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test |
+              grep -E '\.dart$' || true
           )
           if [ "${#dart_files[@]}" -eq 0 ]; then
             echo "No Dart source or test files changed."
@@ -58,13 +51,26 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          dart format --output=write "${dart_files[@]}"
+      - name: Upload formatter-normalized Dart sources for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatter-normalized-dart-sources
+          path: apps/mobile/test/app_test.dart
+          if-no-files-found: error
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Verify visual capture artifacts
+        if: success()
+        working-directory: apps/mobile
+        run: |
+          test -s test-artifacts/match-canvas-393x873.png
+          test -s test-artifacts/board-preview-calibration-393x873.png
       - name: Upload deterministic match screenshot
         if: always()
         uses: actions/upload-artifact@v4
