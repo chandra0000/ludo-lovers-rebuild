@@ -118,6 +118,9 @@ void main() {
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await tester.tap(pawn);
+      // The first frame establishes the ticker start time; advance it only
+      // after that frame so this assertion samples actual interpolation.
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 55));
       final inMotion = tester.getTopLeft(pawn);
       expect(inMotion, isNot(start));
