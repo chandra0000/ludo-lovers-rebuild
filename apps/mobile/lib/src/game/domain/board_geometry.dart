@@ -163,15 +163,37 @@ class BoardGeometry {
     ),
   };
 
-  // Centers measured from the four yard sockets in the canonical
-  // 810×1440 artwork, expressed in 15×15 grid units.
-  static const List<NormalizedBoardPoint> _yardOffsets =
-      <NormalizedBoardPoint>[
-    NormalizedBoardPoint(1.76, 2.01),
-    NormalizedBoardPoint(3.73, 2.01),
-    NormalizedBoardPoint(1.76, 4.01),
-    NormalizedBoardPoint(3.73, 4.01),
-  ];
+  // Socket centers measured from each colored yard in the canonical
+  // 810×1440 artwork, expressed relative to that seat's 15×15 grid origin.
+  // Each corner is mirrored independently; the bottom yards sit lower
+  // within their 6×6 home areas than the top yards.
+  static const Map<PlayerColor, List<NormalizedBoardPoint>> _yardOffsets =
+      <PlayerColor, List<NormalizedBoardPoint>>{
+    PlayerColor.orange: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(1.76, 2.01),
+      NormalizedBoardPoint(3.73, 2.01),
+      NormalizedBoardPoint(1.76, 4.01),
+      NormalizedBoardPoint(3.73, 4.01),
+    ],
+    PlayerColor.green: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(1.60, 2.01),
+      NormalizedBoardPoint(3.60, 2.01),
+      NormalizedBoardPoint(1.60, 4.01),
+      NormalizedBoardPoint(3.60, 4.01),
+    ],
+    PlayerColor.magenta: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(1.60, 3.01),
+      NormalizedBoardPoint(3.60, 3.01),
+      NormalizedBoardPoint(1.60, 5.01),
+      NormalizedBoardPoint(3.60, 5.01),
+    ],
+    PlayerColor.blue: <NormalizedBoardPoint>[
+      NormalizedBoardPoint(1.76, 3.01),
+      NormalizedBoardPoint(3.73, 3.01),
+      NormalizedBoardPoint(1.76, 5.01),
+      NormalizedBoardPoint(3.73, 5.01),
+    ],
+  };
 
   static NormalizedBoardPoint normalizedPosition(
     PlayerColor color,
@@ -183,7 +205,7 @@ class BoardGeometry {
       throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
     }
     if (progress == -1) {
-      final offset = _yardOffsets[pawnIndex];
+      final offset = _yardOffsets[color]![pawnIndex];
       return NormalizedBoardPoint(
         (seat.yardColumn + offset.x) / gridSize,
         (seat.yardRow + offset.y) / gridSize,
