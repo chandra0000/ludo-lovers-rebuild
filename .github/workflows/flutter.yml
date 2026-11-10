@@ -41,8 +41,26 @@ jobs:
       - name: Build debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
+      - name: Report debug APK size
+        working-directory: apps/mobile
+        run: du -h build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Build split release APKs
+        working-directory: apps/mobile
+        run: flutter build apk --release --split-per-abi
+
+      - name: Report release APK sizes
+        working-directory: apps/mobile
+        run: ls -lh build/app/outputs/flutter-apk/*-release.apk
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: ludo-lovers-foundation-debug-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Upload split release APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-release-apks
+          path: apps/mobile/build/app/outputs/flutter-apk/*-release.apk
