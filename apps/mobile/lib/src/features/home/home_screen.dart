@@ -1,11 +1,36 @@
 import 'package:flutter/material.dart';
 
+import '../../game/domain/persistence/saved_match_store.dart';
+import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   static const _gold = Color(0xFFFFC857);
+  final SavedMatchStore _savedMatchStore = const SavedMatchStore();
+  SavedMatch? _savedMatch;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedMatch();
+  }
+
+  Future<void> _loadSavedMatch() async {
+    final saved = await _savedMatchStore.load();
+    if (mounted) setState(() => _savedMatch = saved);
+  }
+
+  Future<void> _discardSavedMatch() async {
+    await _savedMatchStore.clear();
+    if (mounted) setState(() => _savedMatch = null);
+  }
   static const _background = Color(0xFF080808);
 
   @override
@@ -126,6 +151,39 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
+                      if (_savedMatch != null) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            key: const Key('resume_saved_match'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: _gold,
+                              side: const BorderSide(color: _gold),
+                              minimumSize: const Size.fromHeight(52),
+                            ),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => MatchScreen(
+                                  initialGame: _savedMatch!.game,
+                                  aiPlayers: _savedMatch!.aiPlayers,
+                                  aiSeed: _savedMatch!.aiSeed,
+                                ),
+                              ),
+                            ).then((_) => _loadSavedMatch()),
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: const Text('RESUME SAVED MATCH'),
+                          ),
+                        ),
+                        TextButton(
+                          key: const Key('discard_saved_match'),
+                          onPressed: _discardSavedMatch,
+                          child: const Text(
+                            'DISCARD SAVED MATCH',
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
