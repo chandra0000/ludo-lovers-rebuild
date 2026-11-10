@@ -41,14 +41,14 @@ Last updated: 2026-11-10
 - Measured package outputs on that verified baseline: debug APK 144 MB; split release APKs 13.4 MB (armeabi-v7a), 16.2 MB (arm64-v8a), and 17.5 MB (x86_64). The arm64 release APK is the likely Android-phone target; use release rather than the large debug APK for device installation/performance checks.
 - Downloadable CI artifacts: [debug APK](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734718462) and [split release APKs](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42754693581/artifacts/13734504994).
 - Latest verified CI run [42758341034](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42758341034) passed formatting, static analysis, unit/widget tests, Android project generation, debug APK build, split release APK builds, and artifact uploads on commit `c6742c444f392a2cd5e60f43448eba66a007eb71`. Later geometry-centralization and expanded regression-test commits are newer than that run; their CI must pass before they are considered validated.
-- No real Android device test has been performed/recorded.
+- No real Android device test or screenshot-based pixel-calibration review has been performed/recorded.
 - Board geometry remains provisional. Automated tests cover all 52 unique shared-track cells, each seat's 51-cell route, five home-lane positions, separate finish, safe-cell metadata, four candidate diagonal connectors, and all 16 starting-yard pawn overlay positions. These are structural and coordinate-contract checks, not pixel-level proof that the route or safe cells match the artwork.
 - The icon is registered as a Flutter asset and shown on the home screen; Android launcher icon generation/configuration remains outstanding.
 
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
-- Pawn overlays use one centralized `BoardGeometry` contract for the 576×1024 design canvas, board-grid rectangle and yard socket offsets. The current board rectangle and yard offsets are first-pass estimates, not pixel-verified measurements. All 16 starting pawns are checked against the same mapping in a widget test. Shared-track route orientation, safe-cell identity, connector placement, lane alignment, pawn stacking and real-device appearance remain provisional.
+- Pawn overlays use one centralized `BoardGeometry` contract for the 576×1024 design canvas, board-grid rectangle and yard socket offsets. Current first-pass values are board rectangle (left 17.78, top 213.33, width 540.44, height 561.78) and yard offsets (1.8/3.8 by 2.0/3.9 grid units). These are explicit estimates, not pixel-verified measurements. All 16 starting pawn overlays are checked against the same mapping in a widget test. Shared-track route orientation, safe-cell identity, connector placement, lane alignment, pawn stacking and real-device appearance remain provisional.
 - Dice and step-by-step pawn animations are implemented; animation timing and positioning still need real-device visual QA.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
@@ -85,7 +85,7 @@ Only mark a task complete when the repository change and validation evidence exi
 The old repository's product baseline, route acceptance, immutable board/route decisions, engine consolidation decision, rule specification, Team Up acceptance, and four-phase gameplay verification plan have been reviewed. The durable requirements and a code-vs-document gap matrix are now recorded in [legacy repository isolation and migration guardrails](architecture/legacy-repository-isolation.md).
 
 Important corrections:
-- No guessed yard/board coordinate calibration is accepted. The recent inferred coordinate edits were reverted; current geometry remains provisional.
+- The canonical full-screen artwork was inspected. The current board rectangle and yard socket offsets are retained as first-pass estimates, not as pixel-verified measurements. The visual-approval gate remains open.
 - The rebuild's compact engine does not yet have the legacy typed command/event/error and versioned transition contract.
 - The rebuild currently lacks the third-consecutive-six penalty, finish bonus roll, and a named/versioned rule profile.
 - Team Up remains deferred from the rebuild's first milestone.
