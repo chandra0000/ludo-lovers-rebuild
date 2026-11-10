@@ -181,6 +181,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(
       tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
@@ -243,6 +248,9 @@ void main() {
     expect(find.text('Pawn 2'), findsOneWidget);
 
     await tester.tap(find.text('Pawn 2'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pawn_orange_1')));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });  
@@ -313,6 +321,9 @@ void main() {
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await tester.tap(pawn);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('destination_preview')), findsOneWidget);
+      await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
       await tester.pump();
@@ -349,6 +360,8 @@ void main() {
       expect(rollCount, 1);
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
+      await tester.tap(pawn);
+      await tester.pumpAndSettle();
       await tester.tap(pawn);
       await tester.pump(const Duration(milliseconds: 40));
 
@@ -409,6 +422,8 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
     // pumpAndSettle would advance through the SnackBar's full display
     // duration and dismiss the transient capture feedback before asserting.
     await tester.pump(const Duration(milliseconds: 200));
@@ -432,6 +447,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
