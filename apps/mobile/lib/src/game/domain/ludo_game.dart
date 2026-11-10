@@ -318,7 +318,7 @@ class LudoGame {
         savedVersion < 0 ||
         savedSixes is! int ||
         savedSixes < 0 ||
-        savedSixes > 2 ||
+        (profile.threeConsecutiveSixesPenalty && savedSixes > 2) ||
         rawCommandIds.any((value) => value is! String || value.trim().isEmpty)) {
       throw const FormatException('Invalid Ludo snapshot state.');
     }
@@ -424,9 +424,10 @@ class LudoGame {
     if (value == 6 &&
         ruleProfile.threeConsecutiveSixesPenalty &&
         nextSixes >= 3) {
+      final nextPlayer = _nextActivePlayer();
       return LudoGame._(
         players: players,
-        activePlayer: _nextActivePlayer(),
+        activePlayer: nextPlayer,
         ruleProfile: ruleProfile,
         stateVersion: stateVersion + 1,
         consecutiveSixes: 0,
@@ -438,7 +439,7 @@ class LudoGame {
             2,
             stateVersion + 1,
             activePlayer,
-            _nextActivePlayer(),
+            nextPlayer,
           ),
         ]),
       );
