@@ -438,6 +438,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('BOARD PREVIEW'), findsOneWidget);
+    expect(find.byKey(const Key('board_preview_canvas')), findsOneWidget);
+    expect(find.byKey(const Key('board_preview_artwork')), findsOneWidget);
+    final previewSize = tester.getSize(
+      find.byKey(const Key('board_preview_canvas')),
+    );
+    expect(
+      previewSize.width / previewSize.height,
+      closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 0.001),
+    );
     for (final color in PlayerColor.turnOrder) {
       for (var pawn = 0; pawn < 4; pawn++) {
         expect(find.byKey(Key('preview_${color.name}_$pawn')), findsOneWidget);
