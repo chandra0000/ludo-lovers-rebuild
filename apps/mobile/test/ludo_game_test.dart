@@ -198,7 +198,7 @@ void main() {
       game = game.roll(6).movePawn(0);
       game = game.roll(6).movePawn(0);
       final nextSix = game.roll(6);
-      expect(nextSix.activePlayer, PlayerColor.green);
+      expect(nextSix.activePlayer, PlayerColor.magenta);
       expect(nextSix.currentPlayer.pawnProgress, [-1, -1, -1, -1]);
     });
 
