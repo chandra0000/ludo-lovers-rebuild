@@ -64,6 +64,14 @@ The 16 circular socket centres were measured independently from the canonical ar
 - CI captures the board preview at 393×873 and uploads both that preview and the canonical source artwork as separate artifacts for repeatable inspection.
 - CI also runs the deterministic match screenshot, unit/widget suite, Android emulator integration smoke test, and debug/profile/release APK builds.
 
+## Expanded coordinate regression coverage — 2026-11-10
+
+- Added a complete pixel-anchor fixture for all 52 shared-track positions, rather than checking only representative route cells.
+- Added exact source-pixel fixtures for all 20 home-lane positions and checks that route/lane centres do not overlap.
+- Added a live MatchScreen placement test that compares pawn widget centres with the centralized transform on a 393×873 viewport for a shared-track cell, a private-lane cell, and the finish centre.
+- Existing yard placement coverage checks all 16 starting sockets in the live widget tree; the asset test verifies the bundled canonical image remains 810×1440.
+- These checks protect the current coordinate contract against accidental drift. They do not independently prove that the measured anchors match the intended artwork pixels; human inspection and physical-device approval are still mandatory.
+
 ## Visual acceptance still pending
 
 The updated source anchors have been overlaid on the canonical source image. The diagnostic overlay shows the route markers centred in their cells and the yard crosshairs aligned with the circular wells. This is useful visual evidence, but it is not final owner approval or physical-device validation.
