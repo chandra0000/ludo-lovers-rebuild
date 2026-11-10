@@ -48,7 +48,7 @@ Last updated: 2026-11-10
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
-- Pawn positions still use provisional board bounds and symmetric yard slots. A prior inferred calibration was reverted because the legacy acceptance docs explicitly prohibit guessed coordinates. Exact cell-centre calibration remains blocked on the owner-approved straight-on board reference.
+- Pawn positions now use a first-pass calibration measured from the canonical `ludo_board_glass.webp`: the board-grid overlay bounds are mapped from the 810×1440 source into the 576×1024 design canvas, and all four yard sockets use one shared measured offset pattern. The 15×15 route and safe-cell IDs remain tied to the documented layout. This is artwork-based calibration, not final visual sign-off; device screenshots and pawn-on-cell QA are still required.
 - Dice and step-by-step pawn animations are implemented; animation timing and positioning still need real-device visual QA.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
@@ -58,7 +58,7 @@ Last updated: 2026-11-10
 
 1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
 2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
-3. Obtain the exact owner-approved straight-on board reference; reconcile the 15×15 track, four entries, diagonal connectors, yard sockets, home lanes and safe cells before changing geometry.
+3. Validate the artwork-based board bounds and yard socket calibration with pawn overlays on screenshots; reconcile all 52 track cells, four entries, diagonal connectors, home lanes and safe cells before marking geometry visually approved.
 4. Tune capture/finish feedback placement and animation timing using visual QA.
 5. Replace the baked-in player names/status with dynamic player labels and online/offline indicators without altering the artwork.
 6. Configure Android launcher icon generation from the canonical icon artwork.
