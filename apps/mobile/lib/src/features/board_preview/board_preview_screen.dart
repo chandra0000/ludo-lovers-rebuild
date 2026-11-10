@@ -60,7 +60,7 @@ class BoardPreviewScreen extends StatelessWidget {
                               index < BoardGeometry.sharedTrack.length;
                               index++)
                             _cellMarker(
-                              BoardGeometry.sharedTrack[index],
+                              BoardGeometry.trackPosition(index),
                               constraints.maxWidth,
                               constraints.maxHeight,
                               color: BoardGeometry.safeTrackCells.contains(index)
@@ -82,7 +82,7 @@ class BoardPreviewScreen extends StatelessWidget {
                                 lane < BoardGeometry.seats[color]!.homeLane.length;
                                 lane++)
                               _cellMarker(
-                                BoardGeometry.seats[color]!.homeLane[lane],
+                                BoardGeometry.homeLanePosition(color, lane),
                                 constraints.maxWidth,
                                 constraints.maxHeight,
                                 color: color.color,
@@ -90,7 +90,7 @@ class BoardPreviewScreen extends StatelessWidget {
                                 key: Key('preview_lane_${color.name}_$lane'),
                               ),
                           _cellMarker(
-                            BoardGeometry.finishCell,
+                            BoardGeometry.finishPosition,
                             constraints.maxWidth,
                             constraints.maxHeight,
                             color: const Color(0xFFFFC857),
@@ -130,7 +130,7 @@ class BoardPreviewScreen extends StatelessWidget {
       );
 
   Widget _cellMarker(
-    BoardCell cell,
+    NormalizedBoardPoint point,
     double width,
     double height, {
     required Color color,
@@ -138,11 +138,11 @@ class BoardPreviewScreen extends StatelessWidget {
     Key? crosshairKey,
     required Key key,
   }) {
-    final point = BoardGeometry.canvasPosition(cell.normalizedCenter);
+    final canvasPoint = BoardGeometry.canvasPosition(point);
     return Positioned(
-      left: point.x / BoardGeometry.canvasWidth * width -
+      left: canvasPoint.x / BoardGeometry.canvasWidth * width -
           (size + (crosshairKey == null ? 0 : 8)) / 2,
-      top: point.y / BoardGeometry.canvasHeight * height -
+      top: canvasPoint.y / BoardGeometry.canvasHeight * height -
           (size + (crosshairKey == null ? 0 : 8)) / 2,
       child: IgnorePointer(
         child: SizedBox(
@@ -183,7 +183,7 @@ class BoardPreviewScreen extends StatelessWidget {
     double height,
   ) {
     final point = BoardGeometry.canvasPosition(
-      BoardGeometry.normalizedPosition(color, -1, pawnIndex),
+      BoardGeometry.yardPosition(color, pawnIndex),
     );
     return Positioned(
       left: point.x / BoardGeometry.canvasWidth * width - 9,
