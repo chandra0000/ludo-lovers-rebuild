@@ -429,8 +429,9 @@ void main() {
       expect(moved.events.map((event) => event.runtimeType).toList(), [
         PawnMoved,
         PawnCaptured,
+        ExtraTurnGranted,
       ]);
-      expect(moved.events.map((event) => event.sequence).toList(), [0, 1]);
+      expect(moved.events.map((event) => event.sequence).toList(), [0, 1, 2]);
     });
 
 
@@ -645,6 +646,140 @@ void main() {
       final thirdSix = game.roll(6);
       expect(thirdSix.activePlayer, PlayerColor.orange);
       expect(thirdSix.diceValue, 6);
+    });
+
+    test('invalid dice is a structured move-evaluation result', () {
+      final game = LudoGame.initial().roll(3);
+      expect(
+        game.evaluatePawnMove(0, roll: 0),
+        isA<InvalidMove>().having(
+          (result) => result.reason,
+          'reason',
+          MoveInvalidReason.invalidDice,
+        ),
+      );
+      expect(
+        game.evaluatePawnMove(0, roll: 7),
+        isA<InvalidMove>().having(
+          (result) => result.reason,
+          'reason',
+          MoveInvalidReason.invalidDice,
+        ),
+      );
+    });
+
+    test('a roll with no legal move emits an explicit pass-phase event', () {
+      final rolled = LudoGame.initial().roll(4);
+      expect(rolled.awaitingPass, isTrue);
+      expect(rolled.events.map((event) => event.runtimeType), [
+        DiceRolled,
+        NoLegalMoveEvent,
+      ]);
+      final noMove = rolled.events.last as NoLegalMoveEvent;
+      expect(noMove.player, PlayerColor.orange);
+      expect(noMove.diceValue, 4);
+
+      final passed = rolled.passTurn();
+      expect(passed.awaitingPass, isFalse);
+      expect(passed.diceValue, isNull);
+      expect(passed.activePlayer, PlayerColor.green);
+    });
+
+    test('a six move emits an extra-turn event', () {
+      final moved = LudoGame.initial().roll(6).movePawn(0);
+      expect(moved.activePlayer, PlayerColor.orange);
+      expect(moved.events.whereType<ExtraTurnGranted>(), hasLength(1));
+    });
+
+    test('passing an unplayable six grants the extra roll explicitly', () {
+      final rolled = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {
+          PlayerColor.orange: [55, 55, 55, 55],
+        },
+      ).roll(6);
+
+      expect(rolled.awaitingPass, isTrue);
+      final passed = rolled.passTurn();
+      expect(passed.activePlayer, PlayerColor.orange);
+      expect(passed.diceValue, isNull);
+      expect(passed.events, hasLength(1));
+      expect(passed.events.single, isA<ExtraTurnGranted>());
+    });
+
+    test('finishing one pawn emits PawnFinished before the bonus event', () {
+      final moved = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        ruleProfile: LudoRuleProfile.classicV1,
+        pawnProgress: {PlayerColor.orange: [55, -1, -1, -1]},
+      ).roll(1).movePawn(0);
+
+      expect(moved.currentPlayer.pawnProgress[0], 56);
+      expect(moved.events.map((event) => event.runtimeType), [
+        PawnMoved,
+        PawnFinished,
+        ExtraTurnGranted,
+      ]);
+    });
+
+    test('winning emits both compatibility and explicit game-completed events', () {
+      final moved = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {PlayerColor.orange: [56, 56, 56, 55]},
+      ).roll(1).movePawn(3);
+
+      expect(moved.winner, PlayerColor.orange);
+      expect(moved.events.whereType<PlayerWon>(), hasLength(1));
+      expect(moved.events.whereType<GameCompleted>(), hasLength(1));
+      expect(moved.events.last, isA<GameCompleted>());
+    });
+
+    test('snapshot rejects completed pawns without a matching winner', () {
+      final snapshot = LudoGame.initial().toSnapshot();
+      final players = snapshot['players']! as List<Map<String, Object?>>;
+      players[0] = {
+        'color': 'orange',
+        'pawnProgress': [56, 56, 56, 56],
+      };
+
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsFormatException,
+      );
+    });
+
+    test('snapshot rejects a winner who has not completed all pawns', () {
+      final snapshot = LudoGame.initial().toSnapshot()
+        ..['winner'] = 'orange';
+
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsFormatException,
+      );
+    });
+
+    test('snapshot rejects a winner with a pending dice roll', () {
+      final snapshot = LudoGame.fromProgress(
+        activePlayer: PlayerColor.orange,
+        pawnProgress: {PlayerColor.orange: [56, 56, 56, 56]},
+      ).toSnapshot()
+        ..['winner'] = 'orange'
+        ..['diceValue'] = 2;
+
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsFormatException,
+      );
+    });
+
+    test('snapshot rejects unknown player colors as a format error', () {
+      final snapshot = LudoGame.initial().toSnapshot();
+      snapshot['activePlayer'] = 'purple';
+
+      expect(
+        () => LudoGame.fromSnapshot(snapshot),
+        throwsFormatException,
+      );
     });
   });
 }

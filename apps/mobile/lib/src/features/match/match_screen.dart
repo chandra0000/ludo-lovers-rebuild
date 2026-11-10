@@ -342,6 +342,7 @@ class _MatchScreenState extends State<MatchScreen>
       MoveInvalidReason.landingOnProtectedStack => 'THAT STACK IS PROTECTED',
       MoveInvalidReason.noPendingRoll => 'ROLL THE DICE FIRST',
       MoveInvalidReason.invalidPawnIndex => 'INVALID PAWN SELECTION',
+      MoveInvalidReason.invalidDice => 'DICE VALUE MUST BE 1 TO 6',
     };
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
