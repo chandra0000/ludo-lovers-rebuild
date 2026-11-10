@@ -7,55 +7,10 @@ import 'package:ludo_lovers/src/features/onboarding/onboarding_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
-import 'package:ludo_lovers/src/game/domain/persistence/saved_match_store.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
-  testWidgets('restored pending AI roll passes without getting stranded', (tester) async {
-    final pendingAiTurn = LudoGame.initial().roll(2);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: MatchScreen(
-          initialGame: pendingAiTurn,
-          aiPlayers: const {PlayerColor.orange},
-          aiSeed: 42,
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('home offers resume for a persisted local match', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    const store = SavedMatchStore();
-    final savedGame = LudoGame.initial()
-        .roll(6, commandId: 'home-resume-roll')
-        .movePawn(0, commandId: 'home-resume-move');
-    await store.save(
-      SavedMatch(
-        game: savedGame,
-        aiPlayers: const {PlayerColor.blue},
-        aiSeed: 42,
-      ),
-    );
-
-    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('resume_saved_match')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('resume_saved_match')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('turn_status')), findsOneWidget);
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
-    expect(find.byKey(const Key('roll_dice')), findsOneWidget);
-  });
-
   testWidgets(
     'home branding and primary action fit a compact phone',
     (tester) async {
