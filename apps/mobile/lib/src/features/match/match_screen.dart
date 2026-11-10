@@ -13,6 +13,7 @@ import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/luxury_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
+import '../../game/presentation/destination_preview_painter.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -60,6 +61,11 @@ class _MatchScreenState extends State<MatchScreen>
   bool _isAutoMovePending = false;
   int _turnResolutionToken = 0;
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
+  int? _selectedPawnIndex;
+  late final AnimationController _previewController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
 
   @override
   void initState() {
@@ -155,6 +161,7 @@ class _MatchScreenState extends State<MatchScreen>
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_persistMatch());
     _movementController.dispose();
+    _previewController.dispose();
     super.dispose();
   }
 
@@ -365,6 +372,7 @@ class _MatchScreenState extends State<MatchScreen>
                 ? 'PAWN HOME!'
                 : null;
     setState(() {
+      _selectedPawnIndex = null;
       _movingColor = movingColor;
       _movingPawnIndex = pawnIndex;
       _movementStartProgress = startProgress;
@@ -376,6 +384,7 @@ class _MatchScreenState extends State<MatchScreen>
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
     });
     unawaited(_persistMatch());
+    _previewController.stop();
     _movementController.forward(from: 0);
   }
 
@@ -473,6 +482,7 @@ class _MatchScreenState extends State<MatchScreen>
                           ),
                         ),
                         ..._buildPawnsWithClusters(scale),
+                        if (_selectedPawnIndex != null) _buildDestinationPreview(),
                         Positioned(
                           left: 243,
                           top: 795,
@@ -577,12 +587,68 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
+  void _selectOrMovePawn(int pawnIndex) {
+    if (_isAutoMovePending || _isDiceAnimating ||
+        !_game.legalPawnIndices().contains(pawnIndex)) return;
+    if (_selectedPawnIndex == pawnIndex) {
+      setState(() => _selectedPawnIndex = null);
+      _previewController.stop();
+      _move(pawnIndex);
+      return;
+    }
+    setState(() => _selectedPawnIndex = pawnIndex);
+    _previewController.repeat();
+  }
+
+  Widget _buildDestinationPreview() {
+    final pawnIndex = _selectedPawnIndex!;
+    final roll = _game.diceValue!;
+    final progress = _game.currentPlayer.pawnProgress[pawnIndex];
+    final target = progress == -1 ? 0 : progress + roll;
+    final point = BoardGeometry.canvasPosition(
+      BoardGeometry.normalizedPosition(_game.activePlayer, target, pawnIndex),
+    );
+    final evaluation = _game.evaluatePawnMove(pawnIndex);
+    var type = DestinationPreviewType.standard;
+    if (evaluation is ValidMove && evaluation.isCapture) {
+      type = DestinationPreviewType.capture;
+    } else if (target < BoardGeometry.playerTrackLength) {
+      final cell = BoardGeometry.physicalTrackCell(_game.activePlayer, target);
+      final hasOpponent = _game.players.any((player) =>
+          player.color != _game.activePlayer &&
+          player.pawnProgress.any((opponentProgress) =>
+              opponentProgress >= 0 &&
+              opponentProgress < BoardGeometry.playerTrackLength &&
+              BoardGeometry.physicalTrackCell(player.color, opponentProgress) == cell));
+      if (hasOpponent && BoardGeometry.safeTrackCells.contains(cell)) {
+        type = DestinationPreviewType.safeCoexist;
+      }
+    }
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _previewController,
+          builder: (context, child) => CustomPaint(
+            key: const Key('destination_preview'),
+            painter: DestinationPreviewPainter(
+              targetCenter: Offset(point.x, point.y),
+              cellSize: 36,
+              playerColor: _game.activePlayer.color,
+              previewType: type,
+              animationProgress: _previewController.value,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _handleStackTap(List<int> movablePawnIndices) {
     if (movablePawnIndices.isEmpty) {
       return;
     }
     if (movablePawnIndices.length == 1) {
-      _move(movablePawnIndices.single);
+      _selectOrMovePawn(movablePawnIndices.single);
       return;
     }
 
@@ -629,7 +695,7 @@ class _MatchScreenState extends State<MatchScreen>
       ),
     ).then((selectedIndex) {
       if (selectedIndex != null && mounted) {
-        _move(selectedIndex);
+        _selectOrMovePawn(selectedIndex);
       }
     });
   }
@@ -775,7 +841,7 @@ class _MatchScreenState extends State<MatchScreen>
                     ? () => _handleStackTap(movableStackIndices)
                     : null)
                 : canMove
-                    ? () => _move(pawnIndex)
+                    ? () => _selectOrMovePawn(pawnIndex)
                     : canExplainInvalidMove
                         ? () => _showInvalidMoveFeedback(pawnIndex)
                         : null,
