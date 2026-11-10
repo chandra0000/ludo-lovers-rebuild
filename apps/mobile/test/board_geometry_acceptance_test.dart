@@ -76,43 +76,62 @@ void main() {
   });
 
   group('Board canvas alignment contract', () {
-    test('canvas is 9:16 and the logical board remains square', () {
+    test('canvas and source artwork share the exact 9:16 aspect ratio', () {
+      expect(BoardGeometry.sourceWidth, 810);
+      expect(BoardGeometry.sourceHeight, 1440);
       expect(
         BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
         closeTo(9 / 16, 1e-12),
       );
-      expect(BoardGeometry.boardWidth, BoardGeometry.boardHeight);
+      expect(
+        BoardGeometry.sourceWidth / BoardGeometry.sourceHeight,
+        closeTo(9 / 16, 1e-12),
+      );
     });
 
-    test('finish point maps to the exact centre of the board grid', () {
-      final point = BoardGeometry.finishCell.normalizedCenter;
-      expect(point.x, closeTo(0.5, 1e-12));
-      expect(point.y, closeTo(0.5, 1e-12));
+    test('finish anchor matches the measured centre of the artwork hub', () {
+      final point = BoardGeometry.finishPosition;
+      expect(point.x * BoardGeometry.sourceWidth, closeTo(403, 1e-9));
+      expect(point.y * BoardGeometry.sourceHeight, closeTo(681, 1e-9));
 
       final canvas = BoardGeometry.canvasPosition(point);
-      expect(
-        canvas.x,
-        closeTo(BoardGeometry.boardLeft + BoardGeometry.boardWidth / 2, 1e-9),
-      );
-      expect(
-        canvas.y,
-        closeTo(BoardGeometry.boardTop + BoardGeometry.boardHeight / 2, 1e-9),
-      );
+      expect(canvas.x, closeTo(403 * 576 / 810, 1e-9));
+      expect(canvas.y, closeTo(681 * 1024 / 1440, 1e-9));
     });
 
-    test('yard sockets remain inside their assigned quadrants', () {
+    test('all 52 route and 20 home-lane anchors stay inside source artwork', () {
+      for (var index = 0; index < BoardGeometry.trackLength; index++) {
+        final point = BoardGeometry.trackPosition(index);
+        expect(point.x, inInclusiveRange(0, 1));
+        expect(point.y, inInclusiveRange(0, 1));
+      }
       for (final color in PlayerColor.turnOrder) {
-        final seat = BoardGeometry.seats[color]!;
+        for (var lane = 0; lane < BoardGeometry.homeLaneLength; lane++) {
+          final point = BoardGeometry.homeLanePosition(color, lane);
+          expect(point.x, inInclusiveRange(0, 1));
+          expect(point.y, inInclusiveRange(0, 1));
+        }
+      }
+    });
+
+    test('yard sockets remain in their artwork quadrants', () {
+      for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
-          final point = BoardGeometry.normalizedPosition(color, -1, pawn);
-          expect(
-            point.x,
-            inInclusiveRange(seat.yardColumn / 15, (seat.yardColumn + 6) / 15),
-          );
-          expect(
-            point.y,
-            inInclusiveRange(seat.yardRow / 15, (seat.yardRow + 6) / 15),
-          );
+          final point = BoardGeometry.yardPosition(color, pawn);
+          final sourceX = point.x * BoardGeometry.sourceWidth;
+          final sourceY = point.y * BoardGeometry.sourceHeight;
+          expect(sourceX, inInclusiveRange(0, 810));
+          expect(sourceY, inInclusiveRange(0, 1440));
+          if (color == PlayerColor.orange || color == PlayerColor.blue) {
+            expect(sourceX, lessThan(405));
+          } else {
+            expect(sourceX, greaterThan(405));
+          }
+          if (color == PlayerColor.orange || color == PlayerColor.green) {
+            expect(sourceY, lessThan(720));
+          } else {
+            expect(sourceY, greaterThan(720));
+          }
         }
       }
     });
