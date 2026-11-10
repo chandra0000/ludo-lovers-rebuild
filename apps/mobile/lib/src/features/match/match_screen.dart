@@ -9,7 +9,10 @@ import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
-  const MatchScreen({super.key});
+  const MatchScreen({super.key, this.rollDice});
+
+  @visibleForTesting
+  final int Function()? rollDice;
 
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -28,7 +31,8 @@ class _MatchScreenState extends State<MatchScreen> {
       return;
     }
     setState(() {
-      final rolled = _game.roll(_random.nextInt(6) + 1);
+      final value = widget.rollDice?.call() ?? _random.nextInt(6) + 1;
+      final rolled = _game.roll(value);
       _game = rolled.legalPawnIndices().isEmpty ? rolled.passTurn() : rolled;
     });
   }
