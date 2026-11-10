@@ -245,7 +245,7 @@ class _MatchScreenState extends State<MatchScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: color.value.withValues(alpha: 0.7),
+                  color: color.color.withValues(alpha: 0.7),
                   blurRadius: canMove ? 13 : 5,
                   spreadRadius: canMove ? 2 : 0,
                 ),
