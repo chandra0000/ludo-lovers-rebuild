@@ -31,15 +31,45 @@ void main() {
       expect(BoardGeometry.seats[PlayerColor.blue]!.entryIndex, 39);
     });
 
-    test('maps the four artwork yard sockets consistently in every quadrant', () {
+    test('maps all sixteen yard pawns to measured source-artwork centres', () {
+      const expected = <PlayerColor, List<Offset>>{
+        PlayerColor.orange: [
+          Offset(114.2, 401.4),
+          Offset(215, 402.6),
+          Offset(115.4, 495),
+          Offset(215, 497.4),
+        ],
+        PlayerColor.green: [
+          Offset(593, 402.6),
+          Offset(692.6, 402.6),
+          Offset(593, 496.2),
+          Offset(692.6, 497.4),
+        ],
+        PlayerColor.blue: [
+          Offset(117.8, 872.2),
+          Offset(217.4, 873.4),
+          Offset(117.8, 968.2),
+          Offset(217.4, 968.2),
+        ],
+        PlayerColor.magenta: [
+          Offset(594.2, 874.6),
+          Offset(691.4, 873.4),
+          Offset(593, 967),
+          Offset(692.6, 967),
+        ],
+      };
+
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
-          final point = BoardGeometry.normalizedPosition(color, -1, pawn);
-          final seat = BoardGeometry.seats[color]!;
-          final expectedX = (seat.yardColumn + (pawn.isEven ? 1.8 : 3.8)) / 15;
-          final expectedY = (seat.yardRow + (pawn < 2 ? 1.8 : 3.8)) / 15;
-          expect(point.x, closeTo(expectedX, 1e-9));
-          expect(point.y, closeTo(expectedY, 1e-9));
+          final point = BoardGeometry.yardPosition(color, pawn);
+          expect(
+            point.x * BoardGeometry.sourceWidth,
+            closeTo(expected[color]![pawn].dx, 1e-9),
+          );
+          expect(
+            point.y * BoardGeometry.sourceHeight,
+            closeTo(expected[color]![pawn].dy, 1e-9),
+          );
         }
       }
     });
@@ -57,7 +87,7 @@ void main() {
           final point = BoardGeometry.normalizedPosition(color, progress, 0);
           expect(
             point,
-            BoardGeometry.sharedTrack[cells[progress]].normalizedCenter,
+            BoardGeometry.trackPosition(cells[progress]),
           );
         }
       }
@@ -128,7 +158,7 @@ void main() {
         for (var index = 0; index < lane.length; index++) {
           expect(
             BoardGeometry.normalizedPosition(color, 51 + index, 0),
-            lane[index].normalizedCenter,
+            BoardGeometry.homeLanePosition(color, index),
           );
         }
       }
@@ -181,35 +211,24 @@ void main() {
       );
     });
 
-    test('keeps the 15x15 board grid square and cells isotropic', () {
-      expect(BoardGeometry.boardHeight, BoardGeometry.boardWidth);
+    test('maps source artwork anchors uniformly to the 9:16 design canvas', () {
+      expect(BoardGeometry.sourceWidth, 810);
+      expect(BoardGeometry.sourceHeight, 1440);
       expect(
-        BoardGeometry.gridCellSize,
-        closeTo(BoardGeometry.boardWidth / BoardGeometry.gridSize, 1e-9),
+        BoardGeometry.sourceWidth / BoardGeometry.sourceHeight,
+        closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 1e-12),
       );
-      final horizontal = BoardGeometry.canvasPosition(
-        const NormalizedBoardPoint(1 / 15, 0),
-      );
-      final vertical = BoardGeometry.canvasPosition(
-        const NormalizedBoardPoint(0, 1 / 15),
-      );
-      expect(
-        horizontal.x - BoardGeometry.boardLeft,
-        closeTo(vertical.y - BoardGeometry.boardTop, 1e-9),
-      );
+      const sourceAnchor = NormalizedBoardPoint(114.2 / 810, 401.4 / 1440);
+      final canvas = BoardGeometry.canvasPosition(sourceAnchor);
+      expect(canvas.x, closeTo(81.2089, 0.001));
+      expect(canvas.y, closeTo(285.44, 0.001));
     });
 
-    test('maps board-relative points through one canvas contract', () {
+    test('maps full-artwork normalized points directly to the design canvas', () {
       const point = NormalizedBoardPoint(0.5, 0.5);
       final canvas = BoardGeometry.canvasPosition(point);
-      expect(
-        canvas.x,
-        closeTo(BoardGeometry.boardLeft + BoardGeometry.boardWidth / 2, 1e-9),
-      );
-      expect(
-        canvas.y,
-        closeTo(BoardGeometry.boardTop + BoardGeometry.boardHeight / 2, 1e-9),
-      );
+      expect(canvas.x, BoardGeometry.canvasWidth / 2);
+      expect(canvas.y, BoardGeometry.canvasHeight / 2);
       expect(BoardGeometry.canvasWidth, 576);
       expect(BoardGeometry.canvasHeight, 1024);
     });
