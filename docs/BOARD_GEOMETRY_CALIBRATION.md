@@ -2,79 +2,76 @@
 
 Last updated: 2026-11-10
 
-## P0 execution note
-
-The canonical source image has been visually inspected. It contains the full-screen player/status chrome as well as the square board; measurements must target the inner 15×15 playfield and the centres of the 16 circular yard sockets, not the outer decorative frame. The existing `boardLeft`, `boardTop`, `boardWidth`, and shared 1.8/3.8 yard offsets remain provisional estimates. No replacement values have been committed because a visual preview alone is not sufficient to certify sub-2-pixel source measurements. The next calibration commit must include reproducible source-pixel coordinates (810×1440), transformed design-canvas coordinates (576×1024), and the computed maximum anchor error. Until that evidence is available, the 16-socket pixel-calibration item remains open.
-
-## Goal
-
-Calibrate every interactive pawn position against the canonical full-screen artwork without editing, cropping, stretching, or replacing the artwork:
-
-`apps/mobile/assets/images/board/ludo_board_glass.webp`
-
-The source is an 810×1440 portrait WebP (9:16). The Flutter design canvas is 576×1024 (the same 9:16 ratio), so the artwork is rendered as one uniformly scaled composition.
-
 ## Current implementation
 
-- One centralized `BoardGeometry` maps normalized 15×15 board coordinates into the design canvas.
-- The playfield uses a square transform: `boardHeight == boardWidth`. A logical cell has the same horizontal and vertical scale; the route is not intentionally distorted to fill a rectangular region.
-- The four yard quadrants share one four-socket offset pattern: x offsets 1.8/3.8 and y offsets 1.8/3.8 grid units. The pattern is mirrored by the seat's yard origin.
-- The 52-cell shared route, per-seat entry indexes (Orange 0, Green 13, Magenta 26, Blue 39), five-cell private lanes, separate centre finish, and safe-cell metadata remain centralized in `BoardGeometry`.
-- Tests cover route uniqueness and bounds, per-seat route traversal, lane separation, finish mapping, safe-cell index bounds, square grid scaling, and all 16 starting pawn positions.
-- The 393×873 match-canvas capture test runs rasterization outside the widget test's fake-async zone, then writes `test-artifacts/match-canvas-393x873.png` for CI upload. Successful run #356 (commit `643e6dfa6b990c513252c7488d60e42dd6603285`) produced artifact `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`); the rendered capture and canonical source artwork were visually inspected together. The yard pawns appear close to their socket wells, but this visual inspection is not a substitute for source-pixel anchor measurements.
+The canonical board artwork is a full-screen 810×1440 portrait composition. Its playable board is **not** a uniform square 15×15 grid: the horizontal arms, vertical arms and central hub have different cell proportions and small offsets. The previous single square-grid transform caused visible pawn misalignment, especially in the yard sockets.
 
-## Calibration values — provisional, not visually approved
+The rendering contract has therefore been changed:
 
-All values below are implementation estimates pending comparison with the CI-rendered canvas and direct pixel measurement of the original source artwork. They must not be represented as pixel-verified:
+- The 52-cell logical route and all game rules remain in the domain layer.
+- Rendering uses source-artwork pixel anchors for each shared-track cell, each of the 20 home-lane cells, the finish centre and all 16 yard sockets.
+- BoardGeometry.normalizedPosition resolves a pawn's logical progress to its explicit source-artwork anchor.
+- BoardGeometry.canvasPosition applies one uniform 810×1440 → 576×1024 transform. No crop, stretch, recolour, redraw, or replacement of the canonical artwork is performed.
+- The board preview renders the same anchor table as the live match; it does not maintain a second coordinate map.
 
-| Parameter | Current value | Status |
-|---|---:|---|
-| Design canvas | 576×1024 | Exact 9:16 canvas contract |
-| Logical grid | 15×15 | Product geometry contract |
-| Board left | 17.78 | Provisional |
-| Board top | 199.1 | Provisional source-art alignment estimate |
-| Board width | 540.44 | Provisional |
-| Board height | 540.44 (tied to width) | Square-grid constraint implemented |
-| Yard socket x offsets | 1.8, 3.8 grid units | Provisional |
-| Yard socket y offsets | 1.8, 3.8 grid units | Provisional |
-| Shared route | 52 unique cells | Structural tests pass; artwork alignment pending |
-| Safe indexes | 0, 8, 13, 21, 26, 34, 39, 47 | Legacy candidate set; visual approval pending |
+## Source-to-canvas transform
 
-The square-grid constraint is a correctness improvement: the 15×15 route must not be stretched into unequal-width and unequal-height cells. It does not by itself prove the rectangle is correctly aligned to the artwork.
+| Property | Value |
+|---|---:|
+| Canonical artwork | 810×1440 px |
+| Design canvas | 576×1024 units |
+| Aspect ratio | 9:16 |
+| Uniform scale | 0.711111… |
+| Logical shared route | 52 cells |
+| Private lanes | 5 cells × 4 players |
+| Yard sockets | 16 |
 
-## Required visual measurement and acceptance
+All source-pixel anchors are converted by x_canvas = x_source × 576/810 and y_canvas = y_source × 1024/1440.
 
-1. Open the CI artifact `ludo-lovers-match-canvas-393x873` from a successful run and compare it with the original 810×1440 artwork.
-2. Determine the exact artwork-to-canvas scale and offsets. Confirm that the full composition remains visible and that no crop or stretch has been introduced.
-3. Measure the outer playfield grid boundary from source pixels, then calculate its 15×15 cell pitch. Record pixel coordinates and normalized canvas coordinates.
-4. Measure all 16 circular yard socket centres independently from the source image. Do not assume quadrant symmetry until the measurements confirm it.
-5. Measure representative route anchors: all four entries, every straight segment, each diagonal/corner transition, all safe cells, each five-cell home lane, and the centre finish.
-6. Compare rendered pawn centres with the measured source anchors. Record maximum pixel error and require no more than 2 logical-canvas pixels at the 576×1024 design size for fixed anchor points.
-7. Update only the centralized `BoardGeometry` constants and retain numeric regression tests for the measured anchors.
-8. Review at 360×800, 393×873, 412×915 and 800×360. Confirm portrait artwork stays 9:16 and is letterboxed rather than cropped in landscape.
-9. Keep `visualApprovalPending = true` until the rendered artifact has been inspected and the measured anchor tests pass. CI green alone is not visual sign-off.
+## Measured arm anchors
 
-## Current blockers / boundaries
+The following centre coordinates are in source-artwork pixels. Arrays are ordered left-to-right or top-to-bottom.
 
-- The screenshot capture now uses `tester.runAsync` for the raster operation. Run #356 passed the screenshot capture and uploaded the 393×873 diagnostic artifact. Earlier failed runs without an artifact are not visual evidence.
-- Safe-cell identity, route orientation, connector placement, home-lane alignment, stack placement, and real-device rendering remain unapproved until pixel comparison and device QA are complete.
-- Do not redraw or modify the canonical artwork as a shortcut to make overlay coordinates appear correct.
+| Anchor set | Source-pixel centres |
+|---|---|
+| Left horizontal arm X | 48, 96.5, 144.5, 192, 240, 287.5 |
+| Right horizontal arm X | 520.5, 568, 616, 664, 712, 760 |
+| Upper vertical arm X | 341, 404, 466.5 |
+| Lower vertical arm X | 351, 403, 455 |
+| Upper vertical arm Y | 326, 377.5, 427.5, 476.5, 525, 577 |
+| Lower vertical arm Y | 785.5, 837.5, 888, 940, 991.5, 1045 |
+| Horizontal arm Y | 625, 677, 729 |
+| Finish centre | (403, 681) |
 
-## Evidence from successful CI run #356
+These arm anchors are applied to the logical cells in the existing sharedTrack order. The route index order, player entry indexes and safe-cell metadata are not changed by this rendering refactor.
 
-- Commit: `643e6dfa6b990c513252c7488d60e42dd6603285`.
-- Formatting, strict static analysis, unit/widget tests, Android emulator integration, debug APK, split profile APKs, split release APKs, and artifact uploads all passed.
-- Match-canvas screenshot artifact: `ludo-lovers-match-canvas-393x873` (artifact ID `13752087187`).
-- Screenshot inspection confirms the app renders the canonical full-screen composition and all 16 yard pawns. It does not establish exact source-pixel alignment for the route, lanes, safe stars, or yard socket centres.
+## Yard socket centres
 
-## Phase 2 completion gate
+The 16 circular socket centres were measured independently from the canonical artwork rather than mirrored from one generic quadrant offset. Coordinates are source pixels; pawn index order is top-left, top-right, bottom-left, bottom-right.
 
-Phase 2 is complete only when:
-- CI analysis and all widget tests pass;
-- the screenshot artifact exists and can be downloaded;
-- source-pixel measurements are recorded for the grid bounds and 16 yard sockets;
-- all route/lane/finish anchor tests use measured coordinates;
-- the rendered comparison meets the stated tolerance; and
-- visual approval is explicitly recorded.
+| Player | Socket centres (x, y) |
+|---|---|
+| Orange | (114.2, 401.4), (215, 402.6), (115.4, 495), (215, 497.4) |
+| Green | (593, 402.6), (692.6, 402.6), (593, 496.2), (692.6, 497.4) |
+| Blue | (117.8, 872.2), (217.4, 873.4), (117.8, 968.2), (217.4, 968.2) |
+| Magenta | (594.2, 874.6), (691.4, 873.4), (593, 967), (692.6, 967) |
 
-Until then this work is **Phase 2 implementation in progress**, not final visual calibration.
+## Automated verification
+
+- Geometry tests preserve the 52 unique logical route cells, player-relative route traversal, five-cell lanes, four connector transitions and existing safe-cell IDs.
+- Numeric tests pin all 16 yard sockets, representative route anchors, finish position and the source-to-canvas transform.
+- Widget tests verify that the match screen and board preview consume the centralized geometry map.
+- CI captures the board preview at 393×873 and uploads both that preview and the canonical source artwork as separate artifacts for repeatable inspection.
+- CI also runs the deterministic match screenshot, unit/widget suite, Android emulator integration smoke test, and debug/profile/release APK builds.
+
+## Visual acceptance still pending
+
+The updated source anchors have been overlaid on the canonical source image. The diagnostic overlay shows the route markers centred in their cells and the yard crosshairs aligned with the circular wells. This is useful visual evidence, but it is not final owner approval or physical-device validation.
+
+Keep BoardGeometry.visualApprovalPending = true until:
+1. The latest successful CI artifact is inspected at full resolution.
+2. The owner confirms that pawn centres align with the intended artwork cells and sockets.
+3. The same placement is checked on a physical Android device at normal display scaling.
+4. Any measured residual offsets are corrected and covered by numeric regression tests.
+
+Do not replace the artwork, introduce a second geometry table, or alter the logical route/rules to compensate for a rendering-coordinate issue.
