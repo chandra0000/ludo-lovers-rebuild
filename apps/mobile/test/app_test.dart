@@ -410,7 +410,10 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
+    // pumpAndSettle would advance through the SnackBar's full display
+    // duration and dismiss the transient capture feedback before asserting.
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('CAPTURE! EXTRA TURN'), findsOneWidget);
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
