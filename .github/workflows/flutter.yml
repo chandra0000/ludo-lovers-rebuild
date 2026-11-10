@@ -58,7 +58,8 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          dart format "${dart_files[@]}"
+          git diff -- "${dart_files[@]}"
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
