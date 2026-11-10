@@ -13,7 +13,7 @@ void main() {
     await tester.pumpWidget(const LudoLoversApp());
     await tester.tap(find.byKey(const Key('start_local_match')));
     await tester.pumpAndSettle();
-    expect(find.text('LOCAL MATCH'), findsOneWidget);
+    expect(find.byKey(const Key('turn_status')), findsOneWidget);
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
   });
 }
