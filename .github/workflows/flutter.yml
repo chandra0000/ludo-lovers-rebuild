@@ -32,33 +32,9 @@ jobs:
       - name: Resolve dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Check formatting in changed Dart files
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+      - name: Check formatting across the Flutter application
         run: |
-          base_sha="$BASE_SHA"
-          if [ -z "$base_sha" ] || [[ "$base_sha" =~ ^0+$ ]]; then
-            base_sha="$(git rev-parse HEAD^ 2>/dev/null || true)"
-          fi
-          if [ -z "$base_sha" ]; then
-            echo "No parent commit is available; skipping the changed-file formatting gate."
-            exit 0
-          fi
-
-          mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- \
-              'apps/mobile/lib/**/*.dart' \
-              'apps/mobile/test/**/*.dart' \
-              'apps/mobile/integration_test/**/*.dart'
-          )
-          if [ "${#dart_files[@]}" -eq 0 ]; then
-            echo "No Dart source or test files changed."
-            exit 0
-          fi
-
-          printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
-          printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          dart format --output=none --set-exit-if-changed apps/mobile/lib apps/mobile/test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
