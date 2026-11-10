@@ -48,7 +48,7 @@ Last updated: 2026-11-10
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
-- Pawn positions now use a first-pass calibration measured from the canonical `ludo_board_glass.webp`: the board-grid overlay bounds are mapped from the 810×1440 source into the 576×1024 design canvas, and all four yard sockets use one shared measured offset pattern. The 15×15 route and safe-cell IDs remain tied to the documented layout. This is artwork-based calibration, not final visual sign-off; device screenshots and pawn-on-cell QA are still required.
+- Pawn positions now use a first-pass calibration measured from the canonical `ludo_board_glass.webp`: board-grid bounds are mapped from the 810×1440 source into the 576×1024 design canvas, and all four yard sockets use a shared measured offset pattern. Yard row offsets were refined to match the visible upper/lower socket centres. Shared-track route, safe-cell IDs, connector positions and pawn-on-cell alignment remain provisional pending screenshot QA; this is not final visual sign-off.
 - Dice and step-by-step pawn animations are implemented; animation timing and positioning still need real-device visual QA.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
