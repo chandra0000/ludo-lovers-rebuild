@@ -85,10 +85,8 @@ class SeededLudoAi {
       scored.add((
         pawn: pawnIndex,
         score: score,
-        tieBreak: random.nextInt(
-          1 << 20,
-        ),
-      ));
+        tieBreak: random.nextInt(1 << 20),
+      ),);
     }
 
     scored.sort((a, b) {
