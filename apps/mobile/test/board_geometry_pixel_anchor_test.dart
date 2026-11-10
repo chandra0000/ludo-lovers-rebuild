@@ -157,8 +157,8 @@ void main() {
           final canvas = BoardGeometry.canvasPosition(
             BoardGeometry.homeLanePosition(color, index),
           );
-          expect(canvas.dx, closeTo(source.dx * scale, 0.001));
-          expect(canvas.dy, closeTo(source.dy * scale, 0.001));
+          expect(canvas.x, closeTo(source.dx * scale, 0.001));
+          expect(canvas.y, closeTo(source.dy * scale, 0.001));
         }
       }
     });
