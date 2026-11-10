@@ -40,6 +40,7 @@ class _MatchScreenState extends State<MatchScreen>
   int? _movingPawnIndex;
   int _movementStartProgress = 0;
   int _movementEndProgress = 0;
+  String? _pendingMoveFeedback;
 
   void _handleMovementTick() {
     if (mounted && _movingPawnIndex != null) {
@@ -49,10 +50,23 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
+      final feedback = _pendingMoveFeedback;
       setState(() {
         _movingColor = null;
         _movingPawnIndex = null;
+        _pendingMoveFeedback = null;
       });
+      if (feedback != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const Key('move_feedback'),
+            content: Text(feedback),
+            duration: const Duration(milliseconds: 1600),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF211A0D),
+          ),
+        );
+      }
     }
   }
 
@@ -87,12 +101,38 @@ class _MatchScreenState extends State<MatchScreen>
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
     final stepCount = endProgress - startProgress;
+    final nextGame = _game.movePawn(pawnIndex);
+    var capturedCount = 0;
+    for (final previousPlayer in _game.players) {
+      if (previousPlayer.color == movingColor) {
+        continue;
+      }
+      final nextPlayer = nextGame.players.firstWhere(
+        (player) => player.color == previousPlayer.color,
+      );
+      for (var index = 0; index < previousPlayer.pawnProgress.length; index++) {
+        if (previousPlayer.pawnProgress[index] >= 0 &&
+            nextPlayer.pawnProgress[index] == -1) {
+          capturedCount++;
+        }
+      }
+    }
+    final feedback = nextGame.winner != null
+        ? '${movingColor.name.toUpperCase()} WINS!'
+        : capturedCount > 0
+            ? capturedCount == 1
+                ? 'CAPTURE! EXTRA TURN'
+                : '$capturedCount CAPTURES! EXTRA TURN'
+            : endProgress == 56
+                ? 'PAWN HOME!'
+                : null;
     setState(() {
       _movingColor = movingColor;
       _movingPawnIndex = pawnIndex;
       _movementStartProgress = startProgress;
       _movementEndProgress = endProgress;
-      _game = _game.movePawn(pawnIndex);
+      _pendingMoveFeedback = feedback;
+      _game = nextGame;
       _movementController.duration = Duration(
         milliseconds: math.max(180, stepCount * 125).toInt(),
       );
