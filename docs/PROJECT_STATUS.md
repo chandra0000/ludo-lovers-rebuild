@@ -200,3 +200,13 @@ See [the Ludo King competitive gap review](competitive-gap-review-2026-11-10.md)
 - Added a focused evaluator test matrix for soft pass-through, hard blockade interception, protected destination stacks, friendly reinforcement, unsafe capture, safe-cell sanctuary, yard entry, pending-roll validation and exact-finish overshoot.
 - The evaluator returns progress positions, not board pixel coordinates. Existing match animation already interpolates through each progress step using `BoardGeometry`; the match UI now also lets a human tap an otherwise-illegal own pawn after a roll to receive reason-specific SnackBar and light haptic feedback. Legal pawns remain highlighted and use the same evaluator-backed legal-action list.
 - This implementation codifies the supplied Classic blockade proposal, but the Classic profile remains opt-in pending owner acceptance and real-device validation.
+
+
+## Match interaction refinement — feature branch
+
+- Added a 350 ms anticipation window after the dice reveal when a human player has exactly one legal pawn. The move is committed automatically after the delay; multiple legal pawns remain available for manual selection.
+- When no pawn is legal, the rolled result remains visible for 600 ms before the engine's normal pass-turn transition.
+- Added a reusable damped horizontal shake wrapper with light haptic feedback for invalid pawn taps.
+- Added a destination reticle overlay. The first tap on a legal pawn previews its destination; a second tap on that same pawn confirms the move. Capture and safe-cell coexistence previews have distinct visual treatments.
+- Added widget coverage for automatic single-move timing, multiple legal moves, shake wrapper rendering, destination painter rendering, and updated existing match/integration flows for two-tap confirmation.
+- These changes are on `feat/match-auto-move-and-feedback`; they are not merged to `main`. Formatting, analysis, full tests, CI, and physical-device validation remain pending.
