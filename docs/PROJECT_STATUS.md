@@ -5,46 +5,60 @@ Last updated: 2026-11-10
 ## Repository
 
 - Repository: [chandra0000/ludo-lovers-rebuild](https://github.com/chandra0000/ludo-lovers-rebuild)
-- The folder-structure PR was merged as PR #2.
-- Existing Flutter foundation work is present on branch `feat/flutter-foundation`.
-- PR #1 was closed without merge; do not assume that its code is on `main`.
-- This documentation update is being prepared on `feat/app-foundation-documentation`.
+- Folder-structure PR #2 was merged.
+- Flutter app foundation and ongoing implementation are on `feat/flutter-app-foundation`.
+- PR #3 is open: [feat: establish documented Flutter app foundation](https://github.com/chandra0000/ludo-lovers-rebuild/pull/3).
+- The branch is not yet merged into `main`.
 
-## Existing implementation found on the foundation branch
+## Implemented foundation
 
-- Flutter app entry point, app theme, and home screen.
-- Local match screen with programmatically drawn pawn tokens.
-- Provisional deterministic game engine.
-- 52-cell shared-track geometry and home-lane mapping.
+- Flutter app entry point, dark premium theme, and home screen.
+- Local four-player match screen and deterministic local game engine.
+- 52-cell shared-track geometry, home lanes, safe cells, capture, exact-finish checks, and win detection.
+- Programmatically painted glass-finish cone pawns.
+- Current-player halo and legal-move highlight.
+- Compact 2×2 layout for multiple pawns sharing a cell.
+- Canonical board and launcher icon files are present under `apps/mobile/assets/images`.
+- Flutter asset manifest references both canonical paths.
 - Unit, geometry, asset-integrity, and widget tests.
-- Flutter CI workflow for analyze, tests, Android scaffold generation, and debug APK build.
+- CI workflow for analysis, tests, Android scaffold generation, and debug APK build.
 
-## Pawn visual implementation (in progress)
+## Verified artwork facts
 
-- Added a programmatically painted glossy glass-finish cone pawn (`GlassyPawn`).
-- Active player's pawns receive a colour-matched halo; legal pawns receive a stronger gold highlight and scale emphasis.
-- Pawns sharing a cell are arranged in a compact 2×2 formation and rendered smaller.
-- Added widget tests for standard and compact pawn rendering. These changes are committed on `feat/flutter-app-foundation`; CI/device visual validation is still pending.
+- Board artwork: `apps/mobile/assets/images/board/ludo_board_glass.webp`; WebP, 810×1440, 9:16, approximately 254 KB.
+- Launcher artwork: `apps/mobile/assets/images/branding/ludo_lovers_icon.webp`.
+- The board-named file is a full-screen portrait game composition, not a board-only texture. It includes player portraits/names, the Ludo board, decorative die, turn display, and bottom controls.
+- The app must preserve the source composition and aspect ratio. Dynamic gameplay elements need carefully positioned overlays; static artwork elements must not be mistaken for live controls.
+- The original asset is also present in the repository's top-level upload paths. The app loads the canonical Flutter copy.
 
-## Not yet accepted / known gaps
+## Validation state
 
-- User's canonical board image and app icon need to be uploaded and verified at the documented paths.
-- The current code references a full-screen concept/reference WebP, not yet verified as the final canonical board-only artwork.
-- Current pawn positions are provisional and must be calibrated against the final supplied board image.
-- Dice currently displays the result as a number in a circular overlay; a polished animated dice component is still required.
-- Pawn movement currently changes state but does not yet animate step-by-step along the track.
+- Earlier CI runs failed during static analysis; the reported analyzer issues have been addressed and new CI runs are in progress.
+- Do not claim tests or APK build pass until the latest workflow run completes successfully.
+- No real Android device test has been performed/recorded.
+- Board geometry remains provisional and has not been accepted through pixel-level visual calibration.
+- The launcher icon file is registered as a Flutter asset but Android launcher icon generation/configuration is still outstanding.
+
+## Known gaps
+
+- The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
+- Pawn positions must be calibrated against the actual board grid and image's displayed rectangle.
+- Multi-pawn stack spacing and pawn tap targets need visual/touch validation.
+- Dice is currently represented by a simple numeric circular overlay; a polished vector dice and roll animation are still required.
+- Pawn movement updates engine state but does not yet animate step-by-step through intermediate cells.
+- Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
-- Real Android device testing has not been performed/recorded.
+- Real Android device testing and APK installation smoke test remain open.
 
 ## Next implementation sequence
 
-1. Confirm the two canonical assets are uploaded and inspect their dimensions and appearance.
-2. Update Flutter asset declarations and launcher icon configuration.
-3. Replace the provisional reference background with the canonical board image, preserving aspect ratio.
-4. Calibrate every pawn yard, track, home-lane, and finish coordinate against that board.
-5. Extract reusable pawn and dice widgets and add polished animations.
-6. Complete game rules and interaction tests.
-7. Run CI, build the APK, then perform a real-device smoke test.
+1. Get the latest CI run green: format, analyze, unit/widget tests, Android scaffold generation, and debug APK build.
+2. Implement the match UI as a responsive portrait composition using the canonical artwork without cropping or stretching.
+3. Calibrate the 15×15 board grid and every yard/track/home-lane coordinate from the source image.
+4. Add animated dice and step-by-step pawn movement with deterministic animation tests.
+5. Make player labels, turn status, and interactions dynamic rather than relying on text baked into the static image.
+6. Configure the Android launcher icon from the canonical icon artwork.
+7. Validate on a real Android device and capture visual QA evidence.
 
 ## Completion policy
 
