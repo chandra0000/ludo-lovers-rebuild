@@ -101,6 +101,7 @@ See [four-phase gameplay verification](quality/four-phase-gameplay-verification.
 
 - Fixed a snapshot validation mismatch: the compatibility profile has no three-consecutive-six penalty, so its counter is not capped at two during restore. The cap now applies only when the active profile enables that penalty.
 - Fixed a match-coordinator deadlock on a Classic third consecutive six. The engine intentionally advances the turn without producing a pending dice value; the UI now avoids starting an animation that cannot complete, shows penalty feedback, and schedules the next AI seat.
+- Added the legacy Classic single-opponent capture rule: a lone opponent pawn is captured, while a stacked pair is protected. The compatibility profile retains its former capture-all behaviour. Snapshot schema v2 stores this profile setting, and schema-v1 snapshots migrate with their original semantics.
 - Added regression coverage for compatibility snapshot restoration after three consecutive sixes, invalid Classic counters, and a human third-six penalty handing off to an AI player.
 - Added a full source-pixel regression fixture for all 52 shared-track anchors and all 20 home-lane anchors. Added live widget placement coverage for track, lane and finish; existing yard placement coverage checks all 16 yard sockets.
 - The canonical artwork asset test continues to enforce the original 810×1440 WebP dimensions and portrait aspect ratio. The artwork itself has not been replaced or modified.
