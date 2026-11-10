@@ -87,10 +87,15 @@ void main() {
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.byKey(const Key('match_canvas_capture')),
     );
-    final renderedImage = await boundary.toImage(pixelRatio: 1);
+    final renderedImage = await tester.runAsync(
+      () => boundary.toImage(pixelRatio: 1),
+    );
+    expect(renderedImage, isNotNull);
     try {
-      final png = await renderedImage.toByteData(
-        format: ui.ImageByteFormat.png,
+      final png = await tester.runAsync(
+        () => renderedImage!.toByteData(
+          format: ui.ImageByteFormat.png,
+        ),
       );
       expect(png, isNotNull);
       final output = File('test-artifacts/match-canvas-393x873.png');
@@ -98,7 +103,7 @@ void main() {
       await output.writeAsBytes(png!.buffer.asUint8List());
       expect(await output.length(), greaterThan(10000));
     } finally {
-      renderedImage.dispose();
+      renderedImage!.dispose();
     }
   });
 
