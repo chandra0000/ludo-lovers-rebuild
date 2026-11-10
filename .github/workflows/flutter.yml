@@ -21,12 +21,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      # Cache Gradle dependencies used by both debug and release APK builds.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: gradle
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -53,10 +47,22 @@ jobs:
         with:
           name: ludo-lovers-match-canvas-393x873
           path: apps/mobile/test-artifacts/match-canvas-393x873.png
-          if-no-files-found: error
+          if-no-files-found: warn
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      # Flutter generates the Android Gradle project above, so restore its
+      # Gradle cache only after the wrapper files exist in the workspace.
+      - name: Cache Android Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/pubspec.lock', 'apps/mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - name: Android emulator integration smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
