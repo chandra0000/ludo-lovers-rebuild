@@ -17,7 +17,9 @@ class _MatchScreenState extends State<MatchScreen> {
   final Random _random = Random();
 
   void _roll() {
-    if (_game.diceValue != null || _game.winner != null) return;
+    if (_game.diceValue != null || _game.winner != null) {
+      return;
+    }
     setState(() {
       final rolled = _game.roll(_random.nextInt(6) + 1);
       _game = rolled.legalPawnIndices().isEmpty ? rolled.passTurn() : rolled;
@@ -25,7 +27,9 @@ class _MatchScreenState extends State<MatchScreen> {
   }
 
   void _move(int index) {
-    if (!_game.legalPawnIndices().contains(index)) return;
+    if (!_game.legalPawnIndices().contains(index)) {
+      return;
+    }
     setState(() => _game = _game.movePawn(index));
   }
 
@@ -50,7 +54,10 @@ class _MatchScreenState extends State<MatchScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF171717),
-                        border: Border.all(color: const Color(0xFFFFC857), width: 2),
+                        border: Border.all(
+                          color: const Color(0xFFFFC857),
+                          width: 2,
+                        ),
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: GridView.count(
@@ -58,30 +65,45 @@ class _MatchScreenState extends State<MatchScreen> {
                         crossAxisCount: 2,
                         padding: const EdgeInsets.all(18),
                         children: PlayerColor.turnOrder.map((color) {
-                          final p = _game.players.firstWhere((item) => item.color == color);
+                          final p = _game.players.firstWhere(
+                            (item) => item.color == color,
+                          );
                           return Container(
                             margin: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: color.value.withOpacity(0.14),
-                              border: Border.all(color: color.value, width: 2),
+                              color: color.value.withValues(alpha: 0.14),
+                              border: Border.all(
+                                color: color.value,
+                                width: 2,
+                              ),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(color.name.toUpperCase(),
-                                    style: TextStyle(color: color.value, fontWeight: FontWeight.bold)),
+                                Text(
+                                  color.name.toUpperCase(),
+                                  style: TextStyle(
+                                    color: color.value,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 const SizedBox(height: 8),
                                 Wrap(
                                   alignment: WrapAlignment.center,
-                                  children: List.generate(4, (i) => Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Icon(
-                                      Icons.circle,
-                                      size: 19,
-                                      color: p.pawnProgress[i] == -1 ? color.value : Colors.white,
+                                  children: List.generate(
+                                    4,
+                                    (i) => Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: Icon(
+                                        Icons.circle,
+                                        size: 19,
+                                        color: p.pawnProgress[i] == -1
+                                            ? color.value
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  )),
+                                  ),
                                 ),
                               ],
                             ),
@@ -93,9 +115,15 @@ class _MatchScreenState extends State<MatchScreen> {
                 ),
               ),
               Text(
-                _game.winner == null ? '${player.color.name.toUpperCase()} TO PLAY' : '${_game.winner!.name.toUpperCase()} WINS',
+                _game.winner == null
+                    ? '${player.color.name.toUpperCase()} TO PLAY'
+                    : '${_game.winner!.name.toUpperCase()} WINS',
                 key: const Key('turn_status'),
-                style: TextStyle(color: player.color.value, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: player.color.value,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
               if (_game.diceValue == null)
@@ -105,15 +133,21 @@ class _MatchScreenState extends State<MatchScreen> {
                   child: const Text('ROLL DICE'),
                 )
               else ...[
-                Text('DICE: ${_game.diceValue}', style: const TextStyle(fontSize: 20)),
+                Text(
+                  'DICE: ${_game.diceValue}',
+                  style: const TextStyle(fontSize: 20),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
-                  children: List.generate(4, (i) => OutlinedButton(
-                    key: Key('pawn_$i'),
-                    onPressed: legal.contains(i) ? () => _move(i) : null,
-                    child: Text('PAWN ${i + 1}'),
-                  )),
+                  children: List.generate(
+                    4,
+                    (i) => OutlinedButton(
+                      key: Key('pawn_$i'),
+                      onPressed: legal.contains(i) ? () => _move(i) : null,
+                      child: Text('PAWN ${i + 1}'),
+                    ),
+                  ),
                 ),
               ],
               const SizedBox(height: 10),
