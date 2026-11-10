@@ -94,7 +94,9 @@ class _MatchScreenState extends State<MatchScreen>
     Future<void>.delayed(const Duration(milliseconds: 450), () {
       _aiTurnScheduled = false;
       if (!mounted || !widget.aiPlayers.contains(_game.activePlayer) ||
-          _game.winner != null || _game.diceValue != null) return;
+          _game.winner != null || _game.diceValue != null) {
+        return;
+      }
       final rolled = _game.roll(
         _random.nextInt(6) + 1,
         expectedStateVersion: _game.stateVersion,
