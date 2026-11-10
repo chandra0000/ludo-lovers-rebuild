@@ -136,8 +136,10 @@ class BoardPreviewScreen extends StatelessWidget {
   }) {
     final point = BoardGeometry.canvasPosition(cell.normalizedCenter);
     return Positioned(
-      left: point.x / BoardGeometry.canvasWidth * width - size / 2,
-      top: point.y / BoardGeometry.canvasHeight * height - size / 2,
+      left: point.x / BoardGeometry.canvasWidth * width -
+          (size + (crosshairKey == null ? 0 : 8)) / 2,
+      top: point.y / BoardGeometry.canvasHeight * height -
+          (size + (crosshairKey == null ? 0 : 8)) / 2,
       child: IgnorePointer(
         child: SizedBox(
           width: size + (crosshairKey == null ? 0 : 8),
@@ -180,19 +182,31 @@ class BoardPreviewScreen extends StatelessWidget {
       BoardGeometry.normalizedPosition(color, -1, pawnIndex),
     );
     return Positioned(
-      left: point.x / BoardGeometry.canvasWidth * width - 5,
-      top: point.y / BoardGeometry.canvasHeight * height - 5,
+      left: point.x / BoardGeometry.canvasWidth * width - 9,
+      top: point.y / BoardGeometry.canvasHeight * height - 9,
       child: IgnorePointer(
-        child: Container(
-          key: Key('preview_${color.name}_$pawnIndex'),
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.color.withValues(alpha: .9),
-            border: Border.all(color: Colors.white, width: 1),
-            boxShadow: const [
-              BoxShadow(color: Color(0x99FFC857), blurRadius: 5),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: Stack(
+            key: Key('preview_${color.name}_${pawnIndex}_crosshair'),
+            alignment: Alignment.center,
+            children: [
+              Container(
+                key: Key('preview_${color.name}_$pawnIndex'),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.color.withValues(alpha: .9),
+                  border: Border.all(color: Colors.white, width: 1),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x99FFC857), blurRadius: 5),
+                  ],
+                ),
+              ),
+              Container(width: 18, height: 1, color: color.color),
+              Container(width: 1, height: 18, color: color.color),
             ],
           ),
         ),
