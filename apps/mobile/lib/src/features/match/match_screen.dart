@@ -186,8 +186,10 @@ class _MatchScreenState extends State<MatchScreen>
                           top: 795,
                           width: 90,
                           height: 90,
-                          child: AnimatedDice(
-                            key: const Key('animated_dice'),
+                          child: KeyedSubtree(
+                            key: const Key('roll_dice'),
+                            child: AnimatedDice(
+                              key: const Key('animated_dice'),
                             value: _game.diceValue,
                             enabled: _game.diceValue == null &&
                                 !_isDiceAnimating &&
@@ -196,17 +198,18 @@ class _MatchScreenState extends State<MatchScreen>
                               setState(() => _isDiceAnimating = true);
                               _roll();
                             },
-                            onRollCompleted: () {
-                              if (mounted) {
-                                setState(() {
-                                  _isDiceAnimating = false;
-                                  if (_game.diceValue != null &&
-                                      _game.legalPawnIndices().isEmpty) {
-                                    _game = _game.passTurn();
-                                  }
-                                });
-                              }
-                            },
+                              onRollCompleted: () {
+                                if (mounted) {
+                                  setState(() {
+                                    _isDiceAnimating = false;
+                                    if (_game.diceValue != null &&
+                                        _game.legalPawnIndices().isEmpty) {
+                                      _game = _game.passTurn();
+                                    }
+                                  });
+                                }
+                              },
+                            ),
                           ),
                         ),
                         Positioned(
