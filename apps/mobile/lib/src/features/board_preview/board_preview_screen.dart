@@ -4,7 +4,7 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 
-/// Read-only diagnostic view. Coordinates are provisional until pixel-measured.
+/// Read-only diagnostic view of measured source-artwork anchors.
 class BoardPreviewScreen extends StatelessWidget {
   const BoardPreviewScreen({super.key});
 
@@ -22,7 +22,7 @@ class BoardPreviewScreen extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
                 child: Text(
-                  'Canonical artwork · coordinate crosshairs · provisional',
+                  'Canonical artwork · measured source-pixel anchors · review pending',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
