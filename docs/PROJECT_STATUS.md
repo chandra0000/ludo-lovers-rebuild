@@ -17,6 +17,7 @@ Last updated: 2026-11-10
 - Programmatically painted glossy glass-finish cone pawns.
 - Gold vector dice with animated rotation, scale and bounce reveal; the game engine supplies the final roll.
 - Pawn movement interpolates through each intermediate board cell, including release from the yard.
+- Captures and reaching the finish now produce explicit in-game feedback after the pawn movement animation; capture feedback identifies the retained extra turn.
 - Dice input is guarded at both the rendered control and roll handler while pawn movement is in progress; a widget regression verifies a second roll cannot be consumed mid-animation.
 - Pawn input is disabled during the dice reveal; turns with no legal move pass after the reveal completes.
 - Current-player halo and legal-move highlighting.
@@ -44,7 +45,7 @@ Last updated: 2026-11-10
 ## Known gaps
 
 - The match screen still uses fixed design-canvas coordinates and needs responsive visual QA on real device aspect ratios.
-- Pawn positions and multi-pawn stack spacing need visual calibration against the board region.
+- Pawn positions use the measured board-grid bounds and four yard-socket centers from the canonical 810×1440 artwork; multi-pawn stack spacing and the calibration still need real-device visual sign-off.
 - Dice and step-by-step pawn animations are implemented; animation timing and positioning still need real-device visual QA.
 - Player portraits/names and decorative UI elements baked into the full-screen artwork are static; dynamic player labels/status and controls must be layered intentionally.
 - The game rule profile needs user acceptance (see [game rules](game/game-rules.md)).
@@ -54,9 +55,9 @@ Last updated: 2026-11-10
 
 1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
 2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
-3. Calibrate the 15×15 board grid and every yard/track/home-lane coordinate from the source image.
-4. Complete capture/finish feedback and tune animation timing using visual QA.
-5. Make player labels, turn status, and interactions dynamic rather than relying on text baked into the static image.
+3. Validate the calibrated 15×15 board grid, yard sockets, track, and home-lane overlays on a real Android device.
+4. Tune capture/finish feedback placement and animation timing using visual QA.
+5. Replace the baked-in player names/status with dynamic player labels and online/offline indicators without altering the artwork.
 6. Configure Android launcher icon generation from the canonical icon artwork.
 7. Validate on a real Android device and capture visual QA evidence.
 
