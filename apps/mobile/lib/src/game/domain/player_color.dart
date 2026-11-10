@@ -18,5 +18,6 @@ enum PlayerColor {
     PlayerColor.blue,
   ];
 
-  PlayerColor get next => turnOrder[(turnOrder.indexOf(this) + 1) % turnOrder.length];
+  PlayerColor get next =>
+      turnOrder[(turnOrder.indexOf(this) + 1) % turnOrder.length];
 }
