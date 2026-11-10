@@ -2,6 +2,18 @@
 
 Record durable product and engineering decisions here. Newest entries go first.
 
+## 2026-11-10 — Versioned local match recovery
+
+**Decision:** Persist a schema-versioned local match snapshot using the existing `shared_preferences` dependency. Restore it through an explicit Home-screen resume action; let the user discard it.
+
+**Persisted state:** Four pawn-progress arrays, active player, pending dice result, winner, full rule-profile settings/version, state version, consecutive-six counter, accepted command IDs, AI seat assignments, and AI seed.
+
+**Not persisted:** In-flight visual animation progress and transient events from the most recent transition. On resume, the UI renders the already-accepted engine state rather than replaying a partial visual hop.
+
+**Reason:** Backgrounding, process recreation and accidental app closure should not silently discard an accepted local match. Keeping persistence local avoids introducing a backend dependency before local gameplay is accepted.
+
+**Consequences:** Snapshot schema changes require explicit versioning and corruption handling. This does not provide cloud backup, cross-device sync or full event replay. Physical Android lifecycle acceptance remains required.
+
 ## 2026-11-10 — Static board with programmatic game pieces
 
 **Decision:** Use the user's supplied board artwork as a static background. Render pawns, dice, highlights, and effects programmatically in Flutter.
