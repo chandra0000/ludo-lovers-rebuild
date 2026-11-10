@@ -292,9 +292,11 @@ void main() {
   testWidgets('completes pawn movement immediately with reduced motion',
       (tester) async {
     await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: MaterialApp(home: MatchScreen(rollDice: () => 6)),
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: MatchScreen(rollDice: () => 6),
+        ),
       ),
     );
     await tester.tap(find.byKey(const Key('roll_dice')));
