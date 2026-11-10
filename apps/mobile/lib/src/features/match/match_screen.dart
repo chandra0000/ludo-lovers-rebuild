@@ -331,7 +331,7 @@ class _MatchScreenState extends State<MatchScreen>
                             ),
                           ),
                         ),
-                        ..._buildPawnsWithClusters(),
+                        ..._buildPawnsWithClusters(scale),
                         Positioned(
                           left: 243,
                           top: 795,
@@ -492,7 +492,7 @@ class _MatchScreenState extends State<MatchScreen>
     });
   }
 
-  List<Widget> _buildPawnsWithClusters() {
+  List<Widget> _buildPawnsWithClusters(double canvasScale) {
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
     for (final color in PlayerColor.turnOrder) {
       final player = _game.players.firstWhere((item) => item.color == color);
@@ -518,7 +518,7 @@ class _MatchScreenState extends State<MatchScreen>
     return [
       for (final color in PlayerColor.turnOrder)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(color, pawnIndex, clusters, legalIndices),
+          _buildPawn(color, pawnIndex, clusters, legalIndices, canvasScale),
     ];
   }
 
@@ -530,6 +530,7 @@ class _MatchScreenState extends State<MatchScreen>
     int pawnIndex,
     Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
     Set<int> legalIndices,
+    double canvasScale,
   ) {
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
@@ -575,11 +576,15 @@ class _MatchScreenState extends State<MatchScreen>
         ? Offset(canvasPoint.x, canvasPoint.y)
         : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
 
+    // The canvas is scaled to fit the phone. Expand the design-space hitbox
+    // inversely so its transformed physical bounds never fall below 44×48 dp.
+    final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
+    final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
     return Positioned(
-      left: tapPosition.dx - 22,
-      top: tapPosition.dy - 24,
-      width: 44,
-      height: 48,
+      left: tapPosition.dx - hitTargetWidth / 2,
+      top: tapPosition.dy - hitTargetHeight / 2,
+      width: hitTargetWidth,
+      height: hitTargetHeight,
       child: IgnorePointer(
         ignoring: stacked && !isStackTapTarget,
         child: Semantics(
