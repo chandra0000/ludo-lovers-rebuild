@@ -24,17 +24,6 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
-  static const double _canvasWidth = 576;
-  static const double _canvasHeight = 1024;
-  // Board-grid bounds measured against the canonical 810x1440 portrait artwork,
-  // then mapped into the 576x1024 design canvas (uniform 576/810 scale).
-  static const Rect _boardRect = Rect.fromLTWH(
-    17.78,
-    213.33,
-    540.44,
-    561.78,
-  );
-
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
   bool _isDiceAnimating = false;
@@ -197,11 +186,11 @@ class _MatchScreenState extends State<MatchScreen>
         child: LayoutBuilder(
           builder: (context, constraints) {
             final scale = math.min(
-              constraints.maxWidth / _canvasWidth,
-              constraints.maxHeight / _canvasHeight,
+              constraints.maxWidth / BoardGeometry.canvasWidth,
+              constraints.maxHeight / BoardGeometry.canvasHeight,
             );
-            final width = _canvasWidth * scale;
-            final height = _canvasHeight * scale;
+            final width = BoardGeometry.canvasWidth * scale;
+            final height = BoardGeometry.canvasHeight * scale;
             return Center(
               child: SizedBox(
                 key: const Key('match_canvas'),
@@ -210,8 +199,8 @@ class _MatchScreenState extends State<MatchScreen>
                 child: FittedBox(
                   fit: BoxFit.fill,
                   child: SizedBox(
-                    width: _canvasWidth,
-                    height: _canvasHeight,
+                    width: BoardGeometry.canvasWidth,
+                    height: BoardGeometry.canvasHeight,
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -403,10 +392,8 @@ class _MatchScreenState extends State<MatchScreen>
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
-    final center = Offset(
-      _boardRect.left + normalized.x * _boardRect.width,
-      _boardRect.top + normalized.y * _boardRect.height,
-    );
+    final canvasPoint = BoardGeometry.canvasPosition(normalized);
+    final center = Offset(canvasPoint.x, canvasPoint.y);
 
     final occupants = <({PlayerColor color, int pawnIndex, Offset center})>[];
     for (final otherColor in PlayerColor.turnOrder) {
@@ -417,10 +404,8 @@ class _MatchScreenState extends State<MatchScreen>
           otherIndex < otherPlayer.pawnProgress.length;
           otherIndex++) {
         final otherPoint = _pawnPosition(otherColor, otherIndex);
-        final otherCenter = Offset(
-          _boardRect.left + otherPoint.x * _boardRect.width,
-          _boardRect.top + otherPoint.y * _boardRect.height,
-        );
+        final otherCanvasPoint = BoardGeometry.canvasPosition(otherPoint);
+        final otherCenter = Offset(otherCanvasPoint.x, otherCanvasPoint.y);
         if ((otherCenter - center).distance < 0.5) {
           occupants.add(
             (color: otherColor, pawnIndex: otherIndex, center: otherCenter),
