@@ -53,7 +53,20 @@ Last updated: 2026-11-10
 - Added immutable game state versions. Accepted roll, move, and pass transitions increment the version once; callers can provide an expected version to reject stale actions and a unique command ID to reject duplicate submissions.
 - Added deterministic typed transition events for dice rolls, pawn movement, captures, turn changes, third-six penalties, and wins. Events carry an ordered sequence and resulting state version.
 - Added regression tests for the opt-in Classic rules, version increments, stale/duplicate rejection, deterministic capture event ordering, and compatibility-profile behaviour.
-- These changes are committed to `main`; their CI validation is pending. Do not mark Phase 3 complete until the latest commit passes analysis, all tests, and Android builds.
+- These changes are committed to `main`. CI run [42764125360](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42764125360) passed formatting, strict analysis, all unit/widget tests, deterministic screenshot upload, Android project generation, debug APK build, split release APK builds, and artifact uploads on commit `e86b3cd8cd081cfcbb30fd8fa789de1f06f68d3d`. This validates the implemented Phase 3 scope, not durable replay or complete legacy-engine parity.
+
+
+## Phase 4 — integration, stress, and device QA implementation
+
+- Added a deterministic stress test that runs up to 2,500 accepted engine transitions and checks four-player snapshots, pawn-progress bounds, exactly one state-version increment per command, unique in-memory command IDs, and contiguous event sequencing/version stamps.
+- Added tests proving player lists, pawn-progress lists, event lists, and command-ID sets exposed by a game snapshot cannot be mutated externally.
+- Added an Android integration smoke test that launches the app and repeats home → local match → home navigation three times, verifying the board artwork, dice control, and all four player pawns.
+- Added an API 35 x86_64 Android emulator job to CI to run that integration test.
+- CI formatting now includes `integration_test/`; documentation records the automated and manual acceptance gates.
+- These changes are committed directly to `main`. The latest CI run for this Phase 4 change is pending; do not mark Phase 4 complete until emulator integration, unit/widget tests, analysis, screenshot upload, debug APK, and split release builds all pass.
+- Physical Android device QA remains pending and must be recorded separately. Emulator CI does not prove touch alignment, frame pacing, battery/thermal behaviour, or final artwork alignment.
+
+See [four-phase gameplay verification](quality/four-phase-gameplay-verification.md) for the acceptance checklist.
 
 ## Known gaps
 
@@ -65,6 +78,10 @@ Last updated: 2026-11-10
 - Real Android device testing and APK installation smoke test remain open.
 
 ## Next implementation sequence
+
+1. Complete the Phase 4 CI run and inspect any emulator/test/build failures before further feature work.
+2. Perform and record the physical Android device smoke test using the Phase 4 checklist.
+3. Complete artwork pixel calibration and owner approval before changing the visual-approval gate.
 
 1. Verify responsive canvas behavior across common portrait sizes and a constrained landscape viewport.
 2. Measure debug and per-ABI release APK sizes; keep debug and release artifacts separate.
