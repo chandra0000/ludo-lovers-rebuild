@@ -8,8 +8,14 @@ import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
-  testWidgets('renders the home screen on the first frame', (tester) async {
+  testWidgets('shows the approved splash before opening the home screen', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
+    expect(find.byKey(const Key('splash_background')), findsOneWidget);
+    expect(find.text('LUDO LOVERS'), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
