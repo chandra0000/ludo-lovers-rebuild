@@ -10,6 +10,8 @@ import 'package:ludo_lovers/src/app.dart';
 void main() {
   testWidgets('shows the approved splash before opening the home screen', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('splash_background')), findsOneWidget);
     expect(find.text('LUDO LOVERS'), findsNothing);
 
@@ -94,6 +96,8 @@ void main() {
 
   testWidgets('opens a local match from the home screen', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
     expect(find.text('TEAM UP · 2 VS 2'), findsOneWidget);
@@ -306,6 +310,8 @@ void main() {
 
   testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_board_preview')));
