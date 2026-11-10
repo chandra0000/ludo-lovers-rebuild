@@ -55,7 +55,7 @@ For each feature considered from the legacy repository:
 ## Current known risks (not silently marked fixed)
 
 - The rebuild's compact `LudoGame` model is not yet equivalent to the legacy engine's typed command/event and versioned transition contract. Add protections incrementally; do not claim parity.
-- The rebuild's board grid bounds and yard sockets have a first-pass calibration against the canonical full-screen `ludo_board_glass.webp`. Shared-track cell centres, route orientation, safe-cell identity, lane entry, and pawn-on-cell visual alignment still require dedicated visual QA before approval.
+- The canonical `ludo_board_glass.webp` artwork has been inspected as a full-screen 810×1440 portrait composition. The current 576×1024 canvas mapping uses first-pass board bounds (left 17.78, top 213.33, width 540.44, height 561.78) and yard offsets (1.8/3.8 by 2.0/3.9 grid units). These remain estimates; the exact board-grid edges and socket centres have not yet been calibrated from pixel measurements. Shared-track cell centres, route orientation, safe-cell identity, lane entry, and pawn-on-cell visual alignment require screenshot comparison before approval.
 - The artwork file currently present is named `ludo_board_glass.webp`, not `ludo_board_glassy.webp`. Do not rename or substitute it without confirming that the requested name refers to the same approved image.
 - A GitHub CI pass proves only the checks in that workflow. It does not prove physical-device rendering or rule correctness for untested variants.
 
@@ -94,13 +94,13 @@ The old repository was reviewed beyond its README. The following documents conta
 
 ### Artwork-based geometry calibration note
 
-The rebuild preserves `ludo_board_glass.webp` as the unchanged full-screen 9:16 artwork. `BoardGeometry` owns the shared 576×1024 design-canvas contract, board-grid rectangle, yard socket offsets, route cells, home lanes and safe-cell metadata; the match screen no longer carries a second board rectangle. The current board rectangle and yard offsets are first-pass estimates, not pixel-verified measurements. Automated tests cover structural route invariants and that all 16 starting pawn overlays consume this single coordinate map. They do not prove the mapping visually matches the artwork. Route orientation, safe-square identity, connector alignment, lane alignment and stacking still require screenshot-based visual QA and remain provisional.
+The rebuild preserves `ludo_board_glass.webp` as the unchanged full-screen 9:16 artwork. The image has been inspected and confirms that the board is embedded between the upper player/brand header and lower player/dice/control area; the artwork must not be cropped or stretched. `BoardGeometry` owns the shared 576×1024 design-canvas contract, board-grid rectangle, yard socket offsets, route cells, home lanes and safe-cell metadata; the match screen no longer carries a second board rectangle. The current board rectangle (left 17.78, top 213.33, width 540.44, height 561.78) and yard offsets (1.8/3.8 by 2.0/3.9 grid units) are first-pass estimates, not pixel-verified measurements. Automated tests validate cell value equality, track/lane/finish separation, route and lane uniqueness, safe-cell and connector index ranges, legal progress bounds, and that all 16 starting pawn overlays consume this single coordinate map. They do not prove pixel alignment with the artwork. Route orientation, safe-square identity, connector alignment, lane alignment, stacking and actual-device appearance still require screenshot-based visual QA and remain provisional.
 
 ### Migration order
 
 1. Keep the gameplay-readiness gate closed while the first-pass artwork overlay is validated.
 2. Capture rendered board screenshots with pawns placed at all 16 yard sockets, each entry, representative straight and connector cells, safe cells, each home lane, finish and shared stacks.
-3. Compare screenshot coordinates against the unchanged full-screen artwork; update only the centralized `BoardGeometry` contract from measured evidence, then retain regression tests for each calibrated anchor.
+3. Measure the board-grid boundary and the 16 yard socket centres in source-artwork pixel coordinates; convert those measurements to the 576×1024 design canvas, compare against rendered screenshot coordinates, and update only the centralized `BoardGeometry` contract. Retain explicit anchor-coordinate regression tests for each measured socket and route anchor.
 4. Upgrade the compact engine incrementally: immutable transition result, typed commands/events/errors, expected-version guard, one version increment per accepted command, then deterministic replay tests.
 5. Add a named/versioned rules profile and explicitly decide the missing Classic rules before implementation.
 6. Complete the four verification phases and record device evidence separately from CI.
