@@ -32,10 +32,6 @@ class BoardCell {
   @override
   int get hashCode => Object.hash(column, row);
 
-  NormalizedBoardPoint get normalizedCenter => NormalizedBoardPoint(
-        (column + 0.5) / 15,
-        (row + 0.5) / 15,
-      );
 }
 
 class PlayerBoardSeat {
