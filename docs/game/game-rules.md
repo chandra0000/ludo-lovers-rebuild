@@ -61,7 +61,7 @@ The Classic profile is deliberately **not the default**. Its rule choices, safe-
 
 Every accepted roll, pass, or pawn move increments the immutable game `stateVersion` exactly once. Callers may supply `expectedStateVersion` to reject stale actions and a unique `commandId` to reject duplicate submissions. Each transition exposes an immutable, deterministically ordered typed event list; every event carries its sequence number and resulting state version. Current event types cover dice rolls, pawn movement, captures, turn changes, the consecutive-six penalty, and wins.
 
-The game snapshots and player pawn-progress lists are immutable. Rejected commands throw before producing a new state and therefore cannot partially mutate the prior snapshot. Command IDs are retained in the snapshot for in-match idempotency; persistence/replay across process restarts is not yet implemented.
+The game snapshots and player pawn-progress lists are immutable. Rejected commands throw before producing a new state and therefore cannot partially mutate the prior snapshot. Command IDs are retained in the versioned local snapshot for in-match idempotency. Local save/resume across process restarts is implemented; durable event replay and a full transition history are still not implemented.
 
 ## Gameplay regression coverage added
 
@@ -77,3 +77,20 @@ Remaining implementation gaps:
 - Player elimination/skip logic and match-completion modes beyond winner-takes-all remain unimplemented.
 
 Do not silently change the default compatibility profile. The proposed Classic profile remains opt-in until the product owner accepts it. The route and safe-cell constants are also still provisional pending visual board approval.
+
+## Critical correctness review — 2026-11-10
+
+Two defects found during the Classic acceptance review have been fixed:
+
+- Snapshot validation now applies the two-six maximum only to profiles that enforce the three-consecutive-six penalty. The compatibility profile does not impose that penalty and can legitimately retain a higher consecutive-six count; its local snapshot must still restore.
+- The match coordinator now treats a Classic third-six penalty as an immediate turn transition with no pending dice animation. It schedules the next AI seat instead of leaving the match in a permanent dice-animation state.
+
+Regression tests cover compatibility-profile snapshot restoration after three consecutive sixes, rejection of an invalid Classic snapshot counter, and a human third-six penalty handing control to an AI seat.
+
+The remaining release blockers are product decisions and visual/device evidence, not assumptions to be silently encoded:
+
+- Confirm own-pawn stacking and opponent blockade rules, including whether a blockade prevents passing and how it is captured.
+- Confirm the exact safe-star cells against the canonical artwork.
+- Confirm the intended match completion mode after the first player wins.
+- Obtain product-owner acceptance of the Classic profile before making it the default.
+
