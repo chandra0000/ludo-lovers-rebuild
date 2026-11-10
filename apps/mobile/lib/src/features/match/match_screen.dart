@@ -22,7 +22,8 @@ class MatchScreen extends StatefulWidget {
   State<MatchScreen> createState() => _MatchScreenState();
 }
 
-class _MatchScreenState extends State<MatchScreen> {
+class _MatchScreenState extends State<MatchScreen>
+    with SingleTickerProviderStateMixin {
   static const double _canvasWidth = 576;
   static const double _canvasHeight = 1024;
   static const Rect _boardRect = Rect.fromLTWH(17, 205, 542, 542);
@@ -30,6 +31,36 @@ class _MatchScreenState extends State<MatchScreen> {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
   bool _isDiceAnimating = false;
+  late final AnimationController _movementController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 160),
+  )..addListener(_handleMovementTick)
+      ..addStatusListener(_handleMovementStatus);
+  PlayerColor? _movingColor;
+  int? _movingPawnIndex;
+  int _movementStartProgress = 0;
+  int _movementEndProgress = 0;
+
+  void _handleMovementTick() {
+    if (mounted && _movingPawnIndex != null) {
+      setState(() {});
+    }
+  }
+
+  void _handleMovementStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed && mounted) {
+      setState(() {
+        _movingColor = null;
+        _movingPawnIndex = null;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _movementController.dispose();
+    super.dispose();
+  }
 
   void _roll() {
     if (_game.diceValue != null || _game.winner != null) {
@@ -43,10 +74,61 @@ class _MatchScreenState extends State<MatchScreen> {
   }
 
   void _move(int pawnIndex) {
-    if (!_game.legalPawnIndices().contains(pawnIndex)) {
+    if (_isDiceAnimating || !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    setState(() => _game = _game.movePawn(pawnIndex));
+    final movingColor = _game.activePlayer;
+    final player = _game.currentPlayer;
+    final startProgress = player.pawnProgress[pawnIndex];
+    final roll = _game.diceValue!;
+    final endProgress = startProgress == -1 ? 0 : startProgress + roll;
+    final stepCount = endProgress - startProgress;
+    setState(() {
+      _movingColor = movingColor;
+      _movingPawnIndex = pawnIndex;
+      _movementStartProgress = startProgress;
+      _movementEndProgress = endProgress;
+      _game = _game.movePawn(pawnIndex);
+      _movementController.duration = Duration(
+        milliseconds: math.max(180, stepCount * 125),
+      );
+    });
+    _movementController.forward(from: 0);
+  }
+
+  NormalizedBoardPoint _pawnPosition(
+    PlayerColor color,
+    int pawnIndex,
+  ) {
+    final player = _game.players.firstWhere((item) => item.color == color);
+    final progress = player.pawnProgress[pawnIndex];
+    if (_movingColor != color || _movingPawnIndex != pawnIndex) {
+      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
+    }
+
+    final steps = _movementEndProgress - _movementStartProgress;
+    if (steps <= 0) {
+      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
+    }
+    final travelled = _movementController.value * steps;
+    final stepIndex = math.min(travelled.floor(), steps - 1);
+    final fraction = (travelled - stepIndex).clamp(0.0, 1.0);
+    final fromProgress = _movementStartProgress + stepIndex;
+    final toProgress = fromProgress + 1;
+    final from = BoardGeometry.normalizedPosition(
+      color,
+      fromProgress,
+      pawnIndex,
+    );
+    final to = BoardGeometry.normalizedPosition(
+      color,
+      toProgress,
+      pawnIndex,
+    );
+    return NormalizedBoardPoint(
+      from.x + (to.x - from.x) * fraction,
+      from.y + (to.y - from.y) * fraction,
+    );
   }
 
   String get _statusText {
@@ -251,11 +333,7 @@ class _MatchScreenState extends State<MatchScreen> {
   Widget _buildPawn(PlayerColor color, int pawnIndex) {
     final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
-    final normalized = BoardGeometry.normalizedPosition(
-      color,
-      progress,
-      pawnIndex,
-    );
+    final normalized = _pawnPosition(color, pawnIndex);
     final center = Offset(
       _boardRect.left + normalized.x * _boardRect.width,
       _boardRect.top + normalized.y * _boardRect.height,
@@ -270,11 +348,7 @@ class _MatchScreenState extends State<MatchScreen> {
           otherIndex < otherPlayer.pawnProgress.length;
           otherIndex++) {
         final otherProgress = otherPlayer.pawnProgress[otherIndex];
-        final otherPoint = BoardGeometry.normalizedPosition(
-          otherColor,
-          otherProgress,
-          otherIndex,
-        );
+        final otherPoint = _pawnPosition(otherColor, otherIndex);
         final otherCenter = Offset(
           _boardRect.left + otherPoint.x * _boardRect.width,
           _boardRect.top + otherPoint.y * _boardRect.height,
