@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-10
 
+## P0 execution note
+
+The canonical source image has been visually inspected. It contains the full-screen player/status chrome as well as the square board; measurements must target the inner 15×15 playfield and the centres of the 16 circular yard sockets, not the outer decorative frame. The existing `boardLeft`, `boardTop`, `boardWidth`, and shared 1.8/3.8 yard offsets remain provisional estimates. No replacement values have been committed because a visual preview alone is not sufficient to certify sub-2-pixel source measurements. The next calibration commit must include reproducible source-pixel coordinates (810×1440), transformed design-canvas coordinates (576×1024), and the computed maximum anchor error. Until that evidence is available, the 16-socket pixel-calibration item remains open.
+
 ## Goal
 
 Calibrate every interactive pawn position against the canonical full-screen artwork without editing, cropping, stretching, or replacing the artwork:
