@@ -266,8 +266,8 @@ void main() {
       expect(penalized.stateVersion, game.stateVersion + 1);
     });
 
-    test('Classic protects a stacked pair of opponent pawns from capture', () {
-      final game = LudoGame.fromProgress(
+    test('Classic rejects landing on a protected pair of opponent pawns', () {
+      final rolled = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         ruleProfile: LudoRuleProfile.classicV1,
         pawnProgress: {
@@ -275,16 +275,20 @@ void main() {
           // Both Green pawns occupy the same physical cell as Orange 5.
           PlayerColor.green: [44, 44, -1, -1],
         },
-      );
+      ).roll(2);
 
-      final moved = game.roll(2).movePawn(0);
-      final green = moved.players.firstWhere(
-        (player) => player.color == PlayerColor.green,
+      final result = rolled.evaluatePawnMove(0);
+      expect(result, isA<InvalidMove>().having(
+        (move) => move.reason,
+        'reason',
+        MoveInvalidReason.landingOnProtectedStack,
+      ));
+      expect(rolled.legalPawnIndices(), isEmpty);
+      expect(rolled.currentPlayer.pawnProgress[0], 3);
+      expect(
+        () => rolled.movePawn(0),
+        throwsStateError,
       );
-
-      expect(green.pawnProgress, [44, 44, -1, -1]);
-      expect(moved.events.whereType<PawnCaptured>(), isEmpty);
-      expect(moved.activePlayer, PlayerColor.green);
     });
 
     test('Classic profile grants an extra turn for reaching final home', () {
