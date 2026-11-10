@@ -597,7 +597,7 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     setState(() => _selectedPawnIndex = pawnIndex);
-    _previewController.repeat();
+    _previewController.forward(from: 0);
   }
 
   Widget _buildDestinationPreview() {
