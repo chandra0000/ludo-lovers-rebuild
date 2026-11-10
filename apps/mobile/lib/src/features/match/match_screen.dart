@@ -601,8 +601,11 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _selectOrMovePawn(int pawnIndex) {
-    if (_isAutoMovePending || _isDiceAnimating ||
-        !_game.legalPawnIndices().contains(pawnIndex)) return;
+    if (_isAutoMovePending ||
+        _isDiceAnimating ||
+        !_game.legalPawnIndices().contains(pawnIndex)) {
+      return;
+    }
     if (_selectedPawnIndex == pawnIndex) {
       setState(() => _selectedPawnIndex = null);
       _previewController.stop();
@@ -627,18 +630,20 @@ class _MatchScreenState extends State<MatchScreen>
       type = DestinationPreviewType.capture;
     } else if (target < BoardGeometry.playerTrackLength) {
       final cell = BoardGeometry.physicalTrackCell(_game.activePlayer, target);
-      final hasOpponent = _game.players.any((player) =>
-          player.color != _game.activePlayer &&
-          player.pawnProgress.any(
-            (opponentProgress) =>
-                opponentProgress >= 0 &&
-                opponentProgress < BoardGeometry.playerTrackLength &&
-                BoardGeometry.physicalTrackCell(
-                      player.color,
-                      opponentProgress,
-                    ) ==
-                    cell,
-          ));
+      final hasOpponent = _game.players.any(
+        (player) =>
+            player.color != _game.activePlayer &&
+            player.pawnProgress.any(
+              (opponentProgress) =>
+                  opponentProgress >= 0 &&
+                  opponentProgress < BoardGeometry.playerTrackLength &&
+                  BoardGeometry.physicalTrackCell(
+                        player.color,
+                        opponentProgress,
+                      ) ==
+                      cell,
+            ),
+      );
       if (hasOpponent && BoardGeometry.safeTrackCells.contains(cell)) {
         type = DestinationPreviewType.safeCoexist;
       }
