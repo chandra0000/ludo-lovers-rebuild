@@ -52,6 +52,14 @@ class _MatchScreenState extends State<MatchScreen>
   int _movementEndProgress = 0;
   String? _pendingMoveFeedback;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scheduleAiTurn();
+    });
+  }
+
   void _handleMovementTick() {
     if (mounted && _movingPawnIndex != null) {
       setState(() {});
@@ -527,7 +535,6 @@ class _MatchScreenState extends State<MatchScreen>
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
-    final center = Offset(canvasPoint.x, canvasPoint.y);
     final occupants = clusters[_clusterKey(normalized)] ?? [
       (color: color, pawnIndex: pawnIndex),
     ];
