@@ -5,6 +5,13 @@ class NormalizedBoardPoint {
 
   final double x;
   final double y;
+
+  @override
+  bool operator ==(Object other) =>
+      other is NormalizedBoardPoint && other.x == x && other.y == y;
+
+  @override
+  int get hashCode => Object.hash(x, y);
 }
 
 class BoardCell {
