@@ -57,7 +57,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: formatter-normalized-dart-sources
-          path: apps/mobile/test/app_test.dart
+          path: |
+            apps/mobile/lib/src/game/domain/board_geometry.dart
+            apps/mobile/test/ludo_game_test.dart
+            apps/mobile/test/seeded_ludo_ai_test.dart
+            apps/mobile/test/match_classic_rules_test.dart
           if-no-files-found: error
       - name: Static analysis
         working-directory: apps/mobile
