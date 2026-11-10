@@ -139,6 +139,21 @@ void main() {
     expect(ai.choosePawn(game, seed: 14), 0);
   });
 
+  test('avoids moving a pawn onto an unsafe cell within an opponent roll', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        // Pawn 0 would move from Orange progress 21 to 22. Green progress 4
+        // is five shared-track cells behind that unsafe landing position.
+        PlayerColor.orange: [21, 10, -1, -1],
+        PlayerColor.green: [4, -1, -1, -1],
+      },
+    ).roll(1);
+
+    // Pawn 1 makes less raw progress but avoids the immediate capture threat.
+    expect(ai.choosePawn(game, seed: 16), 1);
+  });
+
   test('candidate evaluation does not mutate the supplied game snapshot', () {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
