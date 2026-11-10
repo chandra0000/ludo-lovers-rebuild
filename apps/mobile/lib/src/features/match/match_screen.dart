@@ -328,7 +328,9 @@ class _MatchScreenState extends State<MatchScreen> {
       Offset(.48, .48),
     ];
     final stacked = occupants.length > 1;
-    final visualOffset = stacked ? offsets[stackIndex % offsets.length] * 18 : Offset.zero;
+    final visualOffset = stacked
+        ? offsets[stackIndex % offsets.length] * 18
+        : Offset.zero;
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final legalIndices = _game.legalPawnIndices();
     final canMove = color == _game.activePlayer &&
@@ -390,4 +392,4 @@ class _MatchScreenState extends State<MatchScreen> {
       ),
     );
   }
-}}
+}
