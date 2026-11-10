@@ -39,7 +39,10 @@ void main() {
       await tester.tap(find.byKey(const Key('exit_match')));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+      // Match exits to Game Setup; explicitly return home before the next cycle.
+      expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
     }
   });
