@@ -63,6 +63,10 @@ Every accepted roll, pass, or pawn move increments the immutable game `stateVers
 
 The game snapshots and player pawn-progress lists are immutable. Rejected commands throw before producing a new state and therefore cannot partially mutate the prior snapshot. Command IDs are retained in the snapshot for in-match idempotency; persistence/replay across process restarts is not yet implemented.
 
+## Gameplay regression coverage added
+
+The automated suite now exercises capture from all four seat orientations and checks every configured safe-cell ID against a live capture attempt. The default compatibility profile also has an explicit exact-finish/overshoot test: a pawn at progress 55 may finish on a roll of one, while a roll of two cannot move it and passes the turn. These tests verify the currently encoded behaviour; they do not silently select the opt-in Classic profile or resolve pending blockade/stack product decisions.
+
 ## Remaining implementation gaps
 
 Remaining implementation gaps:
