@@ -26,7 +26,12 @@ abstract final class BoardAcceptancePresets {
   static LudoGame get mixedThreePawnStackAtSafeCell21 => _game({
         PlayerColor.orange: [_progressForCell(PlayerColor.orange, 21), -1, -1, -1],
         PlayerColor.green: [_progressForCell(PlayerColor.green, 21), -1, -1, -1],
-        PlayerColor.magenta: [_progressForCell(PlayerColor.magenta, 21), -1, -1, -1],
+        PlayerColor.magenta: [
+          _progressForCell(PlayerColor.magenta, 21),
+          -1,
+          -1,
+          -1,
+        ],
       });
 
   static LudoGame get pawnAtHomeLaneEntry => _game({
