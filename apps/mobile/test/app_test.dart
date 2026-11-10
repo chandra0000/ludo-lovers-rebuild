@@ -334,23 +334,39 @@ void main() {
 
 
 
-  testWidgets('starts a one-human match with three AI-controlled seats', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
-    await tester.pumpWidget(const LudoLoversApp());
-    await tester.pump(const Duration(milliseconds: 1800));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('open_game_setup')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('start_ai_match')));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'supports one, two, three and four human seat configurations',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'onboarding_completed_v1': true,
+      });
+      await tester.pumpWidget(const LudoLoversApp());
+      await tester.pump(const Duration(milliseconds: 1800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_game_setup')));
+      await tester.pumpAndSettle();
 
-    final match = tester.widget<MatchScreen>(find.byType(MatchScreen));
-    expect(
-      match.aiPlayers,
-      {PlayerColor.green, PlayerColor.magenta, PlayerColor.blue},
-    );
-    expect(find.byKey(const Key('roll_dice')), findsOneWidget);
-  });
+      for (final humanCount in [1, 2, 3, 4]) {
+        if (humanCount != 1) {
+          await tester.tap(find.byKey(const Key('human_player_count')));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('$humanCount').last);
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(find.byKey(const Key('start_ai_match')));
+        await tester.pumpAndSettle();
+
+        final match = tester.widget<MatchScreen>(find.byType(MatchScreen));
+        expect(
+          match.aiPlayers,
+          PlayerColor.turnOrder.skip(humanCount).toSet(),
+        );
+        expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('exit_match')));
+        await tester.pumpAndSettle();
+      }
+    },
+  );
 
   testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
     SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
@@ -373,5 +389,9 @@ void main() {
       }
     }
     expect(find.textContaining('Diagnostic only'), findsOneWidget);
+    expect(find.byKey(const Key('preview_track_0')), findsOneWidget);
+    expect(find.byKey(const Key('preview_track_51')), findsOneWidget);
+    expect(find.byKey(const Key('preview_finish')), findsOneWidget);
+    expect(find.byKey(const Key('preview_lane_orange_0')), findsOneWidget);
   });
 }
