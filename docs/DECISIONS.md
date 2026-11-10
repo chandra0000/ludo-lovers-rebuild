@@ -1,3 +1,13 @@
+## 2026-11-10 — Preview before confirming a pawn move
+
+**Decision:** For a human turn with multiple legal pawns, the first tap selects a pawn and previews its destination; a second tap on that same pawn commits the move. A turn with exactly one legal pawn is resolved automatically after a 350 ms post-dice anticipation delay. A roll with no legal pawn is shown for 600 ms before the engine pass transition.
+
+**Feedback:** Invalid pawn taps use a reusable damped shake and light haptic impact. Destination preview differentiates ordinary movement, capture, and safe-cell coexistence.
+
+**Reason:** Make move consequences legible before commitment while reducing unnecessary taps when only one move is possible.
+
+**Consequences:** The domain engine remains authoritative; preview is presentation-only and reads the existing move evaluator and `BoardGeometry`. The change is being validated on `feat/match-auto-move-and-feedback`; it is not yet merged or accepted on a physical device.
+
 # Decision log
 
 Record durable product and engineering decisions here. Newest entries go first.

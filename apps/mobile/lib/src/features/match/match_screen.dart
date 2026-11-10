@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../game/domain/persistence/saved_match_store.dart';
 
@@ -13,6 +12,8 @@ import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/luxury_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
+import '../../game/presentation/shake_feedback_wrapper.dart';
+import '../../game/presentation/destination_preview_painter.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -37,7 +38,7 @@ class MatchScreen extends StatefulWidget {
 }
 
 class _MatchScreenState extends State<MatchScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
@@ -57,6 +58,14 @@ class _MatchScreenState extends State<MatchScreen>
   int _movementStartProgress = 0;
   int _movementEndProgress = 0;
   String? _pendingMoveFeedback;
+  bool _isAutoMovePending = false;
+  int _turnResolutionToken = 0;
+  final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
+  int? _selectedPawnIndex;
+  late final AnimationController _previewController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
 
   @override
   void initState() {
@@ -152,6 +161,7 @@ class _MatchScreenState extends State<MatchScreen>
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_persistMatch());
     _movementController.dispose();
+    _previewController.dispose();
     super.dispose();
   }
 
@@ -263,30 +273,55 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
-      setState(() {
-        _game = _game.passTurn(
-          expectedStateVersion: _game.stateVersion,
-          commandId: 'match-${_game.stateVersion}-pass',
-        );
-      });
-      unawaited(_persistMatch());
-      _scheduleAiTurn();
+      final token = ++_turnResolutionToken;
+      setState(() => _isAutoMovePending = true);
+      unawaited(Future<void>.delayed(const Duration(milliseconds: 600), () {
+        if (!mounted ||
+            token != _turnResolutionToken ||
+            _game.diceValue == null) {
+          return;
+        }
+        setState(() {
+          _game = _game.passTurn(
+            expectedStateVersion: _game.stateVersion,
+            commandId: 'match-${_game.stateVersion}-pass',
+          );
+          _isAutoMovePending = false;
+        });
+        unawaited(_persistMatch());
+        _scheduleAiTurn();
+      }));
       return;
     }
 
-    if (widget.aiPlayers.contains(_game.activePlayer)) {
-      final selected = _ai.choosePawn(
-        _game,
-        seed: widget.aiSeed ^ _game.stateVersion,
-      );
-      if (selected != null) _move(selected);
+    final isAiTurn = widget.aiPlayers.contains(_game.activePlayer);
+    final selected = isAiTurn
+        ? _ai.choosePawn(_game, seed: widget.aiSeed ^ _game.stateVersion)
+        : legal.length == 1
+            ? legal.single
+            : null;
+    if (selected != null) {
+      final token = ++_turnResolutionToken;
+      setState(() => _isAutoMovePending = true);
+      unawaited(Future<void>.delayed(const Duration(milliseconds: 350), () {
+        if (!mounted ||
+            token != _turnResolutionToken ||
+            _game.diceValue == null ||
+            _movementController.isAnimating) {
+          return;
+        }
+        setState(() => _isAutoMovePending = false);
+        _move(selected);
+      }));
     }
   }
 
   void _showInvalidMoveFeedback(int pawnIndex) {
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     if (evaluation is! InvalidMove || !mounted) return;
-    HapticFeedback.lightImpact();
+    _shakeKeys['${_game.activePlayer.name}-$pawnIndex']
+        ?.currentState
+        ?.triggerShake();
     final message = switch (evaluation.reason) {
       MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
       MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
@@ -307,7 +342,9 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _move(int pawnIndex) {
-    if (_isDiceAnimating || !_game.legalPawnIndices().contains(pawnIndex)) {
+    if (_isDiceAnimating ||
+        _isAutoMovePending ||
+        !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
     final movingColor = _game.activePlayer;
@@ -347,6 +384,7 @@ class _MatchScreenState extends State<MatchScreen>
                 ? 'PAWN HOME!'
                 : null;
     setState(() {
+      _selectedPawnIndex = null;
       _movingColor = movingColor;
       _movingPawnIndex = pawnIndex;
       _movementStartProgress = startProgress;
@@ -358,6 +396,7 @@ class _MatchScreenState extends State<MatchScreen>
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
     });
     unawaited(_persistMatch());
+    _previewController.stop();
     _movementController.forward(from: 0);
   }
 
@@ -455,6 +494,8 @@ class _MatchScreenState extends State<MatchScreen>
                           ),
                         ),
                         ..._buildPawnsWithClusters(scale),
+                        if (_selectedPawnIndex != null)
+                          _buildDestinationPreview(),
                         Positioned(
                           left: 243,
                           top: 795,
@@ -559,12 +600,84 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
+  void _selectOrMovePawn(int pawnIndex) {
+    if (_isAutoMovePending ||
+        _isDiceAnimating ||
+        !_game.legalPawnIndices().contains(pawnIndex)) {
+      return;
+    }
+    if (_selectedPawnIndex == pawnIndex) {
+      setState(() => _selectedPawnIndex = null);
+      _previewController.stop();
+      _move(pawnIndex);
+      return;
+    }
+    setState(() => _selectedPawnIndex = pawnIndex);
+    _previewController.forward(from: 0);
+  }
+
+  Widget _buildDestinationPreview() {
+    final pawnIndex = _selectedPawnIndex!;
+    final roll = _game.diceValue!;
+    final progress = _game.currentPlayer.pawnProgress[pawnIndex];
+    final target = progress == -1 ? 0 : progress + roll;
+    final point = BoardGeometry.canvasPosition(
+      BoardGeometry.normalizedPosition(_game.activePlayer, target, pawnIndex),
+    );
+    final evaluation = _game.evaluatePawnMove(pawnIndex);
+    var type = DestinationPreviewType.standard;
+    if (evaluation is ValidMove && evaluation.isCapture) {
+      type = DestinationPreviewType.capture;
+    } else if (target < BoardGeometry.playerTrackLength) {
+      final cell = BoardGeometry.physicalTrackCell(_game.activePlayer, target);
+      final hasOpponent = _game.players.any(
+        (player) =>
+            player.color != _game.activePlayer &&
+            player.pawnProgress.any(
+              (opponentProgress) =>
+                  opponentProgress >= 0 &&
+                  opponentProgress < BoardGeometry.playerTrackLength &&
+                  BoardGeometry.physicalTrackCell(
+                        player.color,
+                        opponentProgress,
+                      ) ==
+                      cell,
+            ),
+      );
+      if (hasOpponent && BoardGeometry.safeTrackCells.contains(cell)) {
+        type = DestinationPreviewType.safeCoexist;
+      }
+    }
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _previewController,
+          builder: (context, child) => CustomPaint(
+            key: const Key('destination_preview'),
+            painter: DestinationPreviewPainter(
+              targetCenter: Offset(point.x, point.y),
+              cellSize: 36,
+              playerColor: _game.activePlayer.color,
+              previewType: type,
+              animationProgress: _previewController.value,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _handleStackTap(List<int> movablePawnIndices) {
+    if (_selectedPawnIndex != null &&
+        movablePawnIndices.contains(_selectedPawnIndex)) {
+      _selectOrMovePawn(_selectedPawnIndex!);
+      return;
+    }
     if (movablePawnIndices.isEmpty) {
       return;
     }
     if (movablePawnIndices.length == 1) {
-      _move(movablePawnIndices.single);
+      _selectOrMovePawn(movablePawnIndices.single);
       return;
     }
 
@@ -611,7 +724,7 @@ class _MatchScreenState extends State<MatchScreen>
       ),
     ).then((selectedIndex) {
       if (selectedIndex != null && mounted) {
-        _move(selectedIndex);
+        _selectOrMovePawn(selectedIndex);
       }
     });
   }
@@ -681,10 +794,12 @@ class _MatchScreenState extends State<MatchScreen>
         color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
+        !_isAutoMovePending &&
         isHumanTurn &&
         legalIndices.contains(pawnIndex);
     final canExplainInvalidMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
+        !_isAutoMovePending &&
         isHumanTurn &&
         _game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
@@ -711,6 +826,10 @@ class _MatchScreenState extends State<MatchScreen>
     // inversely so its transformed physical bounds never fall below 44×48 dp.
     final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
+    final shakeKey = _shakeKeys.putIfAbsent(
+      '${color.name}-$pawnIndex',
+      GlobalKey<ShakeFeedbackWrapperState>.new,
+    );
     return Positioned(
       left: tapPosition.dx - hitTargetWidth / 2,
       top: tapPosition.dy - hitTargetHeight / 2,
@@ -751,21 +870,24 @@ class _MatchScreenState extends State<MatchScreen>
                     ? () => _handleStackTap(movableStackIndices)
                     : null)
                 : canMove
-                    ? () => _move(pawnIndex)
+                    ? () => _selectOrMovePawn(pawnIndex)
                     : canExplainInvalidMove
                         ? () => _showInvalidMoveFeedback(pawnIndex)
                         : null,
             child: Center(
               child: Transform.translate(
                 offset: visualOffset,
-                child: AnimatedScale(
-                  scale: canMove ? 1.12 : 1,
-                  duration: const Duration(milliseconds: 180),
-                  child: GlassyPawn(
-                    color: color.color,
-                    size: size,
-                    isCurrentPlayer: isCurrentPlayer,
-                    isMovable: canMove,
+                child: ShakeFeedbackWrapper(
+                  key: shakeKey,
+                  child: AnimatedScale(
+                    scale: canMove ? 1.12 : 1,
+                    duration: const Duration(milliseconds: 180),
+                    child: GlassyPawn(
+                      color: color.color,
+                      size: size,
+                      isCurrentPlayer: isCurrentPlayer,
+                      isMovable: canMove,
+                    ),
                   ),
                 ),
               ),

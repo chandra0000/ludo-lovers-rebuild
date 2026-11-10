@@ -87,6 +87,8 @@ void main() {
 
     // 4. Release the first legal orange pawn and wait for its hop animation.
     await tester.tap(pawn);
+    await tester.pump(const Duration(milliseconds: 1250));
+    await tester.tap(pawn);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 220));
     await pumpUntilSettled(tester);

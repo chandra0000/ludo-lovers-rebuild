@@ -181,6 +181,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(
       tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
@@ -195,15 +200,14 @@ void main() {
       2,
     );
 
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pump(const Duration(milliseconds: 40));
-    expect(
-      tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
-          .properties.button,
-      isFalse,
-    );
-    await tester.pumpAndSettle();
+    // Only the pawn already on the track can use a non-six roll, so it moves
+    // automatically after the dice reveal and 350 ms anticipation window.
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 349));
+    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    await tester.pumpAndSettle();
   });
   
   testWidgets(
@@ -244,6 +248,9 @@ void main() {
     expect(find.text('Pawn 2'), findsOneWidget);
 
     await tester.tap(find.text('Pawn 2'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pawn_orange_1')));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });  
@@ -295,7 +302,9 @@ void main() {
     await tester.pump();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 800));
+    // Complete the 600 ms dice reveal, then the 600 ms visible no-move delay.
+    await tester.pump(const Duration(milliseconds: 610));
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
@@ -313,6 +322,9 @@ void main() {
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
+      await tester.tap(pawn);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('destination_preview')), findsOneWidget);
       await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
@@ -350,6 +362,8 @@ void main() {
       expect(rollCount, 1);
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
+      await tester.tap(pawn);
+      await tester.pumpAndSettle();
       await tester.tap(pawn);
       await tester.pump(const Duration(milliseconds: 40));
 
@@ -389,6 +403,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
   });
@@ -408,6 +424,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     // pumpAndSettle would advance through the SnackBar's full display
@@ -433,6 +451,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
