@@ -51,6 +51,7 @@ jobs:
               'apps/mobile/test/**/*.dart' \
               'apps/mobile/integration_test/**/*.dart'
           )
+          dart_files=("apps/mobile/lib/src/game/domain/ludo_game.dart")
           if [ "${#dart_files[@]}" -eq 0 ]; then
             echo "No Dart source or test files changed."
             exit 0
