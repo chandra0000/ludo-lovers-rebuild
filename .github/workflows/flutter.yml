@@ -27,8 +27,8 @@ jobs:
       - name: Format Dart sources and show proposed changes
         working-directory: apps/mobile
         run: |
-          dart format lib test
-          git diff -- lib test
+          dart format lib test integration_test
+          git diff -- lib test integration_test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
