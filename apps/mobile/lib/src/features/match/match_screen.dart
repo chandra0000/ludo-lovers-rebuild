@@ -4,19 +4,23 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
+import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/animated_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 
 class MatchScreen extends StatefulWidget {
-  const MatchScreen({super.key, this.rollDice, this.initialGame});
+  const MatchScreen({super.key, this.rollDice, this.initialGame, this.aiPlayers = const {}, this.aiSeed = 1});
 
   @visibleForTesting
   final int Function()? rollDice;
 
   @visibleForTesting
   final LudoGame? initialGame;
+
+  final Set<PlayerColor> aiPlayers;
+  final int aiSeed;
 
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -26,6 +30,8 @@ class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
+  final SeededLudoAi _ai = const SeededLudoAi();
+  bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
   late final AnimationController _movementController = AnimationController(
     vsync: this,
@@ -52,6 +58,7 @@ class _MatchScreenState extends State<MatchScreen>
         _movingPawnIndex = null;
         _pendingMoveFeedback = null;
       });
+      _scheduleAiTurn();
       if (feedback != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -70,6 +77,41 @@ class _MatchScreenState extends State<MatchScreen>
   void dispose() {
     _movementController.dispose();
     super.dispose();
+  }
+
+  void _scheduleAiTurn() {
+    if (!widget.aiPlayers.contains(_game.activePlayer) ||
+        _game.winner != null || _game.diceValue != null || _aiTurnScheduled) {
+      return;
+    }
+    _aiTurnScheduled = true;
+    Future<void>.delayed(const Duration(milliseconds: 450), () {
+      _aiTurnScheduled = false;
+      if (!mounted || !widget.aiPlayers.contains(_game.activePlayer) ||
+          _game.winner != null || _game.diceValue != null) return;
+      final rolled = _game.roll(
+        _random.nextInt(6) + 1,
+        expectedStateVersion: _game.stateVersion,
+        commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
+      );
+      setState(() => _game = rolled);
+      final legal = _game.legalPawnIndices();
+      if (legal.isEmpty) {
+        setState(() {
+          _game = _game.passTurn(
+            expectedStateVersion: _game.stateVersion,
+            commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-pass',
+          );
+        });
+        _scheduleAiTurn();
+        return;
+      }
+      final selected = _ai.choosePawn(
+        _game,
+        seed: widget.aiSeed ^ _game.stateVersion,
+      );
+      if (selected != null) _move(selected);
+    });
   }
 
   void _roll() {
@@ -183,7 +225,9 @@ class _MatchScreenState extends State<MatchScreen>
     if (_game.winner != null) {
       return '${_game.winner!.name.toUpperCase()} WINS';
     }
-    return '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
+    return widget.aiPlayers.contains(_game.activePlayer)
+        ? '${_game.activePlayer.name.toUpperCase()} · AI TURN'
+        : '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
   }
 
   @override
@@ -243,7 +287,8 @@ class _MatchScreenState extends State<MatchScreen>
                             child: AnimatedDice(
                               key: const Key('animated_dice'),
                               value: _game.diceValue,
-                              enabled: _game.diceValue == null &&
+                              enabled: !widget.aiPlayers.contains(_game.activePlayer) &&
+                                  _game.diceValue == null &&
                                   !_isDiceAnimating &&
                                   !_movementController.isAnimating &&
                                   _game.winner == null,
@@ -267,6 +312,7 @@ class _MatchScreenState extends State<MatchScreen>
                                         expectedStateVersion: _game.stateVersion,
                                         commandId: 'match-${_game.stateVersion}-pass',
                                       );
+                                      _scheduleAiTurn();
                                     }
                                   });
                                 }
