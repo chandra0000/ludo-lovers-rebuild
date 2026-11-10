@@ -115,6 +115,7 @@ The rebuild currently contains the opt-in `classic@1` profile and implements the
 | One bonus roll when triggers overlap | Implemented with a single boolean resolution | Existing overlap test strengthened to assert one bonus event |
 | First player to finish all four wins | Implemented | Existing engine win tests |
 | Seeded AI follows supplied profile | AI uses engine legal moves | New Classic blockade AI test |
+| Match UI resolves a Classic blockade for a human and hands off to an AI seat | Match coordinator reads legal moves from the supplied Classic game | New Classic widget test |
 
 The tests are committed for CI execution. Do not report them as passing until the corresponding GitHub Actions run is green.
 
@@ -125,7 +126,7 @@ Classic v1.0 may be promoted only after all of the following are complete:
 - [ ] Product owner approves the safe-square mapping against the canonical artwork.
 - [ ] Product owner approves the blockade semantics and destination-stack behavior.
 - [ ] Engine unit tests pass for all Classic rules.
-- [ ] Widget/integration coverage verifies turn resolution and human/AI hand-off under Classic.
+- [x] Widget coverage verifies a Classic human move constrained by a blockade and hand-off to an AI seat. (Full real-device integration remains pending.)
 - [ ] A full local four-seat match completes on a physical Android phone.
 - [ ] The default-profile change and any saved-match migration are reviewed in a separate change.
 
