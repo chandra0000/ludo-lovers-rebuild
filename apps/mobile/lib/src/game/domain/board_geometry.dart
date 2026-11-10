@@ -1,6 +1,11 @@
-import 'dart:ui';
-
 import 'player_color.dart';
+
+class NormalizedBoardPoint {
+  const NormalizedBoardPoint(this.x, this.y);
+
+  final double x;
+  final double y;
+}
 
 class BoardCell {
   const BoardCell(this.column, this.row);
@@ -10,7 +15,7 @@ class BoardCell {
 
   bool get isInside => column >= 0 && column < 15 && row >= 0 && row < 15;
 
-  Offset get normalizedCenter => Offset(
+  NormalizedBoardPoint get normalizedCenter => NormalizedBoardPoint(
         (column + 0.5) / 15,
         (row + 0.5) / 15,
       );
@@ -158,14 +163,18 @@ class BoardGeometry {
     Offset(3.78, 3.78),
   ];
 
-  static Offset normalizedPosition(PlayerColor color, int progress, int pawnIndex) {
+  static NormalizedBoardPoint normalizedPosition(
+    PlayerColor color,
+    int progress,
+    int pawnIndex,
+  ) {
     final seat = seats[color]!;
     if (pawnIndex < 0 || pawnIndex > 3) {
       throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
     }
     if (progress == -1) {
       final offset = _yardOffsets[pawnIndex];
-      return Offset(
+      return NormalizedBoardPoint(
         (seat.yardColumn + offset.dx) / gridSize,
         (seat.yardRow + offset.dy) / gridSize,
       );
