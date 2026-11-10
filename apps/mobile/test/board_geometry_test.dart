@@ -102,10 +102,10 @@ void main() {
 
     test('uses value equality for physical board cells', () {
       expect(const BoardCell(3, 7), const BoardCell(3, 7));
-      expect(
-        Set<BoardCell>.from([const BoardCell(3, 7), const BoardCell(3, 7)]),
-        hasLength(1),
-      );
+      final duplicateCells = <BoardCell>{};
+      duplicateCells.add(const BoardCell(3, 7));
+      duplicateCells.add(const BoardCell(3, 7));
+      expect(duplicateCells, hasLength(1));
       expect(const BoardCell(3, 7), isNot(const BoardCell(7, 3)));
     });
 
