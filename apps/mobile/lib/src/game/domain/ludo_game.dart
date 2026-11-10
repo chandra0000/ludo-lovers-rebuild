@@ -210,6 +210,18 @@ class LudoGame {
   LudoPlayer get currentPlayer =>
       players.firstWhere((player) => player.color == activePlayer);
 
+  /// Selects the next player who has not already completed all four pawns.
+  /// This also keeps restored/custom snapshots with completed players safe.
+  PlayerColor _nextActivePlayer([PlayerColor? from]) {
+    var candidate = (from ?? activePlayer).next;
+    for (var i = 0; i < players.length; i++) {
+      final player = players.firstWhere((item) => item.color == candidate);
+      if (!player.hasWon) return candidate;
+      candidate = candidate.next;
+    }
+    return from ?? activePlayer;
+  }
+
   void _validateCommand({
     int? expectedStateVersion,
     String? commandId,
@@ -271,7 +283,7 @@ class LudoGame {
         nextSixes >= 3) {
       return LudoGame._(
         players: players,
-        activePlayer: activePlayer.next,
+        activePlayer: _nextActivePlayer(),
         ruleProfile: ruleProfile,
         stateVersion: stateVersion + 1,
         consecutiveSixes: 0,
@@ -279,7 +291,12 @@ class LudoGame {
         events: List<LudoGameEvent>.unmodifiable([
           DiceRolled(0, stateVersion + 1, activePlayer, value),
           ConsecutiveSixPenalty(1, stateVersion + 1, activePlayer),
-          TurnChanged(2, stateVersion + 1, activePlayer, activePlayer.next),
+          TurnChanged(
+            2,
+            stateVersion + 1,
+            activePlayer,
+            _nextActivePlayer(),
+          ),
         ]),
       );
     }
@@ -315,7 +332,7 @@ class LudoGame {
     }
     final nextPlayer = ruleProfile.extraTurnOnSix && diceValue == 6
         ? activePlayer
-        : activePlayer.next;
+        : _nextActivePlayer();
     final events = <LudoGameEvent>[];
     if (nextPlayer != activePlayer) {
       events.add(TurnChanged(0, stateVersion + 1, activePlayer, nextPlayer));
@@ -409,7 +426,7 @@ class LudoGame {
         (ruleProfile.extraTurnOnFinish && finishedPawn);
     final nextPlayer = gameWinner != null || bonusTurn
         ? activePlayer
-        : activePlayer.next;
+        : _nextActivePlayer();
     if (gameWinner != null) {
       emitted.add(
         PlayerWon(emitted.length, stateVersion + 1, activePlayer),
