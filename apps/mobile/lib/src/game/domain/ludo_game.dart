@@ -217,7 +217,7 @@ class LudoGame {
   LudoPlayer get currentPlayer =>
       players.firstWhere((player) => player.color == activePlayer);
 
-  /// Encodes the authoritative match state for durable local resume.
+  /// Encodes the authoritative match state for durable local resume (schema v2).
   ///
   /// Presentation-only animation progress and transient events are purposely
   /// excluded. The state version and accepted command IDs survive restoration
@@ -252,7 +252,7 @@ class LudoGame {
 
   String encodeSnapshot() => jsonEncode(toSnapshot());
 
-  /// Restores a validated schema-v1 snapshot. Unknown or malformed snapshots
+  /// Restores a validated schema-v1 or schema-v2 snapshot. Unknown or malformed snapshots
   /// fail closed; callers should offer a fresh match rather than guess state.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
     final schemaVersion = snapshot['schemaVersion'];
