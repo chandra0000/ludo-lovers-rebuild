@@ -21,7 +21,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
-    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
     for (var cycle = 0; cycle < 3; cycle++) {
       await tester.tap(find.byKey(const Key('open_game_setup')));
