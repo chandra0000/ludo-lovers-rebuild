@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
@@ -38,7 +36,7 @@ void main() {
         for (var pawn = 0; pawn < 4; pawn++) {
           expect(
             BoardGeometry.normalizedPosition(color, -1, pawn),
-            isA<Offset>(),
+            isA<NormalizedBoardPoint>(),
           );
         }
         expect(
