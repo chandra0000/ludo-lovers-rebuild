@@ -516,5 +516,9 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const Key('preview_lane_orange_0')), findsOneWidget);
+    await expectLater(
+      find.byKey(const Key('board_preview_capture')),
+      matchesGoldenFile('../test-artifacts/board-preview-calibration-393x873.png'),
+    );
   });
 }
