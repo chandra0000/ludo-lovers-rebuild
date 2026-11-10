@@ -39,3 +39,16 @@ Record durable product and engineering decisions here. Newest entries go first.
 **Decision:** Complete one four-player local match before adding online features or alternate modes.
 
 **Reason:** Stabilize rendering, game rules, and touch interactions before expanding scope.
+
+
+## 2026-11-10 — Pure structured pawn-move evaluation
+
+**Decision:** Pawn legality is evaluated by a pure domain API returning a sealed valid/invalid result, rather than by a boolean-only check.
+
+**Reason:** The same authoritative result must drive legal-pawn highlighting, transition validation, route animation, and reason-specific feedback. This avoids duplicating rules in Flutter widgets.
+
+**Classic blockade:** The proposed Classic profile treats two or more pawns of the same opponent on an intermediate shared-track cell as a hard blockade. Destination stack protection, safe-cell co-existence and capture are evaluated separately. The compatibility profile retains its prior pass-through behaviour.
+
+**Persistence:** Snapshot schema v3 stores the blockade setting. Schema v1/v2 snapshots migrate with blockade disabled to preserve saved-match semantics.
+
+**Consequences:** UI feedback can consume typed invalid reasons without changing engine rules. Classic remains opt-in until the owner accepts the blockade and remaining rules; this implementation alone is not visual or product acceptance.
