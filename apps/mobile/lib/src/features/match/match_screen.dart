@@ -163,6 +163,7 @@ class _MatchScreenState extends State<MatchScreen>
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
     final stepCount = endProgress - startProgress;
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final nextGame = _game.movePawn(
       pawnIndex,
       expectedStateVersion: _game.stateVersion,
@@ -199,9 +200,9 @@ class _MatchScreenState extends State<MatchScreen>
       _movementEndProgress = endProgress;
       _pendingMoveFeedback = feedback;
       _game = nextGame;
-      _movementController.duration = Duration(
-        milliseconds: math.max(180, stepCount * 125).toInt(),
-      );
+      _movementController.duration = reduceMotion
+          ? Duration.zero
+          : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
     });
     _movementController.forward(from: 0);
   }
