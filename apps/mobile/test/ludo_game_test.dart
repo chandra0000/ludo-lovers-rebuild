@@ -201,7 +201,7 @@ void main() {
         55,
       );
       expect(passed.activePlayer, PlayerColor.green);
-    },);
+    });
 
     test('does not capture on a safe shared-track cell', () {
       final game = LudoGame.fromProgress(
@@ -309,7 +309,7 @@ void main() {
       final passed = rolled.passTurn();
       expect(passed.activePlayer, PlayerColor.green);
       expect(passed.diceValue, isNull);
-    },);
+    });
 
     test('Classic blockade does not prevent passing through own pawns', () {
       final rolled = LudoGame.fromProgress(
@@ -490,7 +490,7 @@ void main() {
         'roll-orange-1',
         'move-orange-pawn-0',
       });
-    },);
+    });
 
     test('transition event ordering is deterministic for a capture', () {
       final game = LudoGame.fromProgress(
@@ -588,7 +588,7 @@ void main() {
       }
 
       expect(totalTransitions, greaterThanOrEqualTo(2500));
-    },);
+    });
 
     test('versioned snapshot round-trips an accepted match and pending roll', () {
       final game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1)
@@ -638,7 +638,7 @@ void main() {
         ),
         throwsStateError,
       );
-    },);
+    });
 
     test('schema-v1 snapshots migrate with their original capture behaviour', () {
       final snapshot = LudoGame.initial(
@@ -652,7 +652,7 @@ void main() {
 
       expect(restored.ruleProfile.id, 'classic');
       expect(restored.ruleProfile.captureOnlySingleOpponentPawn, isFalse);
-    },);
+    });
 
     test('snapshot codec rejects unsupported schema and malformed progress', () {
       expect(
@@ -669,7 +669,7 @@ void main() {
         () => LudoGame.fromSnapshot(snapshot),
         throwsArgumentError,
       );
-    },);
+    });
 
     test('published game snapshots and collections cannot be mutated', () {
       final game = LudoGame.initial().roll(6);
@@ -701,7 +701,7 @@ void main() {
       final restored = LudoGame.decodeSnapshot(game.encodeSnapshot());
       expect(restored.consecutiveSixes, 3);
       expect(restored.ruleProfile, LudoRuleProfile.currentV1);
-    },);
+    });
 
     test('Classic snapshot rejects an impossible post-penalty six counter', () {
       final snapshot = LudoGame.initial(
@@ -812,7 +812,7 @@ void main() {
       expect(moved.events.whereType<PlayerWon>(), hasLength(1));
       expect(moved.events.whereType<GameCompleted>(), hasLength(1));
       expect(moved.events.last, isA<GameCompleted>());
-    },);
+    });
 
     test('snapshot rejects completed pawns without a matching winner', () {
       final snapshot = LudoGame.initial().toSnapshot();
