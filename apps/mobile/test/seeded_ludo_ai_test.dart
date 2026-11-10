@@ -85,4 +85,62 @@ void main() {
     expect(game.currentPlayer.hasWon, isTrue);
   });
 
+
+  test('prefers a safe shared-track landing over raw progress', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [7, 10, -1, -1],
+      },
+    ).roll(1);
+
+    // Orange progress 7 lands on safe physical track cell 8.
+    expect(ai.choosePawn(game, seed: 12), 0);
+  });
+
+  test('prefers entering the protected home lane', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [50, 20, -1, -1],
+      },
+    ).roll(1);
+
+    expect(ai.choosePawn(game, seed: 13), 0);
+  });
+
+  test('moves a vulnerable pawn when an opponent is close behind', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [10, 30, -1, -1],
+        // Green progress 43 maps to shared-track cell 4, six spaces behind
+        // Orange progress 10.
+        PlayerColor.green: [43, -1, -1, -1],
+      },
+    ).roll(1);
+
+    expect(ai.choosePawn(game, seed: 14), 0);
+  });
+
+  test('candidate evaluation does not mutate the supplied game snapshot', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [4, 10, -1, -1],
+        PlayerColor.green: [44, -1, -1, -1],
+      },
+    ).roll(1);
+    final originalVersion = game.stateVersion;
+    final originalEvents = List<LudoGameEvent>.of(game.events);
+    final originalCommandIds = Set<String>.of(game.appliedCommandIds);
+    final originalProgress = List<int>.of(game.currentPlayer.pawnProgress);
+
+    expect(ai.choosePawn(game, seed: 15), 0);
+    expect(game.stateVersion, originalVersion);
+    expect(game.events, originalEvents);
+    expect(game.appliedCommandIds, originalCommandIds);
+    expect(game.currentPlayer.pawnProgress, originalProgress);
+  });
+
 }
