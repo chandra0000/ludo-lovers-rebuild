@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
@@ -8,7 +9,8 @@ import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
 void main() {
-  testWidgets('shows the approved splash before opening the home screen', (tester) async {
+  testWidgets('first launch shows onboarding and skip reaches home', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.byKey(const Key('splash_background')), findsOneWidget);
     expect(find.text('LUDO LOVERS'), findsNothing);
@@ -16,6 +18,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
 
+    expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('skip_onboarding')));
+    await tester.pumpAndSettle();
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
@@ -93,6 +98,7 @@ void main() {
   });
 
   testWidgets('opens a local match from the home screen', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
@@ -307,6 +313,7 @@ void main() {
 
 
   testWidgets('board preview shows all sixteen provisional yard anchors', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
