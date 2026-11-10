@@ -26,7 +26,7 @@ class _MatchScreenState extends State<MatchScreen>
     with SingleTickerProviderStateMixin {
   static const double _canvasWidth = 576;
   static const double _canvasHeight = 1024;
-  static const Rect _boardRect = Rect.fromLTWH(17, 205, 542, 542);
+  static const Rect _boardRect = Rect.fromLTWH(18, 216, 540, 540);
 
   late LudoGame _game = widget.initialGame ?? LudoGame.initial();
   final math.Random _random = math.Random();
