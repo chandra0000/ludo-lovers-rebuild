@@ -6,8 +6,8 @@ The user intends to provide only two source images for the first milestone:
 
 | Purpose | Canonical repository path | Status |
 |---|---|---|
-| Board artwork | `apps/mobile/assets/images/board/ludo_board_glass.webp` | Awaiting user upload/verification |
-| App launcher icon | `apps/mobile/assets/images/branding/ludo_lovers_icon.webp` | Awaiting user upload/verification |
+| Board artwork | `apps/mobile/assets/images/board/ludo_board_glass.webp` | Present and registered in Flutter assets; 810×1440 WebP |
+| App launcher icon | `apps/mobile/assets/images/branding/ludo_lovers_icon.webp` | Present and registered in Flutter assets; launcher generation pending |
 
 The app icon is used for Android launcher branding, not as an in-game board layer.
 
@@ -22,7 +22,7 @@ The app icon is used for Android launcher branding, not as an in-game board laye
 
 ## Runtime rendering
 
-The board should be rendered with its intrinsic aspect ratio (for example, `BoxFit.contain` in a constrained portrait layout). Never use `BoxFit.fill` to distort the board. If the board image includes UI chrome, determine which parts are artwork and which are interactive before placing overlays.
+The supplied board-named WebP is a full-screen 9:16 game composition, not a board-only texture. It includes the player portraits/names, board, decorative die, turn label, and bottom controls. Preserve the entire composition and intrinsic aspect ratio; never crop, stretch, recolor, or redraw it. Treat baked-in UI as static artwork unless an intentional live overlay replaces it. The runtime board coordinate rectangle must be measured within the full-screen image, not assumed to cover the whole image.
 
 ## Procedural elements
 
@@ -35,10 +35,10 @@ This keeps game state separate from static artwork and avoids a large collection
 
 ## Asset verification checklist
 
-- [ ] Board file exists at the canonical path.
-- [ ] Icon file exists at the canonical path.
-- [ ] Dimensions and aspect ratio recorded.
+- [x] Board file exists at the canonical path.
+- [x] Icon file exists at the canonical path.
+- [x] Board dimensions and aspect ratio recorded (810×1440, 9:16).
 - [ ] No unintended crop, stretch, or visual modification.
-- [ ] Flutter asset manifest includes the correct paths.
+- [x] Flutter asset manifest includes the correct paths.
 - [ ] Android launcher icon generated from the approved icon.
 - [ ] Asset integrity tests pass.
