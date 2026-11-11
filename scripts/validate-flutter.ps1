@@ -25,12 +25,16 @@ try {
     Invoke-Checked 'Flutter version' 'flutter' @('--version')
     Invoke-Checked 'Resolve dependencies' 'flutter' @('pub', 'get')
 
+    $formatPaths = @('lib', 'test')
+    if (Test-Path 'integration_test') {
+        $formatPaths += 'integration_test'
+    }
+
     if ($FixFormatting) {
-        Invoke-Checked 'Apply Dart formatting' 'dart' @('format', 'lib', 'test', 'integration_test')
+        Invoke-Checked 'Apply Dart formatting' 'dart' (@('format') + $formatPaths)
     } else {
-        Invoke-Checked 'Verify Dart formatting' 'dart' @(
-            'format', '--output=none', '--set-exit-if-changed',
-            'lib', 'test', 'integration_test'
+        Invoke-Checked 'Verify Dart formatting' 'dart' (
+            @('format', '--output=none', '--set-exit-if-changed') + $formatPaths
         )
     }
 
