@@ -32,11 +32,10 @@ void main() {
       LudoAiDifficulty.hard,
     );
 
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('start_ai_match')),
-      250,
-    );
-    await tester.tap(find.byKey(const Key('start_ai_match')));
+    final startAiMatch = find.byKey(const Key('start_ai_match'));
+    await tester.ensureVisible(startAiMatch);
+    await tester.pumpAndSettle();
+    await tester.tap(startAiMatch);
     await tester.pumpAndSettle();
     expect(find.byType(MatchScreen), findsOneWidget);
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
