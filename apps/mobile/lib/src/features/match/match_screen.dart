@@ -436,6 +436,9 @@ class _MatchScreenState extends State<MatchScreen>
             : endProgress == 56
                 ? 'PAWN HOME!'
                 : null;
+    final moveDurationMs = startProgress == -1
+        ? 280
+        : math.max(180, stepCount * 125).toInt();
     setState(() {
       _selectedPawnIndex = null;
       _movingColor = movingColor;
@@ -445,9 +448,7 @@ class _MatchScreenState extends State<MatchScreen>
       _pendingMoveFeedback = feedback;
       _movementController.duration = reduceMotion
           ? Duration.zero
-          : Duration(milliseconds: startProgress == -1
-              ? 280
-              : math.max(180, stepCount * 125).toInt());
+          : Duration(milliseconds: moveDurationMs);
     });
     unawaited(_persistMatch());
     _previewController.stop();
