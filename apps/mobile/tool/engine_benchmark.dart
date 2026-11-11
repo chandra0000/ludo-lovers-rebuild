@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:ludo_lovers/src/game/domain/ai/seeded_ludo_ai.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
@@ -122,10 +121,7 @@ Map<String, Object?> _measure(
   final median = microsPerOperation.length.isOdd
       ? microsPerOperation[middle]
       : (microsPerOperation[middle - 1] + microsPerOperation[middle]) / 2;
-  final p95Index = math.min(
-    microsPerOperation.length - 1,
-    (microsPerOperation.length * 0.95).ceil() - 1,
-  );
+  final p95Index = (microsPerOperation.length * 0.95).ceil() - 1;
 
   return {
     'name': name,
