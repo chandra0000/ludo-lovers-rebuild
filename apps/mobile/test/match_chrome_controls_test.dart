@@ -3,8 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
 void main() {
-  setUp(() {});
-
   Future<void> pumpMatch(WidgetTester tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
