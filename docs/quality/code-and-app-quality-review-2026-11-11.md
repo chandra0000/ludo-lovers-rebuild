@@ -109,3 +109,22 @@ The rebuild has a sounder architectural foundation and meaningful automated
 coverage, but it is **not yet release-ready**. The blocking gaps are physical
 visual/touch acceptance, real-device performance/lifecycle evidence, and the
 unfinished Team Up mode if it remains in the first public product scope.
+
+### P1 — match chrome and screenshot evidence
+
+Reviewing the actual CI match-canvas image showed a polished premium board, but
+also exposed two usability issues in the source UI: the baked-in Chat and More
+artwork looked actionable without responding to taps, and the exit icon's
+48-pixel design hitbox scaled below 44 logical pixels on a compact phone.
+
+The session branch now:
+- gives Chat an honest local-mode availability message;
+- gives More working Restart (with confirmation) and Exit actions;
+- expands the exit hitbox to preserve a usable physical target after scaling;
+- captures both the entire 393×873 match screen and the separate 9:16 board
+  canvas, instead of labelling a 393×699 canvas capture as a 393×873 screen.
+
+The static portrait names and online indicators remain artwork content and are
+not yet driven by the selected human/AI seat configuration. Before release,
+replace or cover those baked labels with dynamic seat/status overlays without
+editing the canonical source artwork.
