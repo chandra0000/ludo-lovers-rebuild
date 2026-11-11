@@ -261,6 +261,26 @@ class BoardGeometry {
     ],
   };
 
+  /// Visual interpolation between consecutive legal progress anchors.
+  ///
+  /// Both coordinates are interpolated, so diagonal artwork transitions are
+  /// animated without adding diagonal moves to Classic Ludo's rules.
+  /// At 0 and 1 the result is exactly the approved board's measured anchor.
+  static NormalizedBoardPoint interpolateRouteStep(
+    PlayerColor color,
+    int fromProgress,
+    int pawnIndex,
+    double fraction,
+  ) {
+    final start = normalizedPosition(color, fromProgress, pawnIndex);
+    final end = normalizedPosition(color, fromProgress + 1, pawnIndex);
+    final t = fraction.clamp(0.0, 1.0);
+    return NormalizedBoardPoint(
+      start.x + (end.x - start.x) * t,
+      start.y + (end.y - start.y) * t,
+    );
+  }
+
   static NormalizedBoardPoint trackPosition(int index) {
     if (index < 0 || index >= trackLength) {
       throw RangeError.range(index, 0, trackLength - 1, 'index');
