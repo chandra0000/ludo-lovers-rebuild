@@ -49,7 +49,7 @@ jobs:
           fi
           mapfile -t dart_files < <(
             git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool apps/mobile/integration_test |
-              grep -E '\\.dart$' || true
+              grep -E '\.dart$' || true
           )
           if [ "${#dart_files[@]}" -eq 0 ]; then
             echo "No Dart source or test files changed."
