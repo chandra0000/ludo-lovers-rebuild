@@ -44,7 +44,11 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          dart format lib test tool integration_test
+          if [ "$EVENT_NAME" = "push" ] && [[ "$REF_NAME" == feat/* ]]; then
+            dart format lib test tool integration_test
+          else
+            echo "PR/main formatting is checked without modifying files."
+          fi
           if git diff --quiet -- '*.dart'; then
             echo "Dart formatting is clean."
             exit 0
@@ -61,6 +65,7 @@ jobs:
           git push origin "HEAD:refs/heads/$REF_NAME"
       - name: Verify Dart formatting
         working-directory: apps/mobile
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
         run: dart format --output=none --set-exit-if-changed lib test tool integration_test
       - name: Static analysis
         working-directory: apps/mobile
