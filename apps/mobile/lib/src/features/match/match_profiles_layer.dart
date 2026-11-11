@@ -23,6 +23,12 @@ class MatchPlayerBadge extends StatelessWidget {
       PlayerColor.magenta => const Color(0xFFF428FF),
       PlayerColor.blue => const Color(0xFF289EFF),
     };
+    final avatarPath = switch (profile.color) {
+      PlayerColor.orange => 'assets/images/board/extracted/avatar_aldo.webp',
+      PlayerColor.green => 'assets/images/board/extracted/avatar_you.webp',
+      PlayerColor.magenta => 'assets/images/board/extracted/avatar_bob.webp',
+      PlayerColor.blue => 'assets/images/board/extracted/avatar_emma.webp',
+    };
     final initial = profile.displayName.trim().isEmpty
         ? '?'
         : profile.displayName.trim().characters.first.toUpperCase();
@@ -47,11 +53,21 @@ class MatchPlayerBadge extends StatelessWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: accent,
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                child: ClipOval(
+                  child: Image.asset(
+                    avatarPath,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -83,8 +99,7 @@ class MatchPlayerBadge extends StatelessWidget {
 }
 
 /// Explicit design-canvas positions, independent from player profile identity.
-/// Keep behind a feature gate until baked-in avatars are removed from the
-/// approved artwork copy, otherwise both layers would be visible.
+/// Seats sit outside the board-only artwork, so no baked-in avatars overlap.
 class MatchProfilesLayer extends StatelessWidget {
   const MatchProfilesLayer({
     super.key,
@@ -100,8 +115,8 @@ class MatchProfilesLayer extends StatelessWidget {
     const seats = <PlayerColor, Offset>{
       PlayerColor.orange: Offset(12, 102),
       PlayerColor.green: Offset(378, 102),
-      PlayerColor.magenta: Offset(12, 733),
-      PlayerColor.blue: Offset(378, 733),
+      PlayerColor.magenta: Offset(12, 890),
+      PlayerColor.blue: Offset(378, 890),
     };
     return Stack(
       children: [
