@@ -276,7 +276,9 @@ class MatchSession {
       );
     } on ArgumentError catch (error) {
       return reject(
-          MatchCommandRejectionReason.invalidAction, error.message.toString());
+        MatchCommandRejectionReason.invalidAction,
+        error.message.toString(),
+      );
     } on StateError catch (error) {
       return reject(MatchCommandRejectionReason.invalidAction, error.message);
     }
