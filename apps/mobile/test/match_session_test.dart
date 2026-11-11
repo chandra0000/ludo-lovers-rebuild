@@ -91,7 +91,7 @@ void main() {
       expect(result.accepted, isFalse);
       expect(
         result.rejectionReason,
-        MatchCommandRejectionReason.invalidAction,
+        MatchCommandRejectionReason.invalidDice,
       );
       expect(identical(result.session, initial), isTrue);
     });
