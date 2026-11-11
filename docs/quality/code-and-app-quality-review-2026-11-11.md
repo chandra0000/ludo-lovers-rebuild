@@ -78,7 +78,7 @@ not formatted. The command is being changed to a non-mutating
 Earlier project documentation described an Android emulator navigation test,
 but the merged workflow did not contain an integration-test source file or an
 emulator execution step. The current engineering branch adds both: a repeated
-home → setup → local match → home smoke test and an API 35 emulator runner.
+home → setup → local match → home smoke test and an API 34 emulator runner.
 Its result must be green before treating that coverage as verified.
 
 ### P1 — product and accessibility scope
