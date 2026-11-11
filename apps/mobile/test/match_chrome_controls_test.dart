@@ -12,7 +12,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('chat artwork target explains that local chat is unavailable', (
+  testWidgets('chat control opens local chat and emoji reactions', (
     tester,
   ) async {
     await pumpMatch(tester);
@@ -21,7 +21,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text('Chat is not available in local matches yet.'),
+      find.text('Match chat · On this device'),
       findsOneWidget,
     );
   });
