@@ -130,7 +130,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            set -euo pipefail
+            bash -euo pipefail <<'BASH'
             echo "boot_failed=true" >> "$GITHUB_OUTPUT"
             SERIAL="emulator-5554"
             echo "Resetting ADB server..."
@@ -166,6 +166,7 @@ jobs:
             flutter test integration_test/app_navigation_test.dart -d "$SERIAL"
 
       - name: Android emulator navigation smoke test (single startup retry)
+            BASH
         if: steps.emulator_attempt_1.outcome == 'failure' && steps.emulator_attempt_1.outputs.boot_failed != 'false'
         timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
@@ -177,7 +178,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            set -euo pipefail
+            bash -euo pipefail <<'BASH'
             SERIAL="emulator-5554"
             echo "Resetting ADB server..."
             adb kill-server || true
@@ -213,6 +214,7 @@ jobs:
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies
+            BASH
         uses: actions/cache@v4
         with:
           path: |
