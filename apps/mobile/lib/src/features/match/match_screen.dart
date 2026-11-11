@@ -445,7 +445,9 @@ class _MatchScreenState extends State<MatchScreen>
       _pendingMoveFeedback = feedback;
       _movementController.duration = reduceMotion
           ? Duration.zero
-          : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
+          : Duration(milliseconds: startProgress == -1
+              ? 280
+              : math.max(180, stepCount * 125).toInt());
     });
     unawaited(_persistMatch());
     _previewController.stop();
@@ -468,7 +470,10 @@ class _MatchScreenState extends State<MatchScreen>
     }
     final travelled = _movementController.value * steps;
     final stepIndex = math.min(travelled.floor(), steps - 1).toInt();
-    final fraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
+    final linearFraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
+    // Ease each individual hop, not the entire multi-cell movement, so
+    // pawns settle on each square instead of sliding through corners.
+    final fraction = Curves.easeInOutCubic.transform(linearFraction);
     final fromProgress = _movementStartProgress + stepIndex;
     final toProgress = fromProgress + 1;
     final from = BoardGeometry.normalizedPosition(
