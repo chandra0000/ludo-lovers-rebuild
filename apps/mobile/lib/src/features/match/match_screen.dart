@@ -43,7 +43,8 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late MatchSession _session = MatchSession.local(
-    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+    matchId:
+            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
     game: widget.initialGame ?? LudoGame.initial(),
   );
   LudoGame get _game => _session.game;
@@ -639,7 +640,8 @@ class _MatchScreenState extends State<MatchScreen>
                               child: Semantics(
                                 button: true,
                                 label: 'Chat',
-                                hint: 'Chat is not available in local matches yet.',
+                                hint:
+                                    'Chat is not available in local matches yet.',
                                 child: GestureDetector(
                                   key: const Key('chat_button'),
                                   behavior: HitTestBehavior.opaque,
@@ -740,7 +742,8 @@ class _MatchScreenState extends State<MatchScreen>
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF17120B),
         title: const Text('Restart this match?'),
-        content: const Text('The current local match progress will be replaced.'),
+        content:
+            const Text('The current local match progress will be replaced.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
