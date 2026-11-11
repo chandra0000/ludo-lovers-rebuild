@@ -1,9 +1,4 @@
 import 'dart:async';
-
-import 'local_match_chat_sheet.dart';
-import 'match_board_artwork.dart';
-import 'match_dice_layer.dart';
-import 'match_profiles_layer.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -20,6 +15,11 @@ import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 import '../../game/presentation/destination_preview_painter.dart';
+
+import 'local_match_chat_sheet.dart';
+import 'match_board_artwork.dart';
+import 'match_dice_layer.dart';
+import 'match_profiles_layer.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
