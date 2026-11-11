@@ -263,7 +263,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                             ? math.sin(_controller.value * math.pi * 2) * 0.15
                             : 0,
                       ),
-                    child: _DiceFace(
+                    child: _DiceCube(
                       size: widget.size,
                       value: face,
                       isInteractive: interactive,
@@ -274,6 +274,59 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Layered isometric depth stays visible at rest and during rotation.
+/// The match engine still owns the final face and the roll lifecycle.
+class _DiceCube extends StatelessWidget {
+  const _DiceCube({
+    required this.size,
+    required this.value,
+    required this.isInteractive,
+  });
+
+  final double size;
+  final int value;
+  final bool isInteractive;
+
+  @override
+  Widget build(BuildContext context) {
+    final depth = size * 0.10;
+    return SizedBox(
+      width: size + depth,
+      height: size + depth,
+      child: Stack(
+        children: [
+          Positioned(
+            left: depth,
+            top: depth,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(size * .22),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFD5C9A8), Color(0xFF827254)],
+                ),
+                border: Border.all(color: const Color(0xFF9A7936)),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            child: _DiceFace(
+              size: size,
+              value: value,
+              isInteractive: isInteractive,
+            ),
+          ),
+        ],
       ),
     );
   }
