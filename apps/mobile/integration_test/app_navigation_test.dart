@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:ludo_lovers/main.dart' as app;
+import 'package:ludo_lovers/src/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -13,7 +14,7 @@ void main() {
       'onboarding_completed_v1': true,
     });
 
-    await tester.pumpWidget(const app.LudoLoversApp());
+    await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1900));
     await tester.pumpAndSettle();
 
