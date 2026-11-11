@@ -24,5 +24,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/board/ludo_board_glass.webp
+    - assets/images/board/extracted/
     - assets/images/branding/ludo_lovers_icon.webp
     - assets/images/splash/splash_background.webp
