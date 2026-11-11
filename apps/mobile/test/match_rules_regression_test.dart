@@ -9,6 +9,7 @@ void main() {
         for (var roll = 1; roll <= 5; roll++) {
           final game = LudoGame.fromProgress(
             activePlayer: color,
+            pawnProgress: const {},
           ).roll(roll);
           expect(game.legalPawnIndices(), isEmpty);
           expect(
@@ -18,6 +19,7 @@ void main() {
         }
         final six = LudoGame.fromProgress(
           activePlayer: color,
+          pawnProgress: const {},
         ).roll(6);
         expect(six.legalPawnIndices(), [0, 1, 2, 3]);
         final entered = six.movePawn(0);
