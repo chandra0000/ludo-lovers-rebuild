@@ -1089,11 +1089,18 @@ class _MatchScreenState extends State<MatchScreen>
                   child: AnimatedScale(
                     scale: canMove ? 1.12 : 1,
                     duration: const Duration(milliseconds: 180),
-                    child: GlassyPawn(
-                      color: color.color,
-                      size: size,
-                      isCurrentPlayer: isCurrentPlayer,
-                      isMovable: canMove,
+                    child: Transform.rotate(
+                      angle: _movingColor == color &&
+                              _movingPawnIndex == pawnIndex
+                          ? math.sin(_movementController.value * math.pi * 2) *
+                              0.08
+                          : 0,
+                      child: GlassyPawn(
+                        color: color.color,
+                        size: size,
+                        isCurrentPlayer: isCurrentPlayer,
+                        isMovable: canMove,
+                      ),
                     ),
                   ),
                 ),
