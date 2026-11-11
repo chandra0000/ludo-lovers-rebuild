@@ -19,7 +19,9 @@ void main() {
     );
     expect(find.byKey(const Key('board_artwork')), findsOneWidget);
     expect(find.byType(RepaintBoundary), findsWidgets);
-    final artwork = tester.widget<Image>(find.byKey(const Key('board_artwork')));
+    final artwork = tester.widget<Image>(
+      find.byKey(const Key('board_artwork')),
+    );
     expect(
       (artwork.image as AssetImage).assetName,
       MatchBoardArtwork.assetPath,
