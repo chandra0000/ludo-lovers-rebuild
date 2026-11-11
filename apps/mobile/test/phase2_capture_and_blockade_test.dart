@@ -25,12 +25,12 @@ void main() {
       final game = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         pawnProgress: <PlayerColor, List<int>>{
-          PlayerColor.orange: <int>[1, -1, -1, -1],
-          PlayerColor.green: <int>[39, -1, -1, -1],
+          PlayerColor.orange: <int>[7, -1, -1, -1],
+          PlayerColor.green: <int>[47, -1, -1, -1],
         },
       ).roll(1);
       final moved = game.movePawn(0);
-      expect(moved.players[1].pawnProgress[0], 39);
+      expect(moved.players[1].pawnProgress[0], 47);
       expect(moved.events.whereType<PawnCaptured>(), isEmpty);
       expect(moved.activePlayer, PlayerColor.green);
     });
