@@ -59,6 +59,11 @@ jobs:
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
           dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+      - name: Print formatter corrections when formatting fails
+        if: failure()
+        working-directory: apps/mobile
+        run: |
+          dart format --output=show lib/src/features/match/match_screen.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
