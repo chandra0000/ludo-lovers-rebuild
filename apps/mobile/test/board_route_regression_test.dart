@@ -36,8 +36,8 @@ void main() {
     test('every consecutive shared-track edge is adjacent or a documented connector', () {
       for (var index = 0; index < BoardGeometry.trackLength; index++) {
         final from = BoardGeometry.sharedTrack[index];
-        final to = BoardGeometry.sharedTrack[
-            (index + 1) % BoardGeometry.trackLength];
+        final nextIndex = (index + 1) % BoardGeometry.trackLength;
+        final to = BoardGeometry.sharedTrack[nextIndex];
         final dx = (from.column - to.column).abs();
         final dy = (from.row - to.row).abs();
         if (BoardGeometry.cornerConnectorIndexes.contains(index)) {
