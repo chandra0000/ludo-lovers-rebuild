@@ -71,6 +71,7 @@ jobs:
             apps/mobile/test/ludo_rule_profile_contract_test.dart
             apps/mobile/test/match_session_test.dart
             apps/mobile/test/match_chrome_controls_test.dart
+            apps/mobile/test/match_screen_capture_test.dart
             apps/mobile/test-artifacts/dart-format.patch
             apps/mobile/integration_test/app_navigation_test.dart
             apps/mobile/lib/src/game/application/match_session.dart
@@ -83,6 +84,9 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Normalize board-canvas screenshot filename
+        working-directory: apps/mobile
+        run: mv test-artifacts/match-canvas-393x873.png test-artifacts/match-canvas-393x699.png
       - name: Capture engine benchmark baseline
         working-directory: apps/mobile
         run: |
