@@ -217,9 +217,8 @@ class _MatchScreenState extends State<MatchScreen>
             actorId: _session.actorFor(_game.activePlayer),
             expectedStateVersion: _game.stateVersion,
             commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
-            value: math.Random(widget.aiSeed ^ _game.stateVersion)
-                    .nextInt(6) +
-                1,
+            value:
+                math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
           );
           if (!_executeCommand(command)) return;
           final rolled = _game;
