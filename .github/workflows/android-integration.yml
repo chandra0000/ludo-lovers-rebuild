@@ -82,8 +82,8 @@ jobs:
             cd apps/mobile
             flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
 
-      - name: Android emulator integration smoke test (single startup retry)
             BASH
+      - name: Android emulator integration smoke test (single startup retry)
         if: steps.emulator_attempt_1.outcome == 'failure' && steps.emulator_attempt_1.outputs.boot_failed != 'false'
         timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
@@ -132,4 +132,5 @@ jobs:
             echo "Android boot completed on retry. Running Flutter integration smoke test."
             cd apps/mobile
             flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
+
             BASH
