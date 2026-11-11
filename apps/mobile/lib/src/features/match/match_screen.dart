@@ -484,26 +484,23 @@ class _MatchScreenState extends State<MatchScreen>
     // Ease each discrete board step without changing the accepted engine move.
     final fraction = Curves.easeInOutCubic.transform(linearFraction);
     final fromProgress = _movementStartProgress + stepIndex;
-    final toProgress = fromProgress + 1;
-    final from = BoardGeometry.normalizedPosition(
-      color,
-      fromProgress,
-      pawnIndex,
-    );
-    final to = BoardGeometry.normalizedPosition(
-      color,
-      toProgress,
-      pawnIndex,
-    );
     // A small parabolic lift makes each square-to-square step read as a hop.
     // It is presentation-only; the engine has already committed the move.
     // Smooth lift and landing on each square, with a slightly higher arc
     // for a readable 3D-style hop at small Android viewport sizes.
     const hopHeight = 14.0;
     final hopArc = 4 * hopHeight * fraction * (1 - fraction);
+    // Interpolate both axes in artwork space. Diagonal segments are visual
+    // only: every step still starts and lands on its legal route anchor.
+    final point = BoardGeometry.interpolateRouteStep(
+      color,
+      fromProgress,
+      pawnIndex,
+      fraction,
+    );
     return NormalizedBoardPoint(
-      from.x + (to.x - from.x) * fraction,
-      from.y + (to.y - from.y) * fraction - hopArc / BoardGeometry.canvasHeight,
+      point.x,
+      point.y - hopArc / BoardGeometry.canvasHeight,
     );
   }
 
