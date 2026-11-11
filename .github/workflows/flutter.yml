@@ -41,7 +41,7 @@ jobs:
             base_sha="$(git merge-base origin/main HEAD)"
           fi
           mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool |
+            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool apps/mobile/integration_test |
               grep -E '\.dart$' || true
           )
           if [ "${#dart_files[@]}" -eq 0 ]; then
@@ -64,6 +64,7 @@ jobs:
             apps/mobile/test/match_classic_rules_test.dart
             apps/mobile/test/ludo_rule_profile_contract_test.dart
             apps/mobile/test/match_session_test.dart
+            apps/mobile/integration_test/app_navigation_test.dart
             apps/mobile/lib/src/game/application/match_session.dart
             apps/mobile/lib/src/features/match/match_screen.dart
             apps/mobile/tool/engine_benchmark.dart
@@ -115,6 +116,17 @@ jobs:
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Android emulator navigation smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            cd apps/mobile
+            flutter test integration_test/app_navigation_test.dart -d emulator-5554
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies
