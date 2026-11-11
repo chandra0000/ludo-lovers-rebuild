@@ -17,9 +17,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   int _humanPlayers = 1;
   LudoAiDifficulty _aiDifficulty = LudoAiDifficulty.medium;
 
-  Set<PlayerColor> get _aiPlayers => PlayerColor.turnOrder
-      .skip(_humanPlayers)
-      .toSet();
+  Set<PlayerColor> get _aiPlayers =>
+      PlayerColor.turnOrder.skip(_humanPlayers).toSet();
 
   void _startMatch({required bool withAi}) {
     Navigator.of(context).push(
@@ -274,9 +273,7 @@ class _ModeCard extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      color: enabled
-                          ? const Color(0xFFFFC857)
-                          : Colors.white38,
+                      color: enabled ? const Color(0xFFFFC857) : Colors.white38,
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
                     ),

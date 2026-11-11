@@ -39,14 +39,35 @@ void main(List<String> arguments) {
 
   final cases = <({String name, void Function() operation})>[
     (name: 'initial_state_creation', operation: () => LudoGame.initial()),
-    (name: 'legal_action_enumeration', operation: () => initial.legalPawnIndices()),
-    (name: 'single_move_evaluation', operation: () => movement.evaluatePawnMove(0)),
-    (name: 'blockade_path_evaluation', operation: () => blockade.evaluatePawnMove(0)),
-    (name: 'transition_and_event_generation', operation: () => movement.movePawn(0)),
-    (name: 'capture_transition_and_events', operation: () => capture.movePawn(0)),
+    (
+      name: 'legal_action_enumeration',
+      operation: () => initial.legalPawnIndices()
+    ),
+    (
+      name: 'single_move_evaluation',
+      operation: () => movement.evaluatePawnMove(0)
+    ),
+    (
+      name: 'blockade_path_evaluation',
+      operation: () => blockade.evaluatePawnMove(0)
+    ),
+    (
+      name: 'transition_and_event_generation',
+      operation: () => movement.movePawn(0)
+    ),
+    (
+      name: 'capture_transition_and_events',
+      operation: () => capture.movePawn(0)
+    ),
     (name: 'snapshot_encode', operation: () => movement.encodeSnapshot()),
-    (name: 'snapshot_decode', operation: () => LudoGame.decodeSnapshot(snapshot)),
-    (name: 'seeded_ai_decision', operation: () => ai.choosePawn(movement, seed: 2026)),
+    (
+      name: 'snapshot_decode',
+      operation: () => LudoGame.decodeSnapshot(snapshot)
+    ),
+    (
+      name: 'seeded_ai_decision',
+      operation: () => ai.choosePawn(movement, seed: 2026)
+    ),
   ];
 
   final results = <Map<String, Object?>>[];

@@ -28,7 +28,9 @@ void main() {
     test('all four seats have unique 52-cell track rotations', () {
       for (final color in PlayerColor.turnOrder) {
         final cells = <int>{
-          for (var progress = 0; progress < BoardGeometry.trackLength; progress++)
+          for (var progress = 0;
+              progress < BoardGeometry.trackLength;
+              progress++)
             (BoardGeometry.seats[color]!.entryIndex + progress) %
                 BoardGeometry.trackLength,
         };
@@ -40,7 +42,8 @@ void main() {
       }
     });
 
-    test('approved artwork has exactly four documented diagonal connectors', () {
+    test('approved artwork has exactly four documented diagonal connectors',
+        () {
       expect(BoardGeometry.nonOrthogonalTransitions, <int>[4, 17, 30, 43]);
       expect(
         BoardGeometry.safeTrackCells,

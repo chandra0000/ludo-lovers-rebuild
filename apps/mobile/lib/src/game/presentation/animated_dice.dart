@@ -40,7 +40,8 @@ class _AnimatedDiceState extends State<AnimatedDice>
   Future<void> _revealRoll() async {
     _isAnimating = true;
     widget.onRollStarted?.call();
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduceMotion) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -126,8 +127,12 @@ class _DiceFacePainter extends CustomPainter {
       Offset(.72, .72),
     ],
     [
-      Offset(.28, .24), Offset(.72, .24), Offset(.28, .5),
-      Offset(.72, .5), Offset(.28, .76), Offset(.72, .76),
+      Offset(.28, .24),
+      Offset(.72, .24),
+      Offset(.28, .5),
+      Offset(.72, .5),
+      Offset(.28, .76),
+      Offset(.72, .76),
     ],
   ];
 

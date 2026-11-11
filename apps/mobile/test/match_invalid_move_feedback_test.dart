@@ -5,7 +5,8 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
-  testWidgets('tapping a blocked pawn explains the Classic blockade', (tester) async {
+  testWidgets('tapping a blocked pawn explains the Classic blockade',
+      (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
       ruleProfile: LudoRuleProfile.classicV1,

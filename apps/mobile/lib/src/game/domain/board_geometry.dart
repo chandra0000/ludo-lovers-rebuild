@@ -386,8 +386,8 @@ class BoardGeometry {
         nonOrthogonalTransitions.toSet().length ==
             nonOrthogonalTransitions.length &&
         nonOrthogonalTransitions.toSet().containsAll(
-          cornerConnectorIndexes,
-        ) &&
+              cornerConnectorIndexes,
+            ) &&
         cornerConnectorIndexes.containsAll(nonOrthogonalTransitions);
   }
 

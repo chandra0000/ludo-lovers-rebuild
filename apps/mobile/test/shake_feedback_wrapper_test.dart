@@ -3,9 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/presentation/shake_feedback_wrapper.dart';
 
 void main() {
-  testWidgets(
-    'shake feedback animates without replacing its child',
-    (tester) async {
+  testWidgets('shake feedback animates without replacing its child',
+      (tester) async {
     final key = GlobalKey<ShakeFeedbackWrapperState>();
     await tester.pumpWidget(
       MaterialApp(

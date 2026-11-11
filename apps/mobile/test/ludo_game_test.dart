@@ -32,7 +32,9 @@ void main() {
     test('advances to the next player after a non-six move', () {
       final moved = LudoGame.initial().roll(6).movePawn(0).roll(3).movePawn(0);
       expect(
-        moved.players.firstWhere((p) => p.color == PlayerColor.orange).pawnProgress[0],
+        moved.players
+            .firstWhere((p) => p.color == PlayerColor.orange)
+            .pawnProgress[0],
         3,
       );
       expect(moved.activePlayer, PlayerColor.green);
@@ -89,7 +91,9 @@ void main() {
       final moved = game.roll(2).movePawn(0);
       expect(moved.currentPlayer.pawnProgress[0], 5);
       expect(
-        moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0],
+        moved.players
+            .firstWhere((p) => p.color == PlayerColor.green)
+            .pawnProgress[0],
         -1,
       );
       expect(moved.activePlayer, PlayerColor.orange);
@@ -154,7 +158,8 @@ void main() {
                   .firstWhere((player) => player.color == victim)
                   .pawnProgress[0],
               victimProgress,
-              reason: 'Safe cell $safeCell must protect $victim from $attacker.',
+              reason:
+                  'Safe cell $safeCell must protect $victim from $attacker.',
             );
             expect(moved.events.whereType<PawnCaptured>(), isEmpty);
             verifiedSafeCells.add(safeCell);
@@ -166,7 +171,9 @@ void main() {
       expect(verifiedSafeCells, BoardGeometry.safeTrackCells);
     });
 
-    test('default profile requires an exact roll to finish without overshooting', () {
+    test(
+        'default profile requires an exact roll to finish without overshooting',
+        () {
       final exact = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         pawnProgress: {
@@ -213,7 +220,9 @@ void main() {
       );
       final moved = game.roll(5).movePawn(0);
       expect(
-        moved.players.firstWhere((p) => p.color == PlayerColor.green).pawnProgress[0],
+        moved.players
+            .firstWhere((p) => p.color == PlayerColor.green)
+            .pawnProgress[0],
         47,
       );
       expect(moved.activePlayer, PlayerColor.green);
@@ -228,7 +237,9 @@ void main() {
       );
       final moved = game.roll(1).movePawn(0);
       expect(
-        moved.players.firstWhere((p) => p.color == PlayerColor.orange).pawnProgress[0],
+        moved.players
+            .firstWhere((p) => p.color == PlayerColor.orange)
+            .pawnProgress[0],
         51,
       );
     });
@@ -297,7 +308,8 @@ void main() {
       expect(moved.activePlayer, PlayerColor.green);
     });
 
-    test('Classic passes the turn when every pawn is blocked by a blockade', () {
+    test('Classic passes the turn when every pawn is blocked by a blockade',
+        () {
       final rolled = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         ruleProfile: LudoRuleProfile.classicV1,
@@ -465,7 +477,9 @@ void main() {
       expect(moved.events.whereType<ExtraTurnGranted>(), hasLength(1));
     });
 
-    test('accepted transitions increment state version and reject stale commands', () {
+    test(
+        'accepted transitions increment state version and reject stale commands',
+        () {
       final initial = LudoGame.initial();
       final rolled = initial.roll(
         6,
@@ -513,8 +527,9 @@ void main() {
       expect(moved.events.map((event) => event.sequence).toList(), [0, 1, 2]);
     });
 
-
-    test('stress-runs at least 2500 deterministic transitions without invariant drift', () {
+    test(
+        'stress-runs at least 2500 deterministic transitions without invariant drift',
+        () {
       var game = LudoGame.initial();
       var commandNumber = 0;
       var totalTransitions = 0;
@@ -593,7 +608,8 @@ void main() {
       expect(totalTransitions, greaterThanOrEqualTo(2500));
     });
 
-    test('versioned snapshot round-trips an accepted match and pending roll', () {
+    test('versioned snapshot round-trips an accepted match and pending roll',
+        () {
       final game = LudoGame.initial(ruleProfile: LudoRuleProfile.classicV1)
           .roll(
             6,
@@ -643,7 +659,8 @@ void main() {
       );
     });
 
-    test('schema-v1 snapshots migrate with their original capture behaviour', () {
+    test('schema-v1 snapshots migrate with their original capture behaviour',
+        () {
       final snapshot = LudoGame.initial(
         ruleProfile: LudoRuleProfile.classicV1,
       ).toSnapshot();
@@ -657,7 +674,8 @@ void main() {
       expect(restored.ruleProfile.captureOnlySingleOpponentPawn, isFalse);
     });
 
-    test('snapshot codec rejects unsupported schema and malformed progress', () {
+    test('snapshot codec rejects unsupported schema and malformed progress',
+        () {
       expect(
         () => LudoGame.fromSnapshot({'schemaVersion': 99}),
         throwsFormatException,
@@ -694,7 +712,9 @@ void main() {
       );
     });
 
-    test('compatibility profile snapshot preserves more than two consecutive sixes', () {
+    test(
+        'compatibility profile snapshot preserves more than two consecutive sixes',
+        () {
       var game = LudoGame.initial();
       for (var index = 0; index < 3; index++) {
         game = game.roll(6).movePawn(0);
@@ -803,12 +823,13 @@ void main() {
       ]);
     });
 
-    test('winning emits both compatibility and explicit game-completed events', () {
+    test('winning emits both compatibility and explicit game-completed events',
+        () {
       final moved = LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
         pawnProgress: {
-            PlayerColor.orange: [56, 56, 56, 55],
-          },
+          PlayerColor.orange: [56, 56, 56, 55],
+        },
       ).roll(1).movePawn(3);
 
       expect(moved.winner, PlayerColor.orange);
@@ -832,8 +853,7 @@ void main() {
     });
 
     test('snapshot rejects a winner who has not completed all pawns', () {
-      final snapshot = LudoGame.initial().toSnapshot()
-        ..['winner'] = 'orange';
+      final snapshot = LudoGame.initial().toSnapshot()..['winner'] = 'orange';
 
       expect(
         () => LudoGame.fromSnapshot(snapshot),

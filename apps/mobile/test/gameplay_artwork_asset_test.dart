@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('bundled approved gameplay artwork stays complete and portrait', () async {
+  test('bundled approved gameplay artwork stays complete and portrait',
+      () async {
     final data = await rootBundle.load(
       'assets/images/board/ludo_board_glass.webp',
     );

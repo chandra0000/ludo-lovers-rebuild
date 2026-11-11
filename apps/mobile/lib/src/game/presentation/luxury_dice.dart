@@ -217,9 +217,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
 
     return Semantics(
       key: const Key('luxury_dice_semantics'),
-      label: _isAnimating
-          ? 'Dice rolling'
-          : 'Dice, value $valueLabel',
+      label: _isAnimating ? 'Dice rolling' : 'Dice, value $valueLabel',
       hint: _isAnimating
           ? 'Wait for the dice result.'
           : interactive
@@ -249,10 +247,8 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                     : _controller.value < 0.3
                         ? 1 + (_controller.value / 0.3) * 0.25
                         : _controller.value < 0.7
-                            ? 1.25 -
-                                ((_controller.value - 0.3) / 0.4) * 0.35
-                            : 0.9 +
-                                ((_controller.value - 0.7) / 0.3) * 0.1;
+                            ? 1.25 - ((_controller.value - 0.3) / 0.4) * 0.35
+                            : 0.9 + ((_controller.value - 0.7) / 0.3) * 0.1;
 
                 return Transform.scale(
                   scale: bounce,
@@ -311,9 +307,8 @@ class _DiceFace extends StatelessWidget {
           ],
         ),
         border: Border.all(
-          color: isInteractive
-              ? const Color(0xFFFFD54F)
-              : const Color(0xFFC7BEA9),
+          color:
+              isInteractive ? const Color(0xFFFFD54F) : const Color(0xFFC7BEA9),
           width: 2.2,
         ),
         boxShadow: [

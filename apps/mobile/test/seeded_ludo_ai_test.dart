@@ -101,7 +101,6 @@ void main() {
     expect(game.currentPlayer.hasWon, isTrue);
   });
 
-
   test('prefers a safe shared-track landing over raw progress', () {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
@@ -205,7 +204,8 @@ void main() {
     }
   });
 
-  test('easy difficulty remains deterministic while selecting a legal move', () {
+  test('easy difficulty remains deterministic while selecting a legal move',
+      () {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
       pawnProgress: {
@@ -270,5 +270,4 @@ void main() {
     );
     expect(orangeAfterMove.pawnProgress[1], 13);
   });
-
 }

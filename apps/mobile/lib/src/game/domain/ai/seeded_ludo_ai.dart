@@ -53,8 +53,8 @@ class SeededLudoAi {
 
       // Events belong to this transition, not the whole match history.
       final captureCount = next.events.whereType<PawnCaptured>().length;
-      score += captureCount *
-          (difficulty == LudoAiDifficulty.hard ? 1200 : 800);
+      score +=
+          captureCount * (difficulty == LudoAiDifficulty.hard ? 1200 : 800);
 
       // Prefer releasing a pawn from the yard when no stronger move exists.
       if (previousProgress == -1 && movedProgress == 0) {
@@ -80,13 +80,11 @@ class SeededLudoAi {
       }
 
       // A modest progress incentive breaks ties between similarly safe moves.
-      score += movedProgress *
-          (difficulty == LudoAiDifficulty.hard ? 10 : 8);
+      score += movedProgress * (difficulty == LudoAiDifficulty.hard ? 10 : 8);
 
       // Prefer escaping a threatened cell, but do not reward a move that
       // simply carries the pawn into another cell an opponent can capture.
-      if (previousProgress >= 0 &&
-          previousProgress < playerTrackLength) {
+      if (previousProgress >= 0 && previousProgress < playerTrackLength) {
         final previousTrackCell = BoardGeometry.physicalTrackCell(
           game.activePlayer,
           previousProgress,
@@ -121,11 +119,13 @@ class SeededLudoAi {
         }
       }
 
-      scored.add((
-        pawn: pawnIndex,
-        score: score,
-        tieBreak: random.nextInt(1 << 20),
-      ),);
+      scored.add(
+        (
+          pawn: pawnIndex,
+          score: score,
+          tieBreak: random.nextInt(1 << 20),
+        ),
+      );
     }
 
     scored.sort((a, b) {

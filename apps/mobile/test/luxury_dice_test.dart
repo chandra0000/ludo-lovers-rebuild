@@ -22,7 +22,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(completed, 0);
     expect(
-      tester.widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton)).targetValue,
+      tester
+          .widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton))
+          .targetValue,
       5,
     );
   });

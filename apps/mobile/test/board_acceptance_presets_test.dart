@@ -8,11 +8,12 @@ void main() {
     test('fills all sixteen canonical yard sockets', () {
       final game = BoardAcceptancePresets.allYardSocketsFilled;
       for (final color in PlayerColor.turnOrder) {
-        expect(game.players
-            .firstWhere((player) => player.color == color)
-            .pawnProgress,
-            everyElement(-1),
-          );
+        expect(
+          game.players
+              .firstWhere((player) => player.color == color)
+              .pawnProgress,
+          everyElement(-1),
+        );
         for (var pawn = 0; pawn < 4; pawn++) {
           expect(BoardGeometry.yardPosition(color, pawn), isNotNull);
         }
@@ -21,11 +22,13 @@ void main() {
 
     test('provides a single pawn baseline on the shared track', () {
       final game = BoardAcceptancePresets.singlePawnOnTrack;
-      expect(game.players
-          .firstWhere((player) => player.color == PlayerColor.orange)
-          .pawnProgress.first,
-          5,
-        );
+      expect(
+        game.players
+            .firstWhere((player) => player.color == PlayerColor.orange)
+            .pawnProgress
+            .first,
+        5,
+      );
       expect(BoardGeometry.physicalTrackCell(PlayerColor.orange, 5), 5);
     });
 
@@ -50,7 +53,8 @@ void main() {
       ]) {
         final progress = game.players
             .firstWhere((player) => player.color == color)
-            .pawnProgress.first;
+            .pawnProgress
+            .first;
         expect(BoardGeometry.physicalTrackCell(color, progress), 21);
       }
       expect(BoardGeometry.safeTrackCells, contains(21));
@@ -62,13 +66,15 @@ void main() {
       expect(
         home.players
             .firstWhere((player) => player.color == PlayerColor.orange)
-            .pawnProgress.first,
+            .pawnProgress
+            .first,
         51,
       );
       expect(
         goal.players
             .firstWhere((player) => player.color == PlayerColor.orange)
-            .pawnProgress.first,
+            .pawnProgress
+            .first,
         56,
       );
       expect(

@@ -4,7 +4,8 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
   group('LudoGame.evaluatePawnMove', () {
-    test('soft stacks can be passed through when hard blockade is disabled', () {
+    test('soft stacks can be passed through when hard blockade is disabled',
+        () {
       const profile = LudoRuleProfile(
         id: 'soft-stack-test',
         version: 1,

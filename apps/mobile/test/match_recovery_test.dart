@@ -5,14 +5,11 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
-  testWidgets('Classic third-six penalty advances to an AI player', (tester) async {
+  testWidgets('Classic third-six penalty advances to an AI player',
+      (tester) async {
     final beforeThirdSix = LudoGame.initial(
       ruleProfile: LudoRuleProfile.classicV1,
-    )
-        .roll(6)
-        .movePawn(0)
-        .roll(6)
-        .movePawn(0);
+    ).roll(6).movePawn(0).roll(6).movePawn(0);
 
     await tester.pumpWidget(
       MaterialApp(

@@ -14,7 +14,8 @@ void main() {
 
       for (var index = 0; index < BoardGeometry.trackLength; index++) {
         final current = BoardGeometry.sharedTrack[index];
-        final next = BoardGeometry.sharedTrack[(index + 1) % BoardGeometry.trackLength];
+        final next =
+            BoardGeometry.sharedTrack[(index + 1) % BoardGeometry.trackLength];
         final distance = (current.column - next.column).abs() +
             (current.row - next.row).abs();
         expect(
@@ -99,7 +100,8 @@ void main() {
       expect(canvas.y, closeTo(681 * 1024 / 1440, 1e-9));
     });
 
-    test('all 52 route and 20 home-lane anchors stay inside source artwork', () {
+    test('all 52 route and 20 home-lane anchors stay inside source artwork',
+        () {
       for (var index = 0; index < BoardGeometry.trackLength; index++) {
         final point = BoardGeometry.trackPosition(index);
         expect(point.x, inInclusiveRange(0, 1));

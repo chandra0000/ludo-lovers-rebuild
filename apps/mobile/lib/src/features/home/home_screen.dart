@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await _savedMatchStore.clear();
     if (mounted) setState(() => _savedMatch = null);
   }
+
   static const _background = Color(0xFF080808);
 
   @override
@@ -161,16 +162,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               side: const BorderSide(color: _gold),
                               minimumSize: const Size.fromHeight(52),
                             ),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => MatchScreen(
-                                  initialGame: _savedMatch!.game,
-                                  aiPlayers: _savedMatch!.aiPlayers,
-                                  aiSeed: _savedMatch!.aiSeed,
-                                  aiDifficulty: _savedMatch!.aiDifficulty,
-                                ),
-                              ),
-                            ).then((_) => _loadSavedMatch()),
+                            onPressed: () => Navigator.of(context)
+                                .push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => MatchScreen(
+                                      initialGame: _savedMatch!.game,
+                                      aiPlayers: _savedMatch!.aiPlayers,
+                                      aiSeed: _savedMatch!.aiSeed,
+                                      aiDifficulty: _savedMatch!.aiDifficulty,
+                                    ),
+                                  ),
+                                )
+                                .then((_) => _loadSavedMatch()),
                             icon: const Icon(Icons.play_arrow_rounded),
                             label: const Text('RESUME SAVED MATCH'),
                           ),
