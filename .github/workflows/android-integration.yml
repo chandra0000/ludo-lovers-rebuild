@@ -12,8 +12,8 @@ jobs:
   android-integration:
     # Run manually, or add the "run-android-integration" label to a PR.
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-android-integration'
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -26,12 +26,102 @@ jobs:
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
-      - name: Android emulator integration smoke test
-        timeout-minutes: 30
+
+      # Retry the emulator startup once. Each attempt verifies ADB transport and
+      # Android boot completion before invoking any Flutter integration tests.
+      - name: Android emulator integration smoke test (attempt 1)
+        id: emulator_attempt_1
+        continue-on-error: true
+        timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
+          target: google_apis
           arch: x86_64
           profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: cd apps/mobile && flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d emulator-5554
+          script: |
+            set -euo pipefail
+            SERIAL="emulator-5554"
+
+            echo "Resetting ADB server before checking emulator transport..."
+            adb kill-server || true
+            adb start-server
+            adb devices -l
+
+            echo "Waiting up to 10 minutes for $SERIAL to become online..."
+            device_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" get-state 2>/dev/null || true)" = "device" ]; do
+              if (( SECONDS >= device_deadline )); then
+                echo "::error::Emulator did not reach ADB state 'device' within 10 minutes."
+                adb devices -l || true
+                exit 1
+              fi
+              adb devices -l
+              sleep 5
+            done
+
+            echo "Waiting up to 10 minutes for sys.boot_completed=1..."
+            boot_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)" = "1" ]; do
+              if (( SECONDS >= boot_deadline )); then
+                echo "::error::Emulator is online but Android boot did not complete within 10 minutes."
+                adb devices -l || true
+                adb -s "$SERIAL" shell getprop sys.boot_completed || true
+                exit 1
+              fi
+              sleep 5
+            done
+
+            echo "Android boot completed. Running Flutter integration smoke test."
+            cd apps/mobile
+            flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
+
+      - name: Android emulator integration smoke test (single startup retry)
+        if: steps.emulator_attempt_1.outcome == 'failure'
+        timeout-minutes: 22
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            SERIAL="emulator-5554"
+
+            echo "Retrying emulator startup once; resetting ADB server..."
+            adb kill-server || true
+            adb start-server
+            adb devices -l
+
+            echo "Waiting up to 10 minutes for $SERIAL to become online..."
+            device_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" get-state 2>/dev/null || true)" = "device" ]; do
+              if (( SECONDS >= device_deadline )); then
+                echo "::error::Retry failed: emulator did not reach ADB state 'device'."
+                adb devices -l || true
+                exit 1
+              fi
+              adb devices -l
+              sleep 5
+            done
+
+            echo "Waiting up to 10 minutes for sys.boot_completed=1..."
+            boot_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)" = "1" ]; do
+              if (( SECONDS >= boot_deadline )); then
+                echo "::error::Retry failed: Android boot did not complete."
+                adb devices -l || true
+                adb -s "$SERIAL" shell getprop sys.boot_completed || true
+                exit 1
+              fi
+              sleep 5
+            done
+
+            echo "Android boot completed on retry. Running Flutter integration smoke test."
+            cd apps/mobile
+            flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
