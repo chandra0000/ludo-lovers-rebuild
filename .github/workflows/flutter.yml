@@ -68,6 +68,7 @@ jobs:
             apps/mobile/test/match_classic_rules_test.dart
             apps/mobile/test/ludo_rule_profile_contract_test.dart
             apps/mobile/test/match_session_test.dart
+            apps/mobile/test/match_chrome_controls_test.dart
             apps/mobile/integration_test/app_navigation_test.dart
             apps/mobile/lib/src/game/application/match_session.dart
             apps/mobile/lib/src/features/match/match_screen.dart
