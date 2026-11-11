@@ -643,7 +643,19 @@ class _MatchScreenState extends State<MatchScreen>
                                   key: const Key('chat_button'),
                                   behavior: HitTestBehavior.opaque,
                                   onTap: _showLocalChat,
-                                  child: const SizedBox.expand(),
+                                  child: const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xE6211A0D),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.chat_bubble_outline,
+                                        size: 32,
+                                        color: Color(0xFFFFD36B),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -659,7 +671,19 @@ class _MatchScreenState extends State<MatchScreen>
                                   key: const Key('more_button'),
                                   behavior: HitTestBehavior.opaque,
                                   onTap: _showMoreMenu,
-                                  child: const SizedBox.expand(),
+                                  child: const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xE6211A0D),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.more_horiz,
+                                        size: 32,
+                                        color: Color(0xFFFFD36B),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
