@@ -96,6 +96,63 @@ void main() {
       expect(identical(result.session, initial), isTrue);
     });
 
+    test('returns the engine move reason as a typed rejection', () {
+      final rolled = initial.execute(roll(value: 2));
+      final rejected = rolled.session.execute(
+        MovePawnCommand(
+          matchId: 'match-1',
+          actorId: initial.actorFor(PlayerColor.orange),
+          expectedStateVersion: 1,
+          commandId: 'move-from-yard',
+          pawnIndex: 0,
+        ),
+      );
+
+      expect(rejected.accepted, isFalse);
+      expect(
+        rejected.rejectionReason,
+        MatchCommandRejectionReason.illegalMove,
+      );
+      expect(
+        rejected.moveInvalidReason,
+        MoveInvalidReason.pawnInYardNeedsSix,
+      );
+      expect(rejected.session.game.stateVersion, 1);
+    });
+
+    test('rejects a second roll while a roll is pending', () {
+      final rolled = initial.execute(roll());
+      final rejected = rolled.session.execute(
+        roll(expectedVersion: 1, commandId: 'roll-again'),
+      );
+
+      expect(rejected.accepted, isFalse);
+      expect(
+        rejected.rejectionReason,
+        MatchCommandRejectionReason.rollAlreadyPending,
+      );
+      expect(rejected.session.game.stateVersion, 1);
+    });
+
+    test('rejects pass when a legal move is available', () {
+      final rolled = initial.execute(roll());
+      final rejected = rolled.session.execute(
+        PassTurnCommand(
+          matchId: 'match-1',
+          actorId: initial.actorFor(PlayerColor.orange),
+          expectedStateVersion: 1,
+          commandId: 'premature-pass',
+        ),
+      );
+
+      expect(rejected.accepted, isFalse);
+      expect(
+        rejected.rejectionReason,
+        MatchCommandRejectionReason.passNotAllowed,
+      );
+      expect(rejected.session.game.stateVersion, 1);
+    });
+
     test('routes an automatic no-legal-move pass through the boundary', () {
       final rolled = initial.execute(roll(value: 4));
       expect(rolled.accepted, isTrue);
