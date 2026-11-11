@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'local_match_chat_sheet.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -639,12 +641,11 @@ class _MatchScreenState extends State<MatchScreen>
                               child: Semantics(
                                 button: true,
                                 label: 'Chat',
-                                hint:
-                                    'Chat is not available in local matches yet.',
+                                hint: 'Open local chat and emoji reactions.',
                                 child: GestureDetector(
                                   key: const Key('chat_button'),
                                   behavior: HitTestBehavior.opaque,
-                                  onTap: _showChatUnavailable,
+                                  onTap: _showLocalChat,
                                   child: const SizedBox.expand(),
                                 ),
                               ),
@@ -692,12 +693,12 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
-  void _showChatUnavailable() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Chat is not available in local matches yet.'),
-        duration: Duration(milliseconds: 1600),
-      ),
+  void _showLocalChat() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF17120B),
+      builder: (context) => const LocalMatchChatSheet(),
     );
   }
 
