@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
+import 'match_dice_layer.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
-import '../../game/presentation/luxury_dice.dart';
 import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 import '../../game/presentation/destination_preview_painter.dart';
@@ -538,37 +538,27 @@ class _MatchScreenState extends State<MatchScreen>
                             ..._buildPawnsWithClusters(scale),
                             if (_selectedPawnIndex != null)
                               _buildDestinationPreview(),
-                            Positioned(
-                              left: 243,
-                              top: 795,
-                              width: 90,
-                              height: 90,
-                              child: KeyedSubtree(
-                                key: const Key('roll_dice'),
-                                child: LuxuryDiceButton(
-                                  key: const Key('animated_dice'),
-                                  targetValue: _game.diceValue,
-                                  rollId: _diceRollId,
-                                  canRoll: !widget.aiPlayers
-                                          .contains(_game.activePlayer) &&
-                                      _game.diceValue == null &&
-                                      !_isDiceAnimating &&
-                                      !_movementController.isAnimating &&
-                                      _game.winner == null,
-                                  isWaitingForRoll: _game.diceValue == null &&
-                                      _game.winner == null &&
-                                      !_movementController.isAnimating,
-                                  onRollRequested: () {
-                                    if (widget.aiPlayers
-                                        .contains(_game.activePlayer)) {
-                                      return;
-                                    }
-                                    _roll(isAi: false);
-                                  },
-                                  onAnimationComplete:
-                                      _handleDiceAnimationComplete,
-                                ),
-                              ),
+                            MatchDiceLayer(
+                              targetValue: _game.diceValue,
+                              rollId: _diceRollId,
+                              canRoll: !widget.aiPlayers
+                                      .contains(_game.activePlayer) &&
+                                  _game.diceValue == null &&
+                                  !_isDiceAnimating &&
+                                  !_movementController.isAnimating &&
+                                  _game.winner == null,
+                              isWaitingForRoll: _game.diceValue == null &&
+                                  _game.winner == null &&
+                                  !_movementController.isAnimating,
+                              onRollRequested: () {
+                                if (widget.aiPlayers
+                                    .contains(_game.activePlayer)) {
+                                  return;
+                                }
+                                _roll(isAi: false);
+                              },
+                              onAnimationComplete:
+                                  _handleDiceAnimationComplete,
                             ),
                             Positioned(
                               left: 200,
