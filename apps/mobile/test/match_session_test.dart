@@ -205,6 +205,58 @@ void main() {
       expect(replayed.game.stateVersion, 2);
     });
 
+    test('Phase 5 replay stays deterministic after rejected commands', () {
+      final acceptedRoll = initial.execute(roll());
+      expect(acceptedRoll.accepted, isTrue);
+
+      final rejectedDuplicate = acceptedRoll.session.execute(roll());
+      expect(rejectedDuplicate.accepted, isFalse);
+      expect(
+        rejectedDuplicate.rejectionReason,
+        MatchCommandRejectionReason.duplicateCommand,
+      );
+      expect(identical(rejectedDuplicate.session, acceptedRoll.session), isTrue);
+
+      final rejectedStale = acceptedRoll.session.execute(
+        roll(expectedVersion: 0, commandId: 'stale-after-roll'),
+      );
+      expect(rejectedStale.accepted, isFalse);
+      expect(
+        rejectedStale.rejectionReason,
+        MatchCommandRejectionReason.staleState,
+      );
+
+      final acceptedMove = acceptedRoll.session.execute(
+        MovePawnCommand(
+          matchId: 'match-1',
+          actorId: initial.actorFor(PlayerColor.orange),
+          expectedStateVersion: 1,
+          commandId: 'move-after-rejections',
+          pawnIndex: 0,
+        ),
+      );
+      expect(acceptedMove.accepted, isTrue);
+      expect(acceptedMove.session.game.stateVersion, 2);
+
+      final replayed = MatchSession.replay(
+        initial: initial,
+        commands: [
+          roll(),
+          MovePawnCommand(
+            matchId: 'match-1',
+            actorId: initial.actorFor(PlayerColor.orange),
+            expectedStateVersion: 1,
+            commandId: 'move-after-rejections',
+            pawnIndex: 0,
+          ),
+        ],
+      );
+      expect(
+        replayed.game.encodeSnapshot(),
+        acceptedMove.session.game.encodeSnapshot(),
+      );
+    });
+
     test('replay stops at the first rejected command', () {
       final commands = <MatchCommand>[
         roll(),
