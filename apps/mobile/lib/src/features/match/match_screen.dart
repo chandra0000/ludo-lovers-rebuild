@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'local_match_chat_sheet.dart';
+import 'match_board_artwork.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -531,22 +532,8 @@ class _MatchScreenState extends State<MatchScreen>
                         height: BoardGeometry.canvasHeight,
                         child: Stack(
                           children: [
-                            Positioned.fill(
-                              child: Image.asset(
-                                'assets/images/board/ludo_board_glass.webp',
-                                key: const Key('board_artwork'),
-                                fit: BoxFit.fill,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const ColoredBox(
-                                  color: Color(0xFF111111),
-                                  child: Center(
-                                    child: Text(
-                                      'Game artwork could not be loaded.',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            const Positioned.fill(
+                              child: MatchBoardArtwork(),
                             ),
                             ..._buildPawnsWithClusters(scale),
                             if (_selectedPawnIndex != null)
