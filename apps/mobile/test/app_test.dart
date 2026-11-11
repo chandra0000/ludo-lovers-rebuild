@@ -129,9 +129,13 @@ void main() {
       expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
       expect(artwork.width / artwork.height, closeTo(835 / 851, 0.001));
       expect(
-          artwork.width, closeTo(835 / 864 * BoardGeometry.canvasWidth, 0.001));
-      expect(artwork.height,
-          closeTo(851 / 1536 * BoardGeometry.canvasHeight, 0.001));
+        artwork.width,
+        closeTo(835 / 864 * BoardGeometry.canvasWidth, 0.001),
+      );
+      expect(
+        artwork.height,
+        closeTo(851 / 1536 * BoardGeometry.canvasHeight, 0.001),
+      );
     }
   });
 
