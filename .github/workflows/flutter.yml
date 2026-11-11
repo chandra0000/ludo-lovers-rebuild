@@ -41,7 +41,7 @@ jobs:
             base_sha="$(git merge-base origin/main HEAD)"
           fi
           mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test |
+            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool |
               grep -E '\.dart$' || true
           )
           if [ "${#dart_files[@]}" -eq 0 ]; then
@@ -62,6 +62,8 @@ jobs:
             apps/mobile/test/ludo_game_test.dart
             apps/mobile/test/seeded_ludo_ai_test.dart
             apps/mobile/test/match_classic_rules_test.dart
+            apps/mobile/test/ludo_rule_profile_contract_test.dart
+            apps/mobile/tool/engine_benchmark.dart
           if-no-files-found: error
       - name: Static analysis
         working-directory: apps/mobile
