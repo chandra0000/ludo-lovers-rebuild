@@ -96,6 +96,24 @@ void main() {
       expect(identical(result.session, initial), isTrue);
     });
 
+    test('routes an automatic no-legal-move pass through the boundary', () {
+      final rolled = initial.execute(roll(value: 4));
+      expect(rolled.accepted, isTrue);
+      final passed = rolled.session.execute(
+        PassTurnCommand(
+          matchId: 'match-1',
+          actorId: initial.actorFor(PlayerColor.orange),
+          expectedStateVersion: 1,
+          commandId: 'pass-1',
+        ),
+      );
+
+      expect(passed.accepted, isTrue);
+      expect(passed.session.game.activePlayer, PlayerColor.green);
+      expect(passed.session.game.diceValue, isNull);
+      expect(passed.session.game.stateVersion, 2);
+    });
+
     test('replays accepted commands to the same snapshot and events', () {
       final commands = <MatchCommand>[
         roll(),
