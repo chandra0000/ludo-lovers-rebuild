@@ -41,7 +41,9 @@ void main() {
         },
       ).roll(1).movePawn(0);
       expect(
-        game.players.firstWhere((player) => player.color == PlayerColor.orange).pawnProgress[0],
+        game.players
+            .firstWhere((player) => player.color == PlayerColor.orange)
+            .pawnProgress[0],
         finishProgress,
       );
       expect(game.activePlayer, PlayerColor.green);
