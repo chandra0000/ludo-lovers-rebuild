@@ -30,7 +30,7 @@ class MatchScreen extends StatefulWidget {
     this.aiSeed = 1,
     this.aiDifficulty = LudoAiDifficulty.medium,
     this.profiles,
-    this.showDynamicProfiles = false,
+    this.showDynamicProfiles = true,
   });
 
   @visibleForTesting
@@ -42,7 +42,7 @@ class MatchScreen extends StatefulWidget {
   /// Optional identities supplied by a local lobby or future online session.
   final List<MatchPlayerProfile>? profiles;
 
-  /// Enable after the approved artwork has been cleaned of baked-in avatars.
+  /// Dynamic profiles are enabled for the board-only artwork by default.
   final bool showDynamicProfiles;
 
   final Set<PlayerColor> aiPlayers;
