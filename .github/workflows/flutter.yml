@@ -55,16 +55,7 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=write "${dart_files[@]}"
-          mkdir -p apps/mobile/test-artifacts
-          git diff -- apps/mobile/lib apps/mobile/test apps/mobile/tool apps/mobile/integration_test > apps/mobile/test-artifacts/dart-format.patch
-      - name: Upload formatter diagnostic patch
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatter-diagnostic-patch
-          path: apps/mobile/test-artifacts/dart-format.patch
-          if-no-files-found: error
+          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
@@ -132,9 +123,7 @@ jobs:
           profile: pixel_2
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            cd apps/mobile
-            flutter test integration_test/app_navigation_test.dart -d emulator-5554
+          script: cd apps/mobile && flutter test integration_test/app_navigation_test.dart -d emulator-5554
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies
