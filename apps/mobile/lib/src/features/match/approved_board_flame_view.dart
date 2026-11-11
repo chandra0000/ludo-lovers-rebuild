@@ -56,12 +56,6 @@ class _ApprovedBoardFlameViewState extends State<ApprovedBoardFlameView> {
   late final ApprovedBoardFlameGame _game = ApprovedBoardFlameGame();
 
   @override
-  void dispose() {
-    _game.onRemove();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return GameWidget(game: _game);
   }
