@@ -19,7 +19,9 @@ void main() {
     );
     expect(find.byKey(const Key('board_artwork')), findsOneWidget);
     expect(find.byType(RepaintBoundary), findsWidgets);
-    expect(MatchBoardArtwork.assetPath,
-        'assets/images/board/ludo_board_glass.webp');
+    expect(
+      MatchBoardArtwork.assetPath,
+      'assets/images/board/extracted/board_exact.webp',
+    );
   });
 }
