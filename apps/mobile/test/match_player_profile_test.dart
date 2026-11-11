@@ -7,8 +7,10 @@ void main() {
     final profiles = MatchPlayerProfile.local(
       aiPlayers: {PlayerColor.green, PlayerColor.blue},
     );
-    expect(profiles.map((profile) => profile.color).toList(),
-        PlayerColor.turnOrder);
+    expect(
+      profiles.map((profile) => profile.color).toList(),
+      PlayerColor.turnOrder,
+    );
     expect(profiles.map((profile) => profile.playerId).toSet(), hasLength(4));
     expect(profiles.where((profile) => profile.isBot), hasLength(2));
     expect(profiles.every((profile) => profile.isConnected), isTrue);
