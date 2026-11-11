@@ -50,6 +50,8 @@ jobs:
             adb kill-server || true
             adb start-server
             adb devices -l
+            echo "Giving ADB up to 120 seconds to attach the emulator..."
+            timeout 120s adb -s "$SERIAL" wait-for-device || true
 
             echo "Waiting up to 10 minutes for $SERIAL to become online..."
             device_deadline=$((SECONDS + 600))
