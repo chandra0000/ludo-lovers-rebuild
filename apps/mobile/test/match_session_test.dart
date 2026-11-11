@@ -215,7 +215,10 @@ void main() {
         rejectedDuplicate.rejectionReason,
         MatchCommandRejectionReason.duplicateCommand,
       );
-      expect(identical(rejectedDuplicate.session, acceptedRoll.session), isTrue);
+      expect(
+        identical(rejectedDuplicate.session, acceptedRoll.session),
+        isTrue,
+      );
 
       final rejectedStale = acceptedRoll.session.execute(
         roll(expectedVersion: 0, commandId: 'stale-after-roll'),
