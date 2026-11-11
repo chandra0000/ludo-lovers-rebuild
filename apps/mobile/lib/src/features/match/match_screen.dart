@@ -635,7 +635,8 @@ class _MatchScreenState extends State<MatchScreen>
                                   onPressed: () {
                                     setState(() {
                                       _session = MatchSession.local(
-                                        matchId: 'local-${widget.aiSeed}',
+                                        matchId:
+                                            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
                                         game: LudoGame.initial(),
                                       );
                                     });
