@@ -275,7 +275,8 @@ class MatchSession {
         events: nextGame.events,
       );
     } on ArgumentError catch (error) {
-      return reject(MatchCommandRejectionReason.invalidAction, error.message.toString());
+      return reject(
+          MatchCommandRejectionReason.invalidAction, error.message.toString());
     } on StateError catch (error) {
       return reject(MatchCommandRejectionReason.invalidAction, error.message);
     }
