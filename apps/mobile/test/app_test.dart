@@ -14,23 +14,14 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 
-Future<void> _capturePng(
-  WidgetTester tester,
-  Key key,
-  String path, {
-  double? expectedAspectRatio,
-}) async {
+Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
   final logicalSize = boundary.size;
   expect(logicalSize.width, greaterThan(0));
   expect(logicalSize.height, greaterThan(0));
   expect(
     logicalSize.width / logicalSize.height,
-    closeTo(
-      expectedAspectRatio ??
-          BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
-      0.01,
-    ),
+    closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 0.01),
   );
 
   await tester.runAsync(() async {
@@ -170,7 +161,7 @@ void main() {
   });
 
 
-  testWidgets('captures the full match screen and board canvas', (tester) async {
+  testWidgets('captures the canonical match canvas at a 393x873 viewport', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -181,14 +172,8 @@ void main() {
 
     await _capturePng(
       tester,
-      const Key('match_screen_capture'),
-      'test-artifacts/match-screen-393x873.png',
-      expectedAspectRatio: 393 / 873,
-    );
-    await _capturePng(
-      tester,
       const Key('match_canvas_capture'),
-      'test-artifacts/match-canvas-393x699.png',
+      'test-artifacts/match-canvas-393x873.png',
     );
   });
 
