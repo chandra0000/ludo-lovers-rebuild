@@ -69,6 +69,18 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Capture engine benchmark baseline
+        working-directory: apps/mobile
+        run: |
+          mkdir -p test-artifacts
+          dart run tool/engine_benchmark.dart --warmup=200 --samples=20 --iterations-per-sample=100 > test-artifacts/engine-benchmark.json
+      - name: Upload engine benchmark baseline
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-engine-benchmark
+          path: apps/mobile/test-artifacts/engine-benchmark.json
+          if-no-files-found: error
       - name: Verify visual capture artifacts
         if: success()
         working-directory: apps/mobile
