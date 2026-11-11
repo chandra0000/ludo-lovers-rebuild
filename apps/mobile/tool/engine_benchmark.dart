@@ -26,6 +26,14 @@ void main(List<String> arguments) {
       PlayerColor.green: [44, -1, -1, -1],
     },
   ).roll(2);
+  final blockade = LudoGame.fromProgress(
+    activePlayer: PlayerColor.orange,
+    ruleProfile: LudoRuleProfile.classicV1,
+    pawnProgress: {
+      PlayerColor.orange: [3, -1, -1, -1],
+      PlayerColor.green: [44, 44, -1, -1],
+    },
+  ).roll(4);
   final snapshot = movement.encodeSnapshot();
   const ai = SeededLudoAi();
 
@@ -33,6 +41,7 @@ void main(List<String> arguments) {
     (name: 'initial_state_creation', operation: () => LudoGame.initial()),
     (name: 'legal_action_enumeration', operation: () => initial.legalPawnIndices()),
     (name: 'single_move_evaluation', operation: () => movement.evaluatePawnMove(0)),
+    (name: 'blockade_path_evaluation', operation: () => blockade.evaluatePawnMove(0)),
     (name: 'transition_and_event_generation', operation: () => movement.movePawn(0)),
     (name: 'capture_transition_and_events', operation: () => capture.movePawn(0)),
     (name: 'snapshot_encode', operation: () => movement.encodeSnapshot()),
@@ -61,7 +70,9 @@ void main(List<String> arguments) {
       'environment': {
         'operatingSystem': Platform.operatingSystem,
         'operatingSystemVersion': Platform.operatingSystemVersion,
+        'processorCount': Platform.numberOfProcessors,
         'runtime': Platform.version,
+        'executionMode': 'dart-vm-jit',
         'warmupIterationsPerCase': warmup,
         'samplesPerCase': samples,
         'iterationsPerSample': iterationsPerSample,
