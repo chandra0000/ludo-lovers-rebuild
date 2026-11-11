@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'package:ludo_lovers/src/features/match/match_board_artwork.dart';
+import 'package:ludo_lovers/src/features/match/match_dice_layer.dart';
+import 'package:ludo_lovers/src/features/match/match_profiles_layer.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
@@ -19,6 +22,18 @@ void main() {
       tester.view.physicalSize = viewport;
       await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
       await tester.pump();
+
+      // The approved board, all player badges, dice, and chat entry point
+      // must coexist with the pawn layer on every supported phone viewport.
+      expect(find.byType(MatchBoardArtwork), findsOneWidget);
+      expect(find.byKey(const Key('board_artwork')), findsOneWidget);
+      expect(find.byType(MatchProfilesLayer), findsOneWidget);
+      expect(find.byType(MatchDiceLayer), findsOneWidget);
+      expect(find.byKey(const Key('animated_dice')), findsOneWidget);
+      expect(find.byKey(const Key('chat_button')), findsOneWidget);
+      for (final color in PlayerColor.turnOrder) {
+        expect(find.byKey(Key('profile_${color.name}')), findsOneWidget);
+      }
 
       final canvas = tester.getRect(find.byKey(const Key('match_canvas')));
       expect(canvas.width, lessThanOrEqualTo(viewport.width));
