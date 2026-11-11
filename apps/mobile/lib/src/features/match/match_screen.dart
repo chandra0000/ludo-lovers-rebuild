@@ -395,8 +395,9 @@ class _MatchScreenState extends State<MatchScreen>
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    final movingColor = _game.activePlayer;
-    final player = _game.currentPlayer;
+    final previousGame = _game;
+    final movingColor = previousGame.activePlayer;
+    final player = previousGame.currentPlayer;
     final startProgress = player.pawnProgress[pawnIndex];
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
@@ -413,7 +414,7 @@ class _MatchScreenState extends State<MatchScreen>
     if (!_executeCommand(command)) return;
     final nextGame = _game;
     var capturedCount = 0;
-    for (final previousPlayer in _game.players) {
+    for (final previousPlayer in previousGame.players) {
       if (previousPlayer.color == movingColor) {
         continue;
       }
