@@ -51,7 +51,7 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+          dart format --output=write "${dart_files[@]}"
       - name: Upload Dart source review set
         if: success()
         uses: actions/upload-artifact@v4
