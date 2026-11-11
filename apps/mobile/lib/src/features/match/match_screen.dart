@@ -672,16 +672,7 @@ class _MatchScreenState extends State<MatchScreen>
                               height: 80,
                               child: Center(
                                 child: FilledButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _session = MatchSession.local(
-                                        matchId:
-                                            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-                                        game: LudoGame.initial(),
-                                      );
-                                    });
-                                    unawaited(_persistMatch());
-                                  },
+                                  onPressed: _restartMatch,
                                   child: const Text('PLAY AGAIN'),
                                 ),
                               ),
