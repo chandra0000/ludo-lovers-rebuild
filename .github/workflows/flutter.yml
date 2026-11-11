@@ -38,7 +38,11 @@ jobs:
         run: |
           base_sha="$BASE_SHA"
           if [ -z "$base_sha" ]; then
-            base_sha="$(git merge-base origin/main HEAD)"
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              base_sha="$(git rev-parse HEAD^)"
+            else
+              base_sha="$(git merge-base origin/main HEAD)"
+            fi
           fi
           mapfile -t dart_files < <(
             git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool apps/mobile/integration_test |
@@ -91,14 +95,22 @@ jobs:
         if: success()
         working-directory: apps/mobile
         run: |
-          test -s test-artifacts/match-canvas-393x873.png
+          test -s test-artifacts/match-screen-393x873.png
+          test -s test-artifacts/match-canvas-393x699.png
           test -s test-artifacts/board-preview-calibration-393x873.png
-      - name: Upload deterministic match screenshot
+      - name: Upload full-screen match screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-lovers-match-canvas-393x873
-          path: apps/mobile/test-artifacts/match-canvas-393x873.png
+          name: ludo-lovers-match-screen-393x873
+          path: apps/mobile/test-artifacts/match-screen-393x873.png
+          if-no-files-found: warn
+      - name: Upload canonical board-canvas screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-match-canvas-393x699
+          path: apps/mobile/test-artifacts/match-canvas-393x699.png
           if-no-files-found: warn
       - name: Upload board calibration preview
         if: always()
