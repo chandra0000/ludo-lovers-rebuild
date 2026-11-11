@@ -71,13 +71,19 @@ void main(List<String> arguments) {
         'operatingSystem': Platform.operatingSystem,
         'operatingSystemVersion': Platform.operatingSystemVersion,
         'processorCount': Platform.numberOfProcessors,
+        'runnerName': Platform.environment['RUNNER_NAME'] ?? 'local',
+        'appCommit': Platform.environment['GITHUB_SHA'] ?? 'unknown',
         'runtime': Platform.version,
         'executionMode': 'dart-vm-jit',
         'warmupIterationsPerCase': warmup,
         'samplesPerCase': samples,
         'iterationsPerSample': iterationsPerSample,
-        'profile': LudoRuleProfile.currentV1.id,
-        'profileVersion': LudoRuleProfile.currentV1.version,
+        'profiles': {
+          'compatibility':
+              '${LudoRuleProfile.currentV1.id}@${LudoRuleProfile.currentV1.version}',
+          'classic':
+              '${LudoRuleProfile.classicV1.id}@${LudoRuleProfile.classicV1.version}',
+        },
       },
       'results': results,
     }),
