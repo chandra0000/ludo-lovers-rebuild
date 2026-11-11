@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ludo_lovers/src/game/domain/ai/seeded_ludo_ai.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/persistence/saved_match_store.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
@@ -22,6 +23,7 @@ void main() {
         game: game,
         aiPlayers: const {PlayerColor.green, PlayerColor.blue},
         aiSeed: 20261110,
+        aiDifficulty: LudoAiDifficulty.hard,
       );
 
       await store.save(match);
@@ -35,6 +37,23 @@ void main() {
       expect(restored.game.appliedCommandIds, game.appliedCommandIds);
       expect(restored.aiPlayers, {PlayerColor.green, PlayerColor.blue});
       expect(restored.aiSeed, 20261110);
+      expect(restored.aiDifficulty, LudoAiDifficulty.hard);
+    });
+
+    test('migrates schema v1 saved matches to medium AI difficulty', () {
+      final legacy = SavedMatch(
+        game: LudoGame.initial(),
+        aiPlayers: const {PlayerColor.green},
+        aiSeed: 9,
+      ).toJson()
+        ..['schemaVersion'] = 1
+        ..remove('aiDifficulty');
+
+      final restored = SavedMatch.fromJson(legacy);
+
+      expect(restored.aiDifficulty, LudoAiDifficulty.medium);
+      expect(restored.aiPlayers, {PlayerColor.green});
+      expect(restored.aiSeed, 9);
     });
 
     test('clears a saved match when explicitly requested', () async {

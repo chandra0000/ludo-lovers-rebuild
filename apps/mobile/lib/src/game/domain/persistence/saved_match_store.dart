@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ai/seeded_ludo_ai.dart';
 import '../ludo_game.dart';
 import '../player_color.dart';
 
@@ -12,24 +13,29 @@ class SavedMatch {
     required this.game,
     required this.aiPlayers,
     required this.aiSeed,
+    this.aiDifficulty = LudoAiDifficulty.medium,
   });
 
   final LudoGame game;
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
+  final LudoAiDifficulty aiDifficulty;
 
   Map<String, Object?> toJson() => {
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'game': game.toSnapshot(),
         'aiPlayers': aiPlayers.map((player) => player.name).toList()..sort(),
         'aiSeed': aiSeed,
+        'aiDifficulty': aiDifficulty.name,
       };
 
   factory SavedMatch.fromJson(Map<String, dynamic> json) {
-    if (json['schemaVersion'] != 1 ||
+    final schemaVersion = json['schemaVersion'];
+    if ((schemaVersion != 1 && schemaVersion != 2) ||
         json['game'] is! Map<String, dynamic> ||
         json['aiPlayers'] is! List ||
-        json['aiSeed'] is! int) {
+        json['aiSeed'] is! int ||
+        (schemaVersion == 2 && json['aiDifficulty'] is! String)) {
       throw const FormatException('Malformed saved match.');
     }
     final rawAiPlayers = json['aiPlayers'] as List;
@@ -43,10 +49,18 @@ class SavedMatch {
     if (aiPlayers.length != rawAiPlayers.length) {
       throw const FormatException('Duplicate saved AI seats.');
     }
+    final difficultyName = schemaVersion == 2
+        ? json['aiDifficulty'] as String
+        : LudoAiDifficulty.medium.name;
+    final difficulty = LudoAiDifficulty.values.firstWhere(
+      (value) => value.name == difficultyName,
+      orElse: () => throw const FormatException('Unknown saved AI difficulty.'),
+    );
     return SavedMatch(
       game: LudoGame.fromSnapshot(json['game'] as Map<String, dynamic>),
       aiPlayers: Set<PlayerColor>.unmodifiable(aiPlayers),
       aiSeed: json['aiSeed'] as int,
+      aiDifficulty: difficulty,
     );
   }
 

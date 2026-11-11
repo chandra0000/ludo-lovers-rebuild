@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
 import '../board_preview/board_preview_screen.dart';
@@ -14,6 +15,7 @@ class GameSetupScreen extends StatefulWidget {
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
   int _humanPlayers = 1;
+  LudoAiDifficulty _aiDifficulty = LudoAiDifficulty.medium;
 
   Set<PlayerColor> get _aiPlayers => PlayerColor.turnOrder
       .skip(_humanPlayers)
@@ -28,6 +30,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
           ),
           aiPlayers: withAi ? _aiPlayers : const {},
           aiSeed: 20261110,
+          aiDifficulty: _aiDifficulty,
         ),
       ),
     );
@@ -127,6 +130,55 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       Text(
                         '${4 - _humanPlayers} AI opponent(s) · '
                         'Orange → Green → Magenta → Blue',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'AI difficulty',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          DropdownButton<LudoAiDifficulty>(
+                            key: const Key('ai_difficulty'),
+                            value: _aiDifficulty,
+                            dropdownColor: const Color(0xFF17130D),
+                            items: LudoAiDifficulty.values
+                                .map(
+                                  (difficulty) =>
+                                      DropdownMenuItem<LudoAiDifficulty>(
+                                    value: difficulty,
+                                    child: Text(
+                                      difficulty.name.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _aiDifficulty = value);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      Text(
+                        switch (_aiDifficulty) {
+                          LudoAiDifficulty.easy =>
+                            'Easy · Random legal moves; best for casual play.',
+                          LudoAiDifficulty.medium =>
+                            'Medium · Balances progress, safety and captures.',
+                          LudoAiDifficulty.hard =>
+                            'Hard · More strongly prioritises tactics and safety.',
+                        },
                         style: const TextStyle(
                           color: Colors.white54,
                           fontSize: 11,
