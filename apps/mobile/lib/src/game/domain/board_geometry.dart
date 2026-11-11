@@ -274,7 +274,7 @@ class BoardGeometry {
   ) {
     final start = normalizedPosition(color, fromProgress, pawnIndex);
     final end = normalizedPosition(color, fromProgress + 1, pawnIndex);
-    final t = fraction.clamp(0.0, 1.0);
+    final t = fraction.clamp(0.0, 1.0).toDouble();
     return NormalizedBoardPoint(
       start.x + (end.x - start.x) * t,
       start.y + (end.y - start.y) * t,
