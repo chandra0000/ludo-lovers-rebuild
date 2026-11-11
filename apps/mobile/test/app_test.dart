@@ -516,11 +516,10 @@ void main() {
           await tester.tap(find.text('$humanCount').last);
           await tester.pumpAndSettle();
         }
-        await tester.scrollUntilVisible(
-          find.byKey(const Key('start_ai_match')),
-          250,
-        );
-        await tester.tap(find.byKey(const Key('start_ai_match')));
+        final startAiMatch = find.byKey(const Key('start_ai_match'));
+        await tester.ensureVisible(startAiMatch);
+        await tester.pumpAndSettle();
+        await tester.tap(startAiMatch);
         await tester.pumpAndSettle();
 
         final match = tester.widget<MatchScreen>(find.byType(MatchScreen));
