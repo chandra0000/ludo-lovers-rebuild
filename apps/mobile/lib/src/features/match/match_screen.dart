@@ -43,8 +43,7 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late MatchSession _session = MatchSession.local(
-    matchId:
-            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
     game: widget.initialGame ?? LudoGame.initial(),
   );
   LudoGame get _game => _session.game;
@@ -767,7 +766,8 @@ class _MatchScreenState extends State<MatchScreen>
     _previewController.value = 0;
     setState(() {
       _session = MatchSession.local(
-        matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+        matchId:
+            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
         game: LudoGame.initial(),
       );
       _isDiceAnimating = false;
