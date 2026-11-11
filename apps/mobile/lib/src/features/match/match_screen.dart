@@ -43,7 +43,7 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late MatchSession _session = MatchSession.local(
-    matchId: 'local-${widget.aiSeed}',
+    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
     game: widget.initialGame ?? LudoGame.initial(),
   );
   LudoGame get _game => _session.game;
