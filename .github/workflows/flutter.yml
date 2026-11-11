@@ -63,7 +63,7 @@ jobs:
         if: failure()
         working-directory: apps/mobile
         run: |
-          dart format --output=show lib/src/features/match/match_screen.dart
+          dart format --output=show test/app_test.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
