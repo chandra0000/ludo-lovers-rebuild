@@ -30,8 +30,10 @@ void main() {
     );
     await tester.pump();
     expect(find.byKey(const Key('board_artwork')), findsOneWidget);
-    expect(find.text('Approved board artwork could not be loaded.'),
-        findsNothing);
+    expect(
+      find.text('Approved board artwork could not be loaded.'),
+      findsNothing,
+    );
     expect(tester.takeException(), isNull);
   });
 }
