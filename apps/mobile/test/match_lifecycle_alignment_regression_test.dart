@@ -42,16 +42,16 @@ void main() {
     await pumpMatch(tester, const Size(393, 873));
     final canvas = tester.getSize(find.byKey(const Key('match_canvas')));
 
-    await tester.binding.handleAppLifecycleStateChanged(
+    tester.binding.handleAppLifecycleStateChanged(
       AppLifecycleState.inactive,
     );
-    await tester.binding.handleAppLifecycleStateChanged(
+    tester.binding.handleAppLifecycleStateChanged(
       AppLifecycleState.paused,
     );
     await tester.pump();
     expect(find.byKey(const Key('match_canvas')), findsOneWidget);
 
-    await tester.binding.handleAppLifecycleStateChanged(
+    tester.binding.handleAppLifecycleStateChanged(
       AppLifecycleState.resumed,
     );
     await tester.pump();
