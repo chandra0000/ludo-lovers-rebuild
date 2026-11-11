@@ -41,7 +41,7 @@ jobs:
             base_sha="$(git merge-base origin/main HEAD)"
           fi
           mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test |
+            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool |
               grep -E '\.dart$' || true
           )
           if [ "${#dart_files[@]}" -eq 0 ]; then
@@ -62,6 +62,8 @@ jobs:
             apps/mobile/test/ludo_game_test.dart
             apps/mobile/test/seeded_ludo_ai_test.dart
             apps/mobile/test/match_classic_rules_test.dart
+            apps/mobile/test/ludo_rule_profile_contract_test.dart
+            apps/mobile/tool/engine_benchmark.dart
           if-no-files-found: error
       - name: Static analysis
         working-directory: apps/mobile
@@ -69,6 +71,18 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Capture engine benchmark baseline
+        working-directory: apps/mobile
+        run: |
+          mkdir -p test-artifacts
+          dart run tool/engine_benchmark.dart --warmup=200 --samples=20 --iterations-per-sample=100 > test-artifacts/engine-benchmark.json
+      - name: Upload engine benchmark baseline
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-engine-benchmark
+          path: apps/mobile/test-artifacts/engine-benchmark.json
+          if-no-files-found: error
       - name: Verify visual capture artifacts
         if: success()
         working-directory: apps/mobile
