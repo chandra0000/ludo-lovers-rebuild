@@ -214,6 +214,7 @@ class MatchSession {
             'Dice value must be between 1 and 6.',
           );
         }
+        break;
       case MovePawnCommand(:final pawnIndex):
         if (game.diceValue == null) {
           return reject(
@@ -229,6 +230,7 @@ class MatchSession {
             moveInvalidReason: reason,
           );
         }
+        break;
       case PassTurnCommand():
         if (game.diceValue == null) {
           return reject(
@@ -242,6 +244,7 @@ class MatchSession {
             'A legal pawn move is available.',
           );
         }
+        break;
     }
 
     try {
