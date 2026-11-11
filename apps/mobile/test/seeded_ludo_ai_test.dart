@@ -174,4 +174,101 @@ void main() {
     expect(game.currentPlayer.pawnProgress, originalProgress);
   });
 
+  test('all difficulty levels choose only engine-approved legal pawns', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      ruleProfile: LudoRuleProfile.classicV1,
+      pawnProgress: {
+        PlayerColor.orange: [7, 10, 22, -1],
+        PlayerColor.green: [44, -1, -1, -1],
+      },
+    ).roll(2);
+    final legal = game.legalPawnIndices();
+
+    for (final difficulty in LudoAiDifficulty.values) {
+      final first = ai.choosePawn(
+        game,
+        seed: 2026,
+        difficulty: difficulty,
+      );
+      final repeated = ai.choosePawn(
+        game,
+        seed: 2026,
+        difficulty: difficulty,
+      );
+      expect(legal, contains(first), reason: '${difficulty.name} legality');
+      expect(
+        repeated,
+        first,
+        reason: '${difficulty.name} seeded repeatability',
+      );
+    }
+  });
+
+  test('easy difficulty remains deterministic while selecting a legal move', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [4, 10, -1, -1],
+      },
+    ).roll(1);
+    final selected = ai.choosePawn(
+      game,
+      seed: 73,
+      difficulty: LudoAiDifficulty.easy,
+    );
+
+    expect(game.legalPawnIndices(), contains(selected));
+    expect(
+      ai.choosePawn(
+        game,
+        seed: 73,
+        difficulty: LudoAiDifficulty.easy,
+      ),
+      selected,
+    );
+  });
+
+  test('hard difficulty avoids an immediately threatened unsafe landing', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [21, 10, -1, -1],
+        PlayerColor.green: [4, -1, -1, -1],
+      },
+    ).roll(1);
+
+    expect(
+      ai.choosePawn(
+        game,
+        seed: 16,
+        difficulty: LudoAiDifficulty.hard,
+      ),
+      1,
+    );
+  });
+
+  test('seeded AI follows the supplied Classic profile blockade legality', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      ruleProfile: LudoRuleProfile.classicV1,
+      pawnProgress: {
+        PlayerColor.orange: [3, 10, -1, -1],
+        PlayerColor.green: [44, 44, -1, -1],
+      },
+    ).roll(3);
+
+    // The first pawn is blocked mid-route; the second is the only legal move.
+    expect(game.legalPawnIndices(), [1]);
+    final selected = ai.choosePawn(game, seed: 2026);
+    expect(selected, 1);
+
+    final moved = game.movePawn(selected!);
+    expect(moved.ruleProfile, LudoRuleProfile.classicV1);
+    final orangeAfterMove = moved.players.firstWhere(
+      (player) => player.color == PlayerColor.orange,
+    );
+    expect(orangeAfterMove.pawnProgress[1], 13);
+  });
+
 }

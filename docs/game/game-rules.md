@@ -1,6 +1,6 @@
-# Game rules — current provisional profile
+# Engine behavior reference — compatibility and profile audit
 
-This document records the rules currently encoded in the first engine. It is not a claim that every rule has received product sign-off.
+This is an engineering record of behavior currently encoded in the domain engine. It is not the player-facing rulebook and does not itself approve a product variant. The proposed player-facing specification is [Ludo Lovers Classic — Rules v1.0](LUDO_LOVERS_CLASSIC_RULES_v1.md).
 
 ## Players and turns
 
@@ -117,3 +117,12 @@ The proposed `classic@1` profile now enables hard blockades: two or more pawns b
 Snapshot schema v3 persists the new `enableHardBlockade` profile setting. Schema v1 and v2 snapshots remain readable and migrate with hard blockade disabled, preserving their historical movement behaviour.
 
 This is a code-level implementation of the proposed Classic blockade semantics, not product sign-off. Confirm the blockade rule, safe-cell identities, and full route behaviour against the intended Classic rules before enabling Classic as the default.
+
+
+## Product rulebook source of truth
+
+- The proposed player-facing Classic specification lives in [LUDO_LOVERS_CLASSIC_RULES_v1.md](LUDO_LOVERS_CLASSIC_RULES_v1.md).
+- This page remains an implementation/compatibility ledger for developers. Keep it aligned with the engine, but do not treat it as a second official rules document.
+- The current app default remains `ludo-lovers-current@1`; `classic@1` is opt-in pending the acceptance gates in the proposed rulebook.
+- The Classic engine checks intermediate shared-track cells for an opponent same-colour pair and returns `pathBlockedByBlockade` when a pawn would pass through it. If no legal pawn remains, the ordinary pass transition resolves the roll; a six pass grants its extra roll unless the third-six penalty has already taken precedence.
+- Safe-cell categories are explicit in `BoardGeometry.startTrackCells` and `BoardGeometry.starTrackCells`. Their route IDs and logical cells are regression-tested; final artwork/owner approval remains pending.

@@ -496,6 +496,10 @@ void main() {
   testWidgets(
     'supports one, two, three and four human seat configurations',
     (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(393, 873);
       SharedPreferences.setMockInitialValues({
         'onboarding_completed_v1': true,
       });
@@ -512,7 +516,10 @@ void main() {
           await tester.tap(find.text('$humanCount').last);
           await tester.pumpAndSettle();
         }
-        await tester.tap(find.byKey(const Key('start_ai_match')));
+        final startAiMatch = find.byKey(const Key('start_ai_match'));
+        await tester.ensureVisible(startAiMatch);
+        await tester.pumpAndSettle();
+        await tester.tap(startAiMatch);
         await tester.pumpAndSettle();
 
         final match = tester.widget<MatchScreen>(find.byType(MatchScreen));
