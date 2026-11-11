@@ -502,7 +502,9 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return RepaintBoundary(
+      key: const Key('match_screen_capture'),
+      child: Scaffold(
       backgroundColor: const Color(0xFF080808),
       body: SafeArea(
         child: LayoutBuilder(
@@ -616,10 +618,49 @@ class _MatchScreenState extends State<MatchScreen>
                             child: IconButton(
                               key: const Key('exit_match'),
                               tooltip: 'Exit match',
+                              constraints: const BoxConstraints.tightFor(
+                                width: 72,
+                                height: 72,
+                              ),
+                              padding: EdgeInsets.zero,
+                              iconSize: 36,
                               onPressed: () => Navigator.of(context).pop(),
                               icon: const Icon(
                                 Icons.arrow_back,
                                 color: Color(0xFFFFC857),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 16,
+                            top: 936,
+                            width: 76,
+                            height: 76,
+                            child: Semantics(
+                              button: true,
+                              label: 'Chat',
+                              hint: 'Chat is not available in local matches yet.',
+                              child: GestureDetector(
+                                key: const Key('chat_button'),
+                                behavior: HitTestBehavior.opaque,
+                                onTap: _showChatUnavailable,
+                                child: const SizedBox.expand(),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 16,
+                            top: 936,
+                            width: 76,
+                            height: 76,
+                            child: Semantics(
+                              button: true,
+                              label: 'More options',
+                              child: GestureDetector(
+                                key: const Key('more_button'),
+                                behavior: HitTestBehavior.opaque,
+                                onTap: _showMoreMenu,
+                                child: const SizedBox.expand(),
                               ),
                             ),
                           ),
@@ -655,7 +696,98 @@ class _MatchScreenState extends State<MatchScreen>
           },
         ),
       ),
+      ),
     );
+  }
+
+  void _showChatUnavailable() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Chat is not available in local matches yet.'),
+        duration: Duration(milliseconds: 1600),
+      ),
+    );
+  }
+
+  void _showMoreMenu() {
+    showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF17120B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.restart_alt, color: Color(0xFFFFC857)),
+              title: const Text('Restart match'),
+              onTap: () => Navigator.of(sheetContext).pop('restart'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: Color(0xFFFFC857)),
+              title: const Text('Exit match'),
+              onTap: () => Navigator.of(sheetContext).pop('exit'),
+            ),
+          ],
+        ),
+      ),
+    ).then((action) {
+      if (!mounted) return;
+      if (action == 'restart') {
+        _confirmRestart();
+      } else if (action == 'exit') {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  Future<void> _confirmRestart() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF17120B),
+        title: const Text('Restart this match?'),
+        content: const Text('The current local match progress will be replaced.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('RESTART'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) _restartMatch();
+  }
+
+  void _restartMatch() {
+    _turnResolutionToken++;
+    _movementController.stop();
+    _movementController.value = 0;
+    _previewController.stop();
+    _previewController.value = 0;
+    setState(() {
+      _session = MatchSession.local(
+        matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+        game: LudoGame.initial(),
+      );
+      _isDiceAnimating = false;
+      _isAutoMovePending = false;
+      _selectedPawnIndex = null;
+      _movingColor = null;
+      _movingPawnIndex = null;
+      _pendingMoveFeedback = null;
+      _movementStartProgress = 0;
+      _movementEndProgress = 0;
+      _diceRollId = 0;
+    });
+    unawaited(_persistMatch());
+    _scheduleAiTurn();
   }
 
   void _selectOrMovePawn(int pawnIndex) {
