@@ -42,7 +42,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            set -euo pipefail
+            bash -euo pipefail <<'BASH'
             echo "boot_failed=true" >> "$GITHUB_OUTPUT"
             SERIAL="emulator-5554"
 
@@ -83,6 +83,7 @@ jobs:
             flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
 
       - name: Android emulator integration smoke test (single startup retry)
+            BASH
         if: steps.emulator_attempt_1.outcome == 'failure' && steps.emulator_attempt_1.outputs.boot_failed != 'false'
         timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
@@ -94,7 +95,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            set -euo pipefail
+            bash -euo pipefail <<'BASH'
             SERIAL="emulator-5554"
 
             echo "Retrying emulator startup once; resetting ADB server..."
@@ -131,3 +132,4 @@ jobs:
             echo "Android boot completed on retry. Running Flutter integration smoke test."
             cd apps/mobile
             flutter test integration_test/app_smoke_test.dart --timeout 2m --reporter expanded -d "$SERIAL"
+            BASH
