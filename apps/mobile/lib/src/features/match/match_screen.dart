@@ -480,8 +480,7 @@ class _MatchScreenState extends State<MatchScreen>
     }
     final travelled = _movementController.value * steps;
     final stepIndex = math.min(travelled.floor(), steps - 1).toInt();
-    final linearFraction =
-        (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
+    final linearFraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
     // Ease each discrete board step without changing the accepted engine move.
     final fraction = Curves.easeInOutCubic.transform(linearFraction);
     final fromProgress = _movementStartProgress + stepIndex;
