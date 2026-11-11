@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../game/domain/persistence/saved_match_store.dart';
+import '../../game/application/match_session.dart';
 
 import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/board_geometry.dart';
@@ -41,7 +42,11 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late LudoGame _game = widget.initialGame ?? LudoGame.initial();
+  late MatchSession _session = MatchSession.local(
+    matchId: 'local-${widget.aiSeed}',
+    game: widget.initialGame ?? LudoGame.initial(),
+  );
+  LudoGame get _game => _session.game;
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
@@ -141,6 +146,19 @@ class _MatchScreenState extends State<MatchScreen>
     }
   }
 
+  bool _executeCommand(MatchCommand command) {
+    final result = _session.execute(command);
+    if (!result.accepted) {
+      debugPrint(
+        'Rejected match command ${command.commandId}: '
+        '${result.rejectionReason?.name} (${result.message})',
+      );
+      return false;
+    }
+    _session = result.session;
+    return true;
+  }
+
   Future<void> _persistMatch() {
     // Serialize writes so a slower earlier preference write can never
     // overwrite a newer accepted game state.
@@ -194,13 +212,18 @@ class _MatchScreenState extends State<MatchScreen>
               _isDiceAnimating) {
             return;
           }
-          final rolled = _game.roll(
-            math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
+          final command = RollDiceCommand(
+            matchId: _session.matchId,
+            actorId: _session.actorFor(_game.activePlayer),
             expectedStateVersion: _game.stateVersion,
             commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
+            value: math.Random(widget.aiSeed ^ _game.stateVersion)
+                    .nextInt(6) +
+                1,
           );
+          if (!_executeCommand(command)) return;
+          final rolled = _game;
           setState(() {
-            _game = rolled;
             _isDiceAnimating = rolled.diceValue != null;
             if (rolled.diceValue != null) {
               _diceRollId++;
@@ -230,16 +253,19 @@ class _MatchScreenState extends State<MatchScreen>
     final value = isAi
         ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
         : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-    final rolled = _game.roll(
-      value,
+    final command = RollDiceCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(_game.activePlayer),
       expectedStateVersion: _game.stateVersion,
       commandId:
           '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+      value: value,
     );
+    if (!_executeCommand(command)) return false;
+    final rolled = _game;
     final wasPenalized =
         rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
     setState(() {
-      _game = rolled;
       _isDiceAnimating = rolled.diceValue != null;
       if (rolled.diceValue != null) {
         _diceRollId++;
@@ -289,13 +315,14 @@ class _MatchScreenState extends State<MatchScreen>
                 _game.diceValue == null) {
               return;
             }
-            setState(() {
-              _game = _game.passTurn(
-                expectedStateVersion: _game.stateVersion,
-                commandId: 'match-${_game.stateVersion}-pass',
-              );
-              _isAutoMovePending = false;
-            });
+            final command = PassTurnCommand(
+              matchId: _session.matchId,
+              actorId: _session.actorFor(_game.activePlayer),
+              expectedStateVersion: _game.stateVersion,
+              commandId: 'match-${_game.stateVersion}-pass',
+            );
+            if (!_executeCommand(command)) return;
+            setState(() => _isAutoMovePending = false);
             unawaited(_persistMatch());
             _scheduleAiTurn();
           },
@@ -376,11 +403,15 @@ class _MatchScreenState extends State<MatchScreen>
     final stepCount = endProgress - startProgress;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final nextGame = _game.movePawn(
-      pawnIndex,
+    final command = MovePawnCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(movingColor),
       expectedStateVersion: _game.stateVersion,
       commandId: 'match-${_game.stateVersion}-move-$pawnIndex',
+      pawnIndex: pawnIndex,
     );
+    if (!_executeCommand(command)) return;
+    final nextGame = _game;
     var capturedCount = 0;
     for (final previousPlayer in _game.players) {
       if (previousPlayer.color == movingColor) {
@@ -412,7 +443,6 @@ class _MatchScreenState extends State<MatchScreen>
       _movementStartProgress = startProgress;
       _movementEndProgress = endProgress;
       _pendingMoveFeedback = feedback;
-      _game = nextGame;
       _movementController.duration = reduceMotion
           ? Duration.zero
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
@@ -603,7 +633,10 @@ class _MatchScreenState extends State<MatchScreen>
                                 child: FilledButton(
                                   onPressed: () {
                                     setState(() {
-                                      _game = LudoGame.initial();
+                                      _session = MatchSession.local(
+                                        matchId: 'local-${widget.aiSeed}',
+                                        game: LudoGame.initial(),
+                                      );
                                     });
                                     unawaited(_persistMatch());
                                   },
