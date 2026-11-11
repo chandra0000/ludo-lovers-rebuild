@@ -51,8 +51,8 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=write "${dart_files[@]}"
-      - name: Upload formatter-normalized Dart sources for review
+          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
+      - name: Upload Dart source review set
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -63,6 +63,9 @@ jobs:
             apps/mobile/test/seeded_ludo_ai_test.dart
             apps/mobile/test/match_classic_rules_test.dart
             apps/mobile/test/ludo_rule_profile_contract_test.dart
+            apps/mobile/test/match_session_test.dart
+            apps/mobile/lib/src/game/application/match_session.dart
+            apps/mobile/lib/src/features/match/match_screen.dart
             apps/mobile/tool/engine_benchmark.dart
           if-no-files-found: error
       - name: Static analysis
