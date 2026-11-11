@@ -156,3 +156,37 @@ jobs:
         with:
           name: ludo-lovers-release-apks
           path: apps/mobile/build/app/outputs/flutter-apk/*-release.apk
+
+  android-integration:
+    name: Android emulator integration smoke
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Generate Android project files
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run Phase 4 Android integration smoke
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 600
+          working-directory: apps/mobile
+          script: flutter test integration_test/app_navigation_test.dart -d emulator-5554
