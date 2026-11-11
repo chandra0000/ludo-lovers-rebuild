@@ -497,7 +497,9 @@ class _MatchScreenState extends State<MatchScreen>
     );
     // A small parabolic lift makes each square-to-square step read as a hop.
     // It is presentation-only; the engine has already committed the move.
-    const hopHeight = 10.0;
+    // Smooth lift and landing on each square, with a slightly higher arc
+    // for a readable 3D-style hop at small Android viewport sizes.
+    const hopHeight = 14.0;
     final hopArc = 4 * hopHeight * fraction * (1 - fraction);
     return NormalizedBoardPoint(
       from.x + (to.x - from.x) * fraction,
