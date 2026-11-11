@@ -40,7 +40,10 @@ void main() {
           PlayerColor.orange: <int>[55, -1, -1, -1],
         },
       ).roll(1).movePawn(0);
-      expect(game.currentPlayer.pawnProgress[0], finishProgress);
+      expect(
+        game.players.firstWhere((player) => player.color == PlayerColor.orange).pawnProgress[0],
+        finishProgress,
+      );
       expect(game.activePlayer, PlayerColor.green);
     });
 
