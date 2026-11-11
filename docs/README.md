@@ -14,6 +14,7 @@ This folder is the project handbook. Start here when joining the project or resu
 - [Animation and rendering](engineering/animation-and-rendering.md) — how the board, pawns, dice, and effects are rendered.
 - [Engine benchmarks](engineering/engine-benchmarks.md) — reproducible correctness/performance baseline procedure.
 - [Match command/session boundary](engineering/match-session-boundary.md) — typed commands, actor/version checks, idempotency and deterministic replay.
+- [Team Up implementation plan](engineering/team-up-mode-implementation-plan.md) — legacy-derived rules, immutable engine design and acceptance gates.
 - [Code and app quality review](quality/code-and-app-quality-review-2026-11-11.md) — current engineering strengths, release blockers and prioritized improvements.
 - [Physical Android acceptance and performance](DEVICE_ACCEPTANCE_AND_PERFORMANCE.md) — device-only P0 visual/gameplay and P1 profiling protocol.
 - [Development and testing](engineering/development-and-testing.md) — setup, commands, CI, and quality gates.
