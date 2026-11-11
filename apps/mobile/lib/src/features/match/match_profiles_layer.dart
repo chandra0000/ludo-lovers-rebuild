@@ -88,8 +88,11 @@ class MatchPlayerBadge extends StatelessWidget {
               if (!profile.isConnected)
                 const Icon(Icons.wifi_off, size: 14, color: Colors.white70)
               else if (profile.isBot)
-                const Icon(Icons.smart_toy_outlined,
-                    size: 14, color: Colors.white70),
+                const Icon(
+                  Icons.smart_toy_outlined,
+                  size: 14,
+                  color: Colors.white70,
+                ),
             ],
           ),
         ),
