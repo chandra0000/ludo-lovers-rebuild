@@ -56,6 +56,12 @@ enum MatchCommandRejectionReason {
   staleState,
   duplicateCommand,
   invalidCommand,
+  gameFinished,
+  rollAlreadyPending,
+  noPendingRoll,
+  invalidDice,
+  illegalMove,
+  passNotAllowed,
   invalidAction,
 }
 
@@ -68,6 +74,7 @@ class MatchCommandResult {
     required this.events,
     this.rejectionReason,
     this.message,
+    this.moveInvalidReason,
   });
 
   final MatchSession session;
@@ -75,6 +82,7 @@ class MatchCommandResult {
   final List<LudoGameEvent> events;
   final MatchCommandRejectionReason? rejectionReason;
   final String? message;
+  final MoveInvalidReason? moveInvalidReason;
 }
 
 /// Application boundary around the authoritative immutable Ludo domain.
@@ -143,14 +151,16 @@ class MatchSession {
   MatchCommandResult execute(MatchCommand command) {
     MatchCommandResult reject(
       MatchCommandRejectionReason reason,
-      String message,
-    ) =>
+      String message, {
+      MoveInvalidReason? moveInvalidReason,
+    }) =>
         MatchCommandResult._(
           session: this,
           accepted: false,
           events: const [],
           rejectionReason: reason,
           message: message,
+          moveInvalidReason: moveInvalidReason,
         );
 
     if (command.matchId != matchId) {
@@ -182,6 +192,56 @@ class MatchSession {
         MatchCommandRejectionReason.wrongActor,
         'Only the active player may issue this command.',
       );
+    }
+
+    if (game.winner != null) {
+      return reject(
+        MatchCommandRejectionReason.gameFinished,
+        'The match has already finished.',
+      );
+    }
+    switch (command) {
+      case RollDiceCommand(:final value):
+        if (game.diceValue != null) {
+          return reject(
+            MatchCommandRejectionReason.rollAlreadyPending,
+            'Resolve the current roll before rolling again.',
+          );
+        }
+        if (value < 1 || value > 6) {
+          return reject(
+            MatchCommandRejectionReason.invalidDice,
+            'Dice value must be between 1 and 6.',
+          );
+        }
+      case MovePawnCommand(:final pawnIndex):
+        if (game.diceValue == null) {
+          return reject(
+            MatchCommandRejectionReason.noPendingRoll,
+            'Roll the dice before moving a pawn.',
+          );
+        }
+        final evaluation = game.evaluatePawnMove(pawnIndex);
+        if (evaluation case InvalidMove(:final reason)) {
+          return reject(
+            MatchCommandRejectionReason.illegalMove,
+            'Pawn move rejected: ${reason.name}.',
+            moveInvalidReason: reason,
+          );
+        }
+      case PassTurnCommand():
+        if (game.diceValue == null) {
+          return reject(
+            MatchCommandRejectionReason.noPendingRoll,
+            'Roll the dice before passing.',
+          );
+        }
+        if (!game.awaitingPass) {
+          return reject(
+            MatchCommandRejectionReason.passNotAllowed,
+            'A legal pawn move is available.',
+          );
+        }
     }
 
     try {
