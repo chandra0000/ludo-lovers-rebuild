@@ -210,3 +210,14 @@ See [the Ludo King competitive gap review](competitive-gap-review-2026-11-10.md)
 - Added a destination reticle overlay. The first tap on a legal pawn previews its destination; a second tap on that same pawn confirms the move. Capture and safe-cell coexistence previews have distinct visual treatments.
 - Added widget coverage for automatic single-move timing, multiple legal moves, shake wrapper rendering, destination painter rendering, and updated existing match/integration flows for two-tap confirmation.
 - These changes are on `feat/match-auto-move-and-feedback`; they are not merged to `main`. Formatting, analysis, full tests, CI, and physical-device validation remain pending.
+
+## Engineering quality review and session boundary — 2026-11-11
+
+- PR #15 (Classic rules foundation) and PR #21 (rule-profile contract tests and engine benchmarks) are merged into `main`.
+- PR #21 verification run [42945553165](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/42945553165) completed successfully, including strict analyzer, unit/widget tests, benchmark artifact generation and Android profile/release APK builds. This was CI evidence, not physical-device acceptance.
+- The next application-layer milestone is the typed match command/session boundary. Its implementation is in the dedicated `feat/match-command-session-boundary` branch while review and CI run.
+- The boundary routes roll, move and pass through immutable commands carrying match ID, actor ID, expected state version and command ID. It rejects wrong-match, wrong-actor, stale, duplicate and invalid commands without mutating state; replay tests compare snapshots and ordered events.
+- A source-level code/app quality review is recorded in [Code and app quality review](quality/code-and-app-quality-review-2026-11-11.md).
+- The review identifies the physical-device board/touch/performance checks as release blockers and `MatchScreen` as a maintainability hotspot for a later controller/view extraction.
+- The existing Flutter workflow's formatter step previously rewrote files in CI instead of failing on unformatted commits. The session branch changes this to a non-mutating strict check and adds a real Android emulator navigation smoke test because the previous workflow did not actually execute the integration coverage described by older status notes.
+- Team Up remains disabled and issue #19 remains open. Do not expose it until shared-engine rules, persistence, replay, UI and acceptance tests pass.
