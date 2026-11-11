@@ -33,15 +33,19 @@ void main() {
                 BoardGeometry.trackLength,
         };
         expect(cells.length, BoardGeometry.trackLength);
-        expect(BoardGeometry.physicalTrackCell(color, 0),
-            BoardGeometry.seats[color]!.entryIndex);
+        expect(
+          BoardGeometry.physicalTrackCell(color, 0),
+          BoardGeometry.seats[color]!.entryIndex,
+        );
       }
     });
 
     test('approved artwork has exactly four documented diagonal connectors', () {
       expect(BoardGeometry.nonOrthogonalTransitions, <int>[4, 17, 30, 43]);
-      expect(BoardGeometry.safeTrackCells,
-          <int>{0, 8, 13, 21, 26, 34, 39, 47});
+      expect(
+        BoardGeometry.safeTrackCells,
+        <int>{0, 8, 13, 21, 26, 34, 39, 47},
+      );
     });
   });
 }
