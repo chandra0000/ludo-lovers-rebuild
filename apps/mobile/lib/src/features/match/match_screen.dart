@@ -436,9 +436,10 @@ class _MatchScreenState extends State<MatchScreen>
             : endProgress == 56
                 ? 'PAWN HOME!'
                 : null;
-    final moveDurationMs = startProgress == -1
-        ? 280
-        : math.max(180, stepCount * 125).toInt();
+    var moveDurationMs = 280;
+    if (startProgress != -1) {
+      moveDurationMs = math.max(180, stepCount * 125).toInt();
+    }
     setState(() {
       _selectedPawnIndex = null;
       _movingColor = movingColor;
