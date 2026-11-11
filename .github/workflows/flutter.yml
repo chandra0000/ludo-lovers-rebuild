@@ -131,6 +131,7 @@ jobs:
           disable-animations: true
           script: |
             set -euo pipefail
+            echo "boot_failed=true" >> "$GITHUB_OUTPUT"
             SERIAL="emulator-5554"
             echo "Resetting ADB server..."
             adb kill-server || true
@@ -163,7 +164,7 @@ jobs:
             flutter test integration_test/app_navigation_test.dart -d "$SERIAL"
 
       - name: Android emulator navigation smoke test (single startup retry)
-        if: steps.emulator_attempt_1.outcome == 'failure'
+        if: steps.emulator_attempt_1.outcome == 'failure' && steps.emulator_attempt_1.outputs.boot_failed != 'false'
         timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
         with:
