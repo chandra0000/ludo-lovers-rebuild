@@ -3,12 +3,18 @@ name: Flutter foundation checks
 on:
   push:
     branches: [main, "feat/**"]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/flutter.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/flutter.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 # Avoid spending CI minutes on obsolete runs when several commits land quickly.
 concurrency:
@@ -95,11 +101,23 @@ jobs:
           name: ludo-lovers-canonical-board-artwork
           path: apps/mobile/assets/images/board/ludo_board_glass.webp
           if-no-files-found: error
+  android-apks:
+    name: Android profile and release APKs
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
-      # Emulator integration runs separately via the on-demand Android integration checkpoint.
-      # Keep this foundation job focused on analysis, tests and APK builds.
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies
