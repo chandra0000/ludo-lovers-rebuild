@@ -51,9 +51,7 @@ jobs:
 
           printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
           printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=write "${dart_files[@]}"
-          mkdir -p apps/mobile/test-artifacts
-          git diff -- apps/mobile/lib apps/mobile/test apps/mobile/tool apps/mobile/integration_test > apps/mobile/test-artifacts/dart-format.patch
+          dart format --output=none --set-exit-if-changed "${dart_files[@]}"
       - name: Upload Dart source review set
         if: success()
         uses: actions/upload-artifact@v4
@@ -67,7 +65,6 @@ jobs:
             apps/mobile/test/ludo_rule_profile_contract_test.dart
             apps/mobile/test/match_session_test.dart
             apps/mobile/integration_test/app_navigation_test.dart
-            apps/mobile/test-artifacts/dart-format.patch
             apps/mobile/lib/src/game/application/match_session.dart
             apps/mobile/lib/src/features/match/match_screen.dart
             apps/mobile/tool/engine_benchmark.dart
