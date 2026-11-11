@@ -3,6 +3,7 @@ import 'dart:async';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_dice_layer.dart';
+import 'match_profiles_layer.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/domain/match_player_profile.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
@@ -27,6 +29,8 @@ class MatchScreen extends StatefulWidget {
     this.aiPlayers = const {},
     this.aiSeed = 1,
     this.aiDifficulty = LudoAiDifficulty.medium,
+    this.profiles,
+    this.showDynamicProfiles = false,
   });
 
   @visibleForTesting
@@ -34,6 +38,12 @@ class MatchScreen extends StatefulWidget {
 
   @visibleForTesting
   final LudoGame? initialGame;
+
+  /// Optional identities supplied by a local lobby or future online session.
+  final List<MatchPlayerProfile>? profiles;
+
+  /// Enable after the approved artwork has been cleaned of baked-in avatars.
+  final bool showDynamicProfiles;
 
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
@@ -535,6 +545,16 @@ class _MatchScreenState extends State<MatchScreen>
                             const Positioned.fill(
                               child: MatchBoardArtwork(),
                             ),
+                            if (widget.showDynamicProfiles)
+                              Positioned.fill(
+                                child: MatchProfilesLayer(
+                                  profiles: widget.profiles ??
+                                      MatchPlayerProfile.local(
+                                        aiPlayers: widget.aiPlayers,
+                                      ),
+                                  activeColor: _game.activePlayer,
+                                ),
+                              ),
                             ..._buildPawnsWithClusters(scale),
                             if (_selectedPawnIndex != null)
                               _buildDestinationPreview(),
