@@ -576,8 +576,7 @@ class _MatchScreenState extends State<MatchScreen>
                                 }
                                 _roll(isAi: false);
                               },
-                              onAnimationComplete:
-                                  _handleDiceAnimationComplete,
+                              onAnimationComplete: _handleDiceAnimationComplete,
                             ),
                             Positioned(
                               left: 200,
