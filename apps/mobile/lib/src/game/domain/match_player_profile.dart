@@ -18,8 +18,10 @@ class MatchPlayerProfile {
   final String playerId;
   final String displayName;
   final PlayerColor color;
+
   /// Optional custom avatar; absent means use the approved default avatar.
   final Uri? avatarUri;
+
   /// Stable identifier for the approved default avatar artwork.
   final String? defaultAvatarId;
   final bool isBot;
