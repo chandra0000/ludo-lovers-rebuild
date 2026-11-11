@@ -117,7 +117,10 @@ jobs:
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
-      - name: Android emulator navigation smoke test
+      - name: Android emulator navigation smoke test (attempt 1)
+        id: emulator_attempt_1
+        continue-on-error: true
+        timeout-minutes: 22
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -126,7 +129,82 @@ jobs:
           profile: pixel_2
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: cd apps/mobile && flutter test integration_test/app_navigation_test.dart -d emulator-5554
+          script: |
+            set -euo pipefail
+            SERIAL="emulator-5554"
+            echo "Resetting ADB server..."
+            adb kill-server || true
+            adb start-server
+            adb devices -l
+            echo "Waiting up to 10 minutes for ADB state 'device'..."
+            device_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" get-state 2>/dev/null || true)" = "device" ]; do
+              if (( SECONDS >= device_deadline )); then
+                echo "::error::Emulator did not become online."
+                adb devices -l || true
+                exit 1
+              fi
+              adb devices -l
+              sleep 5
+            done
+            echo "Waiting up to 10 minutes for sys.boot_completed=1..."
+            boot_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r' || true)" = "1" ]; do
+              if (( SECONDS >= boot_deadline )); then
+                echo "::error::Android boot did not complete."
+                adb devices -l || true
+                adb -s "$SERIAL" shell getprop sys.boot_completed || true
+                exit 1
+              fi
+              sleep 5
+            done
+            echo "Android boot completed; starting navigation integration test."
+            cd apps/mobile
+            flutter test integration_test/app_navigation_test.dart -d "$SERIAL"
+
+      - name: Android emulator navigation smoke test (single startup retry)
+        if: steps.emulator_attempt_1.outcome == 'failure'
+        timeout-minutes: 22
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            SERIAL="emulator-5554"
+            echo "Resetting ADB server..."
+            adb kill-server || true
+            adb start-server
+            adb devices -l
+            echo "Waiting up to 10 minutes for ADB state 'device'..."
+            device_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" get-state 2>/dev/null || true)" = "device" ]; do
+              if (( SECONDS >= device_deadline )); then
+                echo "::error::Emulator did not become online."
+                adb devices -l || true
+                exit 1
+              fi
+              adb devices -l
+              sleep 5
+            done
+            echo "Waiting up to 10 minutes for sys.boot_completed=1..."
+            boot_deadline=$((SECONDS + 600))
+            until [ "$(adb -s "$SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r' || true)" = "1" ]; do
+              if (( SECONDS >= boot_deadline )); then
+                echo "::error::Android boot did not complete."
+                adb devices -l || true
+                adb -s "$SERIAL" shell getprop sys.boot_completed || true
+                exit 1
+              fi
+              sleep 5
+            done
+            echo "Android boot completed; starting navigation integration test."
+            cd apps/mobile
+            flutter test integration_test/app_navigation_test.dart -d "$SERIAL"
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies
