@@ -5,7 +5,10 @@ import 'debug_board_overlay.dart';
 /// Renders the approved, pixel-exact board crop at its original canvas
 /// location. Pawns continue using the existing 576x1024 board coordinates.
 class MatchBoardArtwork extends StatelessWidget {
-  const MatchBoardArtwork({super.key, this.showDebugOverlay = const bool.fromEnvironment('LUDO_DEBUG_BOARD')});
+  const MatchBoardArtwork({
+    super.key,
+    this.showDebugOverlay = const bool.fromEnvironment('LUDO_DEBUG_BOARD'),
+  });
 
   /// Debug-only artwork calibration; never shown in profile/release builds.
   final bool showDebugOverlay;
