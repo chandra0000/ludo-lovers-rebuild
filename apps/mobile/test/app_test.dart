@@ -225,11 +225,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
+    // One tap now commits the legal pawn move; six grants another turn.
+    expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(
       tester
@@ -299,9 +296,8 @@ void main() {
 
     await tester.tap(find.text('Pawn 2'));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('pawn_orange_1')));
-    await tester.pumpAndSettle();
+    // Choosing from a shared-cell sheet is the single move selection.
+    expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
   });
   testWidgets('AI dice roll animates before its move or turn pass',
@@ -380,9 +376,6 @@ void main() {
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await tester.tap(pawn);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-      await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
       await tester.pump();
@@ -419,8 +412,7 @@ void main() {
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
       await tester.tap(pawn);
-      await tester.pumpAndSettle();
-      await tester.tap(pawn);
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
 
       final dice = tester.widget<LuxuryDiceButton>(
