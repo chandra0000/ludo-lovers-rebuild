@@ -35,6 +35,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.7'
           cache: true
       - name: Flutter version
         run: flutter --version
@@ -111,6 +112,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.7'
           cache: true
       - name: Resolve dependencies
         working-directory: apps/mobile
@@ -167,6 +169,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.7'
           cache: true
       - name: Resolve dependencies
         working-directory: apps/mobile
