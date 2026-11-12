@@ -301,7 +301,7 @@ class _DiceCube extends StatelessWidget {
       if (normalZ <= 0.001) continue;
       faces.add((
         value: face.$1,
-        transform: combined..translate(0.0, 0.0, half),
+        transform: combined..multiply(Matrix4.translationValues(0.0, 0.0, half)),
         depth: normalZ,
       ));
     }
@@ -352,6 +352,7 @@ class _DiceCube extends StatelessWidget {
 
 class _DiceFace extends StatelessWidget {
   const _DiceFace({
+    super.key,
     required this.size,
     required this.value,
     required this.isInteractive,
