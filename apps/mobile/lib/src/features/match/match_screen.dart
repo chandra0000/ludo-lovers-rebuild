@@ -24,11 +24,10 @@ import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
-import 'match_animation_timing.dart';
+import 'match_animation_lifecycle.dart';
 import 'match_turn_resolution_scheduler.dart';
 import 'match_turn_resolution_timing.dart';
 import 'match_turn_resolution_guard.dart';
-import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
@@ -85,18 +84,17 @@ class _MatchScreenState extends State<MatchScreen>
   final SeededLudoAi _ai = const SeededLudoAi();
   final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
   final MatchAiScheduler _aiScheduler = MatchAiScheduler();
-  bool _isDiceAnimating = false;
   bool _isAppResumed = true;
   final MatchPersistenceController _persistence = MatchPersistenceController();
-  int _diceRollId = 0;
-  late final AnimationController _movementController = AnimationController(
+  late final MatchAnimationLifecycle _animations = MatchAnimationLifecycle(
     vsync: this,
-    duration: const Duration(milliseconds: 160),
-  )
-    ..addListener(_handleMovementTick)
-    ..addStatusListener(_handleMovementStatus);
-  final MatchMovementPresentation _movement = MatchMovementPresentation();
-  final MatchAnimationTiming _animationTiming = const MatchAnimationTiming();
+    onMovementTick: _handleMovementTick,
+    onMovementStatus: _handleMovementStatus,
+  );
+  AnimationController get _movementController => _animations.movement;
+  AnimationController get _previewController => _animations.preview;
+  bool get _isDiceAnimating => _animations.isDiceAnimating;
+  int get _diceRollId => _animations.diceRollId;
   bool _isAutoMovePending = false;
   final MatchTurnResolutionScheduler _turnResolution =
       MatchTurnResolutionScheduler();
@@ -104,10 +102,6 @@ class _MatchScreenState extends State<MatchScreen>
       const MatchTurnResolutionTiming();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
-  late final AnimationController _previewController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  );
 
   @override
   void initState() {
@@ -117,8 +111,7 @@ class _MatchScreenState extends State<MatchScreen>
         widget.aiPlayers.contains(_game.activePlayer)) {
       // A saved AI roll is already accepted by the engine. Complete its
       // presentation callback on restore so the AI cannot become stranded.
-      _isDiceAnimating = true;
-      _diceRollId = 1;
+      _animations.restorePendingDiceRoll();
     }
     final lifecycleState = WidgetsBinding.instance.lifecycleState;
     // Treat the initial detached/null state as active until the first
@@ -138,14 +131,14 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _handleMovementTick() {
-    if (mounted && _movement.pawnIndex != null) {
+    if (mounted && _animations.pawn.pawnIndex != null) {
       setState(() {});
     }
   }
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      final feedback = _movement.complete();
+      final feedback = _animations.completePawnMovement();
       setState(() {});
       _scheduleAiTurn();
       if (feedback != null) {
@@ -206,8 +199,7 @@ class _MatchScreenState extends State<MatchScreen>
     _aiScheduler.cancel();
     _turnResolution.cancel();
     unawaited(_persistMatch());
-    _movementController.dispose();
-    _previewController.dispose();
+    _animations.dispose();
     super.dispose();
   }
 
@@ -239,10 +231,9 @@ class _MatchScreenState extends State<MatchScreen>
       if (!_executeCommand(command)) return;
       final rolled = _game;
       setState(() {
-        _isDiceAnimating = rolled.diceValue != null;
-        if (rolled.diceValue != null) {
-          _diceRollId++;
-        }
+        _animations.presentAcceptedRoll(
+          hasDiceResult: rolled.diceValue != null,
+        );
       });
       unawaited(_persistMatch());
       // A third-six penalty is an accepted turn transition, not a dice
@@ -279,10 +270,9 @@ class _MatchScreenState extends State<MatchScreen>
     final wasPenalized =
         rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
     setState(() {
-      _isDiceAnimating = rolled.diceValue != null;
-      if (rolled.diceValue != null) {
-        _diceRollId++;
-      }
+      _animations.presentAcceptedRoll(
+        hasDiceResult: rolled.diceValue != null,
+      );
     });
     unawaited(_persistMatch());
     if (wasPenalized) {
@@ -308,7 +298,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _handleDiceAnimationComplete() {
     if (!mounted || !_isAppResumed || !_isDiceAnimating) return;
     final legal = _game.legalPawnIndices();
-    setState(() => _isDiceAnimating = false);
+    setState(_animations.completeDiceRoll);
 
     if (_game.diceValue == null) {
       // Defensive recovery: a penalty or restored transition may already
@@ -445,19 +435,18 @@ class _MatchScreenState extends State<MatchScreen>
                 : null;
     setState(() {
       _selectedPawnIndex = null;
-      _movement.color = movingColor;
-      _movement.pawnIndex = pawnIndex;
-      _movement.startProgress = startProgress;
-      _movement.endProgress = endProgress;
-      _movement.feedback = feedback;
-      _movementController.duration = _animationTiming.pawnMovement(
+      _animations.configurePawnMovement(
+        color: movingColor,
+        pawnIndex: pawnIndex,
+        startProgress: startProgress,
+        endProgress: endProgress,
         stepCount: stepCount,
         reduceMotion: reduceMotion,
+        feedback: feedback,
       );
     });
     unawaited(_persistMatch());
-    _previewController.stop();
-    _movementController.forward(from: 0);
+    _animations.startPawnMovement();
   }
 
   NormalizedBoardPoint _pawnPosition(
@@ -469,9 +458,9 @@ class _MatchScreenState extends State<MatchScreen>
       color: color,
       pawnIndex: pawnIndex,
       progress: player.pawnProgress[pawnIndex],
-      isMoving: _movement.color == color && _movement.pawnIndex == pawnIndex,
-      startProgress: _movement.startProgress,
-      endProgress: _movement.endProgress,
+      isMoving: _animations.pawn.color == color && _animations.pawn.pawnIndex == pawnIndex,
+      startProgress: _animations.pawn.startProgress,
+      endProgress: _animations.pawn.endProgress,
       animationValue: _movementController.value,
     );
   }
@@ -658,17 +647,11 @@ class _MatchScreenState extends State<MatchScreen>
   void _restartMatch() {
     _aiScheduler.cancel();
     _turnResolution.cancel();
-    _movementController.stop();
-    _movementController.value = 0;
-    _previewController.stop();
-    _previewController.value = 0;
+    _animations.resetForNewMatch();
     setState(() {
       _matchController.reset(_newMatchSession(LudoGame.initial()));
-      _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
-      _movement.clear();
-      _diceRollId = 0;
     });
     unawaited(_persistMatch());
     _scheduleAiTurn();
@@ -957,8 +940,8 @@ class _MatchScreenState extends State<MatchScreen>
                     scale: canMove ? 1.12 : 1,
                     duration: const Duration(milliseconds: 180),
                     child: Transform.rotate(
-                      angle: _movement.color == color &&
-                              _movement.pawnIndex == pawnIndex
+                      angle: _animations.pawn.color == color &&
+                              _animations.pawn.pawnIndex == pawnIndex
                           ? math.sin(_movementController.value * math.pi * 2) *
                               0.08
                           : 0,
