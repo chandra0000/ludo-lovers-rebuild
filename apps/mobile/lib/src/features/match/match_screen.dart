@@ -23,6 +23,7 @@ import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
+import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
@@ -89,11 +90,7 @@ class _MatchScreenState extends State<MatchScreen>
   )
     ..addListener(_handleMovementTick)
     ..addStatusListener(_handleMovementStatus);
-  PlayerColor? _movingColor;
-  int? _movingPawnIndex;
-  int _movementStartProgress = 0;
-  int _movementEndProgress = 0;
-  String? _pendingMoveFeedback;
+  final MatchMovementPresentation _movement = MatchMovementPresentation();
   bool _isAutoMovePending = false;
   int _turnResolutionToken = 0;
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
@@ -132,18 +129,18 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _handleMovementTick() {
-    if (mounted && _movingPawnIndex != null) {
+    if (mounted && _movement.pawnIndex != null) {
       setState(() {});
     }
   }
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      final feedback = _pendingMoveFeedback;
+      final feedback = _movement.feedback;
       setState(() {
-        _movingColor = null;
-        _movingPawnIndex = null;
-        _pendingMoveFeedback = null;
+        _movement.color = null;
+        _movement.pawnIndex = null;
+        _movement.feedback = null;
       });
       _scheduleAiTurn();
       if (feedback != null) {
@@ -446,11 +443,11 @@ class _MatchScreenState extends State<MatchScreen>
                 : null;
     setState(() {
       _selectedPawnIndex = null;
-      _movingColor = movingColor;
-      _movingPawnIndex = pawnIndex;
-      _movementStartProgress = startProgress;
-      _movementEndProgress = endProgress;
-      _pendingMoveFeedback = feedback;
+      _movement.color = movingColor;
+      _movement.pawnIndex = pawnIndex;
+      _movement.startProgress = startProgress;
+      _movement.endProgress = endProgress;
+      _movement.feedback = feedback;
       _movementController.duration = reduceMotion
           ? Duration.zero
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
@@ -469,9 +466,9 @@ class _MatchScreenState extends State<MatchScreen>
       color: color,
       pawnIndex: pawnIndex,
       progress: player.pawnProgress[pawnIndex],
-      isMoving: _movingColor == color && _movingPawnIndex == pawnIndex,
-      startProgress: _movementStartProgress,
-      endProgress: _movementEndProgress,
+      isMoving: _movement.color == color && _movement.pawnIndex == pawnIndex,
+      startProgress: _movement.startProgress,
+      endProgress: _movement.endProgress,
       animationValue: _movementController.value,
     );
   }
@@ -666,11 +663,11 @@ class _MatchScreenState extends State<MatchScreen>
       _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
-      _movingColor = null;
-      _movingPawnIndex = null;
-      _pendingMoveFeedback = null;
-      _movementStartProgress = 0;
-      _movementEndProgress = 0;
+      _movement.color = null;
+      _movement.pawnIndex = null;
+      _movement.feedback = null;
+      _movement.startProgress = 0;
+      _movement.endProgress = 0;
       _diceRollId = 0;
     });
     unawaited(_persistMatch());
@@ -960,8 +957,8 @@ class _MatchScreenState extends State<MatchScreen>
                     scale: canMove ? 1.12 : 1,
                     duration: const Duration(milliseconds: 180),
                     child: Transform.rotate(
-                      angle: _movingColor == color &&
-                              _movingPawnIndex == pawnIndex
+                      angle: _movement.color == color &&
+                              _movement.pawnIndex == pawnIndex
                           ? math.sin(_movementController.value * math.pi * 2) *
                               0.08
                           : 0,
