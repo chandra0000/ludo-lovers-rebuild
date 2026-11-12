@@ -8,7 +8,7 @@ void main() {
 
   test('dice presentation tracks rolls and restores pending AI dice', () {
     final animations = MatchAnimationLifecycle(
-      vsync: TestVSync(),
+      vsync: const TestVSync(),
       onMovementTick: () {},
       onMovementStatus: (_) {},
     );
@@ -41,7 +41,7 @@ void main() {
 
   test('movement completion clears the transient pawn and feedback', () {
     final animations = MatchAnimationLifecycle(
-      vsync: TestVSync(),
+      vsync: const TestVSync(),
       onMovementTick: () {},
       onMovementStatus: (_) {},
     );
@@ -70,7 +70,7 @@ void main() {
   ) async {
     var completions = 0;
     final animations = MatchAnimationLifecycle(
-      vsync: TestVSync(),
+      vsync: const TestVSync(),
       onMovementTick: () {},
       onMovementStatus: (status) {
         if (status == AnimationStatus.completed) completions++;
