@@ -22,6 +22,7 @@ import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
+import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
@@ -78,8 +79,7 @@ class _MatchScreenState extends State<MatchScreen>
   bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
   bool _isAppResumed = true;
-  final SavedMatchStore _savedMatchStore = const SavedMatchStore();
-  Future<void> _persistenceQueue = Future<void>.value();
+  final MatchPersistenceController _persistence = MatchPersistenceController();
   int _diceRollId = 0;
   late final AnimationController _movementController = AnimationController(
     vsync: this,
@@ -193,14 +193,7 @@ class _MatchScreenState extends State<MatchScreen>
       aiSeed: widget.aiSeed,
       aiDifficulty: widget.aiDifficulty,
     );
-    _persistenceQueue = _persistenceQueue.then((_) async {
-      try {
-        await _savedMatchStore.save(snapshot);
-      } catch (error) {
-        debugPrint('Could not persist local match: $error');
-      }
-    });
-    return _persistenceQueue;
+    return _persistence.persist(snapshot);
   }
 
   @override
