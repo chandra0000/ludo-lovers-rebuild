@@ -8,6 +8,7 @@ void main() {
     for (var value = 1; value <= 6; value++) {
       await tester.pumpWidget(
         MaterialApp(
+          key: ValueKey('dice_result_$value'),
           home: Center(
             child: LuxuryDiceButton(
               targetValue: value,
