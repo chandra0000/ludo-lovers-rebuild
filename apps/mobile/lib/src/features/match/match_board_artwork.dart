@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../game/domain/board_geometry.dart';
+import 'debug_board_overlay.dart';
+
 /// Renders the approved, pixel-exact board crop at its original canvas
 /// location. Pawns continue using the existing 576x1024 board coordinates.
 class MatchBoardArtwork extends StatelessWidget {
-  const MatchBoardArtwork({super.key});
+  const MatchBoardArtwork({super.key, this.showDebugOverlay = false});
+
+  /// Debug-only artwork calibration; never shown in profile/release builds.
+  final bool showDebugOverlay;
 
   static const assetPath = 'assets/images/board/extracted/board_exact.webp';
   static const _referenceWidth = 864.0;
@@ -41,6 +47,8 @@ class MatchBoardArtwork extends StatelessWidget {
               ),
             ),
           ),
+          if (showDebugOverlay && debugBoardOverlayEnabled)
+            const Positioned.fill(child: DebugBoardOverlay()),
         ],
       ),
     );
