@@ -268,13 +268,13 @@ class _DiceCube extends StatelessWidget {
 
   // Face normals: 1 front, 6 back, 3 right, 4 left, 2 top, 5 bottom.
   static (double, double) orientationFor(int face) => switch (face) {
-      1 => (0, 0),
-      6 => (0, math.pi),
-      3 => (0, -math.pi / 2),
-      4 => (0, math.pi / 2),
-      2 => (-math.pi / 2, 0),
-      5 => (math.pi / 2, 0),
-      _ => (0, 0),
+        1 => (0, 0),
+        6 => (0, math.pi),
+        3 => (0, -math.pi / 2),
+        4 => (0, math.pi / 2),
+        2 => (-math.pi / 2, 0),
+        5 => (math.pi / 2, 0),
+        _ => (0, 0),
       };
 
   @override
