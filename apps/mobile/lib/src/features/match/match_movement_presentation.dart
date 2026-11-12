@@ -28,6 +28,15 @@ class MatchMovementPresentation {
     feedback = moveFeedback;
   }
 
+  /// Clears the active movement and returns feedback for the UI to display.
+  String? complete() {
+    final message = feedback;
+    color = null;
+    pawnIndex = null;
+    feedback = null;
+    return message;
+  }
+
   void clear() {
     color = null;
     pawnIndex = null;
