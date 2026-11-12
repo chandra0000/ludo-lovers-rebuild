@@ -99,6 +99,25 @@ void main() {
       }
     });
 
+    test('approved safe cells equal starts plus artwork stars', () {
+      expect(
+        BoardGeometry.safeTrackCells,
+        BoardGeometry.startTrackCells.union(BoardGeometry.starTrackCells),
+      );
+      expect(
+        BoardGeometry.startTrackCells.intersection(
+          BoardGeometry.starTrackCells,
+        ),
+        isEmpty,
+      );
+      for (final color in PlayerColor.turnOrder) {
+        expect(
+          BoardGeometry.startTrackCells,
+          contains(BoardGeometry.seats[color]!.entryIndex),
+        );
+      }
+    });
+
     test('keeps safe-cell metadata within the physical shared track', () {
       expect(BoardGeometry.safeTrackCells, {0, 8, 13, 21, 26, 34, 39, 47});
       for (final index in BoardGeometry.safeTrackCells) {
