@@ -458,7 +458,8 @@ class _MatchScreenState extends State<MatchScreen>
       color: color,
       pawnIndex: pawnIndex,
       progress: player.pawnProgress[pawnIndex],
-      isMoving: _animations.pawn.color == color && _animations.pawn.pawnIndex == pawnIndex,
+      isMoving: _animations.pawn.color == color &&
+          _animations.pawn.pawnIndex == pawnIndex,
       startProgress: _animations.pawn.startProgress,
       endProgress: _animations.pawn.endProgress,
       animationValue: _movementController.value,
