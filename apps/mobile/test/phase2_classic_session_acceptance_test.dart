@@ -64,8 +64,10 @@ void main() {
         value: 6,
       ),
     );
-    expect(duplicate.rejectionReason,
-        MatchCommandRejectionReason.duplicateCommand);
+    expect(
+      duplicate.rejectionReason,
+      MatchCommandRejectionReason.duplicateCommand,
+    );
   });
 
   test('hard blockade rejects intermediate path via session boundary', () {
@@ -78,27 +80,39 @@ void main() {
     final blocked = move(rolled.session, 0, 'blocked-move');
     expect(blocked.accepted, isFalse);
     expect(blocked.rejectionReason, MatchCommandRejectionReason.illegalMove);
-    expect(blocked.moveInvalidReason,
-        MoveInvalidReason.pathBlockedByBlockade);
+    expect(
+      blocked.moveInvalidReason,
+      MoveInvalidReason.pathBlockedByBlockade,
+    );
     expect(identical(blocked.session, rolled.session), isTrue);
   });
 
   test('protected destination stack rejects capture', () {
-    final rolled = roll(seeded({
-      PlayerColor.orange: [3, -1, -1, -1],
-      PlayerColor.green: [44, 44, -1, -1],
-    }), 2, 'stack-roll');
+    final rolled = roll(
+      seeded({
+        PlayerColor.orange: [3, -1, -1, -1],
+        PlayerColor.green: [44, 44, -1, -1],
+      }),
+      2,
+      'stack-roll',
+    );
     final blocked = move(rolled.session, 0, 'stack-move');
     expect(blocked.accepted, isFalse);
-    expect(blocked.moveInvalidReason,
-        MoveInvalidReason.landingOnProtectedStack);
+    expect(
+      blocked.moveInvalidReason,
+      MoveInvalidReason.landingOnProtectedStack,
+    );
   });
 
   test('capture awards extra turn through accepted commands', () {
-    final rolled = roll(seeded({
-      PlayerColor.orange: [3, -1, -1, -1],
-      PlayerColor.green: [44, -1, -1, -1],
-    }), 2, 'capture-roll');
+    final rolled = roll(
+      seeded({
+        PlayerColor.orange: [3, -1, -1, -1],
+        PlayerColor.green: [44, -1, -1, -1],
+      }),
+      2,
+      'capture-roll',
+    );
     final moved = move(rolled.session, 0, 'capture-move');
     expect(moved.accepted, isTrue);
     expect(moved.events.whereType<PawnCaptured>(), hasLength(1));
@@ -107,9 +121,13 @@ void main() {
   });
 
   test('finishing a pawn awards extra turn under classic profile', () {
-    final rolled = roll(seeded({
-      PlayerColor.orange: [55, -1, -1, -1],
-    }), 1, 'finish-roll');
+    final rolled = roll(
+      seeded({
+        PlayerColor.orange: [55, -1, -1, -1],
+      }),
+      1,
+      'finish-roll',
+    );
     final moved = move(rolled.session, 0, 'finish-move');
     expect(moved.accepted, isTrue);
     expect(moved.events.whereType<PawnFinished>(), hasLength(1));
