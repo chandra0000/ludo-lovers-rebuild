@@ -25,6 +25,7 @@ import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
 import 'match_animation_timing.dart';
+import 'match_turn_resolution_scheduler.dart';
 import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
@@ -95,7 +96,8 @@ class _MatchScreenState extends State<MatchScreen>
   final MatchMovementPresentation _movement = MatchMovementPresentation();
   final MatchAnimationTiming _animationTiming = const MatchAnimationTiming();
   bool _isAutoMovePending = false;
-  int _turnResolutionToken = 0;
+  final MatchTurnResolutionScheduler _turnResolution =
+      MatchTurnResolutionScheduler();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
   late final AnimationController _previewController = AnimationController(
@@ -198,6 +200,7 @@ class _MatchScreenState extends State<MatchScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _aiScheduler.cancel();
+    _turnResolution.cancel();
     unawaited(_persistMatch());
     _movementController.dispose();
     _previewController.dispose();
@@ -310,15 +313,9 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
-      final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(
-        Future<void>.delayed(
-          const Duration(milliseconds: 600),
-          () {
-            if (!mounted ||
-                token != _turnResolutionToken ||
-                _game.diceValue == null) {
+      _turnResolution.schedule(const Duration(milliseconds: 600), () {
+            if (!mounted || _game.diceValue == null) {
               return;
             }
             final command = PassTurnCommand(
@@ -331,9 +328,7 @@ class _MatchScreenState extends State<MatchScreen>
             setState(() => _isAutoMovePending = false);
             unawaited(_persistMatch());
             _scheduleAiTurn();
-          },
-        ),
-      );
+      });
       return;
     }
 
@@ -348,23 +343,16 @@ class _MatchScreenState extends State<MatchScreen>
             ? legal.single
             : null;
     if (selected != null) {
-      final token = ++_turnResolutionToken;
       setState(() => _isAutoMovePending = true);
-      unawaited(
-        Future<void>.delayed(
-          const Duration(milliseconds: 350),
-          () {
+      _turnResolution.schedule(const Duration(milliseconds: 350), () {
             if (!mounted ||
-                token != _turnResolutionToken ||
                 _game.diceValue == null ||
                 _movementController.isAnimating) {
               return;
             }
             setState(() => _isAutoMovePending = false);
             _move(selected);
-          },
-        ),
-      );
+      });
     }
   }
 
@@ -648,7 +636,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _restartMatch() {
     _aiScheduler.cancel();
-    _turnResolutionToken++;
+    _turnResolution.cancel();
     _movementController.stop();
     _movementController.value = 0;
     _previewController.stop();
