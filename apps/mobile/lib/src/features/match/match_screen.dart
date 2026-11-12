@@ -15,6 +15,7 @@ import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
+import 'game/systems/pawn_layout_solver.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_dice_layer.dart';
@@ -942,7 +943,7 @@ class _MatchScreenState extends State<MatchScreen>
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
         final point = _pawnPosition(color, pawnIndex);
-        final key = _clusterKey(point);
+        final key = PawnLayoutSolver.clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
           (color: color, pawnIndex: pawnIndex),
         );
@@ -966,9 +967,6 @@ class _MatchScreenState extends State<MatchScreen>
     ];
   }
 
-  int _clusterKey(NormalizedBoardPoint point) =>
-      (point.x * 1000).round() * 10000 + (point.y * 1000).round();
-
   Widget _buildPawn(
     PlayerColor color,
     int pawnIndex,
@@ -980,22 +978,16 @@ class _MatchScreenState extends State<MatchScreen>
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
-    final occupants = clusters[_clusterKey(normalized)] ??
+    final occupants = clusters[PawnLayoutSolver.clusterKey(normalized)] ??
         [
           (color: color, pawnIndex: pawnIndex),
         ];
     final stackIndex = occupants.indexWhere(
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
-    const offsets = <Offset>[
-      Offset(-.48, -.48),
-      Offset(.48, -.48),
-      Offset(-.48, .48),
-      Offset(.48, .48),
-    ];
     final stacked = occupants.length > 1;
-    final visualOffset =
-        stacked ? offsets[stackIndex % offsets.length] * 18 : Offset.zero;
+    final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
+    final visualOffset = Offset(slot.x, slot.y);
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
