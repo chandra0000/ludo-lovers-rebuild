@@ -299,12 +299,14 @@ class _DiceCube extends StatelessWidget {
       // A face is only painted when its outward normal faces the camera.
       final normalZ = combined.storage[10];
       if (normalZ <= 0.001) continue;
-      faces.add((
-        value: face.$1,
-        transform: combined..multiply(Matrix4.translationValues(0.0, 0.0, half)),
-        depth: normalZ,
-      ),
-    );
+      faces.add(
+        (
+          value: face.$1,
+          transform: combined
+            ..multiply(Matrix4.translationValues(0.0, 0.0, half)),
+          depth: normalZ,
+        ),
+      );
     }
     faces.sort((a, b) => a.depth.compareTo(b.depth));
     return SizedBox(
