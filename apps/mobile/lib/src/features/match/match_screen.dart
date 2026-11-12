@@ -44,8 +44,7 @@ class MatchScreen extends StatefulWidget {
     this.aiDifficulty = LudoAiDifficulty.medium,
     this.profiles,
     this.showDynamicProfiles = true,
-    this.useApprovedArtwork =
-        const bool.fromEnvironment('LUDO_APPROVED_ART'),
+    this.useApprovedArtwork = const bool.fromEnvironment('LUDO_APPROVED_ART'),
   });
 
   @visibleForTesting
@@ -565,61 +564,61 @@ class _MatchScreenState extends State<MatchScreen>
                   Positioned(
                     left: 16,
                     top: 936,
-                  width: 76,
-                  height: 76,
-                  child: Semantics(
-                    button: true,
-                    label: 'Chat',
-                    hint: 'Open local chat and emoji reactions.',
-                    child: GestureDetector(
-                      key: const Key('chat_button'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _showLocalChat,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color(0xE6211A0D),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.chat_bubble_outline,
-                            size: 32,
-                            color: Color(0xFFFFD36B),
+                    width: 76,
+                    height: 76,
+                    child: Semantics(
+                      button: true,
+                      label: 'Chat',
+                      hint: 'Open local chat and emoji reactions.',
+                      child: GestureDetector(
+                        key: const Key('chat_button'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _showLocalChat,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color(0xE6211A0D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.chat_bubble_outline,
+                              size: 32,
+                              color: Color(0xFFFFD36B),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
                 if (!widget.useApprovedArtwork)
                   Positioned(
                     right: 16,
                     top: 936,
-                  width: 76,
-                  height: 76,
-                  child: Semantics(
-                    button: true,
-                    label: 'More options',
-                    child: GestureDetector(
-                      key: const Key('more_button'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _showMoreMenu,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color(0xE6211A0D),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.more_horiz,
-                            size: 32,
-                            color: Color(0xFFFFD36B),
+                    width: 76,
+                    height: 76,
+                    child: Semantics(
+                      button: true,
+                      label: 'More options',
+                      child: GestureDetector(
+                        key: const Key('more_button'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _showMoreMenu,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color(0xE6211A0D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.more_horiz,
+                              size: 32,
+                              color: Color(0xFFFFD36B),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
                 if (_game.winner != null)
                   Positioned(
                     left: 150,
