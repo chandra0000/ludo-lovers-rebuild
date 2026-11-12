@@ -683,19 +683,18 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _selectOrMovePawn(int pawnIndex) {
+    // A tap on a legal pawn commits the move immediately. The dice has
+    // already been accepted by MatchSession, so a second confirmation tap
+    // adds friction without improving rule validation.
     if (_isAutoMovePending ||
         _isDiceAnimating ||
+        _movementController.isAnimating ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    if (_selectedPawnIndex == pawnIndex) {
-      setState(() => _selectedPawnIndex = null);
-      _previewController.stop();
-      _move(pawnIndex);
-      return;
-    }
-    setState(() => _selectedPawnIndex = pawnIndex);
-    _previewController.forward(from: 0);
+    setState(() => _selectedPawnIndex = null);
+    _previewController.stop();
+    _move(pawnIndex);
   }
 
   Widget _buildDestinationPreview() {
