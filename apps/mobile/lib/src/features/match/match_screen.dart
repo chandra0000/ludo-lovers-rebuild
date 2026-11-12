@@ -15,11 +15,13 @@ import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
+import 'game/systems/pawn_animator.dart';
 import 'game/systems/pawn_layout_solver.dart';
+import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
-import 'match_dice_layer.dart';
+import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
 import 'match_profiles_layer.dart';
@@ -383,16 +385,7 @@ class _MatchScreenState extends State<MatchScreen>
     _shakeKeys['${_game.activePlayer.name}-$pawnIndex']
         ?.currentState
         ?.triggerShake();
-    final message = switch (evaluation.reason) {
-      MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
-      MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
-      MoveInvalidReason.pathBlockedByBlockade =>
-        'PATH BLOCKED BY A PAWN BLOCKADE',
-      MoveInvalidReason.landingOnProtectedStack => 'THAT STACK IS PROTECTED',
-      MoveInvalidReason.noPendingRoll => 'ROLL THE DICE FIRST',
-      MoveInvalidReason.invalidPawnIndex => 'INVALID PAWN SELECTION',
-      MoveInvalidReason.invalidDice => 'DICE VALUE MUST BE 1 TO 6',
-    };
+    final message = MatchFxListener.invalidMoveMessage(evaluation.reason);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         key: const Key('invalid_move_feedback'),
@@ -473,38 +466,14 @@ class _MatchScreenState extends State<MatchScreen>
     int pawnIndex,
   ) {
     final player = _game.players.firstWhere((item) => item.color == color);
-    final progress = player.pawnProgress[pawnIndex];
-    if (_movingColor != color || _movingPawnIndex != pawnIndex) {
-      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
-    }
-
-    final steps = _movementEndProgress - _movementStartProgress;
-    if (steps <= 0) {
-      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
-    }
-    final travelled = _movementController.value * steps;
-    final stepIndex = math.min(travelled.floor(), steps - 1).toInt();
-    final linearFraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
-    // Ease each discrete board step without changing the accepted engine move.
-    final fraction = Curves.easeInOutCubic.transform(linearFraction);
-    final fromProgress = _movementStartProgress + stepIndex;
-    // A small parabolic lift makes each square-to-square step read as a hop.
-    // It is presentation-only; the engine has already committed the move.
-    // Smooth lift and landing on each square, with a slightly higher arc
-    // for a readable 3D-style hop at small Android viewport sizes.
-    const hopHeight = 14.0;
-    final hopArc = 4 * hopHeight * fraction * (1 - fraction);
-    // Interpolate both axes in artwork space. Diagonal segments are visual
-    // only: every step still starts and lands on its legal route anchor.
-    final point = BoardGeometry.interpolateRouteStep(
-      color,
-      fromProgress,
-      pawnIndex,
-      fraction,
-    );
-    return NormalizedBoardPoint(
-      point.x,
-      point.y - hopArc / BoardGeometry.canvasHeight,
+    return PawnAnimator.position(
+      color: color,
+      pawnIndex: pawnIndex,
+      progress: player.pawnProgress[pawnIndex],
+      isMoving: _movingColor == color && _movingPawnIndex == pawnIndex,
+      startProgress: _movementStartProgress,
+      endProgress: _movementEndProgress,
+      animationValue: _movementController.value,
     );
   }
 
@@ -542,7 +511,7 @@ class _MatchScreenState extends State<MatchScreen>
                   ),
                 ..._buildPawnsWithClusters(scale),
                 if (_selectedPawnIndex != null) _buildDestinationPreview(),
-                MatchDiceLayer(
+                DiceControlDock(
                   targetValue: _game.diceValue,
                   rollId: _diceRollId,
                   canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
