@@ -139,11 +139,9 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      final feedback = _movement.feedback;
+      String? feedback;
       setState(() {
-        _movement.color = null;
-        _movement.pawnIndex = null;
-        _movement.feedback = null;
+        feedback = _movement.complete();
       });
       _scheduleAiTurn();
       if (feedback != null) {
@@ -662,11 +660,7 @@ class _MatchScreenState extends State<MatchScreen>
       _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
-      _movement.color = null;
-      _movement.pawnIndex = null;
-      _movement.feedback = null;
-      _movement.startProgress = 0;
-      _movement.endProgress = 0;
+      _movement.clear();
       _diceRollId = 0;
     });
     unawaited(_persistMatch());
