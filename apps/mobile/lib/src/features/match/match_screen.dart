@@ -25,9 +25,7 @@ import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
 import 'match_animation_lifecycle.dart';
-import 'match_turn_resolution_scheduler.dart';
-import 'match_turn_resolution_timing.dart';
-import 'match_turn_resolution_guard.dart';
+import 'match_turn_resolution_controller.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
@@ -95,11 +93,8 @@ class _MatchScreenState extends State<MatchScreen>
   AnimationController get _previewController => _animations.preview;
   bool get _isDiceAnimating => _animations.isDiceAnimating;
   int get _diceRollId => _animations.diceRollId;
-  bool _isAutoMovePending = false;
-  final MatchTurnResolutionScheduler _turnResolution =
-      MatchTurnResolutionScheduler();
-  final MatchTurnResolutionTiming _turnTiming =
-      const MatchTurnResolutionTiming();
+  final MatchTurnResolutionController _turnResolution =
+      MatchTurnResolutionController();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
 
@@ -160,9 +155,10 @@ class _MatchScreenState extends State<MatchScreen>
     _isAppResumed = state == AppLifecycleState.resumed;
     if (!_isAppResumed) {
       // Never execute an automatic pawn move or pass while backgrounded.
+      final hadPendingTurn = _turnResolution.isPending;
       _turnResolution.cancel();
-      if (_isAutoMovePending) {
-        setState(() => _isAutoMovePending = false);
+      if (hadPendingTurn) {
+        setState(() {});
       }
       unawaited(_persistMatch());
       return;
@@ -318,31 +314,27 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
-      final guard = MatchTurnResolutionGuard(
+      _turnResolution.schedulePass(
         matchId: _session.matchId,
         stateVersion: _game.stateVersion,
+        currentMatchId: () => _session.matchId,
+        currentStateVersion: () => _game.stateVersion,
+        canExecute: () => mounted && _isAppResumed && _game.diceValue != null,
+        onReady: () {
+          final command = PassTurnCommand(
+            matchId: _session.matchId,
+            actorId: _session.actorFor(_game.activePlayer),
+            expectedStateVersion: _game.stateVersion,
+            commandId: 'match-${_game.stateVersion}-pass',
+          );
+          final accepted = _executeCommand(command);
+          setState(() {});
+          if (!accepted) return;
+          unawaited(_persistMatch());
+          _scheduleAiTurn();
+        },
       );
-      setState(() => _isAutoMovePending = true);
-      _turnResolution.schedule(_turnTiming.passTurn, () {
-        if (!mounted ||
-            !guard.matches(
-              matchId: _session.matchId,
-              stateVersion: _game.stateVersion,
-            ) ||
-            _game.diceValue == null) {
-          return;
-        }
-        final command = PassTurnCommand(
-          matchId: _session.matchId,
-          actorId: _session.actorFor(_game.activePlayer),
-          expectedStateVersion: _game.stateVersion,
-          commandId: 'match-${_game.stateVersion}-pass',
-        );
-        if (!_executeCommand(command)) return;
-        setState(() => _isAutoMovePending = false);
-        unawaited(_persistMatch());
-        _scheduleAiTurn();
-      });
+      setState(() {});
       return;
     }
 
@@ -357,24 +349,22 @@ class _MatchScreenState extends State<MatchScreen>
             ? legal.single
             : null;
     if (selected != null) {
-      final guard = MatchTurnResolutionGuard(
+      _turnResolution.schedulePawn(
         matchId: _session.matchId,
         stateVersion: _game.stateVersion,
+        currentMatchId: () => _session.matchId,
+        currentStateVersion: () => _game.stateVersion,
+        canExecute: () =>
+            mounted &&
+            _isAppResumed &&
+            _game.diceValue != null &&
+            !_movementController.isAnimating,
+        onReady: () {
+          setState(() {});
+          _move(selected);
+        },
       );
-      setState(() => _isAutoMovePending = true);
-      _turnResolution.schedule(_turnTiming.automaticPawn, () {
-        if (!mounted ||
-            !guard.matches(
-              matchId: _session.matchId,
-              stateVersion: _game.stateVersion,
-            ) ||
-            _game.diceValue == null ||
-            _movementController.isAnimating) {
-          return;
-        }
-        setState(() => _isAutoMovePending = false);
-        _move(selected);
-      });
+      setState(() {});
     }
   }
 
@@ -398,7 +388,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _move(int pawnIndex) {
     if (_isDiceAnimating ||
-        _isAutoMovePending ||
+        _turnResolution.isPending ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
@@ -662,7 +652,6 @@ class _MatchScreenState extends State<MatchScreen>
     _animations.resetForNewMatch();
     setState(() {
       _matchController.reset(_newMatchSession(LudoGame.initial()));
-      _isAutoMovePending = false;
       _selectedPawnIndex = null;
     });
     unawaited(_persistMatch());
@@ -673,7 +662,7 @@ class _MatchScreenState extends State<MatchScreen>
     // A tap on a legal pawn commits the move immediately. The dice has
     // already been accepted by MatchSession, so a second confirmation tap
     // adds friction without improving rule validation.
-    if (_isAutoMovePending ||
+    if (_turnResolution.isPending ||
         _isDiceAnimating ||
         _movementController.isAnimating ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
@@ -866,12 +855,12 @@ class _MatchScreenState extends State<MatchScreen>
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
-        !_isAutoMovePending &&
+        !_turnResolution.isPending &&
         isHumanTurn &&
         legalIndices.contains(pawnIndex);
     final canExplainInvalidMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
-        !_isAutoMovePending &&
+        !_turnResolution.isPending &&
         isHumanTurn &&
         _game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
