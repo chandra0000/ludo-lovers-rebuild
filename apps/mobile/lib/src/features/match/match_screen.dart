@@ -812,9 +812,13 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   List<Widget> _buildPawnsWithClusters(double canvasScale) {
+    // Index players once per frame instead of searching for each pawn.
+    final playersByColor = {
+      for (final player in _game.players) player.color: player,
+    };
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
     for (final color in PlayerColor.turnOrder) {
-      final player = _game.players.firstWhere((item) => item.color == color);
+      final player = playersByColor[color]!;
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
@@ -839,18 +843,25 @@ class _MatchScreenState extends State<MatchScreen>
     return [
       for (final color in PlayerColor.turnOrder)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(color, pawnIndex, clusters, legalIndices, canvasScale),
+          _buildPawn(
+            color,
+            pawnIndex,
+            playersByColor[color]!,
+            clusters,
+            legalIndices,
+            canvasScale,
+          ),
     ];
   }
 
   Widget _buildPawn(
     PlayerColor color,
     int pawnIndex,
+    LudoPlayer player,
     Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
     Set<int> legalIndices,
     double canvasScale,
   ) {
-    final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
