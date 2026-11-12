@@ -19,6 +19,8 @@ void main() {
     expect(movement.startProgress, 4);
     expect(movement.endProgress, 9);
     expect(movement.feedback, 'Captured');
+    expect(movement.complete(), 'Captured');
+    expect(movement.isMoving, isFalse);
     movement.clear();
     expect(movement.isMoving, isFalse);
     expect(movement.feedback, isNull);
