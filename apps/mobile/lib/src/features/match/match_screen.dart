@@ -61,12 +61,13 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late final MatchCommandController _matchController = MatchCommandController(
-    MatchSession.local(
-      matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-      game: widget.initialGame ?? LudoGame.initial(),
-    ),
-  );
+  late final MatchCommandController _matchController =
+      MatchCommandController(_newMatchSession(widget.initialGame ?? LudoGame.initial()));
+  MatchSession _newMatchSession(LudoGame game) {
+    final matchId = 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}';
+    return MatchSession.local(matchId: matchId, game: game);
+  }
+
   MatchSession get _session => _matchController.session;
   LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
@@ -666,13 +667,7 @@ class _MatchScreenState extends State<MatchScreen>
     _previewController.stop();
     _previewController.value = 0;
     setState(() {
-      _matchController.reset(
-        MatchSession.local(
-          matchId:
-              'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-          game: LudoGame.initial(),
-        ),
-      );
+      _matchController.reset(_newMatchSession(LudoGame.initial()));
       _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
