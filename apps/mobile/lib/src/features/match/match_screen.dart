@@ -27,6 +27,7 @@ import 'match_ai_scheduler.dart';
 import 'match_animation_timing.dart';
 import 'match_turn_resolution_scheduler.dart';
 import 'match_turn_resolution_timing.dart';
+import 'match_turn_resolution_guard.dart';
 import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
@@ -316,9 +317,18 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
+      final guard = MatchTurnResolutionGuard(
+        matchId: _session.matchId,
+        stateVersion: _game.stateVersion,
+      );
       setState(() => _isAutoMovePending = true);
       _turnResolution.schedule(_turnTiming.passTurn, () {
-        if (!mounted || _game.diceValue == null) {
+        if (!mounted ||
+            !guard.matches(
+              matchId: _session.matchId,
+              stateVersion: _game.stateVersion,
+            ) ||
+            _game.diceValue == null) {
           return;
         }
         final command = PassTurnCommand(
@@ -346,9 +356,17 @@ class _MatchScreenState extends State<MatchScreen>
             ? legal.single
             : null;
     if (selected != null) {
+      final guard = MatchTurnResolutionGuard(
+        matchId: _session.matchId,
+        stateVersion: _game.stateVersion,
+      );
       setState(() => _isAutoMovePending = true);
       _turnResolution.schedule(_turnTiming.automaticPawn, () {
         if (!mounted ||
+            !guard.matches(
+              matchId: _session.matchId,
+              stateVersion: _game.stateVersion,
+            ) ||
             _game.diceValue == null ||
             _movementController.isAnimating) {
           return;
