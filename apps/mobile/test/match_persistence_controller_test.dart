@@ -18,11 +18,11 @@ void main() {
     final written = <int>[];
     final controller = MatchPersistenceController(
       save: (match) async {
-      if (match.aiSeed == 1) {
-        started.complete();
-        await firstWrite.future;
-      }
-      written.add(match.aiSeed);
+        if (match.aiSeed == 1) {
+          started.complete();
+          await firstWrite.future;
+        }
+        written.add(match.aiSeed);
       },
     );
     final first = controller.persist(snapshot(1));
@@ -38,8 +38,8 @@ void main() {
     final written = <int>[];
     final controller = MatchPersistenceController(
       save: (match) async {
-      if (match.aiSeed == 1) throw StateError('temporary failure');
-      written.add(match.aiSeed);
+        if (match.aiSeed == 1) throw StateError('temporary failure');
+        written.add(match.aiSeed);
       },
     );
     await controller.persist(snapshot(1));
