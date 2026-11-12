@@ -50,6 +50,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    // Start the ticker before advancing its animation duration.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 610));
 
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
