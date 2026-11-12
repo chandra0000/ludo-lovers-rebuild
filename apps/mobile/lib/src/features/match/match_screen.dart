@@ -21,6 +21,7 @@ import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
+import 'match_command_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
@@ -60,11 +61,14 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late MatchSession _session = MatchSession.local(
-    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-    game: widget.initialGame ?? LudoGame.initial(),
+  late final MatchCommandController _matchController = MatchCommandController(
+    MatchSession.local(
+      matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+      game: widget.initialGame ?? LudoGame.initial(),
+    ),
   );
-  LudoGame get _game => _session.game;
+  MatchSession get _session => _matchController.session;
+  LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
@@ -165,7 +169,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   bool _executeCommand(MatchCommand command) {
-    final result = _session.execute(command);
+    final result = _matchController.execute(command);
     if (!result.accepted) {
       debugPrint(
         'Rejected match command ${command.commandId}: '
@@ -173,7 +177,6 @@ class _MatchScreenState extends State<MatchScreen>
       );
       return false;
     }
-    _session = result.session;
     return true;
   }
 
@@ -663,11 +666,11 @@ class _MatchScreenState extends State<MatchScreen>
     _previewController.stop();
     _previewController.value = 0;
     setState(() {
-      _session = MatchSession.local(
+      _matchController.reset(MatchSession.local(
         matchId:
             'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
         game: LudoGame.initial(),
-      );
+      ));
       _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
