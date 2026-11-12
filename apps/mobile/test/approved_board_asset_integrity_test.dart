@@ -9,8 +9,11 @@ void main() {
 
   test('approved board asset decodes and contains visible artwork', () async {
     final data = await rootBundle.load(MatchBoardArtwork.assetPath);
-    expect(data.lengthInBytes, greaterThan(10000),
-        reason: 'The approved board file must not be a placeholder.');
+    expect(
+      data.lengthInBytes,
+      greaterThan(10000),
+      reason: 'The approved board file must not be a placeholder.',
+    );
     final codec = await ui.instantiateImageCodec(
       data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
     );
@@ -44,10 +47,16 @@ void main() {
             }
           }
         }
-        expect(visible, greaterThan(100),
-            reason: 'Board artwork is nearly transparent.');
-        expect(colorful, greaterThan(30),
-            reason: 'Board artwork is unexpectedly dark or empty.');
+        expect(
+          visible,
+          greaterThan(100),
+          reason: 'Board artwork is nearly transparent.',
+        );
+        expect(
+          colorful,
+          greaterThan(30),
+          reason: 'Board artwork is unexpectedly dark or empty.',
+        );
       } finally {
         image.dispose();
       }
