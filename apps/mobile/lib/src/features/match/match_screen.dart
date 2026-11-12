@@ -20,6 +20,8 @@ import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_dice_layer.dart';
+import 'match_dialogs.dart';
+import 'match_hud_overlay.dart';
 import 'match_profiles_layer.dart';
 
 class MatchScreen extends StatefulWidget {
@@ -559,36 +561,9 @@ class _MatchScreenState extends State<MatchScreen>
                   },
                   onAnimationComplete: _handleDiceAnimationComplete,
                 ),
-                Positioned(
-                  left: 200,
-                  top: 924,
-                  width: 176,
-                  height: 32,
-                  child: IgnorePointer(
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xE6080808),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _statusText,
-                          key: const Key('turn_status'),
-                          maxLines: 1,
-                          style: TextStyle(
-                            color: _game.activePlayer.color,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                MatchHudOverlay(
+                  statusText: _statusText,
+                  activePlayer: _game.activePlayer,
                 ),
                 Positioned(
                   left: 12,
@@ -697,30 +672,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _showMoreMenu() {
-    showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: const Color(0xFF17120B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.restart_alt, color: Color(0xFFFFC857)),
-              title: const Text('Restart match'),
-              onTap: () => Navigator.of(sheetContext).pop('restart'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Color(0xFFFFC857)),
-              title: const Text('Exit match'),
-              onTap: () => Navigator.of(sheetContext).pop('exit'),
-            ),
-          ],
-        ),
-      ),
-    ).then((action) {
+    MatchDialogs.showMoreMenu(context).then((action) {
       if (!mounted) return;
       if (action == 'restart') {
         _confirmRestart();
@@ -731,25 +683,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   Future<void> _confirmRestart() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF17120B),
-        title: const Text('Restart this match?'),
-        content:
-            const Text('The current local match progress will be replaced.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('CANCEL'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('RESTART'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await MatchDialogs.confirmRestart(context);
     if (confirmed == true && mounted) _restartMatch();
   }
 
