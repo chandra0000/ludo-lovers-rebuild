@@ -40,24 +40,25 @@ class MatchPlayerBadge extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xF018130D),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isActive ? const [BoxShadow(color: Color(0x55FFD36B), blurRadius: 12)] : null,
           border: Border.all(
             color: isActive ? const Color(0xFFFFD36B) : accent,
             width: isActive ? 3 : 1,
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 16,
+                radius: 23,
                 backgroundColor: accent,
                 child: ClipOval(
                   child: Image.asset(
                     avatarPath,
-                    width: 32,
-                    height: 32,
+                    width: 46,
+                    height: 46,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
@@ -71,7 +72,7 @@ class MatchPlayerBadge extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
                   profile.displayName,
@@ -81,7 +82,7 @@ class MatchPlayerBadge extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -129,7 +130,7 @@ class MatchProfilesLayer extends StatelessWidget {
               left: seats[profile.color]!.dx,
               top: seats[profile.color]!.dy,
               width: 186,
-              height: 46,
+              height: 60,
               child: MatchPlayerBadge(
                 key: Key('profile_${profile.color.name}'),
                 profile: profile,
