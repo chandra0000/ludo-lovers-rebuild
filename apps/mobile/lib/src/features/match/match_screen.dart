@@ -26,6 +26,7 @@ import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
 import 'match_animation_timing.dart';
 import 'match_turn_resolution_scheduler.dart';
+import 'match_turn_resolution_timing.dart';
 import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
@@ -98,6 +99,8 @@ class _MatchScreenState extends State<MatchScreen>
   bool _isAutoMovePending = false;
   final MatchTurnResolutionScheduler _turnResolution =
       MatchTurnResolutionScheduler();
+  final MatchTurnResolutionTiming _turnTiming =
+      const MatchTurnResolutionTiming();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
   late final AnimationController _previewController = AnimationController(
@@ -314,7 +317,7 @@ class _MatchScreenState extends State<MatchScreen>
     }
     if (legal.isEmpty) {
       setState(() => _isAutoMovePending = true);
-      _turnResolution.schedule(const Duration(milliseconds: 600), () {
+      _turnResolution.schedule(_turnTiming.passTurn, () {
         if (!mounted || _game.diceValue == null) {
           return;
         }
@@ -344,7 +347,7 @@ class _MatchScreenState extends State<MatchScreen>
             : null;
     if (selected != null) {
       setState(() => _isAutoMovePending = true);
-      _turnResolution.schedule(const Duration(milliseconds: 350), () {
+      _turnResolution.schedule(_turnTiming.automaticPawn, () {
         if (!mounted ||
             _game.diceValue == null ||
             _movementController.isAnimating) {
