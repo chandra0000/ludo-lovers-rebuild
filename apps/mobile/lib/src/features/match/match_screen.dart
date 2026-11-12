@@ -666,11 +666,13 @@ class _MatchScreenState extends State<MatchScreen>
     _previewController.stop();
     _previewController.value = 0;
     setState(() {
-      _matchController.reset(MatchSession.local(
-        matchId:
-            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-        game: LudoGame.initial(),
-      ));
+      _matchController.reset(
+        MatchSession.local(
+          matchId:
+              'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+          game: LudoGame.initial(),
+        ),
+      );
       _isDiceAnimating = false;
       _isAutoMovePending = false;
       _selectedPawnIndex = null;
