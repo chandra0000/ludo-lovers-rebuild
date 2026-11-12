@@ -9,8 +9,10 @@ void main() {
     for (final index in BoardGeometry.safeTrackCells) {
       final point = BoardGeometry.trackPosition(index);
       expect(keys.add(PawnLayoutSolver.clusterKey(point)), isTrue);
-      expect(PawnLayoutSolver.clusterKey(point),
-          PawnLayoutSolver.clusterKey(point));
+      expect(
+        PawnLayoutSolver.clusterKey(point),
+        PawnLayoutSolver.clusterKey(point),
+      );
     }
     expect(keys, hasLength(BoardGeometry.safeTrackCells.length));
   });
