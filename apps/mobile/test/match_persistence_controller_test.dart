@@ -16,13 +16,15 @@ void main() {
     final firstWrite = Completer<void>();
     final started = Completer<void>();
     final written = <int>[];
-    final controller = MatchPersistenceController(save: (match) async {
+    final controller = MatchPersistenceController(
+      save: (match) async {
       if (match.aiSeed == 1) {
         started.complete();
         await firstWrite.future;
       }
       written.add(match.aiSeed);
-    },);
+      },
+    );
     final first = controller.persist(snapshot(1));
     final second = controller.persist(snapshot(2));
     await started.future;
@@ -34,10 +36,12 @@ void main() {
 
   test('failed save does not block a later snapshot', () async {
     final written = <int>[];
-    final controller = MatchPersistenceController(save: (match) async {
+    final controller = MatchPersistenceController(
+      save: (match) async {
       if (match.aiSeed == 1) throw StateError('temporary failure');
       written.add(match.aiSeed);
-    },);
+      },
+    );
     await controller.persist(snapshot(1));
     await controller.persist(snapshot(2));
     expect(written, [2]);
