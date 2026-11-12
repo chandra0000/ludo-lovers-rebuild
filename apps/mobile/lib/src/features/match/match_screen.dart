@@ -18,6 +18,7 @@ import '../../game/presentation/shake_feedback_wrapper.dart';
 import 'game/systems/pawn_layout_solver.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
+import 'match_board_viewport.dart';
 import 'match_dice_layer.dart';
 import 'match_profiles_layer.dart';
 
@@ -521,28 +522,9 @@ class _MatchScreenState extends State<MatchScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFF080808),
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final scale = math.min(
-                constraints.maxWidth / BoardGeometry.canvasWidth,
-                constraints.maxHeight / BoardGeometry.canvasHeight,
-              );
-              final width = BoardGeometry.canvasWidth * scale;
-              final height = BoardGeometry.canvasHeight * scale;
-              return Center(
-                child: RepaintBoundary(
-                  key: const Key('match_canvas_capture'),
-                  child: SizedBox(
-                    key: const Key('match_canvas'),
-                    width: width,
-                    height: height,
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: SizedBox(
-                        width: BoardGeometry.canvasWidth,
-                        height: BoardGeometry.canvasHeight,
-                        child: Stack(
-                          children: [
+          child: MatchBoardViewport(
+            builder: (context, scale) => Stack(
+              children: [
                             const Positioned.fill(
                               child: MatchBoardArtwork(),
                             ),
@@ -700,14 +682,8 @@ class _MatchScreenState extends State<MatchScreen>
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ),
