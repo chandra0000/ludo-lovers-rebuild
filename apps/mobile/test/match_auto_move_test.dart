@@ -50,11 +50,17 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
+    // Start the ticker before advancing its animation duration.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 610));
 
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_1')), findsOneWidget);
+    // Multiple legal moves require choosing WHICH pawn, not tapping it twice.
+    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.pumpAndSettle();
+    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

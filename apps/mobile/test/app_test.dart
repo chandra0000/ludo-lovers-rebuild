@@ -45,21 +45,21 @@ void main() {
   testWidgets(
     'home branding and primary action fit a compact phone',
     (tester) async {
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(360, 640);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(360, 640);
 
-    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
-    expect(find.text('LUDO LOVERS'), findsOneWidget);
-    expect(find.text('PLAY • CONNECT • LOVE'), findsOneWidget);
-    expect(find.byKey(const Key('brand_logo')), findsOneWidget);
-    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+      expect(find.text('LUDO LOVERS'), findsOneWidget);
+      expect(find.text('PLAY • CONNECT • LOVE'), findsOneWidget);
+      expect(find.byKey(const Key('brand_logo')), findsOneWidget);
+      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
-    final logoSize = tester.getSize(find.byKey(const Key('brand_logo')));
-    expect(logoSize.width, lessThan(160));
-    expect(logoSize.height, lessThan(160));
+      final logoSize = tester.getSize(find.byKey(const Key('brand_logo')));
+      expect(logoSize.width, lessThan(160));
+      expect(logoSize.height, lessThan(160));
       expect(
         tester.getSize(find.byKey(const Key('open_game_setup'))).width,
         lessThanOrEqualTo(312),
@@ -67,7 +67,8 @@ void main() {
     },
   );
 
-  testWidgets('first launch shows onboarding and skip reaches home', (tester) async {
+  testWidgets('first launch shows onboarding and skip reaches home',
+      (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.byKey(const Key('splash_background')), findsOneWidget);
@@ -84,8 +85,8 @@ void main() {
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
   });
 
-
-  testWidgets('onboarding next and get started complete first-run setup', (tester) async {
+  testWidgets('onboarding next and get started complete first-run setup',
+      (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const MaterialApp(home: OnboardingScreen()));
     expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
@@ -105,7 +106,8 @@ void main() {
     expect(preferences.getBool('onboarding_completed_v1'), isTrue);
   });
 
-  testWidgets('keeps the complete board composition responsive', (tester) async {
+  testWidgets('keeps the complete board composition responsive',
+      (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -125,13 +127,20 @@ void main() {
       expect(canvas.width, lessThanOrEqualTo(viewport.width));
       expect(canvas.height, lessThanOrEqualTo(viewport.height));
       expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
-      expect(artwork.width / artwork.height, closeTo(9 / 16, 0.001));
-      expect(artwork.width, BoardGeometry.canvasWidth);
-      expect(artwork.height, BoardGeometry.canvasHeight);
+      expect(artwork.width / artwork.height, closeTo(835 / 851, 0.001));
+      expect(
+        artwork.width,
+        closeTo(835 / 864 * BoardGeometry.canvasWidth, 0.001),
+      );
+      expect(
+        artwork.height,
+        closeTo(851 / 1536 * BoardGeometry.canvasHeight, 0.001),
+      );
     }
   });
 
-  testWidgets('places each starting pawn at its calibrated artwork socket', (tester) async {
+  testWidgets('places each starting pawn at its calibrated artwork socket',
+      (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -160,8 +169,8 @@ void main() {
     }
   });
 
-
-  testWidgets('captures the canonical match canvas at a 393x873 viewport', (tester) async {
+  testWidgets('captures the canonical match canvas at a 393x873 viewport',
+      (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -188,14 +197,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
+    expect(find.byKey(const Key('board_artwork')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_green_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_magenta_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_blue_0')), findsOneWidget);
   });
-  
-  testWidgets('plays a deterministic release and turn-change sequence', (tester) async {
+
+  testWidgets('plays a deterministic release and turn-change sequence',
+      (tester) async {
     final rolls = <int>[6, 2];
     var rollIndex = 0;
     await tester.pumpWidget(
@@ -207,28 +217,31 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice'))).targetValue,
+      tester
+          .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))
+          .targetValue,
       6,
     );
 
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
+    // One tap now commits the legal pawn move; six grants another turn.
+    expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(
-      tester.widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
-          .properties.button,
+      tester
+          .widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
+          .properties
+          .button,
       isTrue,
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice'))).targetValue,
+      tester
+          .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))
+          .targetValue,
       2,
     );
 
@@ -241,10 +254,10 @@ void main() {
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
     await tester.pumpAndSettle();
   });
-  
+
   testWidgets(
-    'offers a chooser when multiple legal pawns share a cell on compact phones',
-    (tester) async {
+      'offers a chooser when multiple legal pawns share a cell on compact phones',
+      (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;
@@ -264,8 +277,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    final firstHitTarget = tester.getRect(find.byKey(const Key('pawn_orange_0')));
-    final secondHitTarget = tester.getRect(find.byKey(const Key('pawn_orange_1')));
+    final firstHitTarget =
+        tester.getRect(find.byKey(const Key('pawn_orange_0')));
+    final secondHitTarget =
+        tester.getRect(find.byKey(const Key('pawn_orange_1')));
     expect(firstHitTarget.width, greaterThanOrEqualTo(44));
     expect(firstHitTarget.height, greaterThanOrEqualTo(44));
     expect(secondHitTarget.width, greaterThanOrEqualTo(44));
@@ -281,11 +296,10 @@ void main() {
 
     await tester.tap(find.text('Pawn 2'));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('pawn_orange_1')));
-    await tester.pumpAndSettle();
+    // Choosing from a shared-cell sheet is the single move selection.
+    expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
-  });  
+  });
   testWidgets('AI dice roll animates before its move or turn pass',
       (tester) async {
     await tester.pumpWidget(
@@ -305,9 +319,12 @@ void main() {
     );
     expect(rollingDice.targetValue, isNotNull);
     expect(
-      tester.widget<Semantics>(
-        find.byKey(const Key('luxury_dice_semantics')),
-      ).properties.label,
+      tester
+          .widget<Semantics>(
+            find.byKey(const Key('luxury_dice_semantics')),
+          )
+          .properties
+          .label,
       'Dice rolling',
     );
 
@@ -317,16 +334,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester.widget<Semantics>(
-        find.byKey(const Key('luxury_dice_semantics')),
-      ).properties.label,
+      tester
+          .widget<Semantics>(
+            find.byKey(const Key('luxury_dice_semantics')),
+          )
+          .properties
+          .label,
       isNot('Dice rolling'),
     );
   });
 
-  testWidgets(
-    'passes a turn after the animated roll when no pawn can move',
-    (tester) async {
+  testWidgets('passes a turn after the animated roll when no pawn can move',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: MatchScreen(rollDice: () => 4),
@@ -357,9 +376,6 @@ void main() {
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await tester.tap(pawn);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('destination_preview')), findsOneWidget);
-      await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
       await tester.pump();
@@ -374,7 +390,6 @@ void main() {
       expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     },
   );
-
 
   testWidgets(
     'blocks a new dice roll until pawn movement animation completes',
@@ -397,8 +412,7 @@ void main() {
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
       await tester.tap(pawn);
-      await tester.pumpAndSettle();
-      await tester.tap(pawn);
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
 
       final dice = tester.widget<LuxuryDiceButton>(
@@ -420,8 +434,6 @@ void main() {
       expect(rollCount, 2);
     },
   );
-
-
 
   testWidgets('completes pawn movement immediately with reduced motion',
       (tester) async {
@@ -468,7 +480,8 @@ void main() {
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
   });
 
-  testWidgets('shows home feedback when a pawn reaches the finish', (tester) async {
+  testWidgets('shows home feedback when a pawn reaches the finish',
+      (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
       pawnProgress: {
@@ -490,8 +503,6 @@ void main() {
 
     expect(find.text('PAWN HOME!'), findsOneWidget);
   });
-
-
 
   testWidgets(
     'supports one, two, three and four human seat configurations',
@@ -534,14 +545,13 @@ void main() {
     },
   );
 
-  testWidgets(
-    'board preview shows all sixteen provisional yard anchors',
-    (tester) async {
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(393, 873);
-      SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
+  testWidgets('board preview shows all sixteen provisional yard anchors',
+      (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 873);
+    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();

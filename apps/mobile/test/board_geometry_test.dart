@@ -74,22 +74,47 @@ void main() {
       }
     });
 
-    test('maps every player-relative track progress to 51 unique physical cells', () {
+    test(
+        'maps every player-relative track progress to 51 unique physical cells',
+        () {
       for (final color in PlayerColor.turnOrder) {
         final cells = <int>[
-          for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++)
+          for (var progress = 0;
+              progress < BoardGeometry.playerTrackLength;
+              progress++)
             BoardGeometry.physicalTrackCell(color, progress),
         ];
         expect(cells, hasLength(51));
         expect(cells.toSet(), hasLength(51));
         expect(cells.first, BoardGeometry.seats[color]!.entryIndex);
-        for (var progress = 0; progress < BoardGeometry.playerTrackLength; progress++) {
+        for (var progress = 0;
+            progress < BoardGeometry.playerTrackLength;
+            progress++) {
           final point = BoardGeometry.normalizedPosition(color, progress, 0);
           expect(
             point,
             BoardGeometry.trackPosition(cells[progress]),
           );
         }
+      }
+    });
+
+    test('approved safe cells equal starts plus artwork stars', () {
+      expect(
+        BoardGeometry.safeTrackCells,
+        BoardGeometry.startTrackCells.union(BoardGeometry.starTrackCells),
+      );
+      expect(
+        BoardGeometry.startTrackCells.intersection(
+          BoardGeometry.starTrackCells,
+        ),
+        isEmpty,
+      );
+      for (final color in PlayerColor.turnOrder) {
+        expect(
+          BoardGeometry.startTrackCells,
+          contains(BoardGeometry.seats[color]!.entryIndex),
+        );
       }
     });
 
@@ -100,13 +125,15 @@ void main() {
       }
     });
 
-    test('validates every route edge and isolates the four diagonal connectors', () {
+    test('validates every route edge and isolates the four diagonal connectors',
+        () {
       final connectors = <int>{};
       for (var index = 0; index < BoardGeometry.trackLength; index++) {
         final from = BoardGeometry.sharedTrack[index];
-        final to = BoardGeometry.sharedTrack[(index + 1) % BoardGeometry.trackLength];
-        final distance = (from.column - to.column).abs() +
-            (from.row - to.row).abs();
+        final to =
+            BoardGeometry.sharedTrack[(index + 1) % BoardGeometry.trackLength];
+        final distance =
+            (from.column - to.column).abs() + (from.row - to.row).abs();
         if (distance == 2) {
           connectors.add(index);
           expect((from.column - to.column).abs(), 1);
@@ -119,7 +146,8 @@ void main() {
       expect(connectors, BoardGeometry.cornerConnectorIndexes);
     });
 
-    test('pins provisional safe-cell IDs to their exact physical route cells', () {
+    test('pins provisional safe-cell IDs to their exact physical route cells',
+        () {
       const expected = <int, BoardCell>{
         0: BoardCell(1, 6),
         8: BoardCell(6, 2),
@@ -224,7 +252,8 @@ void main() {
       expect(canvas.y, closeTo(285.44, 0.001));
     });
 
-    test('maps full-artwork normalized points directly to the design canvas', () {
+    test('maps full-artwork normalized points directly to the design canvas',
+        () {
       const point = NormalizedBoardPoint(0.5, 0.5);
       final canvas = BoardGeometry.canvasPosition(point);
       expect(canvas.x, BoardGeometry.canvasWidth / 2);
@@ -233,7 +262,8 @@ void main() {
       expect(BoardGeometry.canvasHeight, 1024);
     });
 
-    test('maps home yards, shared track, lanes and finish to normalized points', () {
+    test('maps home yards, shared track, lanes and finish to normalized points',
+        () {
       for (final color in PlayerColor.turnOrder) {
         for (var pawn = 0; pawn < 4; pawn++) {
           expect(

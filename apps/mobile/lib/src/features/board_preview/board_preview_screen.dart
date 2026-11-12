@@ -32,82 +32,88 @@ class BoardPreviewScreen extends StatelessWidget {
                   child: RepaintBoundary(
                     key: const Key('board_preview_capture'),
                     child: AspectRatio(
-                      aspectRatio:
-                          BoardGeometry.canvasWidth / BoardGeometry.canvasHeight,
+                      aspectRatio: BoardGeometry.canvasWidth /
+                          BoardGeometry.canvasHeight,
                       child: LayoutBuilder(
-                      builder: (context, constraints) => Stack(
-                        key: const Key('board_preview_canvas'),
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(
-                            'assets/images/board/ludo_board_glass.webp',
-                            key: const Key('board_preview_artwork'),
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const ColoredBox(
-                              color: Color(0xFF111111),
-                              child: Center(
-                                child: Text(
-                                  'Canonical board artwork failed to load.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white70),
+                        builder: (context, constraints) => Stack(
+                          key: const Key('board_preview_canvas'),
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              'assets/images/board/ludo_board_glass.webp',
+                              key: const Key('board_preview_artwork'),
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const ColoredBox(
+                                color: Color(0xFF111111),
+                                child: Center(
+                                  child: Text(
+                                    'Canonical board artwork failed to load.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          for (var index = 0;
-                              index < BoardGeometry.sharedTrack.length;
-                              index++)
+                            for (var index = 0;
+                                index < BoardGeometry.sharedTrack.length;
+                                index++)
+                              _cellMarker(
+                                BoardGeometry.trackPosition(index),
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                                color:
+                                    BoardGeometry.safeTrackCells.contains(index)
+                                        ? const Color(0xFFFFC857)
+                                        : BoardGeometry.cornerConnectorIndexes
+                                                .contains(index)
+                                            ? Colors.redAccent
+                                            : Colors.white70,
+                                size:
+                                    BoardGeometry.safeTrackCells.contains(index)
+                                        ? 9
+                                        : 5,
+                                crosshairKey: BoardGeometry.safeTrackCells
+                                        .contains(index)
+                                    ? Key('preview_track_${index}_crosshair')
+                                    : null,
+                                key: Key('preview_track_$index'),
+                              ),
+                            for (final color in PlayerColor.turnOrder)
+                              for (var lane = 0;
+                                  lane <
+                                      BoardGeometry
+                                          .seats[color]!.homeLane.length;
+                                  lane++)
+                                _cellMarker(
+                                  BoardGeometry.homeLanePosition(color, lane),
+                                  constraints.maxWidth,
+                                  constraints.maxHeight,
+                                  color: color.color,
+                                  size: 7,
+                                  key: Key('preview_lane_${color.name}_$lane'),
+                                ),
                             _cellMarker(
-                              BoardGeometry.trackPosition(index),
+                              BoardGeometry.finishPosition,
                               constraints.maxWidth,
                               constraints.maxHeight,
-                              color: BoardGeometry.safeTrackCells.contains(index)
-                                  ? const Color(0xFFFFC857)
-                                  : BoardGeometry.cornerConnectorIndexes
-                                          .contains(index)
-                                      ? Colors.redAccent
-                                      : Colors.white70,
-                              size: BoardGeometry.safeTrackCells.contains(index)
-                                  ? 9
-                                  : 5,
-                              crosshairKey: BoardGeometry.safeTrackCells.contains(index)
-                                  ? Key('preview_track_${index}_crosshair')
-                                  : null,
-                              key: Key('preview_track_$index'),
+                              color: const Color(0xFFFFC857),
+                              size: 13,
+                              crosshairKey:
+                                  const Key('preview_finish_crosshair'),
+                              key: const Key('preview_finish'),
                             ),
-                          for (final color in PlayerColor.turnOrder)
-                            for (var lane = 0;
-                                lane < BoardGeometry.seats[color]!.homeLane.length;
-                                lane++)
-                              _cellMarker(
-                                BoardGeometry.homeLanePosition(color, lane),
-                                constraints.maxWidth,
-                                constraints.maxHeight,
-                                color: color.color,
-                                size: 7,
-                                key: Key('preview_lane_${color.name}_$lane'),
-                              ),
-                          _cellMarker(
-                            BoardGeometry.finishPosition,
-                            constraints.maxWidth,
-                            constraints.maxHeight,
-                            color: const Color(0xFFFFC857),
-                            size: 13,
-                            crosshairKey: const Key('preview_finish_crosshair'),
-                            key: const Key('preview_finish'),
-                          ),
-                          for (final color in PlayerColor.turnOrder)
-                            for (var index = 0; index < 4; index++)
-                              _yardMarker(
-                                color,
-                                index,
-                                constraints.maxWidth,
-                                constraints.maxHeight,
-                              ),
-                        ],
-                      ),
+                            for (final color in PlayerColor.turnOrder)
+                              for (var index = 0; index < 4; index++)
+                                _yardMarker(
+                                  color,
+                                  index,
+                                  constraints.maxWidth,
+                                  constraints.maxHeight,
+                                ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

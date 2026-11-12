@@ -3,8 +3,14 @@ name: Flutter foundation checks
 on:
   push:
     branches: [main, "feat/**"]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/flutter.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/flutter.yml"
   workflow_dispatch:
 
 permissions:
@@ -17,8 +23,11 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Pin the runner image: ubuntu-latest moved this run to Ubuntu 26.04,
+    # where the Android 37.2.13 x86_64 emulator repeatedly stayed offline
+    # without KVM and never reached sys.boot_completed.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,51 +35,33 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.7'
           cache: true
       - name: Flutter version
         run: flutter --version
       - name: Resolve dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Check formatting in changed Dart files
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      # Never mutate source in verification. Every PR and push must contain
+      # already-formatted Dart code before analyzer, tests, or builds run.
+      - name: Check Dart formatting (strict, non-mutating)
+        working-directory: apps/mobile
+        run: dart format --output=none --set-exit-if-changed lib test tool integration_test
+      - name: Show required Dart formatting changes
+        if: failure()
+        working-directory: apps/mobile
         run: |
-          base_sha="$BASE_SHA"
-          if [ -z "$base_sha" ]; then
-            base_sha="$(git merge-base origin/main HEAD)"
-          fi
-          mapfile -t dart_files < <(
-            git diff --name-only "$base_sha"...HEAD -- apps/mobile/lib apps/mobile/test apps/mobile/tool |
-              grep -E '\.dart$' || true
-          )
-          if [ "${#dart_files[@]}" -eq 0 ]; then
-            echo "No Dart source or test files changed."
-            exit 0
-          fi
-
-          printf 'Checking %s changed Dart file(s):\n' "${#dart_files[@]}"
-          printf ' - %s\n' "${dart_files[@]}"
-          dart format --output=write "${dart_files[@]}"
-      - name: Upload formatter-normalized Dart sources for review
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatter-normalized-dart-sources
-          path: |
-            apps/mobile/lib/src/game/domain/board_geometry.dart
-            apps/mobile/test/ludo_game_test.dart
-            apps/mobile/test/seeded_ludo_ai_test.dart
-            apps/mobile/test/match_classic_rules_test.dart
-            apps/mobile/test/ludo_rule_profile_contract_test.dart
-            apps/mobile/tool/engine_benchmark.dart
-          if-no-files-found: error
+          dart format lib/src/game/presentation/luxury_dice.dart
+          git diff -- lib/src/game/presentation/luxury_dice.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Normalize board-canvas screenshot filename
+        working-directory: apps/mobile
+        run: mv test-artifacts/match-canvas-393x873.png test-artifacts/match-canvas-393x699.png
       - name: Capture engine benchmark baseline
         working-directory: apps/mobile
         run: |
@@ -87,14 +78,22 @@ jobs:
         if: success()
         working-directory: apps/mobile
         run: |
-          test -s test-artifacts/match-canvas-393x873.png
+          test -s test-artifacts/match-screen-393x873.png
+          test -s test-artifacts/match-canvas-393x699.png
           test -s test-artifacts/board-preview-calibration-393x873.png
-      - name: Upload deterministic match screenshot
+      - name: Upload full-screen match screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-lovers-match-canvas-393x873
-          path: apps/mobile/test-artifacts/match-canvas-393x873.png
+          name: ludo-lovers-match-screen-393x873
+          path: apps/mobile/test-artifacts/match-screen-393x873.png
+          if-no-files-found: warn
+      - name: Upload canonical board-canvas screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-match-canvas-393x699
+          path: apps/mobile/test-artifacts/match-canvas-393x699.png
           if-no-files-found: warn
       - name: Upload board calibration preview
         if: always()
@@ -109,6 +108,21 @@ jobs:
           name: ludo-lovers-canonical-board-artwork
           path: apps/mobile/assets/images/board/ludo_board_glass.webp
           if-no-files-found: error
+  android-apks:
+    name: Android profile and release APKs
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.35.7'
+          cache: true
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
@@ -150,3 +164,4 @@ jobs:
         with:
           name: ludo-lovers-release-apks
           path: apps/mobile/build/app/outputs/flutter-apk/*-release.apk
+

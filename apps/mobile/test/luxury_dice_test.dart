@@ -3,6 +3,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 
 void main() {
+  testWidgets('each authoritative result faces the camera on the 3D cube',
+      (tester) async {
+    for (var value = 1; value <= 6; value++) {
+      await tester.pumpWidget(
+        MaterialApp(
+          key: ValueKey('dice_result_$value'),
+          home: Center(
+            child: LuxuryDiceButton(
+              targetValue: value,
+              rollId: value,
+              canRoll: false,
+              isWaitingForRoll: false,
+              onRollRequested: _noop,
+            ),
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('six_face_dice_cube')), findsOneWidget);
+      expect(find.byKey(Key('dice_face_$value')), findsOneWidget);
+    }
+  });
+
   testWidgets('restored dice result is displayed without replaying a roll',
       (tester) async {
     var completed = 0;
@@ -22,7 +44,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(completed, 0);
     expect(
-      tester.widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton)).targetValue,
+      tester
+          .widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton))
+          .targetValue,
       5,
     );
   });

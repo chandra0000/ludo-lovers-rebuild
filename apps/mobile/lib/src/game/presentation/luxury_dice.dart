@@ -39,13 +39,6 @@ class LuxuryDiceButton extends StatefulWidget {
 
 class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     with SingleTickerProviderStateMixin {
-  static const List<List<int>> _tumblePatterns = [
-    [3, 5, 2, 6, 1, 4, 2, 5, 3, 6, 4, 1],
-    [2, 4, 1, 5, 6, 3, 4, 2, 5, 1, 6, 3],
-    [5, 1, 6, 2, 4, 3, 1, 6, 2, 5, 3, 4],
-    [4, 6, 3, 1, 5, 2, 6, 3, 1, 4, 2, 5],
-  ];
-
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 600),
@@ -192,19 +185,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     super.dispose();
   }
 
-  int _visibleFace() {
-    if (!_isAnimating) {
-      return _settledValue ?? widget.targetValue ?? 1;
-    }
-
-    final pattern = _tumblePatterns[widget.rollId % _tumblePatterns.length];
-    final frame = (_controller.value * pattern.length)
-        .floor()
-        .clamp(0, pattern.length - 1)
-        .toInt();
-    return pattern[frame];
-  }
-
   @override
   Widget build(BuildContext context) {
     final interactive = widget.canRoll &&
@@ -217,9 +197,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
 
     return Semantics(
       key: const Key('luxury_dice_semantics'),
-      label: _isAnimating
-          ? 'Dice rolling'
-          : 'Dice, value $valueLabel',
+      label: _isAnimating ? 'Dice rolling' : 'Dice, value $valueLabel',
       hint: _isAnimating
           ? 'Wait for the dice result.'
           : interactive
@@ -240,38 +218,25 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
-                final progress = Curves.easeOutCubic.transform(
-                  _controller.value,
-                );
-                final face = _visibleFace();
-                final bounce = !_isAnimating
-                    ? 1.0
-                    : _controller.value < 0.3
-                        ? 1 + (_controller.value / 0.3) * 0.25
-                        : _controller.value < 0.7
-                            ? 1.25 -
-                                ((_controller.value - 0.3) / 0.4) * 0.35
-                            : 0.9 +
-                                ((_controller.value - 0.7) / 0.3) * 0.1;
-
-                return Transform.scale(
-                  scale: bounce,
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.0018)
-                      ..rotateX(_isAnimating ? progress * 4 * math.pi : 0)
-                      ..rotateY(_isAnimating ? progress * 6 * math.pi : 0)
-                      ..rotateZ(
-                        _isAnimating
-                            ? math.sin(_controller.value * math.pi * 2) * 0.15
-                            : 0,
-                      ),
-                    child: _DiceFace(
-                      size: widget.size,
-                      value: face,
-                      isInteractive: interactive,
-                    ),
+                final t = _controller.value;
+                final landing = Curves.easeOutCubic.transform(t);
+                final turns = widget.rollId.isEven ? 2.0 : 3.0;
+                final target = _settledValue ?? widget.targetValue ?? 1;
+                final angles = _DiceCube.orientationFor(target);
+                final spin =
+                    _isAnimating ? (1 - landing) * turns * 2 * math.pi : 0.0;
+                final lift = _isAnimating
+                    ? math.sin(math.pi * t) * widget.size * .22
+                    : 0.0;
+                return Transform.translate(
+                  offset: Offset(0, -lift),
+                  child: _DiceCube(
+                    key: const Key('six_face_dice_cube'),
+                    size: widget.size,
+                    value: target,
+                    isInteractive: interactive,
+                    xAngle: angles.$1 + spin,
+                    yAngle: angles.$2 + spin * .83,
                   ),
                 );
               },
@@ -283,8 +248,114 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
   }
 }
 
+/// Six independently oriented faces share one rigid 3D transform.
+/// Opposite faces sum to seven; the match engine supplies the settled value.
+class _DiceCube extends StatelessWidget {
+  const _DiceCube({
+    super.key,
+    required this.size,
+    required this.value,
+    required this.isInteractive,
+    required this.xAngle,
+    required this.yAngle,
+  });
+
+  final double size;
+  final int value;
+  final bool isInteractive;
+  final double xAngle;
+  final double yAngle;
+
+  // Face normals: 1 front, 6 back, 3 right, 4 left, 2 top, 5 bottom.
+  static (double, double) orientationFor(int face) => switch (face) {
+        1 => (0, 0),
+        6 => (0, math.pi),
+        3 => (0, -math.pi / 2),
+        4 => (0, math.pi / 2),
+        2 => (-math.pi / 2, 0),
+        5 => (math.pi / 2, 0),
+        _ => (0, 0),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final half = size / 2;
+    final rotation = Matrix4.identity()
+      ..rotateX(xAngle)
+      ..rotateY(yAngle);
+    final faces = <({int value, Matrix4 transform, double depth})>[];
+    for (final face in <(int, double, double)>[
+      (1, 0, 0),
+      (6, 0, math.pi),
+      (3, 0, math.pi / 2),
+      (4, 0, -math.pi / 2),
+      (2, math.pi / 2, 0),
+      (5, -math.pi / 2, 0),
+    ]) {
+      final faceRotation = Matrix4.identity()
+        ..rotateY(face.$3)
+        ..rotateX(face.$2);
+      final combined = rotation.clone()..multiply(faceRotation);
+      // A face is only painted when its outward normal faces the camera.
+      final normalZ = combined.storage[10];
+      if (normalZ <= 0.001) continue;
+      faces.add(
+        (
+          value: face.$1,
+          transform: combined
+            ..multiply(Matrix4.translationValues(0.0, 0.0, half)),
+          depth: normalZ,
+        ),
+      );
+    }
+    faces.sort((a, b) => a.depth.compareTo(b.depth));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: size * .12,
+            top: size * .18,
+            child: Container(
+              width: size * .88,
+              height: size * .88,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(size * .2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x99000000),
+                    blurRadius: 16,
+                    spreadRadius: 3,
+                    offset: Offset(2, 10),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          for (final face in faces)
+            Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0022)
+                ..multiply(face.transform),
+              child: _DiceFace(
+                key: Key('dice_face_${face.value}'),
+                size: size,
+                value: face.value,
+                isInteractive: isInteractive,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DiceFace extends StatelessWidget {
   const _DiceFace({
+    super.key,
     required this.size,
     required this.value,
     required this.isInteractive,
@@ -311,9 +382,8 @@ class _DiceFace extends StatelessWidget {
           ],
         ),
         border: Border.all(
-          color: isInteractive
-              ? const Color(0xFFFFD54F)
-              : const Color(0xFFC7BEA9),
+          color:
+              isInteractive ? const Color(0xFFFFD54F) : const Color(0xFFC7BEA9),
           width: 2.2,
         ),
         boxShadow: [

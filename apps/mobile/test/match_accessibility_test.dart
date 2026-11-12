@@ -26,10 +26,12 @@ void main() {
       MaterialApp(home: MatchScreen(initialGame: game)),
     );
 
-    final pawn = find.ancestor(
-      of: find.byKey(const Key('pawn_orange_0')),
-      matching: find.byType(Semantics),
-    ).first;
+    final pawn = find
+        .ancestor(
+          of: find.byKey(const Key('pawn_orange_0')),
+          matching: find.byType(Semantics),
+        )
+        .first;
     final semantics = tester.widget<Semantics>(pawn);
 
     expect(semantics.properties.button, isTrue);

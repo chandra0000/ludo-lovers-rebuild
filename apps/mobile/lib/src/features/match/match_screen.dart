@@ -3,17 +3,28 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../game/domain/persistence/saved_match_store.dart';
-
+import '../../game/application/match_session.dart';
 import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
+import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
-import '../../game/presentation/player_color_theme.dart';
-import '../../game/presentation/luxury_dice.dart';
-import '../../game/presentation/glassy_pawn.dart';
-import '../../game/presentation/shake_feedback_wrapper.dart';
+import '../../game/domain/persistence/saved_match_store.dart';
 import '../../game/presentation/destination_preview_painter.dart';
+import '../../game/presentation/glassy_pawn.dart';
+import '../../game/presentation/player_color_theme.dart';
+import '../../game/presentation/shake_feedback_wrapper.dart';
+
+import 'game/systems/pawn_animator.dart';
+import 'game/systems/pawn_layout_solver.dart';
+import 'dice_control_dock.dart';
+import 'local_match_chat_sheet.dart';
+import 'match_board_artwork.dart';
+import 'match_board_viewport.dart';
+import 'match_fx_listener.dart';
+import 'match_dialogs.dart';
+import 'match_hud_overlay.dart';
+import 'match_profiles_layer.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -23,6 +34,8 @@ class MatchScreen extends StatefulWidget {
     this.aiPlayers = const {},
     this.aiSeed = 1,
     this.aiDifficulty = LudoAiDifficulty.medium,
+    this.profiles,
+    this.showDynamicProfiles = true,
   });
 
   @visibleForTesting
@@ -30,6 +43,12 @@ class MatchScreen extends StatefulWidget {
 
   @visibleForTesting
   final LudoGame? initialGame;
+
+  /// Optional identities supplied by a local lobby or future online session.
+  final List<MatchPlayerProfile>? profiles;
+
+  /// Dynamic profiles are enabled for the board-only artwork by default.
+  final bool showDynamicProfiles;
 
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
@@ -41,7 +60,11 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late LudoGame _game = widget.initialGame ?? LudoGame.initial();
+  late MatchSession _session = MatchSession.local(
+    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+    game: widget.initialGame ?? LudoGame.initial(),
+  );
+  LudoGame get _game => _session.game;
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   bool _aiTurnScheduled = false;
@@ -141,6 +164,19 @@ class _MatchScreenState extends State<MatchScreen>
     }
   }
 
+  bool _executeCommand(MatchCommand command) {
+    final result = _session.execute(command);
+    if (!result.accepted) {
+      debugPrint(
+        'Rejected match command ${command.commandId}: '
+        '${result.rejectionReason?.name} (${result.message})',
+      );
+      return false;
+    }
+    _session = result.session;
+    return true;
+  }
+
   Future<void> _persistMatch() {
     // Serialize writes so a slower earlier preference write can never
     // overwrite a newer accepted game state.
@@ -194,13 +230,17 @@ class _MatchScreenState extends State<MatchScreen>
               _isDiceAnimating) {
             return;
           }
-          final rolled = _game.roll(
-            math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
+          final command = RollDiceCommand(
+            matchId: _session.matchId,
+            actorId: _session.actorFor(_game.activePlayer),
             expectedStateVersion: _game.stateVersion,
             commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
+            value:
+                math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
           );
+          if (!_executeCommand(command)) return;
+          final rolled = _game;
           setState(() {
-            _game = rolled;
             _isDiceAnimating = rolled.diceValue != null;
             if (rolled.diceValue != null) {
               _diceRollId++;
@@ -230,16 +270,19 @@ class _MatchScreenState extends State<MatchScreen>
     final value = isAi
         ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
         : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-    final rolled = _game.roll(
-      value,
+    final command = RollDiceCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(_game.activePlayer),
       expectedStateVersion: _game.stateVersion,
       commandId:
           '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+      value: value,
     );
+    if (!_executeCommand(command)) return false;
+    final rolled = _game;
     final wasPenalized =
         rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
     setState(() {
-      _game = rolled;
       _isDiceAnimating = rolled.diceValue != null;
       if (rolled.diceValue != null) {
         _diceRollId++;
@@ -289,13 +332,14 @@ class _MatchScreenState extends State<MatchScreen>
                 _game.diceValue == null) {
               return;
             }
-            setState(() {
-              _game = _game.passTurn(
-                expectedStateVersion: _game.stateVersion,
-                commandId: 'match-${_game.stateVersion}-pass',
-              );
-              _isAutoMovePending = false;
-            });
+            final command = PassTurnCommand(
+              matchId: _session.matchId,
+              actorId: _session.actorFor(_game.activePlayer),
+              expectedStateVersion: _game.stateVersion,
+              commandId: 'match-${_game.stateVersion}-pass',
+            );
+            if (!_executeCommand(command)) return;
+            setState(() => _isAutoMovePending = false);
             unawaited(_persistMatch());
             _scheduleAiTurn();
           },
@@ -341,16 +385,7 @@ class _MatchScreenState extends State<MatchScreen>
     _shakeKeys['${_game.activePlayer.name}-$pawnIndex']
         ?.currentState
         ?.triggerShake();
-    final message = switch (evaluation.reason) {
-      MoveInvalidReason.pawnInYardNeedsSix => 'ROLL A SIX TO ENTER',
-      MoveInvalidReason.overshootsHome => 'EXACT ROLL NEEDED TO FINISH',
-      MoveInvalidReason.pathBlockedByBlockade =>
-        'PATH BLOCKED BY A PAWN BLOCKADE',
-      MoveInvalidReason.landingOnProtectedStack => 'THAT STACK IS PROTECTED',
-      MoveInvalidReason.noPendingRoll => 'ROLL THE DICE FIRST',
-      MoveInvalidReason.invalidPawnIndex => 'INVALID PAWN SELECTION',
-      MoveInvalidReason.invalidDice => 'DICE VALUE MUST BE 1 TO 6',
-    };
+    final message = MatchFxListener.invalidMoveMessage(evaluation.reason);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         key: const Key('invalid_move_feedback'),
@@ -368,21 +403,26 @@ class _MatchScreenState extends State<MatchScreen>
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    final movingColor = _game.activePlayer;
-    final player = _game.currentPlayer;
+    final previousGame = _game;
+    final movingColor = previousGame.activePlayer;
+    final player = previousGame.currentPlayer;
     final startProgress = player.pawnProgress[pawnIndex];
     final roll = _game.diceValue!;
     final endProgress = startProgress == -1 ? 0 : startProgress + roll;
     final stepCount = endProgress - startProgress;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final nextGame = _game.movePawn(
-      pawnIndex,
+    final command = MovePawnCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(movingColor),
       expectedStateVersion: _game.stateVersion,
       commandId: 'match-${_game.stateVersion}-move-$pawnIndex',
+      pawnIndex: pawnIndex,
     );
+    if (!_executeCommand(command)) return;
+    final nextGame = _game;
     var capturedCount = 0;
-    for (final previousPlayer in _game.players) {
+    for (final previousPlayer in previousGame.players) {
       if (previousPlayer.color == movingColor) {
         continue;
       }
@@ -412,7 +452,6 @@ class _MatchScreenState extends State<MatchScreen>
       _movementStartProgress = startProgress;
       _movementEndProgress = endProgress;
       _pendingMoveFeedback = feedback;
-      _game = nextGame;
       _movementController.duration = reduceMotion
           ? Duration.zero
           : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
@@ -427,37 +466,14 @@ class _MatchScreenState extends State<MatchScreen>
     int pawnIndex,
   ) {
     final player = _game.players.firstWhere((item) => item.color == color);
-    final progress = player.pawnProgress[pawnIndex];
-    if (_movingColor != color || _movingPawnIndex != pawnIndex) {
-      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
-    }
-
-    final steps = _movementEndProgress - _movementStartProgress;
-    if (steps <= 0) {
-      return BoardGeometry.normalizedPosition(color, progress, pawnIndex);
-    }
-    final travelled = _movementController.value * steps;
-    final stepIndex = math.min(travelled.floor(), steps - 1).toInt();
-    final fraction = (travelled - stepIndex).clamp(0.0, 1.0).toDouble();
-    final fromProgress = _movementStartProgress + stepIndex;
-    final toProgress = fromProgress + 1;
-    final from = BoardGeometry.normalizedPosition(
-      color,
-      fromProgress,
-      pawnIndex,
-    );
-    final to = BoardGeometry.normalizedPosition(
-      color,
-      toProgress,
-      pawnIndex,
-    );
-    // A small parabolic lift makes each square-to-square step read as a hop.
-    // It is presentation-only; the engine has already committed the move.
-    const hopHeight = 10.0;
-    final hopArc = 4 * hopHeight * fraction * (1 - fraction);
-    return NormalizedBoardPoint(
-      from.x + (to.x - from.x) * fraction,
-      from.y + (to.y - from.y) * fraction - hopArc / BoardGeometry.canvasHeight,
+    return PawnAnimator.position(
+      color: color,
+      pawnIndex: pawnIndex,
+      progress: player.pawnProgress[pawnIndex],
+      isMoving: _movingColor == color && _movingPawnIndex == pawnIndex,
+      startProgress: _movementStartProgress,
+      endProgress: _movementEndProgress,
+      animationValue: _movementController.value,
     );
   }
 
@@ -472,172 +488,213 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF080808),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final scale = math.min(
-              constraints.maxWidth / BoardGeometry.canvasWidth,
-              constraints.maxHeight / BoardGeometry.canvasHeight,
-            );
-            final width = BoardGeometry.canvasWidth * scale;
-            final height = BoardGeometry.canvasHeight * scale;
-            return Center(
-              child: RepaintBoundary(
-                key: const Key('match_canvas_capture'),
-                child: SizedBox(
-                  key: const Key('match_canvas'),
-                  width: width,
-                  height: height,
-                  child: FittedBox(
-                    fit: BoxFit.fill,
-                    child: SizedBox(
-                      width: BoardGeometry.canvasWidth,
-                      height: BoardGeometry.canvasHeight,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Image.asset(
-                              'assets/images/board/ludo_board_glass.webp',
-                              key: const Key('board_artwork'),
-                              fit: BoxFit.fill,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const ColoredBox(
-                                color: Color(0xFF111111),
-                                child: Center(
-                                  child: Text(
-                                    'Game artwork could not be loaded.',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
+    return RepaintBoundary(
+      key: const Key('match_screen_capture'),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF080808),
+        body: SafeArea(
+          child: MatchBoardViewport(
+            builder: (context, scale) => Stack(
+              children: [
+                const Positioned.fill(
+                  child: MatchBoardArtwork(),
+                ),
+                if (widget.showDynamicProfiles)
+                  Positioned.fill(
+                    child: MatchProfilesLayer(
+                      profiles: widget.profiles ??
+                          MatchPlayerProfile.local(
+                            aiPlayers: widget.aiPlayers,
                           ),
-                          ..._buildPawnsWithClusters(scale),
-                          if (_selectedPawnIndex != null)
-                            _buildDestinationPreview(),
-                          Positioned(
-                            left: 243,
-                            top: 795,
-                            width: 90,
-                            height: 90,
-                            child: KeyedSubtree(
-                              key: const Key('roll_dice'),
-                              child: LuxuryDiceButton(
-                                key: const Key('animated_dice'),
-                                targetValue: _game.diceValue,
-                                rollId: _diceRollId,
-                                canRoll: !widget.aiPlayers
-                                        .contains(_game.activePlayer) &&
-                                    _game.diceValue == null &&
-                                    !_isDiceAnimating &&
-                                    !_movementController.isAnimating &&
-                                    _game.winner == null,
-                                isWaitingForRoll: _game.diceValue == null &&
-                                    _game.winner == null &&
-                                    !_movementController.isAnimating,
-                                onRollRequested: () {
-                                  if (widget.aiPlayers
-                                      .contains(_game.activePlayer)) {
-                                    return;
-                                  }
-                                  _roll(isAi: false);
-                                },
-                                onAnimationComplete:
-                                    _handleDiceAnimationComplete,
-                              ),
-                            ),
+                      activeColor: _game.activePlayer,
+                    ),
+                  ),
+                ..._buildPawnsWithClusters(scale),
+                if (_selectedPawnIndex != null) _buildDestinationPreview(),
+                DiceControlDock(
+                  targetValue: _game.diceValue,
+                  rollId: _diceRollId,
+                  canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
+                      _game.diceValue == null &&
+                      !_isDiceAnimating &&
+                      !_movementController.isAnimating &&
+                      _game.winner == null,
+                  isWaitingForRoll: _game.diceValue == null &&
+                      _game.winner == null &&
+                      !_movementController.isAnimating,
+                  onRollRequested: () {
+                    if (widget.aiPlayers.contains(_game.activePlayer)) {
+                      return;
+                    }
+                    _roll(isAi: false);
+                  },
+                  onAnimationComplete: _handleDiceAnimationComplete,
+                ),
+                MatchHudOverlay(
+                  statusText: _statusText,
+                  activePlayer: _game.activePlayer,
+                ),
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  child: IconButton(
+                    key: const Key('exit_match'),
+                    tooltip: 'Exit match',
+                    constraints: const BoxConstraints.tightFor(
+                      width: 72,
+                      height: 72,
+                    ),
+                    padding: EdgeInsets.zero,
+                    iconSize: 36,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFFFFC857),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  top: 936,
+                  width: 76,
+                  height: 76,
+                  child: Semantics(
+                    button: true,
+                    label: 'Chat',
+                    hint: 'Open local chat and emoji reactions.',
+                    child: GestureDetector(
+                      key: const Key('chat_button'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _showLocalChat,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color(0xE6211A0D),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.chat_bubble_outline,
+                            size: 32,
+                            color: Color(0xFFFFD36B),
                           ),
-                          Positioned(
-                            left: 200,
-                            top: 924,
-                            width: 176,
-                            height: 32,
-                            child: IgnorePointer(
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xE6080808),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    _statusText,
-                                    key: const Key('turn_status'),
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      color: _game.activePlayer.color,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 12,
-                            top: 12,
-                            child: IconButton(
-                              key: const Key('exit_match'),
-                              tooltip: 'Exit match',
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Color(0xFFFFC857),
-                              ),
-                            ),
-                          ),
-                          if (_game.winner != null)
-                            Positioned(
-                              left: 150,
-                              top: 480,
-                              width: 276,
-                              height: 80,
-                              child: Center(
-                                child: FilledButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _game = LudoGame.initial();
-                                    });
-                                    unawaited(_persistMatch());
-                                  },
-                                  child: const Text('PLAY AGAIN'),
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+                Positioned(
+                  right: 16,
+                  top: 936,
+                  width: 76,
+                  height: 76,
+                  child: Semantics(
+                    button: true,
+                    label: 'More options',
+                    child: GestureDetector(
+                      key: const Key('more_button'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _showMoreMenu,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color(0xE6211A0D),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.more_horiz,
+                            size: 32,
+                            color: Color(0xFFFFD36B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_game.winner != null)
+                  Positioned(
+                    left: 150,
+                    top: 480,
+                    width: 276,
+                    height: 80,
+                    child: Center(
+                      child: FilledButton(
+                        onPressed: _restartMatch,
+                        child: const Text('PLAY AGAIN'),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
+  void _showLocalChat() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF17120B),
+      builder: (context) => const LocalMatchChatSheet(),
+    );
+  }
+
+  void _showMoreMenu() {
+    MatchDialogs.showMoreMenu(context).then((action) {
+      if (!mounted) return;
+      if (action == 'restart') {
+        _confirmRestart();
+      } else if (action == 'exit') {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  Future<void> _confirmRestart() async {
+    final confirmed = await MatchDialogs.confirmRestart(context);
+    if (confirmed == true && mounted) _restartMatch();
+  }
+
+  void _restartMatch() {
+    _turnResolutionToken++;
+    _movementController.stop();
+    _movementController.value = 0;
+    _previewController.stop();
+    _previewController.value = 0;
+    setState(() {
+      _session = MatchSession.local(
+        matchId:
+            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
+        game: LudoGame.initial(),
+      );
+      _isDiceAnimating = false;
+      _isAutoMovePending = false;
+      _selectedPawnIndex = null;
+      _movingColor = null;
+      _movingPawnIndex = null;
+      _pendingMoveFeedback = null;
+      _movementStartProgress = 0;
+      _movementEndProgress = 0;
+      _diceRollId = 0;
+    });
+    unawaited(_persistMatch());
+    _scheduleAiTurn();
+  }
+
   void _selectOrMovePawn(int pawnIndex) {
+    // A tap on a legal pawn commits the move immediately. The dice has
+    // already been accepted by MatchSession, so a second confirmation tap
+    // adds friction without improving rule validation.
     if (_isAutoMovePending ||
         _isDiceAnimating ||
+        _movementController.isAnimating ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    if (_selectedPawnIndex == pawnIndex) {
-      setState(() => _selectedPawnIndex = null);
-      _previewController.stop();
-      _move(pawnIndex);
-      return;
-    }
-    setState(() => _selectedPawnIndex = pawnIndex);
-    _previewController.forward(from: 0);
+    setState(() => _selectedPawnIndex = null);
+    _previewController.stop();
+    _move(pawnIndex);
   }
 
   Widget _buildDestinationPreview() {
@@ -754,14 +811,18 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   List<Widget> _buildPawnsWithClusters(double canvasScale) {
+    // Index players once per frame instead of searching for each pawn.
+    final playersByColor = {
+      for (final player in _game.players) player.color: player,
+    };
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
     for (final color in PlayerColor.turnOrder) {
-      final player = _game.players.firstWhere((item) => item.color == color);
+      final player = playersByColor[color]!;
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
         final point = _pawnPosition(color, pawnIndex);
-        final key = _clusterKey(point);
+        final key = PawnLayoutSolver.clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
           (color: color, pawnIndex: pawnIndex),
         );
@@ -781,40 +842,38 @@ class _MatchScreenState extends State<MatchScreen>
     return [
       for (final color in PlayerColor.turnOrder)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(color, pawnIndex, clusters, legalIndices, canvasScale),
+          _buildPawn(
+            color,
+            pawnIndex,
+            playersByColor[color]!,
+            clusters,
+            legalIndices,
+            canvasScale,
+          ),
     ];
   }
-
-  int _clusterKey(NormalizedBoardPoint point) =>
-      (point.x * 1000).round() * 10000 + (point.y * 1000).round();
 
   Widget _buildPawn(
     PlayerColor color,
     int pawnIndex,
+    LudoPlayer player,
     Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
     Set<int> legalIndices,
     double canvasScale,
   ) {
-    final player = _game.players.firstWhere((item) => item.color == color);
     final progress = player.pawnProgress[pawnIndex];
     final normalized = _pawnPosition(color, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
-    final occupants = clusters[_clusterKey(normalized)] ??
+    final occupants = clusters[PawnLayoutSolver.clusterKey(normalized)] ??
         [
           (color: color, pawnIndex: pawnIndex),
         ];
     final stackIndex = occupants.indexWhere(
       (item) => item.color == color && item.pawnIndex == pawnIndex,
     );
-    const offsets = <Offset>[
-      Offset(-.48, -.48),
-      Offset(.48, -.48),
-      Offset(-.48, .48),
-      Offset(.48, .48),
-    ];
     final stacked = occupants.length > 1;
-    final visualOffset =
-        stacked ? offsets[stackIndex % offsets.length] * 18 : Offset.zero;
+    final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
+    final visualOffset = Offset(slot.x, slot.y);
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
@@ -905,11 +964,18 @@ class _MatchScreenState extends State<MatchScreen>
                   child: AnimatedScale(
                     scale: canMove ? 1.12 : 1,
                     duration: const Duration(milliseconds: 180),
-                    child: GlassyPawn(
-                      color: color.color,
-                      size: size,
-                      isCurrentPlayer: isCurrentPlayer,
-                      isMovable: canMove,
+                    child: Transform.rotate(
+                      angle: _movingColor == color &&
+                              _movingPawnIndex == pawnIndex
+                          ? math.sin(_movementController.value * math.pi * 2) *
+                              0.08
+                          : 0,
+                      child: GlassyPawn(
+                        color: color.color,
+                        size: size,
+                        isCurrentPlayer: isCurrentPlayer,
+                        isMovable: canMove,
+                      ),
                     ),
                   ),
                 ),

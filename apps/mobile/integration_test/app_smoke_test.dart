@@ -77,9 +77,12 @@ void main() {
     // 3. Confirm the dice settled on the engine-provided result and the turn
     // status remains available after the animation callback.
     expect(
-      tester.widget<Semantics>(
-        find.byKey(const Key('luxury_dice_semantics')),
-      ).properties.label,
+      tester
+          .widget<Semantics>(
+            find.byKey(const Key('luxury_dice_semantics')),
+          )
+          .properties
+          .label,
       'Dice, value 6',
     );
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
@@ -98,7 +101,6 @@ void main() {
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
   });
 }
-
 
 /// Pumps animations in bounded increments so a never-ending ticker cannot
 /// hold the Android integration runner indefinitely.

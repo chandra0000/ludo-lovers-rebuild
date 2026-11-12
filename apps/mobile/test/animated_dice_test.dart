@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/presentation/animated_dice.dart';
 
 void main() {
-  testWidgets('reveals the engine dice value with a bounded roll animation', (tester) async {
+  testWidgets('reveals the engine dice value with a bounded roll animation',
+      (tester) async {
     var value = 0;
     var completed = false;
 
@@ -87,5 +88,4 @@ void main() {
     expect(value, 4);
     expect(completed, isTrue);
   });
-
 }
