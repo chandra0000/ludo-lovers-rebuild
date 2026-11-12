@@ -44,6 +44,11 @@ class MatchAnimationLifecycle {
     if (hasDiceResult) diceRollId++;
   }
 
+  /// Resolves an interrupted/restored pending roll without replaying the die.
+  void resumePendingDiceResult() {
+    isDiceAnimating = true;
+  }
+
   void completeDiceRoll() {
     isDiceAnimating = false;
   }
