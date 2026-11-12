@@ -124,6 +124,40 @@ void main() {
     expect(controller.game.encodeSnapshot(), snapshot);
   });
 
+  test('saved pending roll resumes without losing command idempotency', () {
+    final original = controllerFor(LudoGame.initial(), 'saved-match');
+    final accepted = roll(original, 6);
+    expect(accepted.accepted, isTrue);
+
+    final snapshot = original.game.toSnapshot();
+    final restoredGame = LudoGame.fromSnapshot(
+      Map<String, dynamic>.from(snapshot),
+    );
+    final resumed = controllerFor(restoredGame, 'saved-match');
+    expect(resumed.game.diceValue, 6);
+    expect(resumed.game.stateVersion, 1);
+
+    final duplicate = resumed.execute(
+      RollDiceCommand(
+        matchId: 'saved-match',
+        actorId: resumed.session.actorFor(PlayerColor.orange),
+        expectedStateVersion: 0,
+        commandId: 'regression-roll-0',
+        value: 6,
+      ),
+    );
+    expect(duplicate.accepted, isFalse);
+    expect(
+      duplicate.rejectionReason,
+      MatchCommandRejectionReason.duplicateCommand,
+    );
+    expect(resumed.game.stateVersion, 1);
+
+    expect(move(resumed, 0).accepted, isTrue);
+    expect(resumed.game.currentPlayer.pawnProgress[0], 0);
+    expect(resumed.game.diceValue, isNull);
+  });
+
   test('restart rejects actions from the old match identity', () {
     final controller = controllerFor(LudoGame.initial(), 'old-match');
     final oldCommand = RollDiceCommand(
