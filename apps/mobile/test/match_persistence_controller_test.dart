@@ -22,7 +22,7 @@ void main() {
         await firstWrite.future;
       }
       written.add(match.aiSeed);
-    });
+    },);
     final first = controller.persist(snapshot(1));
     final second = controller.persist(snapshot(2));
     await started.future;
@@ -37,7 +37,7 @@ void main() {
     final controller = MatchPersistenceController(save: (match) async {
       if (match.aiSeed == 1) throw StateError('temporary failure');
       written.add(match.aiSeed);
-    });
+    },);
     await controller.persist(snapshot(1));
     await controller.persist(snapshot(2));
     expect(written, [2]);
