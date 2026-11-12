@@ -525,163 +525,163 @@ class _MatchScreenState extends State<MatchScreen>
           child: MatchBoardViewport(
             builder: (context, scale) => Stack(
               children: [
-                            const Positioned.fill(
-                              child: MatchBoardArtwork(),
-                            ),
-                            if (widget.showDynamicProfiles)
-                              Positioned.fill(
-                                child: MatchProfilesLayer(
-                                  profiles: widget.profiles ??
-                                      MatchPlayerProfile.local(
-                                        aiPlayers: widget.aiPlayers,
-                                      ),
-                                  activeColor: _game.activePlayer,
-                                ),
-                              ),
-                            ..._buildPawnsWithClusters(scale),
-                            if (_selectedPawnIndex != null)
-                              _buildDestinationPreview(),
-                            MatchDiceLayer(
-                              targetValue: _game.diceValue,
-                              rollId: _diceRollId,
-                              canRoll: !widget.aiPlayers
-                                      .contains(_game.activePlayer) &&
-                                  _game.diceValue == null &&
-                                  !_isDiceAnimating &&
-                                  !_movementController.isAnimating &&
-                                  _game.winner == null,
-                              isWaitingForRoll: _game.diceValue == null &&
-                                  _game.winner == null &&
-                                  !_movementController.isAnimating,
-                              onRollRequested: () {
-                                if (widget.aiPlayers
-                                    .contains(_game.activePlayer)) {
-                                  return;
-                                }
-                                _roll(isAi: false);
-                              },
-                              onAnimationComplete: _handleDiceAnimationComplete,
-                            ),
-                            Positioned(
-                              left: 200,
-                              top: 924,
-                              width: 176,
-                              height: 32,
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xE6080808),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      _statusText,
-                                      key: const Key('turn_status'),
-                                      maxLines: 1,
-                                      style: TextStyle(
-                                        color: _game.activePlayer.color,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 12,
-                              top: 12,
-                              child: IconButton(
-                                key: const Key('exit_match'),
-                                tooltip: 'Exit match',
-                                constraints: const BoxConstraints.tightFor(
-                                  width: 72,
-                                  height: 72,
-                                ),
-                                padding: EdgeInsets.zero,
-                                iconSize: 36,
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(
-                                  Icons.arrow_back,
-                                  color: Color(0xFFFFC857),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 16,
-                              top: 936,
-                              width: 76,
-                              height: 76,
-                              child: Semantics(
-                                button: true,
-                                label: 'Chat',
-                                hint: 'Open local chat and emoji reactions.',
-                                child: GestureDetector(
-                                  key: const Key('chat_button'),
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: _showLocalChat,
-                                  child: const DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xE6211A0D),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.chat_bubble_outline,
-                                        size: 32,
-                                        color: Color(0xFFFFD36B),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              right: 16,
-                              top: 936,
-                              width: 76,
-                              height: 76,
-                              child: Semantics(
-                                button: true,
-                                label: 'More options',
-                                child: GestureDetector(
-                                  key: const Key('more_button'),
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: _showMoreMenu,
-                                  child: const DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xE6211A0D),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.more_horiz,
-                                        size: 32,
-                                        color: Color(0xFFFFD36B),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (_game.winner != null)
-                              Positioned(
-                                left: 150,
-                                top: 480,
-                                width: 276,
-                                height: 80,
-                                child: Center(
-                                  child: FilledButton(
-                                    onPressed: _restartMatch,
-                                    child: const Text('PLAY AGAIN'),
-                                  ),
-                                ),
-                              ),
+              const Positioned.fill(
+                child: MatchBoardArtwork(),
+              ),
+              if (widget.showDynamicProfiles)
+                Positioned.fill(
+                  child: MatchProfilesLayer(
+                    profiles: widget.profiles ??
+                        MatchPlayerProfile.local(
+                          aiPlayers: widget.aiPlayers,
+                        ),
+                    activeColor: _game.activePlayer,
+                  ),
+                ),
+              ..._buildPawnsWithClusters(scale),
+              if (_selectedPawnIndex != null)
+                _buildDestinationPreview(),
+              MatchDiceLayer(
+                targetValue: _game.diceValue,
+                rollId: _diceRollId,
+                canRoll: !widget.aiPlayers
+                        .contains(_game.activePlayer) &&
+                    _game.diceValue == null &&
+                    !_isDiceAnimating &&
+                    !_movementController.isAnimating &&
+                    _game.winner == null,
+                isWaitingForRoll: _game.diceValue == null &&
+                    _game.winner == null &&
+                    !_movementController.isAnimating,
+                onRollRequested: () {
+                  if (widget.aiPlayers
+                      .contains(_game.activePlayer)) {
+                    return;
+                  }
+                  _roll(isAi: false);
+                },
+                onAnimationComplete: _handleDiceAnimationComplete,
+              ),
+              Positioned(
+                left: 200,
+                top: 924,
+                width: 176,
+                height: 32,
+                child: IgnorePointer(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xE6080808),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _statusText,
+                        key: const Key('turn_status'),
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: _game.activePlayer.color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 12,
+                top: 12,
+                child: IconButton(
+                  key: const Key('exit_match'),
+                  tooltip: 'Exit match',
+                  constraints: const BoxConstraints.tightFor(
+                    width: 72,
+                    height: 72,
+                  ),
+                  padding: EdgeInsets.zero,
+                  iconSize: 36,
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Color(0xFFFFC857),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                top: 936,
+                width: 76,
+                height: 76,
+                child: Semantics(
+                  button: true,
+                  label: 'Chat',
+                  hint: 'Open local chat and emoji reactions.',
+                  child: GestureDetector(
+                    key: const Key('chat_button'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _showLocalChat,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color(0xE6211A0D),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.chat_bubble_outline,
+                          size: 32,
+                          color: Color(0xFFFFD36B),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 16,
+                top: 936,
+                width: 76,
+                height: 76,
+                child: Semantics(
+                  button: true,
+                  label: 'More options',
+                  child: GestureDetector(
+                    key: const Key('more_button'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _showMoreMenu,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color(0xE6211A0D),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.more_horiz,
+                          size: 32,
+                          color: Color(0xFFFFD36B),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (_game.winner != null)
+                Positioned(
+                  left: 150,
+                  top: 480,
+                  width: 276,
+                  height: 80,
+                  child: Center(
+                    child: FilledButton(
+                      onPressed: _restartMatch,
+                      child: const Text('PLAY AGAIN'),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
