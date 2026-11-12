@@ -81,7 +81,7 @@ void main() {
     expect(calls, 0);
   });
 
-  test('foreground and turn eligibility are rechecked before execution', () async {
+  test('rechecks eligibility before executing a delayed turn', () async {
     final controller = create();
     var foreground = true;
     var calls = 0;
