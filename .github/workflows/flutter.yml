@@ -46,7 +46,10 @@ jobs:
       # already-formatted Dart code before analyzer, tests, or builds run.
       - name: Check Dart formatting (strict, non-mutating)
         working-directory: apps/mobile
-        run: dart format --output=none --set-exit-if-changed lib test tool integration_test
+        run: |
+          dart format lib test tool integration_test
+          git diff -- lib/src/features/match/match_screen.dart
+          git diff --exit-code -- lib test tool integration_test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
