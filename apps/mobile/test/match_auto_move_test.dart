@@ -57,7 +57,7 @@ void main() {
     expect(find.byKey(const Key('pawn_orange_1')), findsOneWidget);
     // Multiple legal moves require choosing WHICH pawn, not tapping it twice.
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
