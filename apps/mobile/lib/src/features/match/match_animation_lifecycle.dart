@@ -1,4 +1,5 @@
 import 'package:flutter/animation.dart';
+import 'package:flutter/foundation.dart' show VoidCallback;
 
 import '../../game/domain/player_color.dart';
 import 'match_animation_timing.dart';
