@@ -23,6 +23,7 @@ import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
+import 'match_ai_scheduler.dart';
 import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
@@ -79,7 +80,7 @@ class _MatchScreenState extends State<MatchScreen>
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
   final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
-  bool _aiTurnScheduled = false;
+  final MatchAiScheduler _aiScheduler = MatchAiScheduler();
   bool _isDiceAnimating = false;
   bool _isAppResumed = true;
   final MatchPersistenceController _persistence = MatchPersistenceController();
@@ -198,6 +199,7 @@ class _MatchScreenState extends State<MatchScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _aiScheduler.cancel();
     unawaited(_persistMatch());
     _movementController.dispose();
     _previewController.dispose();
@@ -209,18 +211,13 @@ class _MatchScreenState extends State<MatchScreen>
       session: _session,
       aiPlayers: widget.aiPlayers,
       isAppResumed: _isAppResumed,
-      isScheduled: _aiTurnScheduled,
+      isScheduled: _aiScheduler.isScheduled,
       isMovementAnimating: _movementController.isAnimating,
       isDiceAnimating: _isDiceAnimating,
     )) {
       return;
     }
-    _aiTurnScheduled = true;
-    unawaited(
-      Future<void>.delayed(
-        const Duration(milliseconds: 450),
-        () {
-          _aiTurnScheduled = false;
+    _aiScheduler.schedule(() {
           if (!mounted ||
               !_isAppResumed ||
               !widget.aiPlayers.contains(_game.activePlayer) ||
@@ -249,9 +246,7 @@ class _MatchScreenState extends State<MatchScreen>
             _showConsecutiveSixPenalty();
             _scheduleAiTurn();
           }
-        },
-      ),
-    );
+    });
   }
 
   bool _roll({required bool isAi}) {
@@ -653,6 +648,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _restartMatch() {
+    _aiScheduler.cancel();
     _turnResolutionToken++;
     _movementController.stop();
     _movementController.value = 0;
