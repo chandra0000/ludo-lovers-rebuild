@@ -139,10 +139,8 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      String? feedback;
-      setState(() {
-        feedback = _movement.complete();
-      });
+      final feedback = _movement.complete();
+      setState(() {});
       _scheduleAiTurn();
       if (feedback != null) {
         ScaffoldMessenger.of(context).showSnackBar(
