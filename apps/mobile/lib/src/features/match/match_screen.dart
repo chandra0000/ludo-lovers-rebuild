@@ -159,11 +159,22 @@ class _MatchScreenState extends State<MatchScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppResumed = state == AppLifecycleState.resumed;
     if (!_isAppResumed) {
+      // Never execute an automatic pawn move or pass while backgrounded.
+      _turnResolution.cancel();
+      if (_isAutoMovePending) {
+        setState(() => _isAutoMovePending = false);
+      }
       unawaited(_persistMatch());
       return;
     }
-    // Flutter's ticker lifecycle handling pauses the in-flight visual
-    // animation. Resume AI scheduling only after the app is foregrounded.
+    // A paused dice widget may never send its animation-complete callback.
+    // Resume the already accepted result without generating another roll.
+    if (_game.diceValue != null && !_movementController.isAnimating) {
+      _animations.resumePendingDiceResult();
+      _handleDiceAnimationComplete();
+      return;
+    }
+    // The Flutter ticker resumes an in-flight pawn movement automatically.
     if (!_isDiceAnimating && !_movementController.isAnimating) {
       _scheduleAiTurn();
     }
