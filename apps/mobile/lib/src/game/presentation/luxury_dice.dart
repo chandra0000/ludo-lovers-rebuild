@@ -186,7 +186,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final interactive = widget.canRoll &&
@@ -225,7 +224,9 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                 final turns = widget.rollId.isEven ? 2.0 : 3.0;
                 final target = _settledValue ?? widget.targetValue ?? 1;
                 final angles = _DiceCube.orientationFor(target);
-                final spin = _isAnimating ? (1 - landing) * turns * 2 * math.pi : 0.0;
+                final spin = _isAnimating
+                    ? (1 - landing) * turns * 2 * math.pi
+                    : 0.0;
                 final lift = _isAnimating
                     ? math.sin(math.pi * t) * widget.size * .22
                     : 0.0;
