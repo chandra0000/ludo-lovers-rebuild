@@ -264,13 +264,10 @@ class _MatchScreenState extends State<MatchScreen>
     final value = isAi
         ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
         : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-    final command = RollDiceCommand(
-      matchId: _session.matchId,
-      actorId: _session.actorFor(_game.activePlayer),
-      expectedStateVersion: _game.stateVersion,
-      commandId:
-          '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+    final command = _matchController.buildRoll(
       value: value,
+      isAi: isAi,
+      aiSeed: widget.aiSeed,
     );
     if (!_executeCommand(command)) return false;
     final rolled = _game;
@@ -321,12 +318,7 @@ class _MatchScreenState extends State<MatchScreen>
         currentStateVersion: () => _game.stateVersion,
         canExecute: () => mounted && _isAppResumed && _game.diceValue != null,
         onReady: () {
-          final command = PassTurnCommand(
-            matchId: _session.matchId,
-            actorId: _session.actorFor(_game.activePlayer),
-            expectedStateVersion: _game.stateVersion,
-            commandId: 'match-${_game.stateVersion}-pass',
-          );
+          final command = _matchController.buildPass();
           final accepted = _executeCommand(command);
           setState(() {});
           if (!accepted) return;
@@ -401,13 +393,7 @@ class _MatchScreenState extends State<MatchScreen>
     final stepCount = endProgress - startProgress;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final command = MovePawnCommand(
-      matchId: _session.matchId,
-      actorId: _session.actorFor(movingColor),
-      expectedStateVersion: _game.stateVersion,
-      commandId: 'match-${_game.stateVersion}-move-$pawnIndex',
-      pawnIndex: pawnIndex,
-    );
+    final command = _matchController.buildMove(pawnIndex);
     if (!_executeCommand(command)) return;
     final nextGame = _game;
     var capturedCount = 0;
