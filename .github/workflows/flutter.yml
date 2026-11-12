@@ -52,8 +52,8 @@ jobs:
         if: failure()
         working-directory: apps/mobile
         run: |
-          dart format lib/src/game/presentation/luxury_dice.dart
-          git diff -- lib/src/game/presentation/luxury_dice.dart
+          dart format lib test tool integration_test
+          git diff -- lib test tool integration_test
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
