@@ -539,13 +539,11 @@ class _MatchScreenState extends State<MatchScreen>
                     ),
                   ),
                 ..._buildPawnsWithClusters(scale),
-                if (_selectedPawnIndex != null)
-                  _buildDestinationPreview(),
+                if (_selectedPawnIndex != null) _buildDestinationPreview(),
                 MatchDiceLayer(
                   targetValue: _game.diceValue,
                   rollId: _diceRollId,
-                  canRoll: !widget.aiPlayers
-                          .contains(_game.activePlayer) &&
+                  canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
                       _game.diceValue == null &&
                       !_isDiceAnimating &&
                       !_movementController.isAnimating &&
@@ -554,8 +552,7 @@ class _MatchScreenState extends State<MatchScreen>
                       _game.winner == null &&
                       !_movementController.isAnimating,
                   onRollRequested: () {
-                    if (widget.aiPlayers
-                        .contains(_game.activePlayer)) {
+                    if (widget.aiPlayers.contains(_game.activePlayer)) {
                       return;
                     }
                     _roll(isAi: false);
