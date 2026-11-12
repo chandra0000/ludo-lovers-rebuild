@@ -4,6 +4,8 @@ import 'package:ludo_lovers/src/features/match/match_animation_lifecycle.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('dice presentation tracks rolls and restores pending AI dice', () {
     final animations = MatchAnimationLifecycle(
       vsync: TestVSync(),
@@ -16,6 +18,11 @@ void main() {
     expect(animations.isDiceAnimating, isTrue);
     expect(animations.diceRollId, 1);
 
+    animations.completeDiceRoll();
+    expect(animations.isDiceAnimating, isFalse);
+    animations.resumePendingDiceResult();
+    expect(animations.isDiceAnimating, isTrue);
+    expect(animations.diceRollId, 1);
     animations.completeDiceRoll();
     expect(animations.isDiceAnimating, isFalse);
 
