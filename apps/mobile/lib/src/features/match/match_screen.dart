@@ -24,6 +24,7 @@ import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
+import 'match_animation_timing.dart';
 import 'match_movement_presentation.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
@@ -92,6 +93,7 @@ class _MatchScreenState extends State<MatchScreen>
     ..addListener(_handleMovementTick)
     ..addStatusListener(_handleMovementStatus);
   final MatchMovementPresentation _movement = MatchMovementPresentation();
+  final MatchAnimationTiming _animationTiming = const MatchAnimationTiming();
   bool _isAutoMovePending = false;
   int _turnResolutionToken = 0;
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
@@ -443,9 +445,10 @@ class _MatchScreenState extends State<MatchScreen>
       _movement.startProgress = startProgress;
       _movement.endProgress = endProgress;
       _movement.feedback = feedback;
-      _movementController.duration = reduceMotion
-          ? Duration.zero
-          : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
+      _movementController.duration = _animationTiming.pawnMovement(
+        stepCount: stepCount,
+        reduceMotion: reduceMotion,
+      );
     });
     unawaited(_persistMatch());
     _previewController.stop();
