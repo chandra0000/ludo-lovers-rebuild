@@ -238,14 +238,14 @@ class _MatchScreenState extends State<MatchScreen>
         if (rolled.diceValue != null) {
           _diceRollId++;
         }
-    });
-    unawaited(_persistMatch());
-    // A third-six penalty is an accepted turn transition, not a dice
-    // result to animate. Continue immediately if the next seat is AI.
-    if (rolled.diceValue == null) {
-      _showConsecutiveSixPenalty();
-      _scheduleAiTurn();
-    }
+      });
+      unawaited(_persistMatch());
+      // A third-six penalty is an accepted turn transition, not a dice
+      // result to animate. Continue immediately if the next seat is AI.
+      if (rolled.diceValue == null) {
+        _showConsecutiveSixPenalty();
+        _scheduleAiTurn();
+      }
     });
   }
 
