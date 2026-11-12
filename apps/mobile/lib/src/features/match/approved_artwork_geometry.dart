@@ -65,7 +65,7 @@ class ApprovedArtworkGeometry {
         row >= boardGridSize) {
       throw RangeError('Artwork cell must be within the 15x15 board.');
     }
-    final pitch = nominalBoardSize / boardGridSize;
+    const pitch = nominalBoardSize / boardGridSize;
     return Offset(
       nominalBoardLeft + (column + 0.5) * pitch,
       nominalBoardTop + (row + 0.5) * pitch,
