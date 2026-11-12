@@ -47,6 +47,12 @@ jobs:
       - name: Check Dart formatting (strict, non-mutating)
         working-directory: apps/mobile
         run: dart format --output=none --set-exit-if-changed lib test tool integration_test
+      - name: Show required Dart formatting changes
+        if: failure()
+        working-directory: apps/mobile
+        run: |
+          dart format lib/src/game/presentation/luxury_dice.dart
+          git diff -- lib/src/game/presentation/luxury_dice.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
