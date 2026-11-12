@@ -218,26 +218,26 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     _aiScheduler.schedule(() {
-    if (!mounted ||
-        !_isAppResumed ||
-        !widget.aiPlayers.contains(_game.activePlayer) ||
-        _game.winner != null ||
-        _game.diceValue != null ||
-        _movementController.isAnimating ||
-        _isDiceAnimating) {
-      return;
-    }
-    final command = _aiTurnPolicy.createRoll(
-      session: _session,
-      aiSeed: widget.aiSeed,
-    );
-    if (!_executeCommand(command)) return;
-    final rolled = _game;
-    setState(() {
-      _isDiceAnimating = rolled.diceValue != null;
-      if (rolled.diceValue != null) {
-        _diceRollId++;
+      if (!mounted ||
+          !_isAppResumed ||
+          !widget.aiPlayers.contains(_game.activePlayer) ||
+          _game.winner != null ||
+          _game.diceValue != null ||
+          _movementController.isAnimating ||
+          _isDiceAnimating) {
+        return;
       }
+      final command = _aiTurnPolicy.createRoll(
+        session: _session,
+        aiSeed: widget.aiSeed,
+      );
+      if (!_executeCommand(command)) return;
+      final rolled = _game;
+      setState(() {
+        _isDiceAnimating = rolled.diceValue != null;
+        if (rolled.diceValue != null) {
+          _diceRollId++;
+        }
     });
     unawaited(_persistMatch());
     // A third-six penalty is an accepted turn transition, not a dice
