@@ -11,9 +11,11 @@ class MatchTurnResolutionScheduler {
 
   void schedule(Duration delay, void Function() onReady) {
     final generation = ++_generation;
-    unawaited(Future<void>.delayed(delay, () {
-      if (generation != _generation) return;
-      onReady();
-    }));
+    unawaited(
+      Future<void>.delayed(delay, () {
+        if (generation != _generation) return;
+        onReady();
+      }),
+    );
   }
 }
