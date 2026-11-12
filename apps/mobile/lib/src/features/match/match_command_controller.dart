@@ -13,6 +13,42 @@ class MatchCommandController {
   MatchSession get session => _session;
   LudoGame get game => _session.game;
 
+  /// Builds a command for the currently active actor and state version.
+  /// The MatchSession still validates and applies it on execute.
+  RollDiceCommand buildRoll({
+    required int value,
+    required bool isAi,
+    required int aiSeed,
+  }) {
+    final prefix = isAi ? 'ai-$aiSeed' : 'match';
+    return RollDiceCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(game.activePlayer),
+      expectedStateVersion: game.stateVersion,
+      commandId: '$prefix-${game.stateVersion}-roll',
+      value: value,
+    );
+  }
+
+  MovePawnCommand buildMove(int pawnIndex) {
+    return MovePawnCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(game.activePlayer),
+      expectedStateVersion: game.stateVersion,
+      commandId: 'match-${game.stateVersion}-move-$pawnIndex',
+      pawnIndex: pawnIndex,
+    );
+  }
+
+  PassTurnCommand buildPass() {
+    return PassTurnCommand(
+      matchId: _session.matchId,
+      actorId: _session.actorFor(game.activePlayer),
+      expectedStateVersion: game.stateVersion,
+      commandId: 'match-${game.stateVersion}-pass',
+    );
+  }
+
   MatchCommandResult execute(MatchCommand command) {
     final result = _session.execute(command);
     if (result.accepted) {
