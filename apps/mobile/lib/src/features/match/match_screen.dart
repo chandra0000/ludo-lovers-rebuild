@@ -22,6 +22,7 @@ import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
+import 'match_ai_turn_policy.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
@@ -76,6 +77,7 @@ class _MatchScreenState extends State<MatchScreen>
   LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
+  final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
   bool _aiTurnScheduled = false;
   bool _isDiceAnimating = false;
   bool _isAppResumed = true;
@@ -206,13 +208,14 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _scheduleAiTurn() {
-    if (!_isAppResumed ||
-        !widget.aiPlayers.contains(_game.activePlayer) ||
-        _game.winner != null ||
-        _game.diceValue != null ||
-        _aiTurnScheduled ||
-        _movementController.isAnimating ||
-        _isDiceAnimating) {
+    if (!_aiTurnPolicy.canSchedule(
+      session: _session,
+      aiPlayers: widget.aiPlayers,
+      isAppResumed: _isAppResumed,
+      isScheduled: _aiTurnScheduled,
+      isMovementAnimating: _movementController.isAnimating,
+      isDiceAnimating: _isDiceAnimating,
+    )) {
       return;
     }
     _aiTurnScheduled = true;
@@ -230,13 +233,9 @@ class _MatchScreenState extends State<MatchScreen>
               _isDiceAnimating) {
             return;
           }
-          final command = RollDiceCommand(
-            matchId: _session.matchId,
-            actorId: _session.actorFor(_game.activePlayer),
-            expectedStateVersion: _game.stateVersion,
-            commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
-            value:
-                math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
+          final command = _aiTurnPolicy.createRoll(
+            session: _session,
+            aiSeed: widget.aiSeed,
           );
           if (!_executeCommand(command)) return;
           final rolled = _game;
