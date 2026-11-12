@@ -303,7 +303,8 @@ class _DiceCube extends StatelessWidget {
         value: face.$1,
         transform: combined..multiply(Matrix4.translationValues(0.0, 0.0, half)),
         depth: normalZ,
-      ));
+      ),
+    );
     }
     faces.sort((a, b) => a.depth.compareTo(b.depth));
     return SizedBox(
