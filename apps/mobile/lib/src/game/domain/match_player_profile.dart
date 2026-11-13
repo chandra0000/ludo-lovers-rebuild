@@ -12,6 +12,7 @@ class MatchPlayerProfile {
     this.avatarUri,
     this.defaultAvatarId,
     this.isBot = false,
+    this.isLocalSeat = false,
     this.isConnected = true,
   });
 
@@ -25,13 +26,27 @@ class MatchPlayerProfile {
   /// Stable identifier for the approved default avatar artwork.
   final String? defaultAvatarId;
   final bool isBot;
+
+  /// Local seats do not have an online presence, even when ready to play.
+  final bool isLocalSeat;
+
+  /// Network availability for remote seats; not a local match status.
   final bool isConnected;
+
+  /// Display semantics shared by visual badges and accessibility labels.
+  String get presenceLabel {
+    if (isLocalSeat) {
+      return isBot ? 'BOT' : 'LOCAL';
+    }
+    return isConnected ? 'ONLINE' : 'OFFLINE';
+  }
 
   MatchPlayerProfile copyWith({
     String? displayName,
     Uri? avatarUri,
     String? defaultAvatarId,
     bool? isBot,
+    bool? isLocalSeat,
     bool? isConnected,
   }) {
     return MatchPlayerProfile(
@@ -41,6 +56,7 @@ class MatchPlayerProfile {
       avatarUri: avatarUri ?? this.avatarUri,
       defaultAvatarId: defaultAvatarId ?? this.defaultAvatarId,
       isBot: isBot ?? this.isBot,
+      isLocalSeat: isLocalSeat ?? this.isLocalSeat,
       isConnected: isConnected ?? this.isConnected,
     );
   }
@@ -58,6 +74,7 @@ class MatchPlayerProfile {
           color: color,
           defaultAvatarId: 'approved-${color.name}',
           isBot: aiPlayers.contains(color),
+          isLocalSeat: true,
         ),
       ),
     );
