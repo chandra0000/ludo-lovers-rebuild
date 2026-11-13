@@ -16,10 +16,11 @@ on:
 permissions:
   contents: read
 
-# Avoid spending CI minutes on obsolete runs when several commits land quickly.
+# Keep each CI run independent so new commits cannot interrupt long Android APK builds.
+# Using github.run_id also prevents pending runs from replacing each other.
 concurrency:
-  group: flutter-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: flutter-${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   verify:
