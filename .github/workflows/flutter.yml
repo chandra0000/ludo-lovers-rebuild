@@ -7,8 +7,7 @@ on:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
   pull_request:
-    # Stacked design PRs target the in-flight Phase 1 refactor branch.
-    branches: [main, "refactor/**"]
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
@@ -52,8 +51,8 @@ jobs:
         if: failure()
         working-directory: apps/mobile
         run: |
-          dart format lib test tool integration_test
-          git diff -- lib test tool integration_test
+          dart format lib/src/game/presentation/luxury_dice.dart
+          git diff -- lib/src/game/presentation/luxury_dice.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
@@ -82,17 +81,6 @@ jobs:
           test -s test-artifacts/match-screen-393x873.png
           test -s test-artifacts/match-canvas-393x699.png
           test -s test-artifacts/board-preview-calibration-393x873.png
-      - name: Verify approved full-art preview screenshot
-        if: success()
-        working-directory: apps/mobile
-        run: test -s test-artifacts/approved-artwork-preview-393x873.png
-      - name: Upload approved reference preview screenshot
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ludo-lovers-approved-artwork-preview-393x873
-          path: apps/mobile/test-artifacts/approved-artwork-preview-393x873.png
-          if-no-files-found: warn
       - name: Upload full-screen match screenshot
         if: always()
         uses: actions/upload-artifact@v4

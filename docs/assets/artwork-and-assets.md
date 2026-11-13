@@ -35,22 +35,7 @@ This keeps game state separate from static artwork and avoids a large collection
 
 ## Repository asset hygiene
 
-The repository previously contained a reference-path copy of the board with the same Git blob SHA as the runtime board. That redundant working-tree copy has been removed; the canonical runtime board remains at `apps/mobile/assets/images/board/ludo_board_glass.webp`. The canonical sources remain the board WebP and launcher WebP; the extracted board/avatar assets are derived resources for the legacy presentation and calibration. The runtime manifest is intentionally explicit rather than including the entire asset directory.
-
-## Approved full-composition preview (follow-up visual PR)
-
-The approved 810×1440 full portrait remains untouched. The default runtime
-currently uses `assets/images/board/extracted/board_exact.webp` plus live
-Flutter profile/dice/HUD controls. The new `LUDO_APPROVED_ART` preview flag
-renders **the complete canonical WebP**, while dynamic names/status and active
-turn overlay the baked text and Chat/More retain transparent semantic targets.
-
-This preview is a visual calibration tool, **not** release approval: the
-canonical image includes fixed portrait identities and a decorative die. The
-production solution requires a user-approved static derivative that removes
-only those baked dynamic elements. Do not enable the preview flag for public
-distribution until the derivative and all live UI layers pass visual/device
-acceptance. See [the artwork integration plan](../engineering/approved-artwork-integration.md).
+The repository previously contained a reference-path copy of the board with the same Git blob SHA as the runtime board. That redundant working-tree copy has been removed; the canonical runtime board remains at `apps/mobile/assets/images/board/ludo_board_glass.webp`. The current tree contains only the board WebP and launcher WebP. The runtime manifest is intentionally explicit rather than including the entire asset directory.
 
 ## Asset verification checklist
 
