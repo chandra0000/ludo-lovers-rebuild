@@ -15,15 +15,16 @@ void main() {
         const PawnMoved(1, 1, PlayerColor.orange, 0, 0, 1),
       ],
     );
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: 576,
-          height: 1024,
-          child: Stack(children: [MatchLandingCelebration(plan: plan)]),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 576,
+            height: 1024,
+            child: Stack(children: [MatchLandingCelebration(plan: plan)]),
+          ),
         ),
       ),
-    ),
     );
     expect(find.byKey(const Key('pawn_landing_fx')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 700));
