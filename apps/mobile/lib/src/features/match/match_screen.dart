@@ -195,8 +195,7 @@ class _MatchScreenState extends State<MatchScreen>
     return result;
   }
 
-  bool _executeCommand(MatchCommand command) =>
-      _applyCommand(command).accepted;
+  bool _executeCommand(MatchCommand command) => _applyCommand(command).accepted;
 
   Future<void> _persistMatch() {
     // Serialize writes so a slower earlier preference write can never
