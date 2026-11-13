@@ -1,5 +1,3 @@
-// dart format off
-// Temporary benchmark-only formatter exemption; remove after CI API validation.
 import 'dart:math' as math;
 import 'dart:ui' show FrameTiming;
 
@@ -18,8 +16,9 @@ class RendererBenchmarkScreen extends StatefulWidget {
   const RendererBenchmarkScreen({super.key});
 
   @override
-  State<RendererBenchmarkScreen> createState() =>
-      _RendererBenchmarkScreenState();
+  State<RendererBenchmarkScreen> createState() {
+    return _RendererBenchmarkScreenState();
+  }
 }
 
 class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
@@ -121,18 +120,24 @@ class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
 class BenchmarkAnchorOverlay extends StatelessWidget {
   const BenchmarkAnchorOverlay({super.key});
 
+  double _trackLeft(int index) {
+    final point = BoardGeometry.trackPosition(index);
+    return point.x * BoardGeometry.canvasWidth - 2;
+  }
+
+  double _trackTop(int index) {
+    final point = BoardGeometry.trackPosition(index);
+    return point.y * BoardGeometry.canvasHeight - 2;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         for (var i = 0; i < BoardGeometry.trackLength; i++)
           Positioned(
-            left: BoardGeometry.trackPosition(i).x *
-                    BoardGeometry.canvasWidth -
-                2,
-            top: BoardGeometry.trackPosition(i).y *
-                    BoardGeometry.canvasHeight -
-                2,
+            left: _trackLeft(i),
+            top: _trackTop(i),
             child: const SizedBox(
               width: 4,
               height: 4,
@@ -155,9 +160,11 @@ class BenchmarkFlameGame extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
     camera.viewfinder.anchor = Anchor.topLeft;
-    camera.viewport = FixedResolutionViewport(
-      resolution: Vector2(BoardGeometry.canvasWidth, BoardGeometry.canvasHeight),
+    final resolution = Vector2(
+      BoardGeometry.canvasWidth,
+      BoardGeometry.canvasHeight,
     );
+    camera.viewport = FixedResolutionViewport(resolution: resolution);
     final board = await images.load('board/extracted/board_exact.webp');
     await world.add(
       SpriteComponent(
