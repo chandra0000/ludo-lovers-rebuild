@@ -48,7 +48,7 @@ class MatchSurfaceChrome extends StatelessWidget {
                   height: railHeight,
                   child: const Center(
                     child: Text(
-                      'LUDO LOVERS  •  LOCAL CLASSIC',
+                      'LUDO LOVERS  •  OFFLINE MATCH',
                       key: Key('match_top_rail'),
                       maxLines: 1,
                       style: TextStyle(
