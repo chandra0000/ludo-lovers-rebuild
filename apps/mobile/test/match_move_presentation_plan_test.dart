@@ -118,4 +118,29 @@ void main() {
       throwsStateError,
     );
   });
+
+  test('duplicate movement events cannot produce a partial animation', () {
+    final game = LudoGame.initial().roll(6).movePawn(0);
+    final moved = game.events.whereType<PawnMoved>().single;
+    expect(
+      () => MatchMovePresentationPlan.fromEvents(
+        events: [...game.events, moved],
+        player: PlayerColor.orange,
+        pawnIndex: 0,
+      ),
+      throwsStateError,
+    );
+  });
+
+  test('a movement event cannot animate a different player', () {
+    final game = LudoGame.initial().roll(6).movePawn(0);
+    expect(
+      () => MatchMovePresentationPlan.fromEvents(
+        events: game.events,
+        player: PlayerColor.green,
+        pawnIndex: 0,
+      ),
+      throwsStateError,
+    );
+  });
 }
