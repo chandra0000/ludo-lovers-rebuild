@@ -21,6 +21,12 @@ import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
+import 'match_command_controller.dart';
+import 'match_ai_turn_policy.dart';
+import 'match_ai_scheduler.dart';
+import 'match_animation_lifecycle.dart';
+import 'match_turn_resolution_controller.dart';
+import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
@@ -60,38 +66,37 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late MatchSession _session = MatchSession.local(
-    matchId: 'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-    game: widget.initialGame ?? LudoGame.initial(),
+  late final MatchCommandController _matchController = MatchCommandController(
+    _newMatchSession(widget.initialGame ?? LudoGame.initial()),
   );
-  LudoGame get _game => _session.game;
+
+  MatchSession _newMatchSession(LudoGame game) {
+    final matchId =
+        'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}';
+    return MatchSession.local(matchId: matchId, game: game);
+  }
+
+  MatchSession get _session => _matchController.session;
+  LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
   final SeededLudoAi _ai = const SeededLudoAi();
-  bool _aiTurnScheduled = false;
-  bool _isDiceAnimating = false;
+  final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
+  final MatchAiScheduler _aiScheduler = MatchAiScheduler();
   bool _isAppResumed = true;
-  final SavedMatchStore _savedMatchStore = const SavedMatchStore();
-  Future<void> _persistenceQueue = Future<void>.value();
-  int _diceRollId = 0;
-  late final AnimationController _movementController = AnimationController(
+  final MatchPersistenceController _persistence = MatchPersistenceController();
+  late final MatchAnimationLifecycle _animations = MatchAnimationLifecycle(
     vsync: this,
-    duration: const Duration(milliseconds: 160),
-  )
-    ..addListener(_handleMovementTick)
-    ..addStatusListener(_handleMovementStatus);
-  PlayerColor? _movingColor;
-  int? _movingPawnIndex;
-  int _movementStartProgress = 0;
-  int _movementEndProgress = 0;
-  String? _pendingMoveFeedback;
-  bool _isAutoMovePending = false;
-  int _turnResolutionToken = 0;
+    onMovementTick: _handleMovementTick,
+    onMovementStatus: _handleMovementStatus,
+  );
+  AnimationController get _movementController => _animations.movement;
+  AnimationController get _previewController => _animations.preview;
+  bool get _isDiceAnimating => _animations.isDiceAnimating;
+  int get _diceRollId => _animations.diceRollId;
+  final MatchTurnResolutionController _turnResolution =
+      MatchTurnResolutionController();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
-  late final AnimationController _previewController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  );
 
   @override
   void initState() {
@@ -101,8 +106,7 @@ class _MatchScreenState extends State<MatchScreen>
         widget.aiPlayers.contains(_game.activePlayer)) {
       // A saved AI roll is already accepted by the engine. Complete its
       // presentation callback on restore so the AI cannot become stranded.
-      _isDiceAnimating = true;
-      _diceRollId = 1;
+      _animations.restorePendingDiceRoll();
     }
     final lifecycleState = WidgetsBinding.instance.lifecycleState;
     // Treat the initial detached/null state as active until the first
@@ -122,19 +126,15 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _handleMovementTick() {
-    if (mounted && _movingPawnIndex != null) {
+    if (mounted && _animations.pawn.pawnIndex != null) {
       setState(() {});
     }
   }
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      final feedback = _pendingMoveFeedback;
-      setState(() {
-        _movingColor = null;
-        _movingPawnIndex = null;
-        _pendingMoveFeedback = null;
-      });
+      final feedback = _animations.completePawnMovement();
+      setState(() {});
       _scheduleAiTurn();
       if (feedback != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,18 +154,30 @@ class _MatchScreenState extends State<MatchScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppResumed = state == AppLifecycleState.resumed;
     if (!_isAppResumed) {
+      // Never execute an automatic pawn move or pass while backgrounded.
+      final hadPendingTurn = _turnResolution.isPending;
+      _turnResolution.cancel();
+      if (hadPendingTurn) {
+        setState(() {});
+      }
       unawaited(_persistMatch());
       return;
     }
-    // Flutter's ticker lifecycle handling pauses the in-flight visual
-    // animation. Resume AI scheduling only after the app is foregrounded.
+    // A paused dice widget may never send its animation-complete callback.
+    // Resume the already accepted result without generating another roll.
+    if (_game.diceValue != null && !_movementController.isAnimating) {
+      _animations.resumePendingDiceResult();
+      _handleDiceAnimationComplete();
+      return;
+    }
+    // The Flutter ticker resumes an in-flight pawn movement automatically.
     if (!_isDiceAnimating && !_movementController.isAnimating) {
       _scheduleAiTurn();
     }
   }
 
   bool _executeCommand(MatchCommand command) {
-    final result = _session.execute(command);
+    final result = _matchController.execute(command);
     if (!result.accepted) {
       debugPrint(
         'Rejected match command ${command.commandId}: '
@@ -173,7 +185,6 @@ class _MatchScreenState extends State<MatchScreen>
       );
       return false;
     }
-    _session = result.session;
     return true;
   }
 
@@ -186,76 +197,59 @@ class _MatchScreenState extends State<MatchScreen>
       aiSeed: widget.aiSeed,
       aiDifficulty: widget.aiDifficulty,
     );
-    _persistenceQueue = _persistenceQueue.then((_) async {
-      try {
-        await _savedMatchStore.save(snapshot);
-      } catch (error) {
-        debugPrint('Could not persist local match: $error');
-      }
-    });
-    return _persistenceQueue;
+    return _persistence.persist(snapshot);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _aiScheduler.cancel();
+    _turnResolution.cancel();
     unawaited(_persistMatch());
-    _movementController.dispose();
-    _previewController.dispose();
+    _animations.dispose();
     super.dispose();
   }
 
   void _scheduleAiTurn() {
-    if (!_isAppResumed ||
-        !widget.aiPlayers.contains(_game.activePlayer) ||
-        _game.winner != null ||
-        _game.diceValue != null ||
-        _aiTurnScheduled ||
-        _movementController.isAnimating ||
-        _isDiceAnimating) {
+    if (!_aiTurnPolicy.canSchedule(
+      session: _session,
+      aiPlayers: widget.aiPlayers,
+      isAppResumed: _isAppResumed,
+      isScheduled: _aiScheduler.isScheduled,
+      isMovementAnimating: _movementController.isAnimating,
+      isDiceAnimating: _isDiceAnimating,
+    )) {
       return;
     }
-    _aiTurnScheduled = true;
-    unawaited(
-      Future<void>.delayed(
-        const Duration(milliseconds: 450),
-        () {
-          _aiTurnScheduled = false;
-          if (!mounted ||
-              !_isAppResumed ||
-              !widget.aiPlayers.contains(_game.activePlayer) ||
-              _game.winner != null ||
-              _game.diceValue != null ||
-              _movementController.isAnimating ||
-              _isDiceAnimating) {
-            return;
-          }
-          final command = RollDiceCommand(
-            matchId: _session.matchId,
-            actorId: _session.actorFor(_game.activePlayer),
-            expectedStateVersion: _game.stateVersion,
-            commandId: 'ai-${widget.aiSeed}-${_game.stateVersion}-roll',
-            value:
-                math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1,
-          );
-          if (!_executeCommand(command)) return;
-          final rolled = _game;
-          setState(() {
-            _isDiceAnimating = rolled.diceValue != null;
-            if (rolled.diceValue != null) {
-              _diceRollId++;
-            }
-          });
-          unawaited(_persistMatch());
-          // A third-six penalty is an accepted turn transition, not a dice
-          // result to animate. Continue immediately if the next seat is AI.
-          if (rolled.diceValue == null) {
-            _showConsecutiveSixPenalty();
-            _scheduleAiTurn();
-          }
-        },
-      ),
-    );
+    _aiScheduler.schedule(() {
+      if (!mounted ||
+          !_isAppResumed ||
+          !widget.aiPlayers.contains(_game.activePlayer) ||
+          _game.winner != null ||
+          _game.diceValue != null ||
+          _movementController.isAnimating ||
+          _isDiceAnimating) {
+        return;
+      }
+      final command = _aiTurnPolicy.createRoll(
+        session: _session,
+        aiSeed: widget.aiSeed,
+      );
+      if (!_executeCommand(command)) return;
+      final rolled = _game;
+      setState(() {
+        _animations.presentAcceptedRoll(
+          hasDiceResult: rolled.diceValue != null,
+        );
+      });
+      unawaited(_persistMatch());
+      // A third-six penalty is an accepted turn transition, not a dice
+      // result to animate. Continue immediately if the next seat is AI.
+      if (rolled.diceValue == null) {
+        _showConsecutiveSixPenalty();
+        _scheduleAiTurn();
+      }
+    });
   }
 
   bool _roll({required bool isAi}) {
@@ -270,23 +264,19 @@ class _MatchScreenState extends State<MatchScreen>
     final value = isAi
         ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
         : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-    final command = RollDiceCommand(
-      matchId: _session.matchId,
-      actorId: _session.actorFor(_game.activePlayer),
-      expectedStateVersion: _game.stateVersion,
-      commandId:
-          '${isAi ? 'ai-${widget.aiSeed}' : 'match'}-${_game.stateVersion}-roll',
+    final command = _matchController.buildRoll(
       value: value,
+      isAi: isAi,
+      aiSeed: widget.aiSeed,
     );
     if (!_executeCommand(command)) return false;
     final rolled = _game;
     final wasPenalized =
         rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
     setState(() {
-      _isDiceAnimating = rolled.diceValue != null;
-      if (rolled.diceValue != null) {
-        _diceRollId++;
-      }
+      _animations.presentAcceptedRoll(
+        hasDiceResult: rolled.diceValue != null,
+      );
     });
     unawaited(_persistMatch());
     if (wasPenalized) {
@@ -312,7 +302,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _handleDiceAnimationComplete() {
     if (!mounted || !_isAppResumed || !_isDiceAnimating) return;
     final legal = _game.legalPawnIndices();
-    setState(() => _isDiceAnimating = false);
+    setState(_animations.completeDiceRoll);
 
     if (_game.diceValue == null) {
       // Defensive recovery: a penalty or restored transition may already
@@ -321,30 +311,22 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (legal.isEmpty) {
-      final token = ++_turnResolutionToken;
-      setState(() => _isAutoMovePending = true);
-      unawaited(
-        Future<void>.delayed(
-          const Duration(milliseconds: 600),
-          () {
-            if (!mounted ||
-                token != _turnResolutionToken ||
-                _game.diceValue == null) {
-              return;
-            }
-            final command = PassTurnCommand(
-              matchId: _session.matchId,
-              actorId: _session.actorFor(_game.activePlayer),
-              expectedStateVersion: _game.stateVersion,
-              commandId: 'match-${_game.stateVersion}-pass',
-            );
-            if (!_executeCommand(command)) return;
-            setState(() => _isAutoMovePending = false);
-            unawaited(_persistMatch());
-            _scheduleAiTurn();
-          },
-        ),
+      _turnResolution.schedulePass(
+        matchId: _session.matchId,
+        stateVersion: _game.stateVersion,
+        currentMatchId: () => _session.matchId,
+        currentStateVersion: () => _game.stateVersion,
+        canExecute: () => mounted && _isAppResumed && _game.diceValue != null,
+        onReady: () {
+          final command = _matchController.buildPass();
+          final accepted = _executeCommand(command);
+          setState(() {});
+          if (!accepted) return;
+          unawaited(_persistMatch());
+          _scheduleAiTurn();
+        },
       );
+      setState(() {});
       return;
     }
 
@@ -359,23 +341,22 @@ class _MatchScreenState extends State<MatchScreen>
             ? legal.single
             : null;
     if (selected != null) {
-      final token = ++_turnResolutionToken;
-      setState(() => _isAutoMovePending = true);
-      unawaited(
-        Future<void>.delayed(
-          const Duration(milliseconds: 350),
-          () {
-            if (!mounted ||
-                token != _turnResolutionToken ||
-                _game.diceValue == null ||
-                _movementController.isAnimating) {
-              return;
-            }
-            setState(() => _isAutoMovePending = false);
-            _move(selected);
-          },
-        ),
+      _turnResolution.schedulePawn(
+        matchId: _session.matchId,
+        stateVersion: _game.stateVersion,
+        currentMatchId: () => _session.matchId,
+        currentStateVersion: () => _game.stateVersion,
+        canExecute: () =>
+            mounted &&
+            _isAppResumed &&
+            _game.diceValue != null &&
+            !_movementController.isAnimating,
+        onReady: () {
+          setState(() {});
+          _move(selected);
+        },
       );
+      setState(() {});
     }
   }
 
@@ -399,7 +380,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   void _move(int pawnIndex) {
     if (_isDiceAnimating ||
-        _isAutoMovePending ||
+        _turnResolution.isPending ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
@@ -412,13 +393,7 @@ class _MatchScreenState extends State<MatchScreen>
     final stepCount = endProgress - startProgress;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final command = MovePawnCommand(
-      matchId: _session.matchId,
-      actorId: _session.actorFor(movingColor),
-      expectedStateVersion: _game.stateVersion,
-      commandId: 'match-${_game.stateVersion}-move-$pawnIndex',
-      pawnIndex: pawnIndex,
-    );
+    final command = _matchController.buildMove(pawnIndex);
     if (!_executeCommand(command)) return;
     final nextGame = _game;
     var capturedCount = 0;
@@ -447,18 +422,18 @@ class _MatchScreenState extends State<MatchScreen>
                 : null;
     setState(() {
       _selectedPawnIndex = null;
-      _movingColor = movingColor;
-      _movingPawnIndex = pawnIndex;
-      _movementStartProgress = startProgress;
-      _movementEndProgress = endProgress;
-      _pendingMoveFeedback = feedback;
-      _movementController.duration = reduceMotion
-          ? Duration.zero
-          : Duration(milliseconds: math.max(180, stepCount * 125).toInt());
+      _animations.configurePawnMovement(
+        color: movingColor,
+        pawnIndex: pawnIndex,
+        startProgress: startProgress,
+        endProgress: endProgress,
+        stepCount: stepCount,
+        reduceMotion: reduceMotion,
+        feedback: feedback,
+      );
     });
     unawaited(_persistMatch());
-    _previewController.stop();
-    _movementController.forward(from: 0);
+    _animations.startPawnMovement();
   }
 
   NormalizedBoardPoint _pawnPosition(
@@ -470,9 +445,10 @@ class _MatchScreenState extends State<MatchScreen>
       color: color,
       pawnIndex: pawnIndex,
       progress: player.pawnProgress[pawnIndex],
-      isMoving: _movingColor == color && _movingPawnIndex == pawnIndex,
-      startProgress: _movementStartProgress,
-      endProgress: _movementEndProgress,
+      isMoving: _animations.pawn.color == color &&
+          _animations.pawn.pawnIndex == pawnIndex,
+      startProgress: _animations.pawn.startProgress,
+      endProgress: _animations.pawn.endProgress,
       animationValue: _movementController.value,
     );
   }
@@ -657,26 +633,12 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _restartMatch() {
-    _turnResolutionToken++;
-    _movementController.stop();
-    _movementController.value = 0;
-    _previewController.stop();
-    _previewController.value = 0;
+    _aiScheduler.cancel();
+    _turnResolution.cancel();
+    _animations.resetForNewMatch();
     setState(() {
-      _session = MatchSession.local(
-        matchId:
-            'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}',
-        game: LudoGame.initial(),
-      );
-      _isDiceAnimating = false;
-      _isAutoMovePending = false;
+      _matchController.reset(_newMatchSession(LudoGame.initial()));
       _selectedPawnIndex = null;
-      _movingColor = null;
-      _movingPawnIndex = null;
-      _pendingMoveFeedback = null;
-      _movementStartProgress = 0;
-      _movementEndProgress = 0;
-      _diceRollId = 0;
     });
     unawaited(_persistMatch());
     _scheduleAiTurn();
@@ -686,7 +648,7 @@ class _MatchScreenState extends State<MatchScreen>
     // A tap on a legal pawn commits the move immediately. The dice has
     // already been accepted by MatchSession, so a second confirmation tap
     // adds friction without improving rule validation.
-    if (_isAutoMovePending ||
+    if (_turnResolution.isPending ||
         _isDiceAnimating ||
         _movementController.isAnimating ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
@@ -879,12 +841,12 @@ class _MatchScreenState extends State<MatchScreen>
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
     final canMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
-        !_isAutoMovePending &&
+        !_turnResolution.isPending &&
         isHumanTurn &&
         legalIndices.contains(pawnIndex);
     final canExplainInvalidMove = !_isDiceAnimating &&
         !_movementController.isAnimating &&
-        !_isAutoMovePending &&
+        !_turnResolution.isPending &&
         isHumanTurn &&
         _game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
@@ -965,8 +927,8 @@ class _MatchScreenState extends State<MatchScreen>
                     scale: canMove ? 1.12 : 1,
                     duration: const Duration(milliseconds: 180),
                     child: Transform.rotate(
-                      angle: _movingColor == color &&
-                              _movingPawnIndex == pawnIndex
+                      angle: _animations.pawn.color == color &&
+                              _animations.pawn.pawnIndex == pawnIndex
                           ? math.sin(_movementController.value * math.pi * 2) *
                               0.08
                           : 0,
