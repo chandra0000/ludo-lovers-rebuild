@@ -133,8 +133,8 @@ class MatchProfilesLayer extends StatelessWidget {
     const seats = <PlayerColor, Offset>{
       PlayerColor.orange: Offset(12, 102),
       PlayerColor.green: Offset(378, 102),
-      PlayerColor.magenta: Offset(12, 890),
-      PlayerColor.blue: Offset(378, 890),
+      PlayerColor.magenta: Offset(12, 850),
+      PlayerColor.blue: Offset(378, 850),
     };
     return Stack(
       children: [
