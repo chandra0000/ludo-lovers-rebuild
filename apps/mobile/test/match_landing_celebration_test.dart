@@ -12,7 +12,7 @@ void main() {
       player: PlayerColor.orange,
       pawnIndex: 0,
       events: [
-        PawnMoved(1, 1, PlayerColor.orange, 0, 0, 1),
+        const PawnMoved(1, 1, PlayerColor.orange, 0, 0, 1),
       ],
     );
     await tester.pumpWidget(MaterialApp(
@@ -23,7 +23,8 @@ void main() {
           child: Stack(children: [MatchLandingCelebration(plan: plan)]),
         ),
       ),
-    ));
+    ),
+    );
     expect(find.byKey(const Key('pawn_landing_fx')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 700));
     expect(tester.takeException(), isNull);
