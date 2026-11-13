@@ -43,17 +43,19 @@ void main() {
     expect(find.byKey(const Key('profile_green')), findsOneWidget);
     final avatars = tester.widgetList<Image>(find.byType(Image)).toList();
     expect(avatars, hasLength(2));
-    AssetImage sourceFor(ImageProvider provider) {
-      final source = provider is ResizeImage ? provider.imageProvider : provider;
-      return source as AssetImage;
-    }
+    final first = avatars[0].image;
+    final second = avatars[1].image;
+    expect(first, isA<ResizeImage>());
+    expect(second, isA<ResizeImage>());
+    final firstSource = (first as ResizeImage).imageProvider as AssetImage;
+    final secondSource = (second as ResizeImage).imageProvider as AssetImage;
 
     expect(
-      sourceFor(avatars[0].image).assetName,
+      firstSource.assetName,
       'assets/images/board/extracted/avatar_aldo.webp',
     );
     expect(
-      sourceFor(avatars[1].image).assetName,
+      secondSource.assetName,
       'assets/images/board/extracted/avatar_you.webp',
     );
   });
