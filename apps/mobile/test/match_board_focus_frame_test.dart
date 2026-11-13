@@ -58,7 +58,7 @@ void main() {
     );
     final image = await tester.runAsync(\n      () => boundary.toImage(pixelRatio: 0.25),\n    );\n    expect(image, isNotNull);
     addTearDown(image!.dispose);
-    final byteData = await tester.runAsync(\n      () => image.toByteData(format: ui.ImageByteFormat.rawRgba),\n    );
+    final byteData = await tester.runAsync(\n      () => capturedImage.toByteData(format: ui.ImageByteFormat.rawRgba),\n    );
     expect(byteData, isNotNull);
     final bytes = byteData!.buffer.asUint8List();
     final board = Rect.fromLTWH(\n      MatchBoardFocusFrame.artworkRect.left * 0.25,\n      MatchBoardFocusFrame.artworkRect.top * 0.25,\n      MatchBoardFocusFrame.artworkRect.width * 0.25,\n      MatchBoardFocusFrame.artworkRect.height * 0.25,\n    );
@@ -66,7 +66,7 @@ void main() {
     // central pixels. This catches inward shadows and border regressions.
     for (var y = board.top.ceil(); y < board.bottom.floor(); y++) {
       for (var x = board.left.ceil(); x < board.right.floor(); x++) {
-        if (bytes[(y * image.width + x) * 4 + 3] != 0) {
+        if (bytes[(y * capturedImage.width + x) * 4 + 3] != 0) {
           fail('Halo modified board-interior pixel ($x,$y)');
         }
       }
