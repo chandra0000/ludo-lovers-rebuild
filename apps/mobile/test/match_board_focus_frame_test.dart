@@ -56,12 +56,23 @@ void main() {
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.byKey(const Key('halo_pixel_capture')),
     );
-    final image = await tester.runAsync(\n      () => boundary.toImage(pixelRatio: 0.25),\n    );\n    expect(image, isNotNull);
-    addTearDown(image!.dispose);
-    final byteData = await tester.runAsync(\n      () => capturedImage.toByteData(format: ui.ImageByteFormat.rawRgba),\n    );
+    final image = await tester.runAsync(
+      () => boundary.toImage(pixelRatio: 0.25),
+    );
+    expect(image, isNotNull);
+    final capturedImage = image!;
+    addTearDown(capturedImage.dispose);
+    final byteData = await tester.runAsync(
+      () => capturedImage.toByteData(format: ui.ImageByteFormat.rawRgba),
+    );
     expect(byteData, isNotNull);
     final bytes = byteData!.buffer.asUint8List();
-    final board = Rect.fromLTWH(\n      MatchBoardFocusFrame.artworkRect.left * 0.25,\n      MatchBoardFocusFrame.artworkRect.top * 0.25,\n      MatchBoardFocusFrame.artworkRect.width * 0.25,\n      MatchBoardFocusFrame.artworkRect.height * 0.25,\n    );
+    final board = Rect.fromLTWH(
+      MatchBoardFocusFrame.artworkRect.left * 0.25,
+      MatchBoardFocusFrame.artworkRect.top * 0.25,
+      MatchBoardFocusFrame.artworkRect.width * 0.25,
+      MatchBoardFocusFrame.artworkRect.height * 0.25,
+    );
     // Every pixel strictly inside the image is untouched, not merely its
     // central pixels. This catches inward shadows and border regressions.
     for (var y = board.top.ceil(); y < board.bottom.floor(); y++) {
