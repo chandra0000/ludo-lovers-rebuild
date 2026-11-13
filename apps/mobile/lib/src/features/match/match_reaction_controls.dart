@@ -11,10 +11,10 @@ class MatchReactionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 399,
-      top: 936,
-      width: 72,
-      height: 72,
+      left: 392,
+      top: 928,
+      width: 84,
+      height: 84,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xF0211A0D),
@@ -44,10 +44,10 @@ class MatchReactionToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 386,
-      top: 814,
+      left: 392,
+      top: 778,
       width: 92,
-      height: 82,
+      height: 70,
       child: IgnorePointer(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
