@@ -17,6 +17,8 @@ import '../../game/presentation/shake_feedback_wrapper.dart';
 
 import 'game/systems/pawn_animator.dart';
 import 'game/systems/pawn_layout_solver.dart';
+import 'approved_artwork_overlays.dart';
+import 'approved_reference_plate.dart';
 import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
@@ -42,6 +44,7 @@ class MatchScreen extends StatefulWidget {
     this.aiDifficulty = LudoAiDifficulty.medium,
     this.profiles,
     this.showDynamicProfiles = true,
+    this.useApprovedArtwork = const bool.fromEnvironment('LUDO_APPROVED_ART'),
   });
 
   @visibleForTesting
@@ -55,6 +58,10 @@ class MatchScreen extends StatefulWidget {
 
   /// Dynamic profiles are enabled for the board-only artwork by default.
   final bool showDynamicProfiles;
+
+  /// Opt-in full-composition preview. The original runtime view remains the
+  /// release fallback until a clean static plate has been approved.
+  final bool useApprovedArtwork;
 
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
@@ -472,18 +479,31 @@ class _MatchScreenState extends State<MatchScreen>
           child: MatchBoardViewport(
             builder: (context, scale) => Stack(
               children: [
-                const Positioned.fill(
-                  child: MatchBoardArtwork(),
-                ),
+                if (widget.useApprovedArtwork)
+                  Positioned.fill(
+                    child: ApprovedReferencePlate(canvasScale: scale),
+                  )
+                else
+                  const Positioned.fill(
+                    child: MatchBoardArtwork(),
+                  ),
                 if (widget.showDynamicProfiles)
                   Positioned.fill(
-                    child: MatchProfilesLayer(
-                      profiles: widget.profiles ??
-                          MatchPlayerProfile.local(
-                            aiPlayers: widget.aiPlayers,
+                    child: widget.useApprovedArtwork
+                        ? ApprovedArtworkProfilesLayer(
+                            profiles: widget.profiles ??
+                                MatchPlayerProfile.local(
+                                  aiPlayers: widget.aiPlayers,
+                                ),
+                            activeColor: _game.activePlayer,
+                          )
+                        : MatchProfilesLayer(
+                            profiles: widget.profiles ??
+                                MatchPlayerProfile.local(
+                                  aiPlayers: widget.aiPlayers,
+                                ),
+                            activeColor: _game.activePlayer,
                           ),
-                      activeColor: _game.activePlayer,
-                    ),
                   ),
                 ..._buildPawnsWithClusters(scale),
                 if (_selectedPawnIndex != null) _buildDestinationPreview(),
@@ -506,10 +526,16 @@ class _MatchScreenState extends State<MatchScreen>
                   },
                   onAnimationComplete: _handleDiceAnimationComplete,
                 ),
-                MatchHudOverlay(
-                  statusText: _statusText,
-                  activePlayer: _game.activePlayer,
-                ),
+                if (widget.useApprovedArtwork)
+                  ApprovedArtworkTurnOverlay(
+                    statusText: _statusText,
+                    activePlayer: _game.activePlayer,
+                  )
+                else
+                  MatchHudOverlay(
+                    statusText: _statusText,
+                    activePlayer: _game.activePlayer,
+                  ),
                 Positioned(
                   left: 12,
                   top: 12,
@@ -529,63 +555,70 @@ class _MatchScreenState extends State<MatchScreen>
                     ),
                   ),
                 ),
-                Positioned(
-                  left: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
-                  child: Semantics(
-                    button: true,
-                    label: 'Chat',
-                    hint: 'Open local chat and emoji reactions.',
-                    child: GestureDetector(
-                      key: const Key('chat_button'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _showLocalChat,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color(0xE6211A0D),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.chat_bubble_outline,
-                            size: 32,
-                            color: Color(0xFFFFD36B),
+                if (widget.useApprovedArtwork)
+                  ApprovedArtworkActionsLayer(
+                    onChat: _showLocalChat,
+                    onMore: _showMoreMenu,
+                  ),
+                if (!widget.useApprovedArtwork)
+                  Positioned(
+                    left: 16,
+                    top: 936,
+                    width: 76,
+                    height: 76,
+                    child: Semantics(
+                      button: true,
+                      label: 'Chat',
+                      hint: 'Open local chat and emoji reactions.',
+                      child: GestureDetector(
+                        key: const Key('chat_button'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _showLocalChat,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color(0xE6211A0D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.chat_bubble_outline,
+                              size: 32,
+                              color: Color(0xFFFFD36B),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
-                  child: Semantics(
-                    button: true,
-                    label: 'More options',
-                    child: GestureDetector(
-                      key: const Key('more_button'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _showMoreMenu,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color(0xE6211A0D),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.more_horiz,
-                            size: 32,
-                            color: Color(0xFFFFD36B),
+                if (!widget.useApprovedArtwork)
+                  Positioned(
+                    right: 16,
+                    top: 936,
+                    width: 76,
+                    height: 76,
+                    child: Semantics(
+                      button: true,
+                      label: 'More options',
+                      child: GestureDetector(
+                        key: const Key('more_button'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _showMoreMenu,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color(0xE6211A0D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.more_horiz,
+                              size: 32,
+                              color: Color(0xFFFFD36B),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
                 if (_game.winner != null)
                   Positioned(
                     left: 150,

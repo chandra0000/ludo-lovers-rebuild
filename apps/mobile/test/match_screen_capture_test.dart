@@ -71,4 +71,64 @@ void main() {
       }
     });
   });
+  testWidgets('captures the approved 393x873 artwork preview', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(393, 873);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MatchScreen(useApprovedArtwork: true),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+
+    expect(find.byKey(const Key('approved_full_artwork')), findsOneWidget);
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(const Key('match_screen_capture')),
+    );
+    expect(boundary.size, const Size(393, 873));
+
+    await tester.runAsync(() async {
+      final image = await boundary.toImage(pixelRatio: 1);
+      try {
+        final png = await image.toByteData(format: ui.ImageByteFormat.png);
+        final rgba = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        expect(png, isNotNull);
+        expect(rgba, isNotNull);
+        final pixels = rgba!.buffer.asUint8List();
+        var saturated = 0;
+        for (var y = 280; y < 620; y += 8) {
+          for (var x = 60; x < 333; x += 8) {
+            final i = (y * image.width + x) * 4;
+            final r = pixels[i].toInt();
+            final g = pixels[i + 1].toInt();
+            final b = pixels[i + 2].toInt();
+            final maximum = [r, g, b].reduce((a, b) => a > b ? a : b);
+            final minimum = [r, g, b].reduce((a, b) => a < b ? a : b);
+            if (maximum - minimum > 55 && maximum > 90) saturated++;
+          }
+        }
+        expect(
+          saturated,
+          greaterThan(30),
+          reason: 'The approved full-screen board image is blank or missing.',
+        );
+        final output = File(
+          'test-artifacts/approved-artwork-preview-393x873.png',
+        );
+        await output.parent.create(recursive: true);
+        await output.writeAsBytes(png!.buffer.asUint8List(), flush: true);
+      } finally {
+        image.dispose();
+      }
+    });
+  });
 }
