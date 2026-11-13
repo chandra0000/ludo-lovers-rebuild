@@ -69,10 +69,14 @@ class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
               _frameMs.clear();
             }),
           ),
-          Text('Frames: ${_frameMs.length} | p95 total frame: '
-              '${_frameMs.isEmpty ? "collecting" : _p95.toStringAsFixed(2)} ms'),
-          const Text('Profile mode on a physical device required. '
-              'Static-scene comparison only; not a gameplay FPS claim.'),
+          Text(
+            'Frames: ${_frameMs.length} | p95 total frame: '
+            '${_frameMs.isEmpty ? "collecting" : _p95.toStringAsFixed(2)} ms',
+          ),
+          const Text(
+            'Profile mode on a physical device required. '
+            'Static-scene comparison only; not a gameplay FPS claim.',
+          ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
