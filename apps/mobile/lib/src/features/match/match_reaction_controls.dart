@@ -50,7 +50,21 @@ class MatchReactionToast extends StatelessWidget {
       height: 70,
       child: IgnorePointer(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
+          duration: MediaQuery.maybeOf(context)?.disableAnimations == true
+              ? Duration.zero
+              : const Duration(milliseconds: 320),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, .25),
+                end: Offset.zero,
+              ).animate(animation),
+              child: ScaleTransition(scale: animation, child: child),
+            ),
+          ),
           child: reaction == null
               ? const SizedBox.shrink()
               : Semantics(
