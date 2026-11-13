@@ -460,6 +460,15 @@ class _MatchScreenState extends State<MatchScreen>
         : '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
   }
 
+  String get _actionInstruction {
+    if (_game.winner != null) return 'Match complete';
+    if (widget.aiPlayers.contains(_game.activePlayer)) return 'AI thinking';
+    if (_isDiceAnimating || _movementController.isAnimating) {
+      return 'Moving';
+    }
+    return _game.diceValue == null ? 'Roll dice' : 'Choose a pawn';
+  }
+
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -512,6 +521,72 @@ class _MatchScreenState extends State<MatchScreen>
                   },
                   onAnimationComplete: _handleDiceAnimationComplete,
                 ),
+                Positioned(
+                  left: 354,
+                  top: 800,
+                  width: 208,
+                  height: 82,
+                  child: IgnorePointer(
+                    child: Center(
+                      child: Text(
+                        _actionInstruction,
+                        key: const Key('match_action_instruction'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFFFD36B),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_game.diceValue != null &&
+                    !_isDiceAnimating &&
+                    !_movementController.isAnimating &&
+                    !widget.aiPlayers.contains(_game.activePlayer) &&
+                    _game.legalPawnIndices().length > 1)
+                  Positioned(
+                    left: 354,
+                    top: 800,
+                    width: 208,
+                    height: math.max(82, 48 / scale),
+                    child: PopupMenuButton<int>(
+                      key: const Key('accessible_pawn_chooser'),
+                      tooltip: 'Choose a legal pawn',
+                      onSelected: _selectOrMovePawn,
+                      itemBuilder: (context) => [
+                        for (final index in _game.legalPawnIndices())
+                          PopupMenuItem<int>(
+                            value: index,
+                            height: 48,
+                            child: Text('Pawn ${index + 1}'),
+                          ),
+                      ],
+                      child: Center(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: const Color(0xF2111017),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFFD36B)),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 18,
+                            ),
+                            child: Text(
+                              'CHOOSE PAWN',
+                              style: TextStyle(
+                                color: Color(0xFFFFD36B),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 MatchHudOverlay(
                   statusText: _statusText,
                   activePlayer: _game.activePlayer,
@@ -925,7 +1000,7 @@ class _MatchScreenState extends State<MatchScreen>
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 44×48 dp.
-    final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
+    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
     final shakeKey = _shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
