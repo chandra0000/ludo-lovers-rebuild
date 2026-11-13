@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' show FrameTiming;
 
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
