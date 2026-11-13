@@ -10,8 +10,8 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
 void main() {
   test('the canonical mask includes the glass board but excludes baked UI', () {
-    final bounds = CanonicalBoardSourceMask.boardClip;
-    final stage = ApprovedArtworkGeometry.referenceCanvas;
+    const bounds = CanonicalBoardSourceMask.boardClip;
+    const stage = ApprovedArtworkGeometry.referenceCanvas;
     expect(stage.contains(bounds.topLeft), isTrue);
     expect(stage.contains(bounds.bottomRight), isTrue);
     expect(bounds.left, closeTo(10, 1));
