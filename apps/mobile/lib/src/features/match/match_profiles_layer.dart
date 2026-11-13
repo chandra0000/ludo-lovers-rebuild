@@ -124,8 +124,8 @@ class MatchPlayerBadge extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                            color: Color(0xFFFFD36B),
-                            fontWeight: FontWeight.w700,
+                              color: Color(0xFFFFD36B),
+                              fontWeight: FontWeight.w700,
                               fontSize: 10,
                             ),
                           ),
