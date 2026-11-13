@@ -13,21 +13,39 @@ class MatchBrandMark extends StatelessWidget {
       height: 120,
       child: IgnorePointer(
         child: Center(
-          child: Image.asset(
-            'assets/images/branding/ludo_lovers_icon.webp',
-            key: const Key('match_brand_mark'),
-            width: 116,
-            height: 116,
-            cacheWidth: 256,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-            semanticLabel: 'Ludo Lovers',
-            errorBuilder: (context, error, stackTrace) => const Text(
-              'LUDO LOVERS',
-              style: TextStyle(
-                color: Color(0xFFFFD36B),
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFFFFD36B),
+                width: 2,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x66F5BD51),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/branding/ludo_lovers_icon.webp',
+                key: const Key('match_brand_mark'),
+                width: 108,
+                height: 108,
+                cacheWidth: 256,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.medium,
+                semanticLabel: 'Ludo Lovers',
+                errorBuilder: (context, error, stackTrace) => const Text(
+                  'LUDO LOVERS',
+                  style: TextStyle(
+                    color: Color(0xFFFFD36B),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
               ),
             ),
           ),
