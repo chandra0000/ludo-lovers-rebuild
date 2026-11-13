@@ -25,6 +25,8 @@ void main() {
     expect(plan.endProgress, 0);
     expect(plan.stepCount, 1);
     expect(plan.feedback, isNull);
+    expect(plan.captureCount, 0);
+    expect(plan.hasCapture, isFalse);
   });
 
   test('capture feedback includes extra turn only when engine grants it', () {
@@ -41,6 +43,8 @@ void main() {
     expect(withBonus.events.whereType<PawnCaptured>(), hasLength(1));
     expect(withBonus.events.whereType<ExtraTurnGranted>(), hasLength(1));
     expect(present(withBonus).feedback, 'CAPTURE! EXTRA TURN');
+    expect(present(withBonus).captureCount, 1);
+    expect(present(withBonus).hasCapture, isTrue);
     expect(present(withBonus).stepCount, 2);
 
     final withoutBonus = capture(
@@ -67,6 +71,7 @@ void main() {
 
     expect(game.events.whereType<PawnCaptured>(), hasLength(2));
     expect(present(game).feedback, '2 CAPTURES! EXTRA TURN');
+    expect(present(game).captureCount, 2);
   });
 
   test('home arrival only announces a bonus when the rule grants one', () {
