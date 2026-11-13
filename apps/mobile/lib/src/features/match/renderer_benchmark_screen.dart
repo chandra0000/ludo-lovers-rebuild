@@ -165,7 +165,7 @@ class BenchmarkFlameGame extends FlameGame {
       BoardGeometry.canvasWidth,
       BoardGeometry.canvasHeight,
     );
-    camera.viewport = FixedResolutionViewport(resolution: resolution);
+    camera.viewfinder.visibleGameSize = resolution;
     final board = await images.load('board/extracted/board_exact.webp');
     await world.add(
       SpriteComponent(
