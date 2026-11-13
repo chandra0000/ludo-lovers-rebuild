@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../game/domain/board_geometry.dart';
+import '../../game/presentation/player_color_theme.dart';
 import 'match_move_presentation_plan.dart';
 
 /// Purely visual effect emitted after an accepted movement animation ends.
