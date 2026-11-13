@@ -22,9 +22,11 @@ void main() {
     expect(BoardGeometry.starTrackCells, <int>{8, 21, 34, 47});
     expect(BoardGeometry.safeTrackCells,
         containsAll(BoardGeometry.starTrackCells));
-    expect(BoardGeometry.starTrackCells.intersection(
-      BoardGeometry.startTrackCells,
-    ), isEmpty);
+    expect(
+        BoardGeometry.starTrackCells.intersection(
+          BoardGeometry.startTrackCells,
+        ),
+        isEmpty);
 
     for (final index in BoardGeometry.starTrackCells) {
       final finder = find.byKey(Key('safe_star_$index'));
@@ -40,10 +42,12 @@ void main() {
 
     expect(find.byType(IgnorePointer), findsWidgets);
     final ignore = tester.widget<IgnorePointer>(
-      find.descendant(
-        of: find.byType(MatchSafeStarLayer),
-        matching: find.byType(IgnorePointer),
-      ).first,
+      find
+          .descendant(
+            of: find.byType(MatchSafeStarLayer),
+            matching: find.byType(IgnorePointer),
+          )
+          .first,
     );
     expect(ignore.ignoring, isTrue);
   });
