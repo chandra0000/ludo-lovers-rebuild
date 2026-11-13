@@ -17,9 +17,9 @@ class MatchHudOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 176,
+      left: 172,
       top: 916,
-      width: 224,
+      width: 208,
       height: 50,
       child: IgnorePointer(
         child: Semantics(
