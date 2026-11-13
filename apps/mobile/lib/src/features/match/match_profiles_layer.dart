@@ -117,16 +117,17 @@ class MatchPlayerBadge extends StatelessWidget {
                             color: Colors.white70,
                           ),
                         const SizedBox(width: 4),
-                        Text(
-                          isActive
-                              ? '${profile.presenceLabel} · PLAYING'
-                              : profile.presenceLabel,
-                          key: Key('profile_status_${profile.color.name}'),
-                          maxLines: 1,
-                          style: const TextStyle(
+                        Flexible(
+                          child: Text(
+                            profile.presenceLabel,
+                            key: Key('profile_status_${profile.color.name}'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                             color: Color(0xFFFFD36B),
                             fontWeight: FontWeight.w700,
-                            fontSize: 10,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                       ],
