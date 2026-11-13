@@ -43,12 +43,17 @@ void main() {
     expect(find.byKey(const Key('profile_green')), findsOneWidget);
     final avatars = tester.widgetList<Image>(find.byType(Image)).toList();
     expect(avatars, hasLength(2));
+    AssetImage sourceFor(ImageProvider provider) {
+      final source = provider is ResizeImage ? provider.imageProvider : provider;
+      return source as AssetImage;
+    }
+
     expect(
-      (avatars[0].image as AssetImage).assetName,
+      sourceFor(avatars[0].image).assetName,
       'assets/images/board/extracted/avatar_aldo.webp',
     );
     expect(
-      (avatars[1].image as AssetImage).assetName,
+      sourceFor(avatars[1].image).assetName,
       'assets/images/board/extracted/avatar_you.webp',
     );
   });
