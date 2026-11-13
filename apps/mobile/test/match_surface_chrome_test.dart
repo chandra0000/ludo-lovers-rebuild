@@ -25,7 +25,6 @@ void main() {
     expect(find.byKey(const Key('more_button')), findsOneWidget);
   });
 
-
   testWidgets('footer actions retain large tap regions on compact phones', (
     tester,
   ) async {
