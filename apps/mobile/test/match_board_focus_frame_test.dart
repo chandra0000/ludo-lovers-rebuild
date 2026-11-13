@@ -61,7 +61,7 @@ void main() {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     expect(byteData, isNotNull);
     final bytes = byteData!.buffer.asUint8List();
-    final board = MatchBoardFocusFrame.artworkRect;
+    const board = MatchBoardFocusFrame.artworkRect;
     // Every pixel strictly inside the image is untouched, not merely its
     // central pixels. This catches inward shadows and border regressions.
     for (var y = board.top.ceil(); y < board.bottom.floor(); y++) {
