@@ -8,7 +8,7 @@ on:
       - ".github/workflows/flutter.yml"
   pull_request:
     # Stacked design PRs target the in-flight Phase 1 refactor branch.
-    branches: [main, "refactor/**"]
+    branches: [main, "refactor/**", "feat/**"]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
@@ -92,6 +92,17 @@ jobs:
         with:
           name: ludo-lovers-approved-artwork-preview-393x873
           path: apps/mobile/test-artifacts/approved-artwork-preview-393x873.png
+          if-no-files-found: warn
+      - name: Verify canonical-source board mask capture
+        if: success()
+        working-directory: apps/mobile
+        run: test -s test-artifacts/canonical-board-mask-393x873.png
+      - name: Upload canonical-source board mask capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-lovers-canonical-board-mask-393x873
+          path: apps/mobile/test-artifacts/canonical-board-mask-393x873.png
           if-no-files-found: warn
       - name: Upload full-screen match screenshot
         if: always()
