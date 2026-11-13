@@ -8,7 +8,7 @@ on:
       - ".github/workflows/flutter.yml"
   pull_request:
     # Stacked design PRs target the in-flight Phase 1 refactor branch.
-    branches: [main, "refactor/**"]
+    branches: [main, "refactor/**", "feat/**"]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
