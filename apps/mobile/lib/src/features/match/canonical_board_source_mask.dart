@@ -43,8 +43,7 @@ class CanonicalBoardSourceMask extends StatelessWidget {
                 gaplessPlayback: true,
                 cacheWidth: ApprovedArtworkGeometry.sourceWidth.toInt(),
                 excludeFromSemantics: true,
-                errorBuilder: (context, error, stackTrace) =>
-                    const ColoredBox(
+                errorBuilder: (context, error, stackTrace) => const ColoredBox(
                   color: Color(0xFF211A0D),
                   child: Center(
                     child: Text(
