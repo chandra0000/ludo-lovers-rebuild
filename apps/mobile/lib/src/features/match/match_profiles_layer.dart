@@ -34,6 +34,7 @@ class MatchPlayerBadge extends StatelessWidget {
         : profile.displayName.trim().characters.first.toUpperCase();
 
     return Semantics(
+      excludeSemantics: true,
       label: '${profile.displayName}, ${profile.color.name}, '
           '${profile.presenceLabel.toLowerCase()}'
           '${isActive ? ', current turn' : ''}',
@@ -64,6 +65,9 @@ class MatchPlayerBadge extends StatelessWidget {
                     width: 46,
                     height: 46,
                     fit: BoxFit.cover,
+                    cacheWidth: 192,
+                    cacheHeight: 192,
+                    filterQuality: FilterQuality.medium,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
                         initial,
@@ -78,34 +82,50 @@ class MatchPlayerBadge extends StatelessWidget {
               ),
               const SizedBox(width: 9),
               Expanded(
-                child: Text(
-                  profile.displayName,
-                  key: Key('profile_name_${profile.color.name}'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              if (!profile.isLocalSeat && !profile.isConnected)
-                const Icon(Icons.wifi_off, size: 14, color: Colors.white70)
-              else if (profile.isBot)
-                const Icon(
-                  Icons.smart_toy_outlined,
-                  size: 14,
-                  color: Colors.white70,
-                ),
-              const SizedBox(width: 4),
-              Text(
-                profile.presenceLabel,
-                key: Key('profile_status_${profile.color.name}'),
-                style: const TextStyle(
-                  color: Color(0xFFFFD36B),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 9,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.displayName,
+                      key: Key('profile_name_${profile.color.name}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (!profile.isLocalSeat && !profile.isConnected)
+                          const Icon(
+                            Icons.wifi_off,
+                            size: 13,
+                            color: Colors.white70,
+                          )
+                        else if (profile.isBot)
+                          const Icon(
+                            Icons.smart_toy_outlined,
+                            size: 13,
+                            color: Colors.white70,
+                          ),
+                        const SizedBox(width: 4),
+                        Text(
+                          profile.presenceLabel,
+                          key: Key('profile_status_${profile.color.name}'),
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Color(0xFFFFD36B),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -133,8 +153,8 @@ class MatchProfilesLayer extends StatelessWidget {
     const seats = <PlayerColor, Offset>{
       PlayerColor.orange: Offset(12, 102),
       PlayerColor.green: Offset(378, 102),
-      PlayerColor.magenta: Offset(12, 890),
-      PlayerColor.blue: Offset(378, 890),
+      PlayerColor.magenta: Offset(12, 850),
+      PlayerColor.blue: Offset(378, 850),
     };
     return Stack(
       children: [

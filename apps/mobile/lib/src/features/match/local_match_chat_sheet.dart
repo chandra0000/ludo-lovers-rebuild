@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
+/// Offline reactions shared by the chat sheet and the one-tap picker.
+const localMatchReactions = <String>['👏', '😂', '❤️', '🔥', '👍', '🎉'];
+
 /// Local-only match communication. No messages leave the device.
 class LocalMatchChatSheet extends StatefulWidget {
-  const LocalMatchChatSheet({super.key});
+  const LocalMatchChatSheet({super.key, this.onReaction});
+
+  final ValueChanged<String>? onReaction;
 
   @override
   State<LocalMatchChatSheet> createState() => _LocalMatchChatSheetState();
 }
 
 class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
-  static const reactions = <String>['👏', '😂', '❤️', '🔥', '👍', '🎉'];
   final _controller = TextEditingController();
   final _messages = <String>[];
 
@@ -21,6 +25,9 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
       _messages.add(value);
     });
     _controller.clear();
+    if (localMatchReactions.contains(value)) {
+      widget.onReaction?.call(value);
+    }
   }
 
   @override
@@ -61,7 +68,7 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final reaction in reactions)
+                  for (final reaction in localMatchReactions)
                     IconButton(
                       tooltip: 'React $reaction',
                       onPressed: () => _send(reaction),

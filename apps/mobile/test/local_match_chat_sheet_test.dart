@@ -22,4 +22,21 @@ void main() {
     await tester.pump();
     expect(find.text('👏'), findsWidgets);
   });
+
+  testWidgets('emoji reaction notifies the live presentation locally', (
+    tester,
+  ) async {
+    final reactions = <String>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LocalMatchChatSheet(onReaction: reactions.add),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('React 🔥'));
+    await tester.pump();
+    expect(reactions, <String>['🔥']);
+  });
 }

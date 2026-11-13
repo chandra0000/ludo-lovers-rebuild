@@ -20,6 +20,7 @@ import 'game/systems/pawn_layout_solver.dart';
 import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
+import 'match_brand_mark.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_move_presentation_plan.dart';
@@ -32,6 +33,7 @@ import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
 import 'match_profiles_layer.dart';
+import 'match_reaction_controls.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -98,6 +100,8 @@ class _MatchScreenState extends State<MatchScreen>
       MatchTurnResolutionController();
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
+  String? _activeReaction;
+  Timer? _reactionDismissTimer;
 
   @override
   void initState() {
@@ -204,6 +208,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   void dispose() {
+    _reactionDismissTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _aiScheduler.cancel();
     _turnResolution.cancel();
@@ -454,6 +459,7 @@ class _MatchScreenState extends State<MatchScreen>
                 const Positioned.fill(
                   child: MatchBoardArtwork(),
                 ),
+                const MatchBrandMark(),
                 if (widget.showDynamicProfiles)
                   Positioned.fill(
                     child: MatchProfilesLayer(
@@ -489,6 +495,7 @@ class _MatchScreenState extends State<MatchScreen>
                   statusText: _statusText,
                   activePlayer: _game.activePlayer,
                 ),
+                MatchReactionToast(reaction: _activeReaction),
                 Positioned(
                   left: 12,
                   top: 12,
@@ -509,10 +516,10 @@ class _MatchScreenState extends State<MatchScreen>
                   ),
                 ),
                 Positioned(
-                  left: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
+                  left: 12,
+                  top: 928,
+                  width: 84,
+                  height: 84,
                   child: Semantics(
                     button: true,
                     label: 'Chat',
@@ -537,11 +544,12 @@ class _MatchScreenState extends State<MatchScreen>
                     ),
                   ),
                 ),
+                MatchReactionButton(onPressed: _showQuickReactions),
                 Positioned(
-                  right: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
+                  right: 12,
+                  top: 928,
+                  width: 84,
+                  height: 84,
                   child: Semantics(
                     button: true,
                     label: 'More options',
@@ -591,7 +599,33 @@ class _MatchScreenState extends State<MatchScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF17120B),
-      builder: (context) => const LocalMatchChatSheet(),
+      builder: (context) => LocalMatchChatSheet(
+        onReaction: _displayReaction,
+      ),
+    );
+  }
+
+  void _displayReaction(String reaction) {
+    if (!mounted) return;
+    _reactionDismissTimer?.cancel();
+    setState(() => _activeReaction = reaction);
+    _reactionDismissTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _activeReaction = null);
+      }
+    });
+  }
+
+  void _showQuickReactions() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF17120B),
+      builder: (pickerContext) => MatchReactionPicker(
+        onReaction: (reaction) {
+          Navigator.of(pickerContext).pop();
+          _displayReaction(reaction);
+        },
+      ),
     );
   }
 
