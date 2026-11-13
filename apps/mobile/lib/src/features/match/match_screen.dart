@@ -733,7 +733,9 @@ class _MatchScreenState extends State<MatchScreen>
               cellSize: 36,
               playerColor: _game.activePlayer.color,
               previewType: type,
-              animationProgress: _previewController.value,
+              animationProgress: MediaQuery.maybeOf(context)?.disableAnimations == true
+                  ? 0
+                  : _previewController.value,
             ),
           ),
         ),
