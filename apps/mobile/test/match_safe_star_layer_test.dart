@@ -25,10 +25,10 @@ void main() {
       containsAll(BoardGeometry.starTrackCells),
     );
     expect(
-        BoardGeometry.starTrackCells.intersection(
-          BoardGeometry.startTrackCells,
-        ),
-        isEmpty,
+      BoardGeometry.starTrackCells.intersection(
+        BoardGeometry.startTrackCells,
+      ),
+      isEmpty,
     );
 
     for (final index in BoardGeometry.starTrackCells) {
