@@ -46,7 +46,7 @@ class _MatchLandingCelebrationState extends State<MatchLandingCelebration>
         widget.plan.pawnIndex,
       ),
     );
-    final isCapture = widget.plan.feedback?.contains('CAPTURE') ?? false;
+    final isCapture = widget.plan.hasCapture;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Positioned(
