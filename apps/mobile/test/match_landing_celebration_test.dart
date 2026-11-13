@@ -11,7 +11,7 @@ void main() {
       player: PlayerColor.orange,
       pawnIndex: 0,
       events: [
-        PawnMoved(PlayerColor.orange, 0, 0, 1),
+        PawnMoved(1, 1, PlayerColor.orange, 0, 0, 1),
       ],
     );
     await tester.pumpWidget(MaterialApp(
