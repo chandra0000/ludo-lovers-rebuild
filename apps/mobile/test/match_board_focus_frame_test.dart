@@ -66,11 +66,9 @@ void main() {
     // central pixels. This catches inward shadows and border regressions.
     for (var y = board.top.ceil(); y < board.bottom.floor(); y++) {
       for (var x = board.left.ceil(); x < board.right.floor(); x++) {
-        expect(
-          bytes[(y * image.width + x) * 4 + 3],
-          0,
-          reason: 'Halo modified board-interior pixel ($x,$y)',
-        );
+        if (bytes[(y * image.width + x) * 4 + 3] != 0) {
+          fail('Halo modified board-interior pixel ($x,$y)');
+        }
       }
     }
   });
