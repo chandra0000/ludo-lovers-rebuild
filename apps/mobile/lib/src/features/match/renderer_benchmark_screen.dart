@@ -56,7 +56,8 @@ class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
   }
 
   String get _frameSummary {
-    final p95 = _frameMs.isEmpty ? 'collecting' : '${_p95.toStringAsFixed(2)} ms';
+    final p95 =
+        _frameMs.isEmpty ? 'collecting' : '${_p95.toStringAsFixed(2)} ms';
     return 'Frames: ${_frameMs.length} | p95 total frame: $p95';
   }
 
