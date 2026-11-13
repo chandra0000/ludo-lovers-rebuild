@@ -25,8 +25,8 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: CustomPaint(
-            size: const Size(576, 1024),
-            painter: const DestinationPreviewPainter(
+            size: Size(576, 1024),
+            painter: DestinationPreviewPainter(
               targetCenter: Offset(280, 450),
               routePoints: [
                 Offset(100, 350),
