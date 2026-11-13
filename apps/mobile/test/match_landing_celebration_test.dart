@@ -6,7 +6,8 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
-  testWidgets('accepted move produces a decorative landing pulse', (tester) async {
+  testWidgets('accepted move produces a decorative landing pulse',
+      (tester) async {
     final plan = MatchMovePresentationPlan.fromEvents(
       player: PlayerColor.orange,
       pawnIndex: 0,

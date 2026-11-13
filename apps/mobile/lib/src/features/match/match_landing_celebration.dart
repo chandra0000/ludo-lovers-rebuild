@@ -110,8 +110,10 @@ class _LandingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < 8; i++) {
       final angle = 2 * math.pi * i / 8;
-      final start = center + Offset(math.cos(angle), math.sin(angle)) * (radius + 2);
-      final end = center + Offset(math.cos(angle), math.sin(angle)) * (radius + 11);
+      final start =
+          center + Offset(math.cos(angle), math.sin(angle)) * (radius + 2);
+      final end =
+          center + Offset(math.cos(angle), math.sin(angle)) * (radius + 11);
       canvas.drawLine(start, end, spark);
     }
   }
