@@ -34,21 +34,24 @@ class MatchMovePresentationPlan {
     required int pawnIndex,
   }) {
     final recorded = List<LudoGameEvent>.of(events);
-    final moves = recorded
-        .whereType<PawnMoved>()
-        .where(
-          (event) => event.player == player && event.pawnIndex == pawnIndex,
-        )
-        .toList();
+    // One accepted move command may animate exactly one pawn. Reject
+    // inconsistent event batches rather than silently animating a partial move.
+    final moves = recorded.whereType<PawnMoved>().toList();
 
-    if (moves.length != 1) {
+    if (moves.length != 1 ||
+        moves.single.player != player ||
+        moves.single.pawnIndex != pawnIndex) {
       throw StateError(
         'Accepted pawn move must emit exactly one matching PawnMoved event.',
       );
     }
     final move = moves.single;
     final steps = move.to - move.from;
-    if (move.from < -1 || move.to > finishProgress || steps <= 0) {
+    if (move.from < -1 ||
+        move.from >= finishProgress ||
+        move.to < 0 ||
+        move.to > finishProgress ||
+        steps <= 0) {
       throw StateError('Accepted pawn movement has invalid progress bounds.');
     }
 
