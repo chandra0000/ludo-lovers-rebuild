@@ -370,6 +370,19 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _showInvalidMoveFeedback(int pawnIndex) {
+    // Derive the visual arrows from the same authoritative progress anchors
+    // as pawn movement, including turns and home-lane transitions.
+    final routePoints = <Offset>[];
+    for (var step = progress; step <= target; step++) {
+      final anchor = BoardGeometry.canvasPosition(
+        BoardGeometry.normalizedPosition(
+          _game.activePlayer,
+          step,
+          pawnIndex,
+        ),
+      );
+      routePoints.add(Offset(anchor.x, anchor.y));
+    }
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     if (evaluation is! InvalidMove || !mounted) return;
     _shakeKeys['${_game.activePlayer.name}-$pawnIndex']
@@ -716,6 +729,7 @@ class _MatchScreenState extends State<MatchScreen>
             key: const Key('destination_preview'),
             painter: DestinationPreviewPainter(
               targetCenter: Offset(point.x, point.y),
+              routePoints: routePoints,
               cellSize: 36,
               playerColor: _game.activePlayer.color,
               previewType: type,
