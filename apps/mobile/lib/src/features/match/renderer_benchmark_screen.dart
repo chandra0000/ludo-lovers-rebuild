@@ -1,3 +1,5 @@
+// dart format off
+// Temporary benchmark-only formatter exemption; remove after CI API validation.
 import 'dart:math' as math;
 import 'dart:ui' show FrameTiming;
 
