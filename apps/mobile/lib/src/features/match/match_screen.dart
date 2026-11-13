@@ -516,10 +516,10 @@ class _MatchScreenState extends State<MatchScreen>
                   ),
                 ),
                 Positioned(
-                  left: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
+                  left: 12,
+                  top: 928,
+                  width: 84,
+                  height: 84,
                   child: Semantics(
                     button: true,
                     label: 'Chat',
@@ -546,10 +546,10 @@ class _MatchScreenState extends State<MatchScreen>
                 ),
                 MatchReactionButton(onPressed: _showQuickReactions),
                 Positioned(
-                  right: 16,
-                  top: 936,
-                  width: 76,
-                  height: 76,
+                  right: 12,
+                  top: 928,
+                  width: 84,
+                  height: 84,
                   child: Semantics(
                     button: true,
                     label: 'More options',
