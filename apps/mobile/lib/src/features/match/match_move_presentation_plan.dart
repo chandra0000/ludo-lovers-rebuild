@@ -57,9 +57,7 @@ class MatchMovePresentationPlan {
     final extraTurn = recorded
         .whereType<ExtraTurnGranted>()
         .any((event) => event.player == player);
-    final finished = recorded
-        .whereType<PawnFinished>()
-        .any(
+    final finished = recorded.whereType<PawnFinished>().any(
           (event) => event.player == player && event.pawnIndex == pawnIndex,
         );
 
