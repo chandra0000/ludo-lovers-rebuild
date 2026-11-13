@@ -90,5 +90,4 @@ void main() {
     expect(find.byIcon(Icons.wifi_off), findsNothing);
     expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
   });
-
 }
