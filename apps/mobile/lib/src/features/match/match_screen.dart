@@ -36,6 +36,7 @@ import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
 import 'match_profiles_layer.dart';
 import 'match_reaction_controls.dart';
+import 'match_landing_celebration.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -104,6 +105,9 @@ class _MatchScreenState extends State<MatchScreen>
   int? _selectedPawnIndex;
   String? _activeReaction;
   Timer? _reactionDismissTimer;
+  MatchMovePresentationPlan? _landingPlan;
+  MatchMovePresentationPlan? _lastLandingPlan;
+  int _landingSequence = 0;
 
   @override
   void initState() {
@@ -141,7 +145,14 @@ class _MatchScreenState extends State<MatchScreen>
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
       final feedback = _animations.completePawnMovement();
-      setState(() {});
+      final completedPlan = _landingPlan;
+      setState(() {
+        _landingPlan = null;
+        if (completedPlan != null) {
+          _lastLandingPlan = completedPlan;
+          _landingSequence++;
+        }
+      });
       _scheduleAiTurn();
       if (feedback != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -408,6 +419,7 @@ class _MatchScreenState extends State<MatchScreen>
     );
     setState(() {
       _selectedPawnIndex = null;
+      _landingPlan = plan;
       _animations.configurePawnMovement(
         color: plan.player,
         pawnIndex: plan.pawnIndex,
@@ -475,6 +487,11 @@ class _MatchScreenState extends State<MatchScreen>
                     ),
                   ),
                 ..._buildPawnsWithClusters(scale),
+                if (_landingSequence > 0 && _lastLandingPlan != null)
+                  MatchLandingCelebration(
+                    key: ValueKey(_landingSequence),
+                    plan: _lastLandingPlan!,
+                  ),
                 if (_selectedPawnIndex != null) _buildDestinationPreview(),
                 DiceControlDock(
                   targetValue: _game.diceValue,
@@ -654,6 +671,9 @@ class _MatchScreenState extends State<MatchScreen>
     _turnResolution.cancel();
     _animations.resetForNewMatch();
     setState(() {
+      _landingPlan = null;
+      _lastLandingPlan = null;
+      _landingSequence = 0;
       _matchController.reset(_newMatchSession(LudoGame.initial()));
       _selectedPawnIndex = null;
     });
