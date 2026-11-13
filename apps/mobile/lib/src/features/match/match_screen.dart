@@ -20,6 +20,8 @@ import 'game/systems/pawn_layout_solver.dart';
 import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
+import 'match_board_focus_frame.dart';
+import 'match_safe_star_layer.dart';
 import 'match_brand_mark.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
@@ -34,6 +36,7 @@ import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
 import 'match_profiles_layer.dart';
 import 'match_reaction_controls.dart';
+import 'match_landing_celebration.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -102,6 +105,9 @@ class _MatchScreenState extends State<MatchScreen>
   int? _selectedPawnIndex;
   String? _activeReaction;
   Timer? _reactionDismissTimer;
+  MatchMovePresentationPlan? _landingPlan;
+  MatchMovePresentationPlan? _lastLandingPlan;
+  int _landingSequence = 0;
 
   @override
   void initState() {
@@ -139,7 +145,14 @@ class _MatchScreenState extends State<MatchScreen>
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
       final feedback = _animations.completePawnMovement();
-      setState(() {});
+      final completedPlan = _landingPlan;
+      setState(() {
+        _landingPlan = null;
+        if (completedPlan != null) {
+          _lastLandingPlan = completedPlan;
+          _landingSequence++;
+        }
+      });
       _scheduleAiTurn();
       if (feedback != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -406,6 +419,7 @@ class _MatchScreenState extends State<MatchScreen>
     );
     setState(() {
       _selectedPawnIndex = null;
+      _landingPlan = plan;
       _animations.configurePawnMovement(
         color: plan.player,
         pawnIndex: plan.pawnIndex,
@@ -459,6 +473,8 @@ class _MatchScreenState extends State<MatchScreen>
                 const Positioned.fill(
                   child: MatchBoardArtwork(),
                 ),
+                const MatchBoardFocusFrame(),
+                const MatchSafeStarLayer(),
                 const MatchBrandMark(),
                 if (widget.showDynamicProfiles)
                   Positioned.fill(
@@ -471,6 +487,11 @@ class _MatchScreenState extends State<MatchScreen>
                     ),
                   ),
                 ..._buildPawnsWithClusters(scale),
+                if (_landingSequence > 0 && _lastLandingPlan != null)
+                  MatchLandingCelebration(
+                    key: ValueKey(_landingSequence),
+                    plan: _lastLandingPlan!,
+                  ),
                 if (_selectedPawnIndex != null) _buildDestinationPreview(),
                 DiceControlDock(
                   targetValue: _game.diceValue,
@@ -650,6 +671,9 @@ class _MatchScreenState extends State<MatchScreen>
     _turnResolution.cancel();
     _animations.resetForNewMatch();
     setState(() {
+      _landingPlan = null;
+      _lastLandingPlan = null;
+      _landingSequence = 0;
       _matchController.reset(_newMatchSession(LudoGame.initial()));
       _selectedPawnIndex = null;
     });
@@ -680,6 +704,19 @@ class _MatchScreenState extends State<MatchScreen>
     final point = BoardGeometry.canvasPosition(
       BoardGeometry.normalizedPosition(_game.activePlayer, target, pawnIndex),
     );
+    // Derive the visual arrows from the same authoritative progress anchors
+    // as pawn movement, including turns and home-lane transitions.
+    final routePoints = <Offset>[];
+    for (var step = progress; step <= target; step++) {
+      final anchor = BoardGeometry.canvasPosition(
+        BoardGeometry.normalizedPosition(
+          _game.activePlayer,
+          step,
+          pawnIndex,
+        ),
+      );
+      routePoints.add(Offset(anchor.x, anchor.y));
+    }
     final evaluation = _game.evaluatePawnMove(pawnIndex);
     var type = DestinationPreviewType.standard;
     if (evaluation is ValidMove && evaluation.isCapture) {
@@ -712,10 +749,14 @@ class _MatchScreenState extends State<MatchScreen>
             key: const Key('destination_preview'),
             painter: DestinationPreviewPainter(
               targetCenter: Offset(point.x, point.y),
+              routePoints: routePoints,
               cellSize: 36,
               playerColor: _game.activePlayer.color,
               previewType: type,
-              animationProgress: _previewController.value,
+              animationProgress:
+                  MediaQuery.maybeOf(context)?.disableAnimations == true
+                      ? 0
+                      : _previewController.value,
             ),
           ),
         ),

@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 enum DestinationPreviewType { standard, capture, safeCoexist }
 
 class DestinationPreviewPainter extends CustomPainter {
   const DestinationPreviewPainter({
     required this.targetCenter,
+    this.routePoints = const <Offset>[],
     required this.cellSize,
     required this.playerColor,
     required this.previewType,
@@ -14,6 +16,7 @@ class DestinationPreviewPainter extends CustomPainter {
   });
 
   final Offset targetCenter;
+  final List<Offset> routePoints;
   final double cellSize;
   final Color playerColor;
   final DestinationPreviewType previewType;
@@ -21,6 +24,7 @@ class DestinationPreviewPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    _paintRouteArrows(canvas);
     final radius = cellSize * .45;
     final breathe = (math.sin(animationProgress * 2 * math.pi) + 1) / 2;
     final highlight = previewType == DestinationPreviewType.capture
@@ -79,8 +83,43 @@ class DestinationPreviewPainter extends CustomPainter {
     }
   }
 
+  /// Marching chevrons travel along the real sequence of route anchors.
+  /// No straight-line shortcuts across the board or game-state mutation.
+  void _paintRouteArrows(Canvas canvas) {
+    if (routePoints.length < 2) return;
+    final paint = Paint()
+      ..color = playerColor.withValues(alpha: .84)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    const arrowSpacing = 20.0;
+    final phase = animationProgress * arrowSpacing;
+    for (var i = 1; i < routePoints.length; i++) {
+      final from = routePoints[i - 1];
+      final to = routePoints[i];
+      final delta = to - from;
+      final length = delta.distance;
+      if (length < 1) continue;
+      final unit = delta / length;
+      final normal = Offset(-unit.dy, unit.dx);
+      for (var distance = 6.0 + phase;
+          distance < length - 6;
+          distance += arrowSpacing) {
+        final tip = from + unit * distance;
+        final tail = tip - unit * 7;
+        final chevron = Path()
+          ..moveTo((tail + normal * 4).dx, (tail + normal * 4).dy)
+          ..lineTo(tip.dx, tip.dy)
+          ..lineTo((tail - normal * 4).dx, (tail - normal * 4).dy);
+        canvas.drawPath(chevron, paint);
+      }
+    }
+  }
+
   @override
   bool shouldRepaint(covariant DestinationPreviewPainter oldDelegate) =>
+      !listEquals(oldDelegate.routePoints, routePoints) ||
       oldDelegate.targetCenter != targetCenter ||
       oldDelegate.cellSize != cellSize ||
       oldDelegate.playerColor != playerColor ||
