@@ -30,7 +30,7 @@ class _ExteriorBoardHaloPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final board = MatchBoardFocusFrame.artworkRect;
+    const board = MatchBoardFocusFrame.artworkRect;
     final outside = Path.combine(
       PathOperation.difference,
       Path()..addRect(Offset.zero & size),
