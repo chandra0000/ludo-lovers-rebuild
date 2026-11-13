@@ -27,3 +27,20 @@ the logo or board without a side-by-side, owner-approved alternative.
   current cropped board, retaining the canonical source unchanged.
 - Produce owner-approved home/mode/win/rematch design variants before coding.
 - Confirm 2-player, 4-player, and bot seating copy across all modes.
+
+## Safe squares, player identities and communication
+- Safe star track indexes: 8, 21, 34, 47. Coloured safe entry
+  squares: 0, 13, 26, 39. Together they are the eight authoritative
+  `BoardGeometry.safeTrackCells`. Decorative star positions are derived
+  from `trackPosition` and must never alter capture rules.
+- Stars use `IgnorePointer` so pawns on safe cells remain selectable.
+  Confirm visibility with both empty and occupied squares; avoid duplicate
+  visual stars if the approved baked artwork is already sufficiently legible.
+- Retain four distinct bundled avatars and the active-seat highlight. Future
+  profile avatar selection must use validated local assets, with safe fallback
+  initials, and must not imply an online presence in offline mode.
+- Offline chat and emoji reactions remain on-device only. Never label a local
+  reaction as delivered to a remote player. Verify keyboard insets, message
+  overflow, reaction animation lifecycle and accessibility labels.
+- Validate 2-player, 4-player and AI seating, including hidden seats and
+  status copy, before release.
