@@ -51,8 +51,10 @@ void main() {
     expect(BoardGeometry.nonOrthogonalTransitions, [4, 17, 30, 43]);
     for (final color in PlayerColor.turnOrder) {
       final entry = BoardGeometry.seats[color]!.entryIndex;
-      expect(BoardGeometry.normalizedPosition(color, 0, 0),
-          BoardGeometry.trackPosition(entry));
+      expect(
+        BoardGeometry.normalizedPosition(color, 0, 0),
+        BoardGeometry.trackPosition(entry),
+      );
       for (var progress = 0; progress < 55; progress++) {
         final start = BoardGeometry.normalizedPosition(color, progress, 0);
         final midpoint = BoardGeometry.interpolateRouteStep(
