@@ -22,7 +22,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: CustomPaint(
             size: const Size(576, 1024),
