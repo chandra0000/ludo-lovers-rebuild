@@ -16,7 +16,6 @@ void main() {
     expect(profiles.every((profile) => profile.isConnected), isTrue);
   });
 
-
   test('local seats never advertise online presence', () {
     final profiles = MatchPlayerProfile.local(
       aiPlayers: {PlayerColor.green},
