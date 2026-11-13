@@ -37,6 +37,8 @@ void main() {
     expect(find.text('Alex'), findsOneWidget);
     expect(find.text('Sam'), findsOneWidget);
     expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+    expect(find.text('ONLINE'), findsOneWidget);
+    expect(find.text('OFFLINE'), findsOneWidget);
     expect(find.byKey(const Key('profile_orange')), findsOneWidget);
     expect(find.byKey(const Key('profile_green')), findsOneWidget);
     final avatars = tester.widgetList<Image>(find.byType(Image)).toList();
@@ -49,5 +51,43 @@ void main() {
       (avatars[1].image as AssetImage).assetName,
       'assets/images/board/extracted/avatar_you.webp',
     );
+  });
+
+  testWidgets('local player and AI badges never display ONLINE',
+      (tester) async {
+    final profiles = MatchPlayerProfile.local(
+      aiPlayers: {PlayerColor.green},
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              SizedBox(
+                width: 186,
+                height: 60,
+                child: MatchPlayerBadge(
+                  profile: profiles.first,
+                  isActive: true,
+                ),
+              ),
+              SizedBox(
+                width: 186,
+                height: 60,
+                child: MatchPlayerBadge(
+                  profile: profiles[1],
+                  isActive: false,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    expect(find.text('LOCAL'), findsOneWidget);
+    expect(find.text('BOT'), findsOneWidget);
+    expect(find.text('ONLINE'), findsNothing);
+    expect(find.byIcon(Icons.wifi_off), findsNothing);
+    expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
   });
 }

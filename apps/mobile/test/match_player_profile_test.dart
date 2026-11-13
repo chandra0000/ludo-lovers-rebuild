@@ -16,6 +16,25 @@ void main() {
     expect(profiles.every((profile) => profile.isConnected), isTrue);
   });
 
+  test('local seats never advertise online presence', () {
+    final profiles = MatchPlayerProfile.local(
+      aiPlayers: {PlayerColor.green},
+    );
+    expect(profiles.every((profile) => profile.isLocalSeat), isTrue);
+    expect(profiles.first.presenceLabel, 'LOCAL');
+    expect(profiles[1].presenceLabel, 'BOT');
+    expect(profiles[1].copyWith(displayName: 'CPU').presenceLabel, 'BOT');
+
+    const remote = MatchPlayerProfile(
+      playerId: 'remote-orange',
+      displayName: 'Remote',
+      color: PlayerColor.orange,
+    );
+    expect(remote.isLocalSeat, isFalse);
+    expect(remote.presenceLabel, 'ONLINE');
+    expect(remote.copyWith(isConnected: false).presenceLabel, 'OFFLINE');
+  });
+
   test('profile updates do not change seat identity', () {
     final original = MatchPlayerProfile.local().first;
     final updated = original.copyWith(

@@ -35,7 +35,7 @@ class MatchPlayerBadge extends StatelessWidget {
 
     return Semantics(
       label: '${profile.displayName}, ${profile.color.name}, '
-          '${profile.isConnected ? 'connected' : 'disconnected'}'
+          '${profile.presenceLabel.toLowerCase()}'
           '${isActive ? ', current turn' : ''}',
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -90,7 +90,7 @@ class MatchPlayerBadge extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!profile.isConnected)
+              if (!profile.isLocalSeat && !profile.isConnected)
                 const Icon(Icons.wifi_off, size: 14, color: Colors.white70)
               else if (profile.isBot)
                 const Icon(
@@ -98,6 +98,16 @@ class MatchPlayerBadge extends StatelessWidget {
                   size: 14,
                   color: Colors.white70,
                 ),
+              const SizedBox(width: 4),
+              Text(
+                profile.presenceLabel,
+                key: Key('profile_status_${profile.color.name}'),
+                style: const TextStyle(
+                  color: Color(0xFFFFD36B),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 9,
+                ),
+              ),
             ],
           ),
         ),
