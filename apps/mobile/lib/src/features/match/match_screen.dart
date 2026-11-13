@@ -19,6 +19,7 @@ import 'game/systems/pawn_animator.dart';
 import 'game/systems/pawn_layout_solver.dart';
 import 'approved_artwork_overlays.dart';
 import 'approved_reference_plate.dart';
+import 'canonical_board_source_mask.dart';
 import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
@@ -45,6 +46,8 @@ class MatchScreen extends StatefulWidget {
     this.profiles,
     this.showDynamicProfiles = true,
     this.useApprovedArtwork = const bool.fromEnvironment('LUDO_APPROVED_ART'),
+    this.useCanonicalBoardMask =
+        const bool.fromEnvironment('LUDO_CANONICAL_BOARD_MASK'),
   });
 
   @visibleForTesting
@@ -62,6 +65,10 @@ class MatchScreen extends StatefulWidget {
   /// Opt-in full-composition preview. The original runtime view remains the
   /// release fallback until a clean static plate has been approved.
   final bool useApprovedArtwork;
+
+  /// Experimental non-destructive board mask. Disabled by default until
+  /// visual calibration and device acceptance are complete.
+  final bool useCanonicalBoardMask;
 
   final Set<PlayerColor> aiPlayers;
   final int aiSeed;
@@ -482,6 +489,10 @@ class _MatchScreenState extends State<MatchScreen>
                 if (widget.useApprovedArtwork)
                   Positioned.fill(
                     child: ApprovedReferencePlate(canvasScale: scale),
+                  )
+                else if (widget.useCanonicalBoardMask)
+                  const Positioned.fill(
+                    child: CanonicalBoardSourceMask(),
                   )
                 else
                   const Positioned.fill(
