@@ -20,13 +20,16 @@ void main() {
     );
 
     expect(BoardGeometry.starTrackCells, <int>{8, 21, 34, 47});
-    expect(BoardGeometry.safeTrackCells,
-        containsAll(BoardGeometry.starTrackCells));
+    expect(
+      BoardGeometry.safeTrackCells,
+      containsAll(BoardGeometry.starTrackCells),
+    );
     expect(
         BoardGeometry.starTrackCells.intersection(
           BoardGeometry.startTrackCells,
         ),
-        isEmpty);
+        isEmpty,
+    );
 
     for (final index in BoardGeometry.starTrackCells) {
       final finder = find.byKey(Key('safe_star_$index'));
