@@ -38,7 +38,11 @@ class MatchPlayerBadge extends StatelessWidget {
       label: '${profile.displayName}, ${profile.color.name}, '
           '${profile.presenceLabel.toLowerCase()}'
           '${isActive ? ', current turn' : ''}',
-      child: DecoratedBox(
+      child: AnimatedContainer(
+        duration: MediaQuery.maybeOf(context)?.disableAnimations == true
+            ? Duration.zero
+            : const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           color: const Color(0xF018130D),
           borderRadius: BorderRadius.circular(20),
@@ -114,7 +118,7 @@ class MatchPlayerBadge extends StatelessWidget {
                           ),
                         const SizedBox(width: 4),
                         Text(
-                          profile.presenceLabel,
+                          isActive ? '${profile.presenceLabel} · PLAYING' : profile.presenceLabel,
                           key: Key('profile_status_${profile.color.name}'),
                           maxLines: 1,
                           style: const TextStyle(
