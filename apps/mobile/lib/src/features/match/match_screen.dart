@@ -21,6 +21,7 @@ import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_focus_frame.dart';
+import 'match_safe_star_layer.dart';
 import 'match_brand_mark.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
@@ -461,6 +462,7 @@ class _MatchScreenState extends State<MatchScreen>
                   child: MatchBoardArtwork(),
                 ),
                 const MatchBoardFocusFrame(),
+                const MatchSafeStarLayer(),
                 const MatchBrandMark(),
                 if (widget.showDynamicProfiles)
                   Positioned.fill(
