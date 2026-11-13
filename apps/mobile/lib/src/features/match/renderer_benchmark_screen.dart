@@ -54,6 +54,11 @@ class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
     return sorted[(sorted.length * 0.95).ceil() - 1];
   }
 
+  String get _frameSummary {
+    final p95 = _frameMs.isEmpty ? 'collecting' : '${_p95.toStringAsFixed(2)} ms';
+    return 'Frames: ${_frameMs.length} | p95 total frame: $p95';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,14 +74,9 @@ class _RendererBenchmarkScreenState extends State<RendererBenchmarkScreen> {
               _frameMs.clear();
             }),
           ),
-          Text(
-            'Frames: ${_frameMs.length} | p95 total frame: '
-            '${_frameMs.isEmpty ? "collecting" : _p95.toStringAsFixed(2)} ms',
-          ),
-          const Text(
-            'Profile mode on a physical device required. '
-            'Static-scene comparison only; not a gameplay FPS claim.',
-          ),
+          Text(_frameSummary),
+          const Text('Profile mode on a physical device required.'),
+          const Text('Static scene only; no gameplay FPS claim.'),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
