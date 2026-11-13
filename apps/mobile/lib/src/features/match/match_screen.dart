@@ -22,6 +22,7 @@ import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
+import 'match_move_presentation_plan.dart';
 import 'match_ai_turn_policy.dart';
 import 'match_ai_scheduler.dart';
 import 'match_animation_lifecycle.dart';
@@ -176,17 +177,18 @@ class _MatchScreenState extends State<MatchScreen>
     }
   }
 
-  bool _executeCommand(MatchCommand command) {
+  MatchCommandResult _applyCommand(MatchCommand command) {
     final result = _matchController.execute(command);
     if (!result.accepted) {
       debugPrint(
         'Rejected match command ${command.commandId}: '
         '${result.rejectionReason?.name} (${result.message})',
       );
-      return false;
     }
-    return true;
+    return result;
   }
+
+  bool _executeCommand(MatchCommand command) => _applyCommand(command).accepted;
 
   Future<void> _persistMatch() {
     // Serialize writes so a slower earlier preference write can never
@@ -384,52 +386,29 @@ class _MatchScreenState extends State<MatchScreen>
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    final previousGame = _game;
-    final movingColor = previousGame.activePlayer;
-    final player = previousGame.currentPlayer;
-    final startProgress = player.pawnProgress[pawnIndex];
-    final roll = _game.diceValue!;
-    final endProgress = startProgress == -1 ? 0 : startProgress + roll;
-    final stepCount = endProgress - startProgress;
+    final movingColor = _game.activePlayer;
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final command = _matchController.buildMove(pawnIndex);
-    if (!_executeCommand(command)) return;
-    final nextGame = _game;
-    var capturedCount = 0;
-    for (final previousPlayer in previousGame.players) {
-      if (previousPlayer.color == movingColor) {
-        continue;
-      }
-      final nextPlayer = nextGame.players.firstWhere(
-        (player) => player.color == previousPlayer.color,
-      );
-      for (var index = 0; index < previousPlayer.pawnProgress.length; index++) {
-        if (previousPlayer.pawnProgress[index] >= 0 &&
-            nextPlayer.pawnProgress[index] == -1) {
-          capturedCount++;
-        }
-      }
-    }
-    final feedback = nextGame.winner != null
-        ? '${movingColor.name.toUpperCase()} WINS!'
-        : capturedCount > 0
-            ? capturedCount == 1
-                ? 'CAPTURE! EXTRA TURN'
-                : '$capturedCount CAPTURES! EXTRA TURN'
-            : endProgress == 56
-                ? 'PAWN HOME!'
-                : null;
+    final result = _applyCommand(_matchController.buildMove(pawnIndex));
+    if (!result.accepted) return;
+
+    // Authoritative movement and feedback are projected from accepted events.
+    // The UI must not recalculate capture or bonus rules from pawn snapshots.
+    final plan = MatchMovePresentationPlan.fromEvents(
+      events: result.events,
+      player: movingColor,
+      pawnIndex: pawnIndex,
+    );
     setState(() {
       _selectedPawnIndex = null;
       _animations.configurePawnMovement(
-        color: movingColor,
-        pawnIndex: pawnIndex,
-        startProgress: startProgress,
-        endProgress: endProgress,
-        stepCount: stepCount,
+        color: plan.player,
+        pawnIndex: plan.pawnIndex,
+        startProgress: plan.startProgress,
+        endProgress: plan.endProgress,
+        stepCount: plan.stepCount,
         reduceMotion: reduceMotion,
-        feedback: feedback,
+        feedback: plan.feedback,
       );
     });
     unawaited(_persistMatch());
