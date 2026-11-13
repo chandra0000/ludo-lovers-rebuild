@@ -28,8 +28,7 @@ void main() {
   });
 
   test('capture feedback includes extra turn only when engine grants it', () {
-    LudoGame capture({LudoRuleProfile? profile}) =>
-        LudoGame.fromProgress(
+    LudoGame capture({LudoRuleProfile? profile}) => LudoGame.fromProgress(
           activePlayer: PlayerColor.orange,
           ruleProfile: profile ?? LudoRuleProfile.currentV1,
           pawnProgress: {
@@ -71,8 +70,7 @@ void main() {
   });
 
   test('home arrival only announces a bonus when the rule grants one', () {
-    LudoGame finish(LudoRuleProfile profile) =>
-        LudoGame.fromProgress(
+    LudoGame finish(LudoRuleProfile profile) => LudoGame.fromProgress(
           activePlayer: PlayerColor.orange,
           ruleProfile: profile,
           pawnProgress: {
