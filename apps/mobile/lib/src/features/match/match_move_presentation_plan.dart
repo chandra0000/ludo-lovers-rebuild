@@ -14,6 +14,7 @@ class MatchMovePresentationPlan {
     required this.endProgress,
     required this.stepCount,
     this.feedback,
+    required this.captureCount,
   });
 
   final PlayerColor player;
@@ -22,6 +23,9 @@ class MatchMovePresentationPlan {
   final int endProgress;
   final int stepCount;
   final String? feedback;
+  /// Number of captures confirmed by authoritative accepted events.
+  final int captureCount;
+  bool get hasCapture => captureCount > 0;
 
   factory MatchMovePresentationPlan.fromEvents({
     required Iterable<LudoGameEvent> events,
@@ -80,6 +84,7 @@ class MatchMovePresentationPlan {
       endProgress: move.to,
       stepCount: steps,
       feedback: feedback,
+      captureCount: captures,
     );
   }
 }
