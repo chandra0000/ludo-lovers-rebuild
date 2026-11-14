@@ -1,0 +1,83 @@
+name: Cross-platform acceptance (Android and iOS)
+
+on:
+  push:
+    branches: ["feat/**"]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/cross-platform-acceptance.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/cross-platform-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - name: Resolve Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Responsive match presentation tests
+        working-directory: apps/mobile
+        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+      - name: Build Android debug APK
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+      - name: Upload Android acceptance APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-android-acceptance-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+
+  ios-simulator:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - name: Xcode and simulator environment
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+      - name: Generate missing iOS runner in CI
+        working-directory: apps/mobile
+        run: |
+          if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
+            flutter create --platforms=ios --project-name ludo_lovers --org com.ludolovers .
+          fi
+      - name: Resolve Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Run responsive and event presentation widget tests on macOS
+        working-directory: apps/mobile
+        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+      - name: Build iOS simulator app with Xcode
+        working-directory: apps/mobile
+        run: flutter build ios --simulator --debug --no-codesign
+      - name: Verify simulator app artifact
+        working-directory: apps/mobile
+        run: test -d build/ios/iphonesimulator/Runner.app
+      - name: Upload unsigned iOS simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-ios-simulator-app
+          path: apps/mobile/build/ios/iphonesimulator/Runner.app
+          if-no-files-found: error
