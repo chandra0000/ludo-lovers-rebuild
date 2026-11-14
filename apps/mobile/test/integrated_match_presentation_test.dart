@@ -17,8 +17,14 @@ void main() {
       (tester) async {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetViewPadding);
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = viewport;
+        // Exercise a top status/notch inset and bottom gesture area.
+        tester.view.viewPadding = const FakeViewPadding(
+          top: 24,
+          bottom: 24,
+        );
 
         await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
         await tester.pump();
@@ -49,7 +55,8 @@ void main() {
         expect(canvas.width, lessThanOrEqualTo(viewport.width + .01));
         expect(canvas.height, lessThanOrEqualTo(viewport.height + .01));
         expect(canvas.left, greaterThanOrEqualTo(-.01));
-        expect(canvas.top, greaterThanOrEqualTo(-.01));
+        expect(canvas.top, greaterThanOrEqualTo(24 - .01));
+        expect(canvas.bottom, lessThanOrEqualTo(viewport.height - 24 + .01));
         final board = tester.getRect(find.byKey(const Key('board_artwork')));
         expect(board.left, greaterThanOrEqualTo(-.01));
         expect(board.right, lessThanOrEqualTo(viewport.width + .01));
