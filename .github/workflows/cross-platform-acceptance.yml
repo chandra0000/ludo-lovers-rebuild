@@ -33,6 +33,13 @@ jobs:
       - name: Responsive match presentation tests
         working-directory: apps/mobile
         run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+      - name: Upload actual rendered viewport screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-android-responsive-screenshots
+          path: apps/mobile/test-artifacts/acceptance/*.png
+          if-no-files-found: warn
       - name: Build Android debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
@@ -69,6 +76,13 @@ jobs:
       - name: Run responsive and event presentation widget tests on macOS
         working-directory: apps/mobile
         run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+      - name: Upload macOS-rendered widget screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-macos-responsive-widget-screenshots
+          path: apps/mobile/test-artifacts/acceptance/*.png
+          if-no-files-found: warn
       - name: Build iOS simulator app with Xcode
         working-directory: apps/mobile
         run: flutter build ios --simulator --debug --no-codesign
