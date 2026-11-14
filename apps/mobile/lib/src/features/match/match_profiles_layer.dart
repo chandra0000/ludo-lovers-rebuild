@@ -44,11 +44,18 @@ class MatchPlayerBadge extends StatelessWidget {
             : const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: const Color(0xF018130D),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(accent, const Color(0xFF19131C), .82)!,
+              const Color(0xFF0B0C16),
+            ],
+          ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: isActive
               ? const [
-                  BoxShadow(color: Color(0x55FFD36B), blurRadius: 12),
+                  BoxShadow(color: Color(0x55FFD36B), blurRadius: 16, spreadRadius: 1),
                 ]
               : null,
           border: Border.all(
@@ -60,6 +67,15 @@ class MatchPlayerBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           child: Row(
             children: [
+              if (isActive)
+                const Padding(
+                  padding: EdgeInsets.only(right: 5),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    color: Color(0xFFFFD36B),
+                    size: 16,
+                  ),
+                ),
               CircleAvatar(
                 radius: 23,
                 backgroundColor: accent,
@@ -99,6 +115,7 @@ class MatchPlayerBadge extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
+                        shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
                       ),
                     ),
                     const SizedBox(height: 2),
