@@ -13,6 +13,10 @@ on:
       - ".github/workflows/cross-platform-acceptance.yml"
   workflow_dispatch:
 
+concurrency:
+  group: cross-platform-acceptance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -31,6 +35,7 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
       - name: Responsive match presentation tests
+        timeout-minutes: 12
         working-directory: apps/mobile
         run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
       - name: Upload actual rendered viewport screenshots
@@ -74,6 +79,7 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
       - name: Run responsive and event presentation widget tests on macOS
+        timeout-minutes: 12
         working-directory: apps/mobile
         run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
       - name: Upload macOS-rendered widget screenshots
