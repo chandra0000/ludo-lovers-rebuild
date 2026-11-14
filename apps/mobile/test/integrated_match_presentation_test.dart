@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
@@ -52,6 +55,22 @@ void main() {
         expect(board.right, lessThanOrEqualTo(viewport.width + .01));
         expect(board.top, greaterThanOrEqualTo(-.01));
         expect(board.bottom, lessThanOrEqualTo(viewport.height + .01));
+
+        // Capture the actual Flutter-rendered screen, not a design mockup.
+        await tester.pump();
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(const Key('match_screen_capture')),
+        );
+        final image = await boundary.toImage(pixelRatio: 1);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        expect(bytes, isNotNull);
+        final output = File(
+          'test-artifacts/acceptance/match-screen-'
+          '${viewport.width.toInt()}x${viewport.height.toInt()}.png',
+        );
+        await output.parent.create(recursive: true);
+        await output.writeAsBytes(bytes!.buffer.asUint8List());
+        image.dispose();
       },
     );
   }
