@@ -35,6 +35,16 @@ void main() {
         expect(find.byKey(const Key('profile_green')), findsOneWidget);
         expect(find.byKey(const Key('profile_blue')), findsOneWidget);
         expect(find.byKey(const Key('profile_magenta')), findsOneWidget);
+        for (final color in const ['orange', 'green', 'magenta', 'blue']) {
+          final avatar = find.byKey(Key('profile_avatar_$color'));
+          final name = find.byKey(Key('profile_name_$color'));
+          expect(avatar, findsOneWidget);
+          expect(name, findsOneWidget);
+          final square = tester.getSize(avatar);
+          expect(square.width, square.height);
+          expect(tester.getRect(name).bottom,
+              lessThanOrEqualTo(tester.getRect(avatar).top));
+        }
         expect(find.byKey(const Key('chat_button')), findsOneWidget);
         expect(find.byKey(const Key('quick_reactions_button')), findsOneWidget);
         expect(find.byKey(const Key('turn_status')), findsOneWidget);
