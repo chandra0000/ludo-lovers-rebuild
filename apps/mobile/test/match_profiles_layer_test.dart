@@ -35,6 +35,7 @@ void main() {
       ),
     );
     expect(find.text('Alex'), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     expect(find.text('Sam'), findsOneWidget);
     expect(find.byIcon(Icons.wifi_off), findsOneWidget);
     expect(find.text('ONLINE'), findsOneWidget);
@@ -94,6 +95,7 @@ void main() {
     expect(find.text('LOCAL'), findsOneWidget);
     expect(find.text('BOT'), findsOneWidget);
     expect(find.text('ONLINE'), findsNothing);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     expect(find.byIcon(Icons.wifi_off), findsNothing);
     expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
   });
