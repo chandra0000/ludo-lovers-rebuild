@@ -114,9 +114,9 @@ void main() {
   test('ordinary extra turn feedback requires an engine event', () {
     final game = LudoGame.initial().roll(6).movePawn(0);
     final plan = present(game);
-    final granted = game.events.whereType<ExtraTurnGranted>().any(
-      (event) => event.player == PlayerColor.orange,
-    );
+    final granted = game.events
+        .whereType<ExtraTurnGranted>()
+        .any((event) => event.player == PlayerColor.orange);
     expect(plan.extraTurnGranted, granted);
     expect(plan.feedback, granted ? 'EXTRA TURN' : null);
   });
