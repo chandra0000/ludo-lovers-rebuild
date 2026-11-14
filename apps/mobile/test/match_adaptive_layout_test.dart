@@ -19,8 +19,10 @@ void main() {
       );
       expect(layout.stageSize.width, lessThanOrEqualTo(phone.width + .001));
       expect(layout.stageSize.height, lessThanOrEqualTo(phone.height + .001));
-      expect(layout.stageSize.width / layout.stageSize.height,
-          closeTo(canvas.width / canvas.height, .00001));
+      expect(
+        layout.stageSize.width / layout.stageSize.height,
+        closeTo(canvas.width / canvas.height, .00001),
+      );
       expect(layout.freeTop, greaterThanOrEqualTo(0));
       expect(layout.freeBottom, greaterThanOrEqualTo(0));
     }
@@ -45,7 +47,9 @@ void main() {
       canvas: canvas,
     );
     expect(layout.freeTop, closeTo(layout.freeBottom, .00001));
-    expect(layout.stageSize.height + layout.freeTop + layout.freeBottom,
-        closeTo(950, .00001));
+    expect(
+      layout.stageSize.height + layout.freeTop + layout.freeBottom,
+      closeTo(950, .00001),
+    );
   });
 }
