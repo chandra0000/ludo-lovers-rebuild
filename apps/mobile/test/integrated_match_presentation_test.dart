@@ -32,6 +32,15 @@ void main() {
         expect(find.byKey(const Key('exit_match')), findsOneWidget);
         expect(find.byKey(const Key('more_button')), findsOneWidget);
         expect(tester.takeException(), isNull);
+        for (final key in const [
+          Key('chat_button'),
+          Key('quick_reactions_button'),
+          Key('more_button'),
+        ]) {
+          final target = tester.getSize(find.byKey(key));
+          expect(target.width, greaterThanOrEqualTo(48));
+          expect(target.height, greaterThanOrEqualTo(48));
+        }
 
         final canvas = tester.getRect(find.byKey(const Key('match_canvas')));
         expect(canvas.width, lessThanOrEqualTo(viewport.width + .01));
