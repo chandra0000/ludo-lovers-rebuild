@@ -31,9 +31,9 @@ class MatchSurfaceChrome extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF231707),
-                Color(0xFF0B0910),
-                Color(0xFF201306),
+                Color(0xFF10101E),
+                Color(0xFF080911),
+                Color(0xFF15101D),
               ],
             ),
           ),
@@ -48,14 +48,14 @@ class MatchSurfaceChrome extends StatelessWidget {
                   height: railHeight,
                   child: const Center(
                     child: Text(
-                      'LUDO LOVERS  •  OFFLINE MATCH',
+                      'LOCAL MATCH',
                       key: Key('match_top_rail'),
                       maxLines: 1,
                       style: TextStyle(
-                        color: Color(0xFFFFD36B),
-                        fontSize: 12,
+                        color: Color(0x99FFD36B),
+                        fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 1.0,
+                        letterSpacing: 1.8,
                       ),
                     ),
                   ),
@@ -68,14 +68,14 @@ class MatchSurfaceChrome extends StatelessWidget {
                   height: railHeight,
                   child: const Center(
                     child: Text(
-                      'ONE DEVICE  •  FOUR PLAYERS',
+                      'FOUR SEATS  •  ONE BOARD',
                       key: Key('match_bottom_rail'),
                       maxLines: 1,
                       style: TextStyle(
-                        color: Color(0xCCFFD36B),
+                        color: Color(0x88FFD36B),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 1.0,
+                        letterSpacing: 1.5,
                       ),
                     ),
                   ),
