@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
@@ -42,8 +43,10 @@ void main() {
           expect(name, findsOneWidget);
           final square = tester.getSize(avatar);
           expect(square.width, square.height);
-          expect(tester.getRect(name).bottom,
-              lessThanOrEqualTo(tester.getRect(avatar).top));
+          expect(
+            tester.getRect(name).bottom,
+            lessThanOrEqualTo(tester.getRect(avatar).top),
+          );
         }
         expect(find.byKey(const Key('chat_button')), findsOneWidget);
         expect(find.byKey(const Key('quick_reactions_button')), findsOneWidget);
