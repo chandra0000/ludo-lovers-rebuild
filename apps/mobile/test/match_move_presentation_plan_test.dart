@@ -27,6 +27,8 @@ void main() {
     expect(plan.feedback, isNull);
     expect(plan.captureCount, 0);
     expect(plan.hasCapture, isFalse);
+    expect(plan.gameCompleted, isFalse);
+    expect(plan.extraTurnGranted, isFalse);
   });
 
   test('capture feedback includes extra turn only when engine grants it', () {
@@ -45,6 +47,7 @@ void main() {
     expect(present(withBonus).feedback, 'CAPTURE! EXTRA TURN');
     expect(present(withBonus).captureCount, 1);
     expect(present(withBonus).hasCapture, isTrue);
+    expect(present(withBonus).extraTurnGranted, isTrue);
     expect(present(withBonus).stepCount, 2);
 
     final withoutBonus = capture(
@@ -58,6 +61,7 @@ void main() {
     expect(withoutBonus.events.whereType<ExtraTurnGranted>(), isEmpty);
     expect(withoutBonus.activePlayer, PlayerColor.green);
     expect(present(withoutBonus).feedback, 'CAPTURE!');
+    expect(present(withoutBonus).extraTurnGranted, isFalse);
   });
 
   test('captures of two unprotected pawns are announced accurately', () {
@@ -103,7 +107,18 @@ void main() {
     final plan = present(game, pawnIndex: 3);
     expect(plan.endProgress, 56);
     expect(plan.feedback, 'ORANGE WINS!');
+    expect(plan.gameCompleted, isTrue);
     expect(game.events.whereType<GameCompleted>(), hasLength(1));
+  });
+
+  test('ordinary extra turn feedback requires an engine event', () {
+    final game = LudoGame.initial().roll(6).movePawn(0);
+    final plan = present(game);
+    final granted = game.events.whereType<ExtraTurnGranted>().any(
+      (event) => event.player == PlayerColor.orange,
+    );
+    expect(plan.extraTurnGranted, granted);
+    expect(plan.feedback, granted ? 'EXTRA TURN' : null);
   });
 
   test('a rejected or mismatched command cannot yield an animation plan', () {
