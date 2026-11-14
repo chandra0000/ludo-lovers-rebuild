@@ -55,7 +55,11 @@ class MatchPlayerBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: isActive
               ? const [
-                  BoxShadow(color: Color(0x55FFD36B), blurRadius: 16, spreadRadius: 1),
+                  BoxShadow(
+                    color: Color(0x55FFD36B),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                  ),
                 ]
               : null,
           border: Border.all(
