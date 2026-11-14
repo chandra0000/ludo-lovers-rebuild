@@ -73,7 +73,7 @@ void main() {
             children: [
               SizedBox(
                 width: 186,
-                height: 60,
+                height: 78,
                 child: MatchPlayerBadge(
                   profile: profiles.first,
                   isActive: true,
@@ -81,7 +81,7 @@ void main() {
               ),
               SizedBox(
                 width: 186,
-                height: 60,
+                height: 78,
                 child: MatchPlayerBadge(
                   profile: profiles[1],
                   isActive: false,
