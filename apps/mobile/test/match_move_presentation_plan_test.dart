@@ -24,11 +24,11 @@ void main() {
     expect(plan.startProgress, -1);
     expect(plan.endProgress, 0);
     expect(plan.stepCount, 1);
-    expect(plan.feedback, isNull);
+    expect(plan.feedback, 'EXTRA TURN');
     expect(plan.captureCount, 0);
     expect(plan.hasCapture, isFalse);
     expect(plan.gameCompleted, isFalse);
-    expect(plan.extraTurnGranted, isFalse);
+    expect(plan.extraTurnGranted, isTrue);
   });
 
   test('capture feedback includes extra turn only when engine grants it', () {
