@@ -52,4 +52,32 @@ void main() {
     expect(tester.getSize(find.byType(GlassyPawn)), const Size(16, 18.88));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('renders every branded pawn color with stable dimensions',
+      (tester) async {
+    const colors = [
+      Color(0xFFFF8928),
+      Color(0xFF33FF28),
+      Color(0xFF289EFF),
+      Color(0xFFF428FF),
+    ];
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              for (final color in colors)
+                GlassyPawn(color: color, size: 24, isMovable: true),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(GlassyPawn), findsNWidgets(4));
+    for (final pawn in tester.widgetList<GlassyPawn>(find.byType(GlassyPawn))) {
+      expect(colors, contains(pawn.color));
+    }
+    expect(tester.takeException(), isNull);
+  });
 }
