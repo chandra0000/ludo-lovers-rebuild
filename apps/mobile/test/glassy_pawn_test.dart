@@ -62,7 +62,7 @@ void main() {
       Color(0xFFF428FF),
     ];
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: Row(
             children: [
