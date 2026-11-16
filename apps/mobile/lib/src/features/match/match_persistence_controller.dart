@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../game/domain/persistence/saved_match_store.dart';
+import '../../game/domain/persistence/saved_match.dart';
+import '../../game/infrastructure/persistence/saved_match_store.dart';
 
 /// Serializes match snapshots so earlier asynchronous writes cannot overwrite
 /// newer accepted states. A failed write does not poison subsequent saves.

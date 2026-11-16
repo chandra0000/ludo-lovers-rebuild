@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../game/domain/persistence/saved_match_store.dart';
+import '../../game/domain/persistence/saved_match.dart';
+import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
 

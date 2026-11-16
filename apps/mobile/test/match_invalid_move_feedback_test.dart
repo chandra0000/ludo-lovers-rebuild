@@ -11,7 +11,9 @@ void main() {
       activePlayer: PlayerColor.orange,
       ruleProfile: LudoRuleProfile.classicV1,
       pawnProgress: {
-        PlayerColor.orange: [3, -1, -1, -1],
+        // Keep two legal choices so this tests feedback during pawn selection,
+        // rather than an unplayable restored roll that must now auto-pass.
+        PlayerColor.orange: [3, 10, 20, -1],
         PlayerColor.green: [44, 44, -1, -1],
       },
     ).roll(4);

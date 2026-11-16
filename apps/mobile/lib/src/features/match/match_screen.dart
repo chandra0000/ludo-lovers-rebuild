@@ -9,7 +9,7 @@ import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
-import '../../game/domain/persistence/saved_match_store.dart';
+import '../../game/domain/persistence/saved_match.dart';
 import '../../game/presentation/destination_preview_painter.dart';
 import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/player_color_theme.dart';
@@ -113,10 +113,10 @@ class _MatchScreenState extends State<MatchScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (_game.diceValue != null &&
-        widget.aiPlayers.contains(_game.activePlayer)) {
-      // A saved AI roll is already accepted by the engine. Complete its
-      // presentation callback on restore so the AI cannot become stranded.
+    if (_game.diceValue != null) {
+      // A saved roll is already accepted by the engine. Complete its
+      // presentation callback for human and AI seats alike: a restored human
+      // roll with no legal move must not become permanently stranded.
       _animations.restorePendingDiceRoll();
     }
     final lifecycleState = WidgetsBinding.instance.lifecycleState;

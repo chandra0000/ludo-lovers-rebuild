@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../ai/seeded_ludo_ai.dart';
 import '../ludo_game.dart';
 import '../player_color.dart';
@@ -9,12 +7,12 @@ import '../player_color.dart';
 /// Stores one local match so the app can recover after backgrounding or
 /// process recreation. This is local-device persistence, not cloud sync.
 class SavedMatch {
-  const SavedMatch({
+  SavedMatch({
     required this.game,
-    required this.aiPlayers,
+    required Set<PlayerColor> aiPlayers,
     required this.aiSeed,
     this.aiDifficulty = LudoAiDifficulty.medium,
-  });
+  }) : aiPlayers = Set<PlayerColor>.unmodifiable(aiPlayers);
 
   final LudoGame game;
   final Set<PlayerColor> aiPlayers;
@@ -72,39 +70,5 @@ class SavedMatch {
       throw const FormatException('Saved match must be a JSON object.');
     }
     return SavedMatch.fromJson(decoded);
-  }
-}
-
-class SavedMatchStore {
-  const SavedMatchStore();
-
-  static const _storageKey = 'saved_local_match_v1';
-
-  Future<void> save(SavedMatch match) async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(_storageKey, match.encode());
-  }
-
-  Future<SavedMatch?> load() async {
-    final preferences = await SharedPreferences.getInstance();
-    final encoded = preferences.getString(_storageKey);
-    if (encoded == null) return null;
-    try {
-      return SavedMatch.decode(encoded);
-    } on FormatException {
-      await preferences.remove(_storageKey);
-      return null;
-    } on ArgumentError {
-      await preferences.remove(_storageKey);
-      return null;
-    } on StateError {
-      await preferences.remove(_storageKey);
-      return null;
-    }
-  }
-
-  Future<void> clear() async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.remove(_storageKey);
   }
 }
