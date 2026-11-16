@@ -22,3 +22,7 @@ apps/mobile/android/key.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated Flutter verification evidence
+apps/mobile/test-artifacts/
+__pycache__/
