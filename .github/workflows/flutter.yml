@@ -2,12 +2,11 @@ name: Flutter foundation checks
 
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
   pull_request:
-    branches: [main]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/flutter.yml"
@@ -16,10 +15,9 @@ on:
 permissions:
   contents: read
 
-# Keep each CI run independent so new commits cannot interrupt long Android APK builds.
-# Using github.run_id also prevents pending runs from replacing each other.
+# Serialize each PR/ref without cancelling active verification/build jobs.
 concurrency:
-  group: flutter-${{ github.workflow }}-${{ github.run_id }}
+  group: flutter-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -48,18 +46,22 @@ jobs:
       - name: Check Dart formatting (strict, non-mutating)
         working-directory: apps/mobile
         run: dart format --output=none --set-exit-if-changed lib test tool integration_test
-      - name: Show required Dart formatting changes
-        if: failure()
-        working-directory: apps/mobile
-        run: |
-          dart format lib/src/game/presentation/luxury_dice.dart
-          git diff -- lib/src/game/presentation/luxury_dice.dart
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --reporter expanded
+      - name: Verify all responsive PNG artifacts
+        working-directory: apps/mobile
+        run: python3 tool/verify_responsive_screenshots.py
+      - name: Upload responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-linux-responsive-screenshots
+          path: apps/mobile/test-artifacts/acceptance/*.png
+          if-no-files-found: error
       - name: Normalize board-canvas screenshot filename
         working-directory: apps/mobile
         run: mv test-artifacts/match-canvas-393x873.png test-artifacts/match-canvas-393x699.png
@@ -126,7 +128,10 @@ jobs:
         run: flutter pub get
       - name: Generate Android project files
         working-directory: apps/mobile
-        run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+        run: |
+          if [ ! -f android/app/build.gradle.kts ] && [ ! -f android/app/build.gradle ]; then
+            flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+          fi
       # Flutter generates the Android Gradle project above, so restore its
       # Gradle cache only after the wrapper files exist in the workspace.
       - name: Cache Android Gradle dependencies

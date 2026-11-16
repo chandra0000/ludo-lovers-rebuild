@@ -2,12 +2,11 @@ name: Cross-platform acceptance (Android and iOS)
 
 on:
   push:
-    branches: ["feat/**"]
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
   pull_request:
-    branches: [main]
     paths:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
@@ -34,17 +33,12 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Responsive match presentation tests
-        timeout-minutes: 12
+      - name: Generate missing Android runner in CI
         working-directory: apps/mobile
-        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
-      - name: Upload actual rendered viewport screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ludo-android-responsive-screenshots
-          path: apps/mobile/test-artifacts/acceptance/*.png
-          if-no-files-found: warn
+        run: |
+          if [ ! -f android/app/build.gradle.kts ] && [ ! -f android/app/build.gradle ]; then
+            flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+          fi
       - name: Build Android debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
@@ -82,13 +76,16 @@ jobs:
         timeout-minutes: 12
         working-directory: apps/mobile
         run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+      - name: Verify all responsive PNG artifacts
+        working-directory: apps/mobile
+        run: python3 tool/verify_responsive_screenshots.py
       - name: Upload macOS-rendered widget screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ludo-macos-responsive-widget-screenshots
           path: apps/mobile/test-artifacts/acceptance/*.png
-          if-no-files-found: warn
+          if-no-files-found: error
       - name: Build iOS simulator app with Xcode
         working-directory: apps/mobile
         run: flutter build ios --simulator --debug --no-codesign

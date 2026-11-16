@@ -4,9 +4,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
+import 'support/load_sdk_fonts.dart';
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(loadSdkFonts);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final viewport in const [
     Size(360, 800),
     Size(393, 873),
@@ -16,9 +22,20 @@ void main() {
     testWidgets(
       'match presents board, seats, dice, chat and reactions at $viewport',
       (tester) async {
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        addTearDown(tester.view.resetViewPadding);
+        void stage(String name) => debugPrint('viewport $viewport: $name');
+        addTearDown(() async {
+          stage('cleanup');
+          try {
+            await tester.pumpWidget(const SizedBox.shrink());
+            await tester.pump();
+            expect(tester.takeException(), isNull);
+          } finally {
+            tester.view.resetPhysicalSize();
+            tester.view.resetDevicePixelRatio();
+            tester.view.resetViewPadding();
+          }
+          stage('cleanup complete');
+        });
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = viewport;
         // Exercise a top status/notch inset and bottom gesture area.
@@ -27,9 +44,33 @@ void main() {
           bottom: 24,
         );
 
+        stage('initialize');
         await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
         await tester.pump();
 
+        // Resolve the actual providers (including resized avatars), with a
+        // real deadline instead of a sleep or unbounded pumpAndSettle.
+        stage('asset decode');
+        final context = tester.element(find.byType(MatchScreen));
+        final imageErrors = <Object>[];
+        final providers = tester
+            .widgetList<Image>(find.byType(Image))
+            .map((image) => image.image)
+            .toSet();
+        await tester.runAsync(() async {
+          await Future.wait(
+            providers.map((provider) {
+              return precacheImage(
+                provider,
+                context,
+                onError: (error, stack) => imageErrors.add(error),
+              );
+            }),
+          ).timeout(const Duration(seconds: 10));
+        });
+        expect(imageErrors, isEmpty);
+        await tester.pump(const Duration(milliseconds: 250));
+        stage('assertions');
         expect(find.byKey(const Key('match_canvas')), findsOneWidget);
         expect(find.byKey(const Key('board_artwork')), findsOneWidget);
         expect(find.byKey(const Key('profile_orange')), findsOneWidget);
@@ -76,22 +117,70 @@ void main() {
         expect(board.top, greaterThanOrEqualTo(-.01));
         expect(board.bottom, lessThanOrEqualTo(viewport.height + .01));
 
-        // Capture the actual Flutter-rendered screen, not a design mockup.
-        await tester.pump();
+        // Engine/image callbacks and filesystem operations must run outside
+        // the widget binding's fake-async zone. Keeping only writes in runAsync
+        // can leave image completion callbacks pending during test teardown.
         final boundary = tester.renderObject<RenderRepaintBoundary>(
           find.byKey(const Key('match_screen_capture')),
         );
-        final image = await boundary.toImage(pixelRatio: 1);
-        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        expect(bytes, isNotNull);
-        final output = File(
-          'test-artifacts/acceptance/match-screen-'
-          '${viewport.width.toInt()}x${viewport.height.toInt()}.png',
-        );
-        await output.parent.create(recursive: true);
-        await output.writeAsBytes(bytes!.buffer.asUint8List());
-        image.dispose();
+        await tester.runAsync(() async {
+          stage('capture');
+          final image = await boundary
+              .toImage(pixelRatio: 1)
+              .timeout(const Duration(seconds: 10));
+          try {
+            expect(image.width, viewport.width.toInt());
+            expect(image.height, viewport.height.toInt());
+            stage('encode');
+            final bytes = await image
+                .toByteData(format: ui.ImageByteFormat.png)
+                .timeout(const Duration(seconds: 10));
+            expect(bytes, isNotNull);
+            final output = File(
+              'test-artifacts/acceptance/match-screen-'
+              '${viewport.width.toInt()}x${viewport.height.toInt()}.png',
+            );
+            stage('create directory');
+            await output.parent
+                .create(recursive: true)
+                .timeout(const Duration(seconds: 10));
+            stage('write PNG');
+            await output
+                .writeAsBytes(
+                  bytes!.buffer
+                      .asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+                  flush: true,
+                )
+                .timeout(const Duration(seconds: 10));
+            stage('verify PNG');
+            final encoded =
+                await output.readAsBytes().timeout(const Duration(seconds: 10));
+            final codec = await ui
+                .instantiateImageCodec(encoded)
+                .timeout(const Duration(seconds: 10));
+            try {
+              final frame = await codec
+                  .getNextFrame()
+                  .timeout(const Duration(seconds: 10));
+              try {
+                expect(frame.image.width, viewport.width.toInt());
+                expect(frame.image.height, viewport.height.toInt());
+              } finally {
+                frame.image.dispose();
+              }
+            } finally {
+              codec.dispose();
+            }
+          } finally {
+            image.dispose();
+          }
+          stage('capture complete');
+        });
+        // Drain post-frame image listeners before disposing the match.
+        await tester.pump();
+        expect(tester.takeException(), isNull);
       },
+      timeout: const Timeout(Duration(seconds: 60)),
     );
   }
 }
