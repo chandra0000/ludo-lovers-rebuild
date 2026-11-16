@@ -13,7 +13,9 @@ apps/mobile/
         home/             Home screen and navigation
         match/            Match screen and presentation
       game/
-        domain/           Rules, player state, board geometry
+        domain/           Pure rules, geometry, AI and saved-match DTO
+        application/      Authoritative MatchSession command boundary
+        infrastructure/   SharedPreferences storage adapter
         presentation/     Flutter-specific player styling
   test/                   Unit, geometry, asset, and widget tests
 
@@ -49,11 +51,32 @@ The current Flutter source lives under `apps/mobile`. Keep Flutter-specific code
 6. Presentation animates from the previous pawn position to the new authoritative position.
 7. The UI displays the resulting turn, capture, extra turn, or winner.
 
-## Current implementation note
+## Current implementation note — 2026-11-16
 
-The current code contains a deterministic `LudoGame` domain model and a `BoardGeometry` mapping. Dice values are injectable for deterministic widget tests; production rolls currently use a local random source in the match screen. Pawn overlays and movement animation are currently orchestrated by the match screen. Extract presentation responsibilities only when that reduces complexity without creating duplicate state or geometry. Keep game state immutable.
+`MatchSession` owns accepted roll/move/pass transitions over immutable `LudoGame`.
+`MatchCommandController` dispatches commands; dedicated turn, AI, animation and
+persistence controllers coordinate presentation without duplicating rules.
+Human dice remain injectable, seeded local randomness is preserved, and AI chooses
+only engine-legal moves. No rule-profile defaults change in this work.
 
-The match composition uses a fixed 9:16 design canvas scaled uniformly to the available safe area. This preserves the full-screen board artwork on portrait and landscape viewports; responsive viewport tests protect that contract.
+The pure `SavedMatch` DTO and codec live in `game/domain/persistence/saved_match.dart`.
+`game/infrastructure/persistence/saved_match_store.dart` owns SharedPreferences I/O.
+The snapshot constructor copies AI seats into an unmodifiable set so queued writes
+capture the original metadata. Storage key, JSON schemas and migration behavior
+are unchanged. Internal consumers now import the DTO and adapter explicitly.
+
+`engine_architecture_boundary_test.dart` enforces that domain/application imports
+stay in their permitted layers and use no Flutter, Flame, storage or other package
+dependencies. Application may depend on domain; domain cannot depend on application.
+
+On restoration, every pending accepted dice result is resolved for presentation,
+including human seats. A human roll with no legal pawn schedules the ordinary
+engine-validated pass; a single legal pawn follows the existing delayed automatic
+move. No new roll is generated. Restored animation progress is not replayed.
+
+The 576×1024 design canvas retains one uniform transform. Actual four-viewport PNGs
+and native halo transparency tests protect rendering; visual and physical-device
+acceptance remain separate gates.
 
 ## Rendering contract
 

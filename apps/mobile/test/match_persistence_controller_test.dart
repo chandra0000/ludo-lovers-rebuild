@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_persistence_controller.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
-import 'package:ludo_lovers/src/game/domain/persistence/saved_match_store.dart';
+import 'package:ludo_lovers/src/game/domain/player_color.dart';
+import 'package:ludo_lovers/src/game/domain/persistence/saved_match.dart';
 
 void main() {
   SavedMatch snapshot(int seed) => SavedMatch(
@@ -32,6 +33,26 @@ void main() {
     firstWrite.complete();
     await Future.wait([first, second]);
     expect(written, [1, 2]);
+  });
+
+  test('queued snapshots cannot observe later AI seat mutations', () async {
+    final seats = {PlayerColor.green};
+    final match =
+        SavedMatch(game: LudoGame.initial(), aiPlayers: seats, aiSeed: 1);
+    final written = <Set<PlayerColor>>[];
+    final controller = MatchPersistenceController(
+      save: (snapshot) async {
+        written.add(snapshot.aiPlayers);
+      },
+    );
+    final write = controller.persist(match);
+    seats.add(PlayerColor.blue);
+    await write;
+    expect(written.single, {PlayerColor.green});
+    expect(
+      () => match.aiPlayers.add(PlayerColor.orange),
+      throwsUnsupportedError,
+    );
   });
 
   test('failed save does not block a later snapshot', () async {

@@ -175,3 +175,68 @@ not invitations to invent behavior or measurements.
 verification, not completion of the productionization program. No benchmark
 comparison, physical-device result, signed release, simulator runtime result, or
 9/10 visual/readiness score is implied.
+
+## Phase 0 remote verification and integration
+
+Repair PR [#44](https://github.com/chandra0000/ludo-lovers-rebuild/pull/44)
+passed all four check runs on `89956ef638318ef3257ed34e4734c62e446335d9`:
+
+- [Foundation workflow](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467938): verification and Android profile/release APKs **success**.
+- [Cross-platform workflow](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467929): Android debug APK and iOS simulator build **success**.
+- [Linux responsive PNG artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467938/artifacts/14195352863).
+- [macOS responsive PNG artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467929/artifacts/14194644195): downloaded, all four CRC/dimension checks passed; smallest capture inspected.
+- [Debug APK artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467929/artifacts/14195720944).
+- [Profile APK artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467938/artifacts/14195347381).
+- [Release APK artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467938/artifacts/14196015445).
+- [Unsigned simulator app artifact](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43798467929/artifacts/14195496597).
+
+No review threads or reviews blocked #44. Per owner authorization it was merged
+**into draft #43's branch**, producing `32b2ce50bd066d3bf9ec4c206d5ea23e21a56dc6`.
+The merge tree exactly matches the checked repair tree
+`12c87431a4363f5b851221395f65d886e5ee05c1`. This is the Phase 1 integration baseline;
+main and #43's visual/device acceptance remain unchanged. Phase 0 technical gates
+are now **VERIFIED COMPLETE**. A simulator build is not simulator interaction or
+physical iOS acceptance. Generated release APKs are not production-signed releases.
+
+Local Android verification additionally attempted the CI-equivalent generated
+project in an isolated copy. Gradle required explicit proxy configuration, then
+failed because the installed Java runtime has no Java compiler. The remote
+Android build evidence above is green; local build failure is recorded rather
+than claimed as a pass. No generated project files entered the implementation repo.
+
+## Phase 1 implementation and regression evidence
+
+Audit found a human recovery deadlock: initialization only completed restored
+rolls for AI seats. A restored human roll of two with every pawn in its yard had
+no legal pawn, no roll action and no scheduled pass. With the original condition,
+`restored_human_turn_test.dart` fails: expected Green after the pass delay, actual
+Orange. Restoring the general pending-roll handler passes that regression, without
+rerolling or changing engine rules. A second test interrupts an automatic single
+legal move, resumes, and checks exactly one version increment/move across repeated
+pause/resume notifications.
+
+Moved SharedPreferences I/O out of domain into infrastructure. The saved DTO/codecs
+remain pure; schemas, storage key and migrations are preserved. Saved AI-seat sets
+are copied and frozen to prevent mutation between enqueue and asynchronous write.
+An import-boundary regression enforces package-free domain/application layers and
+prevents domain-to-application/presentation dependencies. Existing authoritative
+session, controller, engine, dice RNG, artwork and geometry are preserved.
+
+The targeted recovery, architecture, store and queued-persistence tests pass
+locally (10 tests). Full-suite and remote acceptance will be recorded on the
+published Phase 1 commit. This is not physical process-kill acceptance.
+
+Phase 1 local final verification: **294 tests passed** in 72 seconds, strict
+formatting **128 files, zero changes**, fatal-infos analysis **no issues**.
+Two existing widget fixtures now explicitly represent pawn-selection state:
+accessibility flushes the restored-roll presentation frame, and blockade feedback
+keeps two alternative legal pawns so an automatic single move/pass cannot consume
+its inspection turn. Assertions remain intact; the new recovery tests cover the
+previously stranded automatic path.
+
+Downloaded Phase 0 debug APK: SHA-256
+`8d09e06a8575bb89d8f68f42690c78c5cd8bceecca267220100ff795c1fc227f`.
+`apksigner verify --verbose --print-certs` passes (v2 signature); `aapt dump badging`
+reports `com.ludolovers.ludo_lovers`, versionCode 1 / versionName 0.1.0,
+minSdk 24 / targetSdk 36 / compileSdk 36. It is debug-signed, not a release
+acceptance artifact. No physical installation is claimed.
