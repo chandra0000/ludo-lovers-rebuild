@@ -1,0 +1,58 @@
+{
+  "baseline": "a1ef5846d2a5f4fe3f66b1e9ee344c93c4e626bb",
+  "method": "RGB exact comparison of fully interior pixels of unchanged artwork rectangle, same viewport/insets/state/fonts",
+  "results": [
+    {
+      "viewport": [
+        320,
+        640
+      ],
+      "protected_region": [
+        6,
+        150,
+        314,
+        464
+      ],
+      "changed_pixels": 0
+    },
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "protected_region": [
+        7,
+        208,
+        354,
+        562
+      ],
+      "changed_pixels": 0
+    },
+    {
+      "viewport": [
+        393,
+        873
+      ],
+      "protected_region": [
+        7,
+        227,
+        386,
+        613
+      ],
+      "changed_pixels": 0
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "protected_region": [
+        8,
+        237,
+        423,
+        660
+      ],
+      "changed_pixels": 0
+    }
+  ]
+}

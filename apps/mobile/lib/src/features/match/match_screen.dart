@@ -34,6 +34,7 @@ import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_hud_overlay.dart';
+import 'match_hud_region_clipper.dart';
 import 'match_profiles_layer.dart';
 import 'match_reaction_controls.dart';
 import 'match_landing_celebration.dart';
@@ -460,6 +461,17 @@ class _MatchScreenState extends State<MatchScreen>
         : '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
   }
 
+  String get _actionInstruction {
+    if (_game.winner != null) return 'Match finished';
+    if (_movementController.isAnimating) return 'Pawn moving';
+    if (_isDiceAnimating) return 'Rolling dice';
+    if (_turnResolution.isPending) {
+      return _game.legalPawnIndices().isEmpty ? 'No legal move' : 'Pawn moving';
+    }
+    if (widget.aiPlayers.contains(_game.activePlayer)) return 'AI thinking';
+    return _game.diceValue == null ? 'Roll dice' : 'Choose a pawn';
+  }
+
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -484,6 +496,7 @@ class _MatchScreenState extends State<MatchScreen>
                             aiPlayers: widget.aiPlayers,
                           ),
                       activeColor: _game.activePlayer,
+                      canvasScale: scale,
                     ),
                   ),
                 ..._buildPawnsWithClusters(scale),
@@ -493,39 +506,59 @@ class _MatchScreenState extends State<MatchScreen>
                     plan: _lastLandingPlan!,
                   ),
                 if (_selectedPawnIndex != null) _buildDestinationPreview(),
-                DiceControlDock(
-                  targetValue: _game.diceValue,
-                  rollId: _diceRollId,
-                  canRoll: !widget.aiPlayers.contains(_game.activePlayer) &&
-                      _game.diceValue == null &&
-                      !_isDiceAnimating &&
-                      !_movementController.isAnimating &&
-                      _game.winner == null,
-                  isWaitingForRoll: _game.diceValue == null &&
-                      _game.winner == null &&
-                      !_movementController.isAnimating,
-                  onRollRequested: () {
-                    if (widget.aiPlayers.contains(_game.activePlayer)) {
-                      return;
-                    }
-                    _roll(isAi: false);
-                  },
-                  onAnimationComplete: _handleDiceAnimationComplete,
+                Positioned.fill(
+                  child: ClipPath(
+                    clipper: const MatchHudRegionClipper(),
+                    child: Stack(
+                      children: [
+                        DiceControlDock(
+                          targetValue: _game.diceValue,
+                          rollId: _diceRollId,
+                          canRoll:
+                              !widget.aiPlayers.contains(_game.activePlayer) &&
+                                  _game.diceValue == null &&
+                                  !_isDiceAnimating &&
+                                  !_movementController.isAnimating &&
+                                  _game.winner == null,
+                          isWaitingForRoll: _game.diceValue == null &&
+                              _game.winner == null &&
+                              !_movementController.isAnimating,
+                          onRollRequested: () {
+                            if (widget.aiPlayers.contains(_game.activePlayer)) {
+                              return;
+                            }
+                            _roll(isAi: false);
+                          },
+                          onAnimationComplete: _handleDiceAnimationComplete,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 MatchHudOverlay(
                   statusText: _statusText,
+                  actionInstruction: _actionInstruction,
+                  canvasScale: scale,
                   activePlayer: _game.activePlayer,
+                  legalPawnIndices: _isAppResumed &&
+                          !_isDiceAnimating &&
+                          !_movementController.isAnimating &&
+                          !_turnResolution.isPending &&
+                          !widget.aiPlayers.contains(_game.activePlayer)
+                      ? _game.legalPawnIndices()
+                      : const [],
+                  onPawnSelected: _selectOrMovePawn,
                 ),
                 MatchReactionToast(reaction: _activeReaction),
                 Positioned(
-                  left: 12,
-                  top: 12,
+                  left: 8,
+                  top: 0,
                   child: IconButton(
                     key: const Key('exit_match'),
                     tooltip: 'Exit match',
-                    constraints: const BoxConstraints.tightFor(
-                      width: 72,
-                      height: 72,
+                    constraints: BoxConstraints.tightFor(
+                      width: math.max(72, 48 / scale),
+                      height: math.max(72, 48 / scale),
                     ),
                     padding: EdgeInsets.zero,
                     iconSize: 36,
@@ -924,8 +957,8 @@ class _MatchScreenState extends State<MatchScreen>
         : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
-    // inversely so its transformed physical bounds never fall below 44×48 dp.
-    final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
+    // inversely so its transformed physical bounds never fall below 48×48 dp.
+    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
     final shakeKey = _shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
