@@ -6,6 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
+import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 import 'support/load_sdk_fonts.dart';
 
@@ -45,7 +47,20 @@ void main() {
         );
 
         stage('initialize');
-        await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MatchScreen(
+              profiles: MatchPlayerProfile.local(
+                names: {
+                  PlayerColor.orange: 'Aarav',
+                  PlayerColor.green: 'Zoë',
+                  PlayerColor.magenta: 'Maya',
+                  PlayerColor.blue: 'Noah',
+                },
+              ),
+            ),
+          ),
+        );
         await tester.pump();
 
         // Resolve the actual providers (including resized avatars), with a

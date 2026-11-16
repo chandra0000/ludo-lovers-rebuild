@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/domain/match_player_profile.dart';
+import '../../game/domain/player_name.dart';
+import '../../game/infrastructure/persistence/player_name_preferences.dart';
 import '../board_preview/board_preview_screen.dart';
 import '../match/match_screen.dart';
 
@@ -20,20 +24,166 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   Set<PlayerColor> get _aiPlayers =>
       PlayerColor.turnOrder.skip(_humanPlayers).toSet();
 
-  void _startMatch({required bool withAi}) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MatchScreen(
-          initialGame: LudoGame.initial(
-            ruleProfile: LudoRuleProfile.currentV1,
-          ),
-          aiPlayers: withAi ? _aiPlayers : const {},
-          aiSeed: 20261110,
-          aiDifficulty: _aiDifficulty,
-        ),
-      ),
-    );
+  final Map<PlayerColor, TextEditingController> _names = {
+    for (final color in PlayerColor.turnOrder)
+      color: TextEditingController(text: color.name.toUpperCase()),
+  };
+  final _editedNames = <PlayerColor>{};
+  final _fieldKeys = {
+    for (final color in PlayerColor.turnOrder) color: GlobalKey(),
+  };
+  final _nameErrors = <PlayerColor, String?>{};
+  final _preferences = const PlayerNamePreferences();
+  final _scroll = ScrollController();
+  bool _showNameEditor = false;
+  bool _starting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNames();
   }
+
+  Future<void> _loadNames() async {
+    try {
+      final names = await _preferences.load();
+      if (!mounted) return;
+      for (final entry in names.entries) {
+        if (!_editedNames.contains(entry.key)) {
+          _names[entry.key]!.text = entry.value;
+        }
+      }
+    } catch (error) {
+      debugPrint('Could not load preferred player names: $error');
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    for (final controller in _names.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _startMatch({required bool withAi}) async {
+    if (_starting) return;
+    final aiPlayers = withAi ? _aiPlayers : <PlayerColor>{};
+    final names = <PlayerColor, String>{};
+    var invalid = false;
+    for (final color in PlayerColor.turnOrder) {
+      final error = PlayerName.errorFor(_names[color]!.text);
+      _nameErrors[color] = aiPlayers.contains(color) ? null : error;
+      if (!aiPlayers.contains(color) && error != null) invalid = true;
+      if (error == null) names[color] = PlayerName.parse(_names[color]!.text);
+    }
+    if (invalid) {
+      setState(() => _showNameEditor = true);
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final color = PlayerColor.turnOrder
+            .firstWhere((color) => _nameErrors[color] != null);
+        final context = _fieldKeys[color]!.currentContext;
+        if (context != null) {
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 200),
+          );
+        }
+      });
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _starting = true);
+    try {
+      try {
+        await _preferences.save(names);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Names could not be saved for your next match.'),
+            ),
+          );
+        }
+      }
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MatchScreen(
+            initialGame:
+                LudoGame.initial(ruleProfile: LudoRuleProfile.currentV1),
+            aiPlayers: aiPlayers,
+            aiSeed: 20261110,
+            aiDifficulty: _aiDifficulty,
+            profiles:
+                MatchPlayerProfile.local(aiPlayers: aiPlayers, names: names),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  Widget _nameEditor() => Card(
+        color: const Color(0xFF17130D),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextButton.icon(
+                key: const Key('edit_player_names'),
+                onPressed: () =>
+                    setState(() => _showNameEditor = !_showNameEditor),
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(
+                  _showNameEditor ? 'HIDE PLAYER NAMES' : 'EDIT PLAYER NAMES',
+                ),
+              ),
+              if (_showNameEditor) ...[
+                const Text(
+                  'Human names · up to 20 characters. AI seats use labelled bot names. '
+                  'Matching names are distinguished by seat numbers.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                for (final color in PlayerColor.turnOrder)
+                  Padding(
+                    key: _fieldKeys[color],
+                    padding: const EdgeInsets.only(top: 12),
+                    child: TextField(
+                      key: Key('player_name_${color.name}'),
+                      controller: _names[color],
+                      maxLength: PlayerName.maxGraphemes,
+                      maxLengthEnforcement: MaxLengthEnforcement.none,
+                      textCapitalization: TextCapitalization.words,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: TextInputAction.next,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText:
+                            'Seat ${PlayerColor.turnOrder.indexOf(color) + 1} · ${color.name.toUpperCase()}',
+                        labelStyle: const TextStyle(color: Color(0xFFFFC857)),
+                        errorText: _nameErrors[color],
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        _editedNames.add(color);
+                        setState(
+                          () => _nameErrors[color] = PlayerName.errorFor(value),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -45,6 +195,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
         ),
         body: SafeArea(
           child: ListView(
+            controller: _scroll,
             padding: const EdgeInsets.all(20),
             children: [
               const Text(
@@ -63,7 +214,9 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 'authoritative game engine.',
                 style: TextStyle(color: Colors.white70, height: 1.45),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 12),
+              _nameEditor(),
+              const SizedBox(height: 12),
               _ModeCard(
                 title: 'LOCAL FOUR-PLAYER',
                 subtitle: 'Pass-and-play · Current compatibility rules',
