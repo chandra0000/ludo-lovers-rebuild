@@ -4,6 +4,7 @@ import '../ai/seeded_ludo_ai.dart';
 import '../ludo_game.dart';
 import '../player_color.dart';
 import '../match_player_profile.dart';
+import '../match_configuration.dart';
 
 /// Stores one local match so the app can recover after backgrounding or
 /// process recreation. This is local-device persistence, not cloud sync.
@@ -27,7 +28,8 @@ class SavedMatch {
   final List<MatchPlayerProfile> profiles;
 
   Map<String, Object?> toJson() => {
-        'schemaVersion': 3,
+        'schemaVersion': 4,
+        'configuration': game.configuration.toJson(),
         'profiles': profiles.map((profile) => profile.toJson()).toList(),
         'game': game.toSnapshot(),
         'aiPlayers': aiPlayers.map((player) => player.name).toList()..sort(),
@@ -37,12 +39,15 @@ class SavedMatch {
 
   factory SavedMatch.fromJson(Map<String, dynamic> json) {
     final schemaVersion = json['schemaVersion'];
-    if ((schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) ||
+    if ((schemaVersion != 1 &&
+            schemaVersion != 2 &&
+            schemaVersion != 3 &&
+            schemaVersion != 4) ||
         json['game'] is! Map<String, dynamic> ||
         json['aiPlayers'] is! List ||
         json['aiSeed'] is! int ||
         (schemaVersion != 1 && json['aiDifficulty'] is! String) ||
-        (schemaVersion == 3 && json['profiles'] is! List)) {
+        (schemaVersion >= 3 && json['profiles'] is! List)) {
       throw const FormatException('Malformed saved match.');
     }
     final rawAiPlayers = json['aiPlayers'] as List;
@@ -63,12 +68,23 @@ class SavedMatch {
       (value) => value.name == difficultyName,
       orElse: () => throw const FormatException('Unknown saved AI difficulty.'),
     );
+    final game = LudoGame.fromSnapshot(json['game'] as Map<String, dynamic>);
+    if (aiPlayers.any((c) => !game.configuration.activePlayers.contains(c)) ||
+        (schemaVersion == 4 &&
+            jsonEncode(
+                  MatchConfiguration.fromJson(json['configuration']).toJson(),
+                ) !=
+                jsonEncode(game.configuration.toJson()))) {
+      throw const FormatException(
+        'Saved mode/AI seats disagree with engine state',
+      );
+    }
     return SavedMatch(
-      game: LudoGame.fromSnapshot(json['game'] as Map<String, dynamic>),
+      game: game,
       aiPlayers: Set<PlayerColor>.unmodifiable(aiPlayers),
       aiSeed: json['aiSeed'] as int,
       aiDifficulty: difficulty,
-      profiles: schemaVersion == 3
+      profiles: schemaVersion >= 3
           ? (json['profiles'] as List).map((value) {
               if (value is! Map<String, dynamic>) {
                 throw const FormatException('Malformed player profile.');

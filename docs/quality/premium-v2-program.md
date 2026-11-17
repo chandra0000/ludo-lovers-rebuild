@@ -119,3 +119,27 @@ motion. Actual 393×873 screenshot inspected at gameplay scale; all pawn anchors
 remain canonical. A Flutter-rendered scale-study artifact covers 16/27/30/96 pixels
 in every brand color. Before captures are retained from predecessor #56; no
 physical smoothness or final visual score is inferred.
+
+## Versioned local modes and Classic seat hardening
+
+ModeRegistry distinguishes public, internal-preview and coming-soon capability.
+The existing compatibility setup stays available and remains default; Home adds a
+real mode-selection route. Classic is exercised through explicit internal builds
+(`LUDO_ENABLE_UNRELEASED_MODES=true`) pending release acceptance. Quick/Team Up
+remain locked until their implementations exist. No mode card invents online play.
+
+Immutable MatchConfiguration records mode/version and canonical participating
+seats. Classic 2/3/4 uses approved fixed colors, skips absent seats in turn order,
+assigns actors only to participants and renders only their pawns; four stable
+profile identities remain visible, with absent seats labelled OUT. Setup supports
+human/AI combinations among participating seats. Restart retains configuration.
+
+Engine and saved-match schemas advance to v4. Supported old schemas preserve their
+original flags and four seats; unknown modes/versions, noncanonical seats,
+inconsistent participants and mismatched envelope/engine configuration fail closed.
+A mode definition does not itself make a game publicly releasable.
+
+Seventeen focused tests pass, including two deterministic complete simulations
+for every 2/3/4-seat Classic configuration, mode locks, v3 migration/v4 corruption,
+actor assignment, live two-seat setup and restart. Existing 70 engine/session/save
+and identity checks also pass. No compatibility or Classic rule flags changed.

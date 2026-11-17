@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../game/domain/ai/seeded_ludo_ai.dart';
-import '../../game/domain/ludo_game.dart';
+import '../../game/domain/match_configuration.dart';
+import '../../game/domain/mode_registry.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_name.dart';
@@ -11,7 +12,13 @@ import '../board_preview/board_preview_screen.dart';
 import '../match/match_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
-  const GameSetupScreen({super.key});
+  const GameSetupScreen({
+    super.key,
+    this.mode = MatchMode.compatibility,
+    this.allowInternalModes = ModeRegistry.internalBuild,
+  });
+  final MatchMode mode;
+  final bool allowInternalModes;
 
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
@@ -19,10 +26,13 @@ class GameSetupScreen extends StatefulWidget {
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
   int _humanPlayers = 1;
+  int _playerCount = 4;
+  List<PlayerColor> get _activeColors =>
+      MatchConfiguration.local(widget.mode, playerCount: _playerCount)
+          .activePlayers;
   LudoAiDifficulty _aiDifficulty = LudoAiDifficulty.medium;
 
-  Set<PlayerColor> get _aiPlayers =>
-      PlayerColor.turnOrder.skip(_humanPlayers).toSet();
+  Set<PlayerColor> get _aiPlayers => _activeColors.skip(_humanPlayers).toSet();
 
   final Map<PlayerColor, TextEditingController> _names = {
     for (final color in PlayerColor.turnOrder)
@@ -68,14 +78,27 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 
   Future<void> _startMatch({required bool withAi}) async {
-    if (_starting) return;
+    if (_starting ||
+        !ModeRegistry.canPlay(
+          widget.mode,
+          allowInternal: widget.allowInternalModes,
+        )) {
+      return;
+    }
     final aiPlayers = withAi ? _aiPlayers : <PlayerColor>{};
     final names = <PlayerColor, String>{};
     var invalid = false;
     for (final color in PlayerColor.turnOrder) {
       final error = PlayerName.errorFor(_names[color]!.text);
-      _nameErrors[color] = aiPlayers.contains(color) ? null : error;
-      if (!aiPlayers.contains(color) && error != null) invalid = true;
+      _nameErrors[color] =
+          aiPlayers.contains(color) || !_activeColors.contains(color)
+              ? null
+              : error;
+      if (_activeColors.contains(color) &&
+          !aiPlayers.contains(color) &&
+          error != null) {
+        invalid = true;
+      }
       if (error == null) names[color] = PlayerName.parse(_names[color]!.text);
     }
     if (invalid) {
@@ -113,8 +136,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => MatchScreen(
-            initialGame:
-                LudoGame.initial(ruleProfile: LudoRuleProfile.currentV1),
+            initialGame: ModeRegistry.create(
+              widget.mode,
+              playerCount: _playerCount,
+              allowInternal: widget.allowInternalModes,
+            ),
             aiPlayers: aiPlayers,
             aiSeed: 20261110,
             aiDifficulty: _aiDifficulty,
@@ -186,170 +212,222 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFF080808),
-        appBar: AppBar(
-          title: const Text('GAME SETUP'),
-          backgroundColor: const Color(0xFF100D08),
-          foregroundColor: const Color(0xFFFFC857),
+  Widget build(BuildContext context) {
+    if (!ModeRegistry.canPlay(
+      widget.mode,
+      allowInternal: widget.allowInternalModes,
+    )) {
+      return Scaffold(
+        appBar: AppBar(title: Text(ModeRegistry.definition(widget.mode).name)),
+        body: const SafeArea(
+          child: Center(child: Text('COMING SOON · Acceptance pending')),
         ),
-        body: SafeArea(
-          child: ListView(
-            controller: _scroll,
-            padding: const EdgeInsets.all(20),
-            children: [
-              const Text(
-                'CHOOSE YOUR GAME',
-                style: TextStyle(
-                  color: Color(0xFFFFC857),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+      );
+    }
+    return Scaffold(
+      backgroundColor: const Color(0xFF080808),
+      appBar: AppBar(
+        title: const Text('GAME SETUP'),
+        backgroundColor: const Color(0xFF100D08),
+        foregroundColor: const Color(0xFFFFC857),
+      ),
+      body: SafeArea(
+        child: ListView(
+          controller: _scroll,
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              widget.mode == MatchMode.compatibility
+                  ? 'CHOOSE YOUR GAME'
+                  : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} RULES',
+              style: const TextStyle(
+                color: Color(0xFFFFC857),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Play locally with friends or fill the remaining seats with '
+              'seeded AI opponents. All moves are accepted by the same '
+              'authoritative game engine.',
+              style: TextStyle(color: Colors.white70, height: 1.45),
+            ),
+            const SizedBox(height: 12),
+            if (widget.mode != MatchMode.compatibility)
+              DropdownButtonFormField<int>(
+                key: const Key('mode_player_count'),
+                initialValue: _playerCount,
+                decoration: const InputDecoration(
+                  labelText: 'Participating players',
+                  labelStyle: TextStyle(color: Colors.white70),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Play locally with friends or fill the remaining seats with '
-                'seeded AI opponents. All moves are accepted by the same '
-                'authoritative game engine.',
-                style: TextStyle(color: Colors.white70, height: 1.45),
-              ),
-              const SizedBox(height: 12),
-              _nameEditor(),
-              const SizedBox(height: 12),
-              _ModeCard(
-                title: 'LOCAL FOUR-PLAYER',
-                subtitle: 'Pass-and-play · Current compatibility rules',
-                enabled: true,
-                label: 'AVAILABLE',
-                onTap: () => _startMatch(withAi: false),
-                buttonKey: const Key('start_local_match'),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                color: const Color(0xFF17130D),
-                shape: RoundedRectangleBorder(
-                  side: const BorderSide(color: Color(0x99FFC857)),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'HUMAN VS AI',
-                        style: TextStyle(
-                          color: Color(0xFFFFC857),
-                          fontWeight: FontWeight.w900,
+                items: ModeRegistry.definition(widget.mode)
+                    .playerCounts
+                    .map(
+                      (count) => DropdownMenuItem<int>(
+                        value: count,
+                        child: Text(
+                          '$count players',
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Choose how many human seats to use. Remaining colours '
-                        'are controlled by deterministic AI.',
-                        style: TextStyle(color: Colors.white70),
+                    )
+                    .toList(),
+                onChanged: (count) {
+                  if (count != null) {
+                    setState(() {
+                      _playerCount = count;
+                      _humanPlayers = _humanPlayers.clamp(1, count);
+                    });
+                  }
+                },
+              ),
+            _nameEditor(),
+            const SizedBox(height: 12),
+            _ModeCard(
+              title: widget.mode == MatchMode.compatibility
+                  ? 'LOCAL FOUR-PLAYER'
+                  : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} · $_playerCount PLAYERS',
+              subtitle: ModeRegistry.definition(widget.mode).description,
+              enabled: ModeRegistry.canPlay(
+                widget.mode,
+                allowInternal: widget.allowInternalModes,
+              ),
+              label: widget.mode == MatchMode.compatibility
+                  ? 'AVAILABLE'
+                  : 'INTERNAL PREVIEW',
+              onTap: () => _startMatch(withAi: false),
+              buttonKey: const Key('start_local_match'),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              color: const Color(0xFF17130D),
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0x99FFC857)),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'HUMAN VS AI',
+                      style: TextStyle(
+                        color: Color(0xFFFFC857),
+                        fontWeight: FontWeight.w900,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Human players',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Choose how many human seats to use. Remaining colours '
+                      'are controlled by deterministic AI.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Human players',
+                            style: TextStyle(color: Colors.white),
                           ),
-                          DropdownButton<int>(
-                            key: const Key('human_player_count'),
-                            value: _humanPlayers,
-                            dropdownColor: const Color(0xFF17130D),
-                            items: [1, 2, 3, 4]
-                                .map(
-                                  (count) => DropdownMenuItem<int>(
-                                    value: count,
-                                    child: Text('$count'),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => _humanPlayers = value);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '${4 - _humanPlayers} AI opponent(s) · '
-                        'Orange → Green → Magenta → Blue',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
                         ),
+                        DropdownButton<int>(
+                          key: const Key('human_player_count'),
+                          value: _humanPlayers,
+                          dropdownColor: const Color(0xFF17130D),
+                          items:
+                              List.generate(_playerCount, (index) => index + 1)
+                                  .map(
+                                    (count) => DropdownMenuItem<int>(
+                                      value: count,
+                                      child: Text('$count'),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _humanPlayers = value);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${_playerCount - _humanPlayers} AI opponent(s) · '
+                      'Orange → Green → Magenta → Blue',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'AI difficulty',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'AI difficulty',
+                            style: TextStyle(color: Colors.white),
                           ),
-                          DropdownButton<LudoAiDifficulty>(
-                            key: const Key('ai_difficulty'),
-                            value: _aiDifficulty,
-                            dropdownColor: const Color(0xFF17130D),
-                            items: LudoAiDifficulty.values
-                                .map(
-                                  (difficulty) =>
-                                      DropdownMenuItem<LudoAiDifficulty>(
-                                    value: difficulty,
-                                    child: Text(
-                                      difficulty.name.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
+                        ),
+                        DropdownButton<LudoAiDifficulty>(
+                          key: const Key('ai_difficulty'),
+                          value: _aiDifficulty,
+                          dropdownColor: const Color(0xFF17130D),
+                          items: LudoAiDifficulty.values
+                              .map(
+                                (difficulty) =>
+                                    DropdownMenuItem<LudoAiDifficulty>(
+                                  value: difficulty,
+                                  child: Text(
+                                    difficulty.name.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
                                     ),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => _aiDifficulty = value);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      Text(
-                        switch (_aiDifficulty) {
-                          LudoAiDifficulty.easy =>
-                            'Easy · Random legal moves; best for casual play.',
-                          LudoAiDifficulty.medium =>
-                            'Medium · Balances progress, safety and captures.',
-                          LudoAiDifficulty.hard =>
-                            'Hard · More strongly prioritises tactics and safety.',
-                        },
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _aiDifficulty = value);
+                            }
+                          },
                         ),
+                      ],
+                    ),
+                    Text(
+                      switch (_aiDifficulty) {
+                        LudoAiDifficulty.easy =>
+                          'Easy · Random legal moves; best for casual play.',
+                        LudoAiDifficulty.medium =>
+                          'Medium · Balances progress, safety and captures.',
+                        LudoAiDifficulty.hard =>
+                          'Hard · More strongly prioritises tactics and safety.',
+                      },
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
                       ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          key: const Key('start_ai_match'),
-                          onPressed: () => _startMatch(withAi: true),
-                          child: const Text('START VS AI'),
-                        ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        key: const Key('start_ai_match'),
+                        onPressed: () => _startMatch(withAi: true),
+                        child: const Text('START VS AI'),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
+            if (widget.mode == MatchMode.compatibility)
               const _ModeCard(
                 title: 'TEAM UP · 2 VS 2',
                 subtitle: 'Team rules, bonus turns and victory conditions '
@@ -357,28 +435,29 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 enabled: false,
                 label: 'IN DEVELOPMENT',
               ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                key: const Key('open_board_preview'),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const BoardPreviewScreen(),
-                  ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              key: const Key('open_board_preview'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const BoardPreviewScreen(),
                 ),
-                icon: const Icon(Icons.grid_view_rounded),
-                label: const Text('PREVIEW BOARD & PAWN ANCHORS'),
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Preview anchors are diagnostic only. Final visual approval '
-                'requires pixel measurement and real-device verification.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white38, fontSize: 11),
-              ),
-            ],
-          ),
+              icon: const Icon(Icons.grid_view_rounded),
+              label: const Text('PREVIEW BOARD & PAWN ANCHORS'),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Preview anchors are diagnostic only. Final visual approval '
+              'requires pixel measurement and real-device verification.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white38, fontSize: 11),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ModeCard extends StatelessWidget {
@@ -442,7 +521,7 @@ class _ModeCard extends StatelessWidget {
                   child: FilledButton(
                     key: buttonKey,
                     onPressed: onTap,
-                    child: const Text('START FOUR-PLAYER GAME'),
+                    child: const Text('START LOCAL MATCH'),
                   ),
                 ),
               ],
