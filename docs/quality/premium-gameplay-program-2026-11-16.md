@@ -136,13 +136,15 @@ No new online service, economy or unapproved mode is included.
 
 ## Remaining phases and acceptance
 
-A investigation/baseline is verified. B implementation is locally tested and awaits
-its published CI and visual acceptance. C pawn/dice/feedback, D stars/responsive,
-E gameplay/lifecycle, F selected legacy UX and G performance/release review remain
-sequential work. Physical Android/iOS devices and production signing credentials
-are unavailable; device-only benchmarks and release acceptance must remain open.
-All new PRs remain unmerged for owner review. No new final quality score is assigned
-from task completion alone.
+A–F's selected implementation is now published as the unmerged #48–#52 stack
+on top of #43/#46. #48–#52 have all required CI jobs green; final evidence is
+tracked in the [current evidence report](premium-release-evidence-2026-11-17.md).
+Local final baseline: 334 tests, strict formatting, no analyzer issues. G has
+actual screenshot review and a host engine diagnostic, but physical renderer
+benchmarks, installed simulator interactions, owner visual acceptance and release
+signing remain open. No task-completion claim substitutes for those gates.
+All new PRs remain unmerged. The latest no-auto-merge instruction supersedes any
+historical Notion permission to merge technically verified work.
 
 ## Phase C — materials and feedback
 
@@ -223,3 +225,14 @@ Existing repeated-navigation tests now confirm explicitly. Phase C's feedback
 preferences and this flow complete the selected safe local UX work from the
 verified legacy inventory. No legacy engine, online service, economy, statistics
 policy or unapproved mode was copied.
+
+
+## Final automated checkpoint — 2026-11-17
+
+Application source `9508b598d346d9beeb770a5a240f7a49f192301f`: 334 local tests,
+strict 145-file format and fatal-info analysis pass. #48–#52 all have successful
+required CI jobs. Android debug/profile/release and iOS simulator artifacts exist;
+final debug APK signature/package and simulator ZIP metadata were independently
+checked. Ten macOS PNGs were downloaded/validated. The current evidence report
+records all twenty deliverables, exact source/file manifests, raw host diagnostic,
+provisional quality scores and incomplete release gates. No PR merged automatically.
