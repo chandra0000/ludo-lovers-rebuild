@@ -16,6 +16,11 @@ class MatchDialogs {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.tune, color: Color(0xFFFFC857)),
+              title: const Text('Game feedback'),
+              onTap: () => Navigator.of(sheetContext).pop('feedback'),
+            ),
+            ListTile(
               leading: const Icon(Icons.restart_alt, color: Color(0xFFFFC857)),
               title: const Text('Restart match'),
               onTap: () => Navigator.of(sheetContext).pop('restart'),

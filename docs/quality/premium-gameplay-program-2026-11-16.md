@@ -143,3 +143,22 @@ sequential work. Physical Android/iOS devices and production signing credentials
 are unavailable; device-only benchmarks and release acceptance must remain open.
 All new PRs remain unmerged for owner review. No new final quality score is assigned
 from task completion alone.
+
+## Phase C — materials and feedback
+
+The live die retains its accepted engine value through anticipation, tumble and
+settle; gold face lighting, bevels and resting perspective reveal cube depth.
+All six dominant faces are tested. Glass pawns retain their coordinates and
+silhouette, with controlled highlights, repaint boundaries and finite landing
+bounce. Existing cell-by-cell movement follows authoritative geometry.
+
+The live More menu offers independently persisted sound, haptic and reduced-motion
+controls. Platform feedback follows accepted commands and handles platform errors.
+System reduced motion also applies; enabling it during a roll completes the same
+accepted result exactly once. No independent randomness or audio engine added.
+
+Verification: 317 local tests passed; strict formatting and fatal-info analysis
+passed. Actual 393×873 screenshot inspected: gold cube, square named profiles and
+full board visible. Four required captures exist. Owner visual acceptance and
+physical-device performance remain open; no measured performance gain is claimed.
+Phase B PR #48 has all required CI checks green. New PRs remain unmerged.
