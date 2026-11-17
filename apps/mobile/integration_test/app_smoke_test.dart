@@ -36,6 +36,8 @@ void main() {
       expect(find.byKey(const Key('pawn_blue_0')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('exit_match')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm_leave_match')));
       await pumpUntilSettled(tester);
 
       // Match exits to Game Setup; explicitly return home before the next cycle.

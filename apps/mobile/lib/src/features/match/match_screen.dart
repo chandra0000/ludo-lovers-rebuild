@@ -47,6 +47,7 @@ class MatchScreen extends StatefulWidget {
   const MatchScreen({
     super.key,
     this.rollDice,
+    this.saveMatch,
     this.initialGame,
     this.aiPlayers = const {},
     this.aiSeed = 1,
@@ -57,6 +58,9 @@ class MatchScreen extends StatefulWidget {
 
   @visibleForTesting
   final int Function()? rollDice;
+
+  @visibleForTesting
+  final Future<void> Function(SavedMatch)? saveMatch;
 
   @visibleForTesting
   final LudoGame? initialGame;
@@ -102,7 +106,11 @@ class _MatchScreenState extends State<MatchScreen>
   final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
   final MatchAiScheduler _aiScheduler = MatchAiScheduler();
   bool _isAppResumed = true;
-  final MatchPersistenceController _persistence = MatchPersistenceController();
+  bool _exitDialogOpen = false;
+  bool _allowExit = false;
+  bool get _canAct => _isAppResumed && !_exitDialogOpen;
+  late final MatchPersistenceController _persistence =
+      MatchPersistenceController(save: widget.saveMatch);
   late final MatchAnimationLifecycle _animations = MatchAnimationLifecycle(
     vsync: this,
     onMovementTick: _handleMovementTick,
@@ -256,6 +264,11 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (mounted) setState(() {});
+    _resumeAcceptedTurn();
+  }
+
+  void _resumeAcceptedTurn() {
+    if (!_canAct) return;
     // A paused dice widget may never send its animation-complete callback.
     // Resume the already accepted result without generating another roll.
     if (_game.diceValue != null && !_movementController.isAnimating) {
@@ -310,7 +323,7 @@ class _MatchScreenState extends State<MatchScreen>
     if (!_aiTurnPolicy.canSchedule(
       session: _session,
       aiPlayers: widget.aiPlayers,
-      isAppResumed: _isAppResumed,
+      isAppResumed: _canAct,
       isScheduled: _aiScheduler.isScheduled,
       isMovementAnimating: _movementController.isAnimating,
       isDiceAnimating: _isDiceAnimating,
@@ -319,7 +332,7 @@ class _MatchScreenState extends State<MatchScreen>
     }
     _aiScheduler.schedule(() {
       if (!mounted ||
-          !_isAppResumed ||
+          !_canAct ||
           !widget.aiPlayers.contains(_game.activePlayer) ||
           _game.winner != null ||
           _game.diceValue != null ||
@@ -352,7 +365,7 @@ class _MatchScreenState extends State<MatchScreen>
   bool _roll({required bool isAi}) {
     // The game engine remains authoritative; UI animation only presents
     // the accepted result and cannot alter rules or generate another value.
-    if (!_isAppResumed ||
+    if (!_canAct ||
         _game.diceValue != null ||
         _game.winner != null ||
         _movementController.isAnimating ||
@@ -399,7 +412,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _handleDiceAnimationComplete() {
-    if (!mounted || !_isAppResumed || !_isDiceAnimating) return;
+    if (!mounted || !_canAct || !_isDiceAnimating) return;
     final legal = _game.legalPawnIndices();
     setState(_animations.completeDiceRoll);
 
@@ -415,7 +428,7 @@ class _MatchScreenState extends State<MatchScreen>
         stateVersion: _game.stateVersion,
         currentMatchId: () => _session.matchId,
         currentStateVersion: () => _game.stateVersion,
-        canExecute: () => mounted && _isAppResumed && _game.diceValue != null,
+        canExecute: () => mounted && _canAct && _game.diceValue != null,
         onReady: () {
           final command = _matchController.buildPass();
           final accepted = _executeCommand(command);
@@ -447,7 +460,7 @@ class _MatchScreenState extends State<MatchScreen>
         currentStateVersion: () => _game.stateVersion,
         canExecute: () =>
             mounted &&
-            _isAppResumed &&
+            _canAct &&
             _game.diceValue != null &&
             !_movementController.isAnimating,
         onReady: () {
@@ -479,7 +492,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _move(int pawnIndex) {
-    if (!_isAppResumed ||
+    if (!_canAct ||
         _isDiceAnimating ||
         _turnResolution.isPending ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
@@ -557,180 +570,212 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(disableAnimations: _reduceMotion),
-      child: RepaintBoundary(
-        key: const Key('match_screen_capture'),
-        child: Scaffold(
-          backgroundColor: const Color(0xFF080808),
-          body: SafeArea(
-            child: MatchBoardViewport(
-              builder: (context, scale) => Stack(
-                children: [
-                  const Positioned.fill(
-                    child: MatchBoardArtwork(),
-                  ),
-                  const MatchBoardFocusFrame(),
-                  const MatchSafeStarLayer(),
-                  const MatchBrandMark(),
-                  if (widget.showDynamicProfiles)
+    return PopScope<void>(
+      canPop: _allowExit,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) unawaited(_requestExit());
+      },
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: _reduceMotion),
+        child: RepaintBoundary(
+          key: const Key('match_screen_capture'),
+          child: Scaffold(
+            backgroundColor: const Color(0xFF080808),
+            body: SafeArea(
+              child: MatchBoardViewport(
+                builder: (context, scale) => Stack(
+                  children: [
+                    const Positioned.fill(
+                      child: MatchBoardArtwork(),
+                    ),
+                    const MatchBoardFocusFrame(),
+                    const MatchSafeStarLayer(),
+                    const MatchBrandMark(),
+                    if (widget.showDynamicProfiles)
+                      Positioned.fill(
+                        child: MatchProfilesLayer(
+                          profiles: _profiles,
+                          activeColor: _game.activePlayer,
+                          canvasScale: scale,
+                        ),
+                      ),
+                    ..._buildPawnsWithClusters(scale),
+                    if (_landingSequence > 0 && _lastLandingPlan != null)
+                      MatchLandingCelebration(
+                        key: ValueKey(_landingSequence),
+                        plan: _lastLandingPlan!,
+                      ),
+                    if (_selectedPawnIndex != null) _buildDestinationPreview(),
                     Positioned.fill(
-                      child: MatchProfilesLayer(
-                        profiles: _profiles,
-                        activeColor: _game.activePlayer,
-                        canvasScale: scale,
-                      ),
-                    ),
-                  ..._buildPawnsWithClusters(scale),
-                  if (_landingSequence > 0 && _lastLandingPlan != null)
-                    MatchLandingCelebration(
-                      key: ValueKey(_landingSequence),
-                      plan: _lastLandingPlan!,
-                    ),
-                  if (_selectedPawnIndex != null) _buildDestinationPreview(),
-                  Positioned.fill(
-                    child: ClipPath(
-                      clipper: const MatchHudRegionClipper(),
-                      child: Stack(
-                        children: [
-                          DiceControlDock(
-                            targetValue: _game.diceValue,
-                            rollId: _diceRollId,
-                            canRoll: _isAppResumed &&
-                                !widget.aiPlayers
-                                    .contains(_game.activePlayer) &&
-                                _game.diceValue == null &&
-                                !_isDiceAnimating &&
-                                !_movementController.isAnimating &&
-                                _game.winner == null,
-                            isWaitingForRoll: _game.diceValue == null &&
-                                _game.winner == null &&
-                                !_movementController.isAnimating,
-                            onRollRequested: () {
-                              if (widget.aiPlayers
-                                  .contains(_game.activePlayer)) {
-                                return;
-                              }
-                              _roll(isAi: false);
-                            },
-                            onAnimationComplete: _handleDiceAnimationComplete,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  MatchHudOverlay(
-                    statusText: _statusText,
-                    actionInstruction: _actionInstruction,
-                    canvasScale: scale,
-                    activePlayer: _game.activePlayer,
-                    legalPawnIndices: _isAppResumed &&
-                            !_isDiceAnimating &&
-                            !_movementController.isAnimating &&
-                            !_turnResolution.isPending &&
-                            !widget.aiPlayers.contains(_game.activePlayer)
-                        ? _game.legalPawnIndices()
-                        : const [],
-                    onPawnSelected: _selectOrMovePawn,
-                  ),
-                  MatchReactionToast(reaction: _activeReaction),
-                  Positioned(
-                    left: 8,
-                    top: 0,
-                    child: IconButton(
-                      key: const Key('exit_match'),
-                      tooltip: 'Exit match',
-                      constraints: BoxConstraints.tightFor(
-                        width: math.max(72, 48 / scale),
-                        height: math.max(72, 48 / scale),
-                      ),
-                      padding: EdgeInsets.zero,
-                      iconSize: 36,
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Color(0xFFFFC857),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 8,
-                    top: 920,
-                    width: 96,
-                    height: 96,
-                    child: Semantics(
-                      button: true,
-                      label: 'Chat',
-                      hint: 'Open local chat and emoji reactions.',
-                      child: GestureDetector(
-                        key: const Key('chat_button'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _showLocalChat,
-                        child: const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Color(0xE6211A0D),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.chat_bubble_outline,
-                              size: 32,
-                              color: Color(0xFFFFD36B),
+                      child: ClipPath(
+                        clipper: const MatchHudRegionClipper(),
+                        child: Stack(
+                          children: [
+                            DiceControlDock(
+                              targetValue: _game.diceValue,
+                              rollId: _diceRollId,
+                              canRoll: _canAct &&
+                                  !widget.aiPlayers
+                                      .contains(_game.activePlayer) &&
+                                  _game.diceValue == null &&
+                                  !_isDiceAnimating &&
+                                  !_movementController.isAnimating &&
+                                  _game.winner == null,
+                              isWaitingForRoll: _game.diceValue == null &&
+                                  _game.winner == null &&
+                                  !_movementController.isAnimating,
+                              onRollRequested: () {
+                                if (widget.aiPlayers
+                                    .contains(_game.activePlayer)) {
+                                  return;
+                                }
+                                _roll(isAi: false);
+                              },
+                              onAnimationComplete: _handleDiceAnimationComplete,
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                  MatchReactionButton(onPressed: _showQuickReactions),
-                  Positioned(
-                    right: 8,
-                    top: 920,
-                    width: 96,
-                    height: 96,
-                    child: Semantics(
-                      button: true,
-                      label: 'More options',
-                      child: GestureDetector(
-                        key: const Key('more_button'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _showMoreMenu,
-                        child: const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Color(0xE6211A0D),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.more_horiz,
-                              size: 32,
-                              color: Color(0xFFFFD36B),
-                            ),
-                          ),
-                        ),
-                      ),
+                    MatchHudOverlay(
+                      statusText: _statusText,
+                      actionInstruction: _actionInstruction,
+                      canvasScale: scale,
+                      activePlayer: _game.activePlayer,
+                      legalPawnIndices: _canAct &&
+                              !_isDiceAnimating &&
+                              !_movementController.isAnimating &&
+                              !_turnResolution.isPending &&
+                              !widget.aiPlayers.contains(_game.activePlayer)
+                          ? _game.legalPawnIndices()
+                          : const [],
+                      onPawnSelected: _selectOrMovePawn,
                     ),
-                  ),
-                  if (_game.winner != null)
+                    MatchReactionToast(reaction: _activeReaction),
                     Positioned(
-                      left: 150,
-                      top: 480,
-                      width: 276,
-                      height: 80,
-                      child: Center(
-                        child: FilledButton(
-                          onPressed: _restartMatch,
-                          child: const Text('PLAY AGAIN'),
+                      left: 8,
+                      top: 0,
+                      child: IconButton(
+                        key: const Key('exit_match'),
+                        tooltip: 'Exit match',
+                        constraints: BoxConstraints.tightFor(
+                          width: math.max(72, 48 / scale),
+                          height: math.max(72, 48 / scale),
+                        ),
+                        padding: EdgeInsets.zero,
+                        iconSize: 36,
+                        onPressed: _requestExit,
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Color(0xFFFFC857),
                         ),
                       ),
                     ),
-                ],
+                    Positioned(
+                      left: 8,
+                      top: 920,
+                      width: 96,
+                      height: 96,
+                      child: Semantics(
+                        button: true,
+                        label: 'Chat',
+                        hint: 'Open local chat and emoji reactions.',
+                        child: GestureDetector(
+                          key: const Key('chat_button'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _showLocalChat,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0xE6211A0D),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.chat_bubble_outline,
+                                size: 32,
+                                color: Color(0xFFFFD36B),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    MatchReactionButton(onPressed: _showQuickReactions),
+                    Positioned(
+                      right: 8,
+                      top: 920,
+                      width: 96,
+                      height: 96,
+                      child: Semantics(
+                        button: true,
+                        label: 'More options',
+                        child: GestureDetector(
+                          key: const Key('more_button'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _showMoreMenu,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0xE6211A0D),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.more_horiz,
+                                size: 32,
+                                color: Color(0xFFFFD36B),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_game.winner != null)
+                      Positioned(
+                        left: 150,
+                        top: 480,
+                        width: 276,
+                        height: 80,
+                        child: Center(
+                          child: FilledButton(
+                            onPressed: _restartMatch,
+                            child: const Text('PLAY AGAIN'),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _requestExit() async {
+    if (!mounted || _exitDialogOpen || _allowExit) return;
+    setState(() => _exitDialogOpen = true);
+    _aiScheduler.cancel();
+    _turnResolution.cancel();
+    var saved = false;
+    try {
+      await _persistMatch().timeout(const Duration(seconds: 3));
+      saved = _persistence.lastSaveSucceeded == true;
+    } catch (_) {
+      // A slow platform store must not trap navigation. Its queued write can
+      // still finish; never promise recovery until it has actually succeeded.
+    }
+    if (!mounted) return;
+    final confirmed = await MatchDialogs.confirmExit(context, saved: saved);
+    if (!mounted) return;
+    if (confirmed == true) {
+      setState(() => _allowExit = true);
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _exitDialogOpen = false);
+    _resumeAcceptedTurn();
   }
 
   void _showLocalChat() {
@@ -786,7 +831,7 @@ class _MatchScreenState extends State<MatchScreen>
       } else if (action == 'restart') {
         _confirmRestart();
       } else if (action == 'exit') {
-        Navigator.of(context).pop();
+        unawaited(_requestExit());
       }
     });
   }
@@ -817,7 +862,7 @@ class _MatchScreenState extends State<MatchScreen>
     // A tap on a legal pawn commits the move immediately. The dice has
     // already been accepted by MatchSession, so a second confirmation tap
     // adds friction without improving rule validation.
-    if (!_isAppResumed ||
+    if (!_canAct ||
         _turnResolution.isPending ||
         _isDiceAnimating ||
         _movementController.isAnimating ||

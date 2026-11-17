@@ -36,6 +36,40 @@ class MatchDialogs {
     );
   }
 
+  static Future<bool?> confirmExit(
+    BuildContext context, {
+    required bool saved,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: ThemeData.dark(),
+        child: AlertDialog(
+          key: const Key('confirm_exit_match'),
+          backgroundColor: const Color(0xFF17120B),
+          title: const Text('Leave this match?'),
+          content: Text(
+            saved
+                ? 'Progress saved on this device. Resume this match from Home.'
+                : 'Progress could not be saved. Stay and try again, or leave without guaranteed recovery.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('cancel_exit_match'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('STAY'),
+            ),
+            FilledButton(
+              key: const Key('confirm_leave_match'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('LEAVE'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static Future<bool?> confirmRestart(BuildContext context) {
     return showDialog<bool>(
       context: context,
