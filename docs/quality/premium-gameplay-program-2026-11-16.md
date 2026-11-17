@@ -202,3 +202,24 @@ missed-hit warning no longer masks whether the first move actually happened.
 
 Focused verification: 26 tests passed, including pre-fix reproduction coverage,
 restored human turns, ordered saves and gameplay presentation.
+
+## Phase F — safe local exit flow
+
+Toolbar, More menu and system back share a PopScope-guarded confirmation. Opening
+it cancels scheduled AI/automatic resolution and blocks stale command callbacks.
+Cancel resumes the accepted dice result or AI schedule without rerolling. In-flight
+pawn presentation may finish; it does not create additional engine transitions.
+Repeated callbacks cannot stack prompts.
+
+The prompt awaits the serialized save and reports its actual success or failure.
+A three-second storage deadline prevents a broken platform adapter from trapping
+navigation; queued writes may still finish, but recovery is never promised early.
+Stay and Leave are explicit actions. Confirmed navigation waits for PopScope's
+canPop update before popping the route.
+
+Tests cover accepted-roll preservation, confirm/save/return, menu/system back,
+repeated callbacks, failed and slow saves, pending movement, and AI pause/recovery.
+Existing repeated-navigation tests now confirm explicitly. Phase C's feedback
+preferences and this flow complete the selected safe local UX work from the
+verified legacy inventory. No legacy engine, online service, economy, statistics
+policy or unapproved mode was copied.
