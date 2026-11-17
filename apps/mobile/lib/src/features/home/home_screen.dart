@@ -4,6 +4,7 @@ import '../../game/domain/persistence/saved_match.dart';
 import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
+import '../setup/mode_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -217,6 +218,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        key: const Key('open_mode_selection'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ModeSelectionScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.dashboard_customize_outlined),
+                        label: const Text('EXPLORE GAME MODES'),
                       ),
                       const SizedBox(height: 16),
                       const Text(

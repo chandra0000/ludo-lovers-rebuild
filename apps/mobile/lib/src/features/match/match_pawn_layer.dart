@@ -73,7 +73,7 @@ class MatchPawnLayer extends StatelessWidget {
       for (final player in game.players) player.color: player,
     };
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
-    for (final color in PlayerColor.turnOrder) {
+    for (final color in game.configuration.activePlayers) {
       final player = playersByColor[color]!;
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
@@ -97,7 +97,7 @@ class MatchPawnLayer extends StatelessWidget {
     }
     final legalIndices = game.legalPawnIndices().toSet();
     return [
-      for (final color in PlayerColor.turnOrder)
+      for (final color in game.configuration.activePlayers)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
           _buildPawn(
             color,

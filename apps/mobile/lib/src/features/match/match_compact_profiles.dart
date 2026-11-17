@@ -9,9 +9,11 @@ class MatchCompactProfiles extends StatelessWidget {
     super.key,
     required this.profiles,
     required this.active,
+    this.activePlayers = PlayerColor.turnOrder,
   });
   final List<MatchPlayerProfile> profiles;
   final PlayerColor active;
+  final List<PlayerColor> activePlayers;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -103,7 +105,7 @@ class MatchCompactProfiles extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              '${PlayerColor.turnOrder.indexOf(color) + 1} · ${profile.isBot ? 'AI' : 'LOCAL'}',
+              '${PlayerColor.turnOrder.indexOf(color) + 1} · ${!activePlayers.contains(color) ? 'OUT' : profile.isBot ? 'AI' : 'LOCAL'}',
               key: Key('profile_seat_${color.name}'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

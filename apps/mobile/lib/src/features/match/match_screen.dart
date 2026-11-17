@@ -458,6 +458,7 @@ class _MatchScreenState extends State<MatchScreen>
                       ? MatchCompactProfiles(
                           profiles: _profiles,
                           active: _game.activePlayer,
+                          activePlayers: _game.configuration.activePlayers,
                         )
                       : const SizedBox.shrink(),
                   reaction: MatchReactionToast(
@@ -636,7 +637,12 @@ class _MatchScreenState extends State<MatchScreen>
       _lastLandingPlan = null;
       _landingSequence = 0;
       _matchController.reset(
-        _newMatchSession(LudoGame.initial(ruleProfile: _game.ruleProfile)),
+        _newMatchSession(
+          LudoGame.initial(
+            ruleProfile: _game.ruleProfile,
+            configuration: _game.configuration,
+          ),
+        ),
       );
       _selectedPawnIndex = null;
     });

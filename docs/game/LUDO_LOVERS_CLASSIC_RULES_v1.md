@@ -4,6 +4,15 @@
 >
 > This is the proposed player-facing rulebook for the Ludo Lovers rebuild. It is not yet the shipped/default ruleset. Do not describe Classic as officially released until the acceptance gates in this document are closed.
 
+## Approved seat extension — 2026-11-17
+
+The owner approved fixed two-player (Orange/Magenta), three-player
+(Orange/Green/Magenta) and four-player configurations, retaining relative turn
+order and skipping absent seats. This supersedes the historical four-player-only
+scope below for the internal Classic implementation. Compatibility remains the
+default four-seat mode; existing saved matches retain their profiles. Classic's
+public release/device/visual gates remain open. See the Premium V2 execution ledger.
+
 ## 1. Product scope
 
 - The first acceptance target is **one local four-player match**.
