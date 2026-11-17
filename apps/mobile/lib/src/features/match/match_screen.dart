@@ -14,13 +14,10 @@ import '../../game/domain/persistence/saved_match.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
-import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
 import 'match_board_focus_frame.dart';
 import 'match_safe_star_layer.dart';
-import 'match_brand_mark.dart';
-import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_move_presentation_plan.dart';
 import 'match_animation_lifecycle.dart';
@@ -29,15 +26,15 @@ import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
 import 'match_feedback.dart';
 import 'match_feedback_settings.dart';
-import 'match_hud_overlay.dart';
-import 'match_hud_region_clipper.dart';
-import 'match_profiles_layer.dart';
 import 'match_reaction_controls.dart';
 import 'match_landing_celebration.dart';
 import 'match_pawn_layer.dart';
 import 'match_destination_preview.dart';
 import 'match_turn_coordinator.dart';
 import 'match_result_presentation.dart';
+import 'premium_match_layout.dart';
+import 'match_compact_profiles.dart';
+import 'match_bottom_controls.dart';
 import 'match_ai_scheduler.dart';
 import 'match_turn_resolution_controller.dart';
 
@@ -446,177 +443,92 @@ class _MatchScreenState extends State<MatchScreen>
           key: const Key('match_screen_capture'),
           child: Scaffold(
             backgroundColor: const Color(0xFF080808),
-            body: SafeArea(
-              child: MatchBoardViewport(
-                builder: (context, scale) => Stack(
-                  children: [
-                    const Positioned.fill(
-                      child: MatchBoardArtwork(),
-                    ),
-                    const MatchBoardFocusFrame(),
-                    const MatchSafeStarLayer(),
-                    const MatchBrandMark(),
-                    if (widget.showDynamicProfiles)
-                      Positioned.fill(
-                        child: MatchProfilesLayer(
+            body: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.4,
+                  colors: [Color(0xFF20152C), Color(0xFF080A13)],
+                ),
+              ),
+              child: SafeArea(
+                child: PremiumMatchLayout(
+                  onExit: _requestExit,
+                  profiles: widget.showDynamicProfiles
+                      ? MatchCompactProfiles(
                           profiles: _profiles,
-                          activeColor: _game.activePlayer,
+                          active: _game.activePlayer,
+                        )
+                      : const SizedBox.shrink(),
+                  reaction: MatchReactionToast(
+                    reaction: _activeReaction,
+                    inline: true,
+                  ),
+                  controls: MatchBottomControls(
+                    value: _game.diceValue,
+                    rollId: _diceRollId,
+                    canRoll: _canAct &&
+                        !widget.aiPlayers.contains(_game.activePlayer) &&
+                        _game.diceValue == null &&
+                        !_isDiceAnimating &&
+                        !_movementController.isAnimating &&
+                        _game.winner == null,
+                    waiting: _game.diceValue == null &&
+                        _game.winner == null &&
+                        !_movementController.isAnimating,
+                    onRoll: _roll,
+                    onDiceComplete: _handleDiceAnimationComplete,
+                    status: _statusText,
+                    instruction: _actionInstruction,
+                    active: _game.activePlayer,
+                    legal: _canAct &&
+                            !_isDiceAnimating &&
+                            !_movementController.isAnimating &&
+                            !_turnResolution.isPending &&
+                            !widget.aiPlayers.contains(_game.activePlayer)
+                        ? _game.legalPawnIndices()
+                        : const [],
+                    onPawn: _selectOrMovePawn,
+                    onChat: _showLocalChat,
+                    onReaction: _showQuickReactions,
+                    onMore: _showMoreMenu,
+                  ),
+                  boardBuilder: (context, scale) => Stack(
+                    children: [
+                      const Positioned.fill(child: MatchBoardArtwork()),
+                      const MatchBoardFocusFrame(),
+                      const MatchSafeStarLayer(),
+                      Positioned.fill(
+                        child: MatchPawnLayer(
+                          game: _game,
+                          animations: _animations,
                           canvasScale: scale,
+                          isTurnResolutionPending: _turnResolution.isPending,
+                          aiPlayers: widget.aiPlayers,
+                          shakeKeys: _shakeKeys,
+                          reduceMotion: _reduceMotion,
+                          lastLandingPlan: _lastLandingPlan,
+                          landingSequence: _landingSequence,
+                          onMove: _selectOrMovePawn,
+                          onStackTap: _handleStackTap,
+                          onInvalidMove: _showInvalidMoveFeedback,
                         ),
                       ),
-                    Positioned.fill(
-                      child: MatchPawnLayer(
-                        game: _game,
-                        animations: _animations,
-                        canvasScale: scale,
-                        isTurnResolutionPending: _turnResolution.isPending,
-                        aiPlayers: widget.aiPlayers,
-                        shakeKeys: _shakeKeys,
-                        reduceMotion: _reduceMotion,
-                        lastLandingPlan: _lastLandingPlan,
-                        landingSequence: _landingSequence,
-                        onMove: _selectOrMovePawn,
-                        onStackTap: _handleStackTap,
-                        onInvalidMove: _showInvalidMoveFeedback,
-                      ),
-                    ),
-                    if (_landingSequence > 0 && _lastLandingPlan != null)
-                      MatchLandingCelebration(
-                        key: ValueKey(_landingSequence),
-                        plan: _lastLandingPlan!,
-                      ),
-                    if (_selectedPawnIndex != null)
-                      MatchDestinationPreview(
-                        game: _game,
-                        selectedPawnIndex: _selectedPawnIndex!,
-                        animation: _previewController,
-                      ),
-                    Positioned.fill(
-                      child: ClipPath(
-                        clipper: const MatchHudRegionClipper(),
-                        child: Stack(
-                          children: [
-                            DiceControlDock(
-                              targetValue: _game.diceValue,
-                              rollId: _diceRollId,
-                              canRoll: _canAct &&
-                                  !widget.aiPlayers
-                                      .contains(_game.activePlayer) &&
-                                  _game.diceValue == null &&
-                                  !_isDiceAnimating &&
-                                  !_movementController.isAnimating &&
-                                  _game.winner == null,
-                              isWaitingForRoll: _game.diceValue == null &&
-                                  _game.winner == null &&
-                                  !_movementController.isAnimating,
-                              onRollRequested: () {
-                                if (widget.aiPlayers
-                                    .contains(_game.activePlayer)) {
-                                  return;
-                                }
-                                _roll();
-                              },
-                              onAnimationComplete: _handleDiceAnimationComplete,
-                            ),
-                          ],
+                      if (_landingSequence > 0 && _lastLandingPlan != null)
+                        MatchLandingCelebration(
+                          key: ValueKey(_landingSequence),
+                          plan: _lastLandingPlan!,
                         ),
-                      ),
-                    ),
-                    MatchHudOverlay(
-                      statusText: _statusText,
-                      actionInstruction: _actionInstruction,
-                      canvasScale: scale,
-                      activePlayer: _game.activePlayer,
-                      legalPawnIndices: _canAct &&
-                              !_isDiceAnimating &&
-                              !_movementController.isAnimating &&
-                              !_turnResolution.isPending &&
-                              !widget.aiPlayers.contains(_game.activePlayer)
-                          ? _game.legalPawnIndices()
-                          : const [],
-                      onPawnSelected: _selectOrMovePawn,
-                    ),
-                    MatchReactionToast(reaction: _activeReaction),
-                    Positioned(
-                      left: 8,
-                      top: 0,
-                      child: IconButton(
-                        key: const Key('exit_match'),
-                        tooltip: 'Exit match',
-                        constraints: BoxConstraints.tightFor(
-                          width: math.max(72, 48 / scale),
-                          height: math.max(72, 48 / scale),
+                      if (_selectedPawnIndex != null)
+                        MatchDestinationPreview(
+                          game: _game,
+                          selectedPawnIndex: _selectedPawnIndex!,
+                          animation: _previewController,
                         ),
-                        padding: EdgeInsets.zero,
-                        iconSize: 36,
-                        onPressed: _requestExit,
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Color(0xFFFFC857),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 8,
-                      top: 920,
-                      width: 96,
-                      height: 96,
-                      child: Semantics(
-                        button: true,
-                        label: 'Chat',
-                        hint: 'Open local chat and emoji reactions.',
-                        child: GestureDetector(
-                          key: const Key('chat_button'),
-                          behavior: HitTestBehavior.opaque,
-                          onTap: _showLocalChat,
-                          child: const DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0xE6211A0D),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Icon(
-                                Icons.chat_bubble_outline,
-                                size: 32,
-                                color: Color(0xFFFFD36B),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    MatchReactionButton(onPressed: _showQuickReactions),
-                    Positioned(
-                      right: 8,
-                      top: 920,
-                      width: 96,
-                      height: 96,
-                      child: Semantics(
-                        button: true,
-                        label: 'More options',
-                        child: GestureDetector(
-                          key: const Key('more_button'),
-                          behavior: HitTestBehavior.opaque,
-                          onTap: _showMoreMenu,
-                          child: const DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0xE6211A0D),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Icon(
-                                Icons.more_horiz,
-                                size: 32,
-                                color: Color(0xFFFFD36B),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_game.winner != null)
-                      MatchResultPresentation(onRematch: _restartMatch),
-                  ],
+                      if (_game.winner != null)
+                        MatchResultPresentation(onRematch: _restartMatch),
+                    ],
+                  ),
                 ),
               ),
             ),

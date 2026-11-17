@@ -15,8 +15,10 @@ class MatchHudOverlay extends StatelessWidget {
     this.canvasScale = 1,
     this.legalPawnIndices = const [],
     this.onPawnSelected,
+    this.inline = false,
   }) : assert(canvasScale > 0);
 
+  final bool inline;
   final String statusText;
   final PlayerColor activePlayer;
   final String actionInstruction;
@@ -79,27 +81,29 @@ class MatchHudOverlay extends StatelessWidget {
       ),
     );
     final canChoose = legalPawnIndices.length > 1 && onPawnSelected != null;
+    final control = canChoose
+        ? PopupMenuButton<int>(
+            key: const Key('accessible_pawn_chooser'),
+            tooltip: 'Choose a legal pawn',
+            onSelected: onPawnSelected,
+            itemBuilder: (context) => [
+              for (final index in legalPawnIndices)
+                PopupMenuItem<int>(
+                  value: index,
+                  height: 48,
+                  child: Text('Pawn ${index + 1}'),
+                ),
+            ],
+            child: content,
+          )
+        : IgnorePointer(child: content);
+    if (inline) return control;
     return Positioned(
       left: 120,
       top: 920,
       width: 240,
       height: math.max(88, 48 / canvasScale),
-      child: canChoose
-          ? PopupMenuButton<int>(
-              key: const Key('accessible_pawn_chooser'),
-              tooltip: 'Choose a legal pawn',
-              onSelected: onPawnSelected,
-              itemBuilder: (context) => [
-                for (final index in legalPawnIndices)
-                  PopupMenuItem<int>(
-                    value: index,
-                    height: 48,
-                    child: Text('Pawn ${index + 1}'),
-                  ),
-              ],
-              child: content,
-            )
-          : IgnorePointer(child: content),
+      child: control,
     );
   }
 }
