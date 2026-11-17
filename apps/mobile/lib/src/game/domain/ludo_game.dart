@@ -39,6 +39,16 @@ class LudoRuleProfile {
     enableHardBlockade: true,
   );
 
+  /// Approved faster objective; movement/capture rules match Classic v1.
+  static const quickV1 = LudoRuleProfile(
+    id: 'quick',
+    version: 1,
+    extraTurnOnFinish: true,
+    threeConsecutiveSixesPenalty: true,
+    captureOnlySingleOpponentPawn: true,
+    enableHardBlockade: true,
+  );
+
   final String id;
   final int version;
   final bool extraTurnOnSix;
@@ -244,14 +254,26 @@ class LudoGame {
     MatchConfiguration? requested,
   ) {
     final config = requested ??
-        (profile.id == 'classic'
-            ? MatchConfiguration.local(MatchMode.classic)
-            : MatchConfiguration.compatibility);
+        (profile.id == 'quick'
+            ? MatchConfiguration.local(MatchMode.quick)
+            : profile.id == 'classic'
+                ? MatchConfiguration.local(MatchMode.classic)
+                : MatchConfiguration.compatibility);
     if (config.mode != MatchMode.compatibility &&
-        config.mode != MatchMode.classic) {
+        config.mode != MatchMode.classic &&
+        config.mode != MatchMode.quick) {
       throw const FormatException('Mode engine is not implemented');
     }
-    if (config.mode == MatchMode.classic && profile.id != 'classic') {
+    if ((profile.id == 'classic' && config.mode != MatchMode.classic) ||
+        (profile.id == 'quick' && config.mode != MatchMode.quick)) {
+      throw const FormatException(
+        'Rule profile cannot be relabelled as another mode',
+      );
+    }
+    if ((config.mode == MatchMode.classic &&
+            (profile.id != 'classic' || profile.version != 1)) ||
+        (config.mode == MatchMode.quick &&
+            profile != LudoRuleProfile.quickV1)) {
       throw const FormatException('Mode and rule profile disagree');
     }
     return config;
@@ -483,7 +505,13 @@ class LudoGame {
         (winnerColor != null && !config.activePlayers.contains(winnerColor))) {
       throw const FormatException('Active/winning player is not participating');
     }
-    final completed = restoredPlayers.where((player) => player.hasWon).toList();
+    final completed = restoredPlayers
+        .where(
+          (player) =>
+              player.pawnProgress.where((p) => p == finishProgress).length >=
+              config.finishTarget,
+        )
+        .toList();
     if ((winnerColor == null && completed.isNotEmpty) ||
         (winnerColor != null &&
             (completed.length != 1 ||
@@ -840,7 +868,11 @@ class LudoGame {
     }
 
     final updatedCurrent = updatedPlayers[playerIndex];
-    final gameWinner = updatedCurrent.hasWon ? activePlayer : null;
+    final gameWinner =
+        updatedCurrent.pawnProgress.where((p) => p == finishProgress).length >=
+                configuration.finishTarget
+            ? activePlayer
+            : null;
     final finishedPawn = nextProgress == finishProgress;
     if (finishedPawn) {
       emitted.add(

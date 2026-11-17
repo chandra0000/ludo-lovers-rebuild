@@ -23,7 +23,7 @@ void main() {
     );
     expect(() => ModeRegistry.create(MatchMode.classic), throwsStateError);
     expect(
-      () => ModeRegistry.create(MatchMode.quick, allowInternal: true),
+      () => ModeRegistry.create(MatchMode.quick),
       throwsStateError,
     );
     expect(
