@@ -155,3 +155,27 @@ pending-result/command recovery and live result/rematch. Simulation of 100 seeds
 for each 2/3/4-player Classic/Quick configuration completed all 600 games. Median
 rolls: 175→98, 326→180, 539→255 respectively. Raw samples, p95s, method and limits
 are in the Quick rule document and evidence JSON; no human-duration claim.
+
+## Team Up domain migration
+
+Shared LudoGame/MatchSession now support team-up@1 through a pure TeamUpPolicy;
+no legacy engine or route is copied. Typed events represent team captures,
+priority changes, transfers and team completion. Scheduled seat, active recipient,
+priority map and winning team are immutable and persist in v4 Team Up state.
+Unknown/inconsistent team metadata fails closed; non-team modes reject foreign
+team state. Teams remain fixed; friendly-loss capture bonuses are explicitly
+excluded per owner decision. Six streaks follow a transferred bonus chain.
+
+Twenty-one dedicated scenarios include all approved cases, 3-versus-3 arrival,
+partial priority departure and seeded full-game snapshots after every transition.
+Prior compatibility/Classic/Quick focused suite (62 tests) also passes. Team Up
+remains unavailable in the public/internal registry until live presentation and
+mode-aware AI acceptance are implemented in following focused increments.
+
+## Manual integration procedure
+
+Review the stack in dependency order, but do not repeat the historical merge gap:
+merge #54 into main only with owner approval; then retarget its successor to main
+and verify its parent is in main before merging that successor. Repeat for each
+increment. Merging a child into an already-merged parent branch does not update
+main. No agent automatic merges or force pushes are authorized.
