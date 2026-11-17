@@ -1,67 +1,105 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../game/domain/player_color.dart';
 import '../../game/presentation/player_color_theme.dart';
 
-/// High-contrast, presentation-only turn status; match state stays authoritative.
+/// Presentation-only status and accessible legal choices from MatchSession.
 class MatchHudOverlay extends StatelessWidget {
   const MatchHudOverlay({
     super.key,
     required this.statusText,
     required this.activePlayer,
-  });
+    this.actionInstruction = 'Roll dice',
+    this.canvasScale = 1,
+    this.legalPawnIndices = const [],
+    this.onPawnSelected,
+  }) : assert(canvasScale > 0);
 
   final String statusText;
   final PlayerColor activePlayer;
+  final String actionInstruction;
+  final double canvasScale;
+  final List<int> legalPawnIndices;
+  final ValueChanged<int>? onPawnSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 172,
-      top: 916,
-      width: 208,
-      height: 50,
-      child: IgnorePointer(
-        child: Semantics(
-          liveRegion: true,
-          label: 'Current turn: ${activePlayer.name}. $statusText',
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: const Color(0xF2111017),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: activePlayer.color,
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: activePlayer.color.withValues(alpha: 0.18),
-                  blurRadius: 10,
-                ),
-              ],
+    final content = Semantics(
+      liveRegion: true,
+      label:
+          'Current turn: ${activePlayer.name}. $statusText. $actionInstruction',
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xF2111017),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: activePlayer.color, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: activePlayer.color.withValues(alpha: 0.18),
+              blurRadius: 10,
             ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  statusText,
-                  key: const Key('turn_status'),
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: activePlayer.color,
-                    fontSize: 14,
-                    height: 1.12,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.25,
-                  ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                actionInstruction,
+                key: const Key('match_action_instruction'),
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14 / canvasScale,
+                  height: 1.12,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-            ),
+              Text(
+                statusText,
+                key: const Key('turn_status'),
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: activePlayer.color,
+                  fontSize: 10 / canvasScale,
+                  height: 1.12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+    final canChoose = legalPawnIndices.length > 1 && onPawnSelected != null;
+    return Positioned(
+      left: 120,
+      top: 920,
+      width: 240,
+      height: math.max(88, 48 / canvasScale),
+      child: canChoose
+          ? PopupMenuButton<int>(
+              key: const Key('accessible_pawn_chooser'),
+              tooltip: 'Choose a legal pawn',
+              onSelected: onPawnSelected,
+              itemBuilder: (context) => [
+                for (final index in legalPawnIndices)
+                  PopupMenuItem<int>(
+                    value: index,
+                    height: 48,
+                    child: Text('Pawn ${index + 1}'),
+                  ),
+              ],
+              child: content,
+            )
+          : IgnorePointer(child: content),
     );
   }
 }

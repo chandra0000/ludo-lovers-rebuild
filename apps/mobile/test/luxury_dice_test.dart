@@ -22,7 +22,64 @@ void main() {
       );
       expect(find.byKey(const Key('six_face_dice_cube')), findsOneWidget);
       expect(find.byKey(Key('dice_face_$value')), findsOneWidget);
+      final faces = tester
+          .widgetList<Transform>(
+            find.descendant(
+              of: find.byKey(const Key('six_face_dice_cube')),
+              matching: find.byType(Transform),
+            ),
+          )
+          .where(
+            (transform) =>
+                transform.child?.key.toString().contains('dice_face_') ?? false,
+          );
+      expect(faces.last.child!.key, Key('dice_face_$value'));
+      expect(faces.length, greaterThan(1));
     }
+  });
+
+  testWidgets('enabling reduced motion mid-roll settles the same result once',
+      (tester) async {
+    var reduce = false;
+    var rollId = 0;
+    int? value;
+    var completions = 0;
+    late StateSetter update;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: reduce),
+              child: LuxuryDiceButton(
+                targetValue: value,
+                rollId: rollId,
+                canRoll: value == null,
+                isWaitingForRoll: value == null,
+                onRollRequested: () => setState(() {
+                  value = 6;
+                  rollId++;
+                }),
+                onAnimationComplete: () => completions++,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.byType(LuxuryDiceButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(completions, 0);
+    update(() => reduce = true);
+    await tester.pump();
+    await tester.pump();
+    expect(completions, 1);
+    expect(value, 6);
+    await tester.pump(const Duration(seconds: 2));
+    expect(completions, 1);
+    expect(find.bySemanticsLabel('Dice, value 6'), findsOneWidget);
   });
 
   testWidgets('restored dice result is displayed without replaying a roll',

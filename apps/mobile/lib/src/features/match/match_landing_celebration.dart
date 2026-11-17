@@ -28,7 +28,20 @@ class _MatchLandingCelebrationState extends State<MatchLandingCelebration>
   @override
   void initState() {
     super.initState();
-    _controller.forward();
+  }
+
+  bool _started = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _controller.stop();
+      _controller.value = 1;
+      _started = true;
+    } else if (!_started) {
+      _started = true;
+      _controller.forward();
+    }
   }
 
   @override

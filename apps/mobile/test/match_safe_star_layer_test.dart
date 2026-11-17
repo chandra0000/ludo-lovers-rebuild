@@ -4,7 +4,7 @@ import 'package:ludo_lovers/src/features/match/match_safe_star_layer.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
 
 void main() {
-  testWidgets('stars follow canonical safe-track anchors and ignore touches', (
+  testWidgets('safe anchors follow rules without repainting approved stars', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -31,8 +31,8 @@ void main() {
       isEmpty,
     );
 
-    for (final index in BoardGeometry.starTrackCells) {
-      final finder = find.byKey(Key('safe_star_$index'));
+    for (final index in BoardGeometry.safeTrackCells) {
+      final finder = find.byKey(Key('safe_cell_$index'));
       expect(finder, findsOneWidget);
       final point = BoardGeometry.canvasPosition(
         BoardGeometry.trackPosition(index),
@@ -43,6 +43,14 @@ void main() {
       expect(center.dy - layer.dy, closeTo(point.y, 0.5));
     }
 
+    expect(BoardGeometry.safeTrackCells, <int>{0, 8, 13, 21, 26, 34, 39, 47});
+    expect(
+      find.descendant(
+        of: find.byType(MatchSafeStarLayer),
+        matching: find.byType(Icon),
+      ),
+      findsNothing,
+    );
     expect(find.byType(IgnorePointer), findsWidgets);
     final ignore = tester.widget<IgnorePointer>(
       find

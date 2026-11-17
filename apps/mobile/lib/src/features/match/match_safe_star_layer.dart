@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/board_geometry.dart';
 
-/// Safe-square markers derived from the authoritative board geometry.
+/// Read-only accessibility anchors for authoritative safe cells.
 ///
-/// Start squares are already colour-coded in the approved artwork. Only the
-/// four non-start safe cells receive a gold star. Decorative markers never
-/// intercept pawn gestures or modify the game rules.
+/// The approved board image already paints the four non-entry gold stars and
+/// four colored entries. Painting icons here would duplicate that artwork.
+/// Rules and anchors come from geometry; artwork colors never determine safety.
 class MatchSafeStarLayer extends StatelessWidget {
   const MatchSafeStarLayer({super.key});
 
@@ -15,14 +15,14 @@ class MatchSafeStarLayer extends StatelessWidget {
     return IgnorePointer(
       child: Stack(
         children: [
-          for (final index in BoardGeometry.starTrackCells.toList()..sort())
-            _starAt(index),
+          for (final index in BoardGeometry.safeTrackCells.toList()..sort())
+            _anchorAt(index),
         ],
       ),
     );
   }
 
-  Widget _starAt(int index) {
+  Widget _anchorAt(int index) {
     final position = BoardGeometry.canvasPosition(
       BoardGeometry.trackPosition(index),
     );
@@ -31,16 +31,11 @@ class MatchSafeStarLayer extends StatelessWidget {
       top: position.y - 13,
       width: 26,
       height: 26,
-      child: Center(
-        child: Icon(
-          Icons.star_rounded,
-          key: Key('safe_star_$index'),
-          color: const Color(0xE6FFD36B),
-          size: 21,
-          shadows: const [
-            Shadow(color: Color(0xE6111017), blurRadius: 4),
-          ],
-        ),
+      child: Semantics(
+        key: Key('safe_cell_$index'),
+        label: 'Safe cell ${index + 1}',
+        readOnly: true,
+        child: const SizedBox.expand(),
       ),
     );
   }

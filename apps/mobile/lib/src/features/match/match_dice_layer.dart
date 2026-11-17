@@ -27,14 +27,15 @@ class MatchDiceLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 243,
-      top: 795,
-      width: 90,
-      height: 90,
+      left: 228,
+      top: 790,
+      width: 120,
+      height: 120,
       child: KeyedSubtree(
         key: const Key('roll_dice'),
         child: LuxuryDiceButton(
           key: const Key('animated_dice'),
+          size: 96,
           targetValue: targetValue,
           rollId: rollId,
           canRoll: canRoll,

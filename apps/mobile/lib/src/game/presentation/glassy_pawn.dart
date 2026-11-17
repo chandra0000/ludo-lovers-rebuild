@@ -21,11 +21,13 @@ class GlassyPawn extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size * 1.18,
-      child: CustomPaint(
-        painter: _GlassyConePainter(
-          color: color,
-          isCurrentPlayer: isCurrentPlayer,
-          isMovable: isMovable,
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _GlassyConePainter(
+            color: color,
+            isCurrentPlayer: isCurrentPlayer,
+            isMovable: isMovable,
+          ),
         ),
       ),
     );
@@ -66,7 +68,7 @@ class _GlassyConePainter extends CustomPainter {
         baseRect.inflate(w * (isMovable ? .22 : .12)),
         Paint()
           ..color = (isMovable ? const Color(0xFFFFD700) : color)
-              .withValues(alpha: isMovable ? .42 : .25)
+              .withValues(alpha: isMovable ? .24 : .13)
           ..maskFilter = MaskFilter.blur(
             BlurStyle.normal,
             w * (isMovable ? .28 : .2),
@@ -103,8 +105,8 @@ class _GlassyConePainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.lerp(color, Colors.white, .82)!.withValues(alpha: .98),
-            Color.lerp(color, Colors.white, .34)!.withValues(alpha: .96),
+            Color.lerp(color, Colors.white, .65)!.withValues(alpha: .98),
+            Color.lerp(color, Colors.white, .28)!.withValues(alpha: .96),
             color.withValues(alpha: .94),
             Color.lerp(color, Colors.black, .48)!.withValues(alpha: .98),
           ],
@@ -138,7 +140,7 @@ class _GlassyConePainter extends CustomPainter {
             : Colors.white.withValues(alpha: .82),
     );
 
-    // Curved specular streak creates the glass/plastic highlight.
+    // A narrow directional reflection preserves the glass silhouette.
     final shine = Path()
       ..moveTo(w * .43, h * .17)
       ..cubicTo(w * .32, h * .25, w * .25, h * .52, w * .22, h * .68);

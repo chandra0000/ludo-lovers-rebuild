@@ -1,9 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// Premium ivory-and-gold dice presentation.
+/// Lightweight metallic-gold cube with an authoritative result.
 ///
 /// [targetValue] and [rollId] are supplied by the match controller. Increment
 /// [rollId] for every accepted roll, even when the new result equals the
@@ -107,6 +106,19 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if ((MediaQuery.maybeOf(context)?.disableAnimations ?? false) &&
+        _isAnimating) {
+      final rollId = _activeRollId;
+      _cancelCurrentAnimation();
+      final generation = _callbackGeneration;
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _completeRoll(rollId, generation));
+    }
+  }
+
   void _cancelCurrentAnimation() {
     _callbackGeneration++;
     _controller.stop();
@@ -174,7 +186,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     }
 
     _requestPending = true;
-    HapticFeedback.lightImpact();
     widget.onRollRequested();
   }
 
@@ -228,15 +239,23 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                 final lift = _isAnimating
                     ? math.sin(math.pi * t) * widget.size * .22
                     : 0.0;
+                final anticipation = _isAnimating && t < .12
+                    ? 1 - .07 * (t / .12)
+                    : _isAnimating
+                        ? .93 + .07 * ((t - .12) / .88)
+                        : 1.0;
                 return Transform.translate(
                   offset: Offset(0, -lift),
-                  child: _DiceCube(
-                    key: const Key('six_face_dice_cube'),
-                    size: widget.size,
-                    value: target,
-                    isInteractive: interactive,
-                    xAngle: angles.$1 + spin,
-                    yAngle: angles.$2 + spin * .83,
+                  child: Transform.scale(
+                    scale: anticipation,
+                    child: _DiceCube(
+                      key: const Key('six_face_dice_cube'),
+                      size: widget.size,
+                      value: target,
+                      isInteractive: interactive,
+                      xAngle: angles.$1 + spin + .16,
+                      yAngle: angles.$2 + spin * .83 - .20,
+                    ),
                   ),
                 );
               },
@@ -345,6 +364,7 @@ class _DiceCube extends StatelessWidget {
                 size: size,
                 value: face.value,
                 isInteractive: isInteractive,
+                light: .62 + .38 * face.depth,
               ),
             ),
         ],
@@ -359,11 +379,13 @@ class _DiceFace extends StatelessWidget {
     required this.size,
     required this.value,
     required this.isInteractive,
+    required this.light,
   });
 
   final double size;
   final int value;
   final bool isInteractive;
+  final double light;
 
   @override
   Widget build(BuildContext context) {
@@ -372,18 +394,31 @@ class _DiceFace extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFFFFFFF),
-            Color(0xFFF6F3EA),
-            Color(0xFFE2DCCB),
+            Color.lerp(
+              const Color(0xFFA56C13),
+              const Color(0xFFFFF0B5),
+              light,
+            )!,
+            Color.lerp(
+              const Color(0xFF8D550B),
+              const Color(0xFFF5C44B),
+              light,
+            )!,
+            Color.lerp(
+              const Color(0xFF634009),
+              const Color(0xFFB77C1C),
+              light,
+            )!,
           ],
+          stops: const [0, .38, 1],
         ),
         border: Border.all(
           color:
-              isInteractive ? const Color(0xFFFFD54F) : const Color(0xFFC7BEA9),
+              isInteractive ? const Color(0xFFFFEBA3) : const Color(0xFFD39F35),
           width: 2.2,
         ),
         boxShadow: [

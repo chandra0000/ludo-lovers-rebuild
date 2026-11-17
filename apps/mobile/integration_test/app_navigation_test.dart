@@ -33,6 +33,8 @@ void main() {
 
       await tester.tap(find.byKey(const Key('exit_match')));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm_leave_match')));
+      await tester.pumpAndSettle();
       // Exiting a match returns to Game Setup, not directly to Home.
       expect(find.byKey(const Key('start_local_match')), findsOneWidget);
       expect(tester.takeException(), isNull);
