@@ -157,7 +157,8 @@ void responsiveTest(
         expect(target.height, greaterThanOrEqualTo(48));
       }
 
-      final canvas = tester.getRect(find.byKey(const Key('match_canvas')));
+      final canvas = tester.getRect(find.byKey(const Key('board_stage')));
+      expect(canvas.width, closeTo(canvas.height, .01));
       expect(canvas.width, lessThanOrEqualTo(viewport.width + .01));
       expect(canvas.height, lessThanOrEqualTo(viewport.height + .01));
       expect(canvas.left, greaterThanOrEqualTo(-.01));
@@ -168,6 +169,29 @@ void responsiveTest(
       expect(board.right, lessThanOrEqualTo(viewport.width + .01));
       expect(board.top, greaterThanOrEqualTo(-.01));
       expect(board.bottom, lessThanOrEqualTo(viewport.height + .01));
+      expect(board.left, greaterThanOrEqualTo(canvas.left - .01));
+      expect(board.right, lessThanOrEqualTo(canvas.right + .01));
+      expect(board.top, greaterThanOrEqualTo(canvas.top - .01));
+      expect(board.bottom, lessThanOrEqualTo(canvas.bottom + .01));
+      for (final key in [
+        'roll_dice',
+        'chat_button',
+        'quick_reactions_button',
+        'more_button',
+      ]) {
+        expect(
+          tester.getRect(find.byKey(Key(key))).top,
+          greaterThanOrEqualTo(canvas.bottom - .01),
+        );
+      }
+      final profileCenters = ['orange', 'green', 'magenta', 'blue']
+          .map((color) => tester.getCenter(find.byKey(Key('profile_$color'))))
+          .toList();
+      for (var i = 1; i < profileCenters.length; i++) {
+        expect(profileCenters[i].dx, greaterThan(profileCenters[i - 1].dx));
+        expect(profileCenters[i].dy, closeTo(profileCenters[0].dy, .01));
+      }
+
       for (final color in const ['orange', 'green', 'magenta', 'blue']) {
         expect(
           tester.getRect(find.byKey(Key('profile_$color'))).overlaps(board),

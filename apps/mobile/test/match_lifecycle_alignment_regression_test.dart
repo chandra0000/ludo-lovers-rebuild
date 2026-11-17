@@ -25,7 +25,10 @@ void main() {
       final artwork = find.byKey(const Key('board_artwork'));
       expect(artwork, findsOneWidget);
       expect(canvas.width, lessThanOrEqualTo(size.width));
-      expect(canvas.height, lessThanOrEqualTo(size.height));
+      expect(
+        tester.getSize(find.byKey(const Key('board_stage'))).height,
+        lessThanOrEqualTo(size.height),
+      );
       expect(
         canvas.width / canvas.height,
         closeTo(BoardGeometry.canvasWidth / BoardGeometry.canvasHeight, 0.001),
