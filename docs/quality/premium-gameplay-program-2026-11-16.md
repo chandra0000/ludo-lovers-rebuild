@@ -162,3 +162,24 @@ passed. Actual 393×873 screenshot inspected: gold cube, square named profiles a
 full board visible. Four required captures exist. Owner visual acceptance and
 physical-device performance remain open; no measured performance gain is claimed.
 Phase B PR #48 has all required CI checks green. New PRs remain unmerged.
+
+## Phase D — safe cells and adaptive acceptance
+
+The approved extracted board already contains gold stars at the four non-entry
+safe cells. The previous overlay painted duplicate icons. Removed only duplicate
+paint; eight read-only semantic anchors now derive from `safeTrackCells`, including
+four entries. Tests assert exact rule sets, positions, no extra icons and ignored
+pointer input. Artwork, geometry, pawn coordinates and safe rules are unchanged.
+
+Responsive capture now covers the four mandatory viewports plus 320×568/375×667
+compact phones, 393×873 at DPR3 with 59/34 insets, 440×956 at DPR3 with 62/34
+insets, 360×780 at DPR2.75 with 32/24 insets, and 600×1024 at DPR2. Tests provide
+both real logical padding and physical view padding. They check square avatars,
+names above avatars, board/profile separation, safe areas and 48dp controls.
+The artifact verifier requires all ten PNGs. Actual compact 320×568 capture was
+visually inspected: full board, four readable profiles and accessible controls.
+These configurations model logical displays, not physical-device acceptance.
+
+App launch requests portraitUp, with a platform-channel regression test. Modern
+large-screen platform orientation policy may override this request; adaptive
+rendering remains necessary. No platform behavior is inferred from a mock test.
