@@ -83,6 +83,14 @@ class _MatchScreenState extends State<MatchScreen>
     return MatchSession.local(matchId: matchId, game: game);
   }
 
+  late final List<MatchPlayerProfile> _profiles = MatchPlayerProfile.roster(
+    widget.profiles ?? MatchPlayerProfile.local(aiPlayers: widget.aiPlayers),
+    aiPlayers: widget.aiPlayers,
+  );
+
+  MatchPlayerProfile _profileFor(PlayerColor color) =>
+      _profiles.singleWhere((profile) => profile.color == color);
+
   MatchSession get _session => _matchController.session;
   LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
@@ -216,6 +224,7 @@ class _MatchScreenState extends State<MatchScreen>
       aiPlayers: widget.aiPlayers,
       aiSeed: widget.aiSeed,
       aiDifficulty: widget.aiDifficulty,
+      profiles: _profiles,
     );
     return _persistence.persist(snapshot);
   }
@@ -454,7 +463,11 @@ class _MatchScreenState extends State<MatchScreen>
 
   String get _statusText {
     if (_game.winner != null) {
-      return '${_game.winner!.name.toUpperCase()} WINS';
+      final winner = _profileFor(_game.winner!);
+      final label = winner.displayName == winner.color.name.toUpperCase()
+          ? winner.displayName
+          : '${winner.displayName} (${winner.color.name.toUpperCase()})';
+      return '$label WINS';
     }
     return widget.aiPlayers.contains(_game.activePlayer)
         ? '${_game.activePlayer.name.toUpperCase()} · AI TURN'
@@ -491,10 +504,7 @@ class _MatchScreenState extends State<MatchScreen>
                 if (widget.showDynamicProfiles)
                   Positioned.fill(
                     child: MatchProfilesLayer(
-                      profiles: widget.profiles ??
-                          MatchPlayerProfile.local(
-                            aiPlayers: widget.aiPlayers,
-                          ),
+                      profiles: _profiles,
                       activeColor: _game.activePlayer,
                       canvasScale: scale,
                     ),

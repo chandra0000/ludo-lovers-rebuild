@@ -35,8 +35,8 @@ class MatchPlayerBadge extends StatelessWidget {
     final avatarPath = switch (profile.color) {
       PlayerColor.orange => 'assets/images/board/extracted/avatar_aldo.webp',
       PlayerColor.green => 'assets/images/board/extracted/avatar_you.webp',
-      PlayerColor.magenta => 'assets/images/board/extracted/avatar_bob.webp',
-      PlayerColor.blue => 'assets/images/board/extracted/avatar_emma.webp',
+      PlayerColor.magenta => 'assets/images/board/extracted/avatar_emma.webp',
+      PlayerColor.blue => 'assets/images/board/extracted/avatar_bob.webp',
     };
     final initial = profile.displayName.trim().isEmpty
         ? '?'
@@ -45,6 +45,7 @@ class MatchPlayerBadge extends StatelessWidget {
     return Semantics(
       excludeSemantics: true,
       label: '${profile.displayName}, ${profile.color.name}, '
+          'seat ${PlayerColor.turnOrder.indexOf(profile.color) + 1}, '
           '${profile.presenceLabel.toLowerCase()}'
           '${isActive ? ', current turn' : ''}',
       child: AnimatedContainer(
@@ -82,19 +83,40 @@ class MatchPlayerBadge extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                profile.displayName,
-                key: Key('profile_name_${profile.color.name}'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14 / presentationScale,
-                  height: 1.1,
-                  shadows: const [Shadow(color: Colors.black54, blurRadius: 3)],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      profile.displayName,
+                      key: Key('profile_name_${profile.color.name}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14 / presentationScale,
+                        height: 1.1,
+                        shadows: const [
+                          Shadow(color: Colors.black54, blurRadius: 3),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      '${PlayerColor.turnOrder.indexOf(profile.color) + 1}',
+                      key: Key('profile_seat_${profile.color.name}'),
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 10 / presentationScale,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 3),
               Row(
@@ -109,7 +131,7 @@ class MatchPlayerBadge extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isActive ? const Color(0xFFFFD36B) : accent,
+                            color: accent,
                             width: 2,
                           ),
                         ),
@@ -203,8 +225,8 @@ class MatchProfilesLayer extends StatelessWidget {
     const seats = <PlayerColor, Offset>{
       PlayerColor.orange: Offset(12, 88),
       PlayerColor.green: Offset(378, 88),
-      PlayerColor.magenta: Offset(12, 800),
-      PlayerColor.blue: Offset(378, 800),
+      PlayerColor.magenta: Offset(378, 800),
+      PlayerColor.blue: Offset(12, 800),
     };
     return ClipPath(
       clipper: const MatchHudRegionClipper(),
