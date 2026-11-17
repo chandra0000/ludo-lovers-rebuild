@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/features/setup/game_setup_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ai/seeded_ludo_ai.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('player can select a seeded AI difficulty before starting', (
     tester,
   ) async {
@@ -22,6 +24,8 @@ void main() {
       LudoAiDifficulty.medium,
     );
 
+    await tester.ensureVisible(difficultyPicker);
+    await tester.pumpAndSettle();
     await tester.tap(difficultyPicker);
     await tester.pumpAndSettle();
     await tester.tap(find.text('HARD').last);

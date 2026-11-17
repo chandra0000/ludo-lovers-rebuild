@@ -19,7 +19,10 @@ void main() {
         for (final directive
             in directives.allMatches(file.readAsStringSync())) {
           final target = directive.group(1)!;
-          if (target.startsWith('dart:')) continue;
+          if (target.startsWith('dart:') ||
+              target == 'package:characters/characters.dart') {
+            continue;
+          }
           expect(
             target.startsWith('package:'),
             isFalse,

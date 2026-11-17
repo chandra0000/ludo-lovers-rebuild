@@ -63,8 +63,11 @@ void main() {
         written.add(match.aiSeed);
       },
     );
+    expect(controller.lastSaveSucceeded, isNull);
     await controller.persist(snapshot(1));
+    expect(controller.lastSaveSucceeded, isFalse);
     await controller.persist(snapshot(2));
+    expect(controller.lastSaveSucceeded, isTrue);
     expect(written, [2]);
   });
 }
