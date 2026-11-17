@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/home/home_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
-import 'package:ludo_lovers/src/game/domain/persistence/saved_match_store.dart';
+import 'package:ludo_lovers/src/game/domain/persistence/saved_match.dart';
+import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {

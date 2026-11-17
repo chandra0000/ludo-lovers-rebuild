@@ -15,6 +15,8 @@ class MatchMovePresentationPlan {
     required this.stepCount,
     this.feedback,
     required this.captureCount,
+    required this.extraTurnGranted,
+    required this.gameCompleted,
   });
 
   final PlayerColor player;
@@ -26,6 +28,13 @@ class MatchMovePresentationPlan {
 
   /// Number of captures confirmed by authoritative accepted events.
   final int captureCount;
+
+  /// Engine-confirmed bonus turn, never inferred from a six or a capture.
+  final bool extraTurnGranted;
+
+  /// Engine-confirmed match completion, never inferred from pawn positions.
+  final bool gameCompleted;
+
   bool get hasCapture => captureCount > 0;
 
   factory MatchMovePresentationPlan.fromEvents({
@@ -78,7 +87,7 @@ class MatchMovePresentationPlan {
     } else if (finished) {
       feedback = extraTurn ? 'PAWN HOME! EXTRA TURN' : 'PAWN HOME!';
     } else {
-      feedback = null;
+      feedback = extraTurn ? 'EXTRA TURN' : null;
     }
 
     return MatchMovePresentationPlan._(
@@ -89,6 +98,8 @@ class MatchMovePresentationPlan {
       stepCount: steps,
       feedback: feedback,
       captureCount: captures,
+      extraTurnGranted: extraTurn,
+      gameCompleted: isWinner,
     );
   }
 }

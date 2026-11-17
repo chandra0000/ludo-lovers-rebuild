@@ -25,6 +25,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: MatchScreen(initialGame: game)),
     );
+    // Flush presentation resolution of the already-accepted restored roll.
+    await tester.pump();
 
     final pawn = find
         .ancestor(

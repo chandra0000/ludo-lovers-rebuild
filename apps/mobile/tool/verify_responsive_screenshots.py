@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Fail CI if any required responsive screenshot is missing or corrupt."""
+
+import argparse
+from pathlib import Path
+import struct
+import zlib
+
+VIEWPORTS = ((320, 640), (360, 800), (393, 873), (430, 932))
+
+
+def verify(path, width, height):
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"{path}: invalid PNG signature")
+    offset, compressed, saw_header, saw_end = 8, bytearray(), False, False
+    while offset < len(data):
+        length = struct.unpack_from(">I", data, offset)[0]
+        kind = data[offset + 4:offset + 8]
+        payload = data[offset + 8:offset + 8 + length]
+        expected_crc = struct.unpack_from(">I", data, offset + 8 + length)[0]
+        if zlib.crc32(kind + payload) != expected_crc:
+            raise ValueError(f"{path}: corrupt {kind!r} chunk")
+        if kind == b"IHDR":
+            if struct.unpack_from(">II", payload) != (width, height):
+                raise ValueError(f"{path}: wrong viewport dimensions")
+            saw_header = True
+        elif kind == b"IDAT":
+            compressed.extend(payload)
+        elif kind == b"IEND":
+            saw_end = True
+        offset += length + 12
+    if not saw_header or not saw_end or not zlib.decompress(compressed):
+        raise ValueError(f"{path}: incomplete PNG")
+    print(f"Verified {path}: {width}x{height}, {len(data)} bytes")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--directory", type=Path,
+                        default=Path("test-artifacts/acceptance"))
+    args = parser.parse_args()
+    for width, height in VIEWPORTS:
+        verify(args.directory / f"match-screen-{width}x{height}.png", width, height)
+
+
+if __name__ == "__main__":
+    main()

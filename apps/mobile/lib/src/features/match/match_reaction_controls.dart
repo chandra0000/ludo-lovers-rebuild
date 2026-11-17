@@ -11,10 +11,10 @@ class MatchReactionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 392,
-      top: 928,
-      width: 84,
-      height: 84,
+      left: 376,
+      top: 920,
+      width: 96,
+      height: 96,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xF0211A0D),

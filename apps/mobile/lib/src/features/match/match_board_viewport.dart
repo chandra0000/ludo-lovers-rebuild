@@ -1,9 +1,8 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../game/domain/board_geometry.dart';
 import 'match_surface_chrome.dart';
+import 'match_adaptive_layout.dart';
 
 /// Preserves the approved 576x1024 board coordinate space at every screen size.
 class MatchBoardViewport extends StatelessWidget {
@@ -15,10 +14,14 @@ class MatchBoardViewport extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = math.min(
-          constraints.maxWidth / BoardGeometry.canvasWidth,
-          constraints.maxHeight / BoardGeometry.canvasHeight,
+        final layout = MatchAdaptiveLayout.resolve(
+          available: constraints.biggest,
+          canvas: const Size(
+            BoardGeometry.canvasWidth,
+            BoardGeometry.canvasHeight,
+          ),
         );
+        final scale = layout.scale;
         return MatchSurfaceChrome(
           child: Center(
             child: RepaintBoundary(

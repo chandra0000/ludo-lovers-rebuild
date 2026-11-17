@@ -74,6 +74,17 @@ class _GlassyConePainter extends CustomPainter {
       );
     }
 
+    // Contact occlusion keeps the piece grounded without changing its
+    // geometry or introducing textures / additional GPU allocations.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(w * .5, baseY + h * .055),
+        width: w * .7,
+        height: h * .095,
+      ),
+      Paint()..color = Colors.black.withValues(alpha: .28),
+    );
+
     final body = Path()
       ..moveTo(w * .5, h * .07)
       ..cubicTo(w * .43, h * .07, w * .37, h * .14, w * .35, h * .23)
@@ -100,6 +111,23 @@ class _GlassyConePainter extends CustomPainter {
           stops: const [0, .22, .62, 1],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
+
+    // A narrow shaded facet gives the cone a rounded, dimensional silhouette.
+    // It is clipped to the existing pawn path so the approved board anchors,
+    // hit regions and visual extents remain exactly unchanged.
+    canvas.save();
+    canvas.clipPath(body);
+    canvas.drawRect(
+      Rect.fromLTWH(w * .56, h * .07, w * .34, h * .87),
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Colors.transparent,
+            Color.lerp(color, Colors.black, .65)!.withValues(alpha: .34),
+          ],
+        ).createShader(Rect.fromLTWH(w * .56, 0, w * .34, h)),
+    );
+    canvas.restore();
     canvas.drawPath(
       body,
       Paint()
@@ -122,6 +150,17 @@ class _GlassyConePainter extends CustomPainter {
         ..strokeWidth = w * .105
         ..color = Colors.white.withValues(alpha: .62),
     );
+    final rimLight = Path()
+      ..moveTo(w * .66, h * .21)
+      ..quadraticBezierTo(w * .71, h * .4, w * .8, h * .68);
+    canvas.drawPath(
+      rimLight,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = w * .035
+        ..color = Colors.white.withValues(alpha: .3),
+    );
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(w * .49, h * .13),
@@ -142,6 +181,18 @@ class _GlassyConePainter extends CustomPainter {
             Color.lerp(color, Colors.black, .42)!,
           ],
         ).createShader(baseRect),
+    );
+    // A thin upper rim and a softer lower edge read as a raised glass foot.
+    canvas.drawArc(
+      baseRect.deflate(w * .035),
+      3.4,
+      2.55,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * .045
+        ..strokeCap = StrokeCap.round
+        ..color = Colors.white.withValues(alpha: .58),
     );
     canvas.drawOval(
       baseRect,

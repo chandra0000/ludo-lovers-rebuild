@@ -23,3 +23,7 @@ This folder is the project handbook. Start here when joining the project or resu
 ## Documentation rule
 
 Every material architecture, gameplay, asset, or workflow change must update the relevant document in the same pull request. Record unverified assumptions as pending; do not describe them as accepted facts.
+
+## Current productionization evidence
+
+See [the 2026-11-16 baseline, Phase 0 diagnosis, and dependency ledger](quality/productionization-2026-11-16.md). It distinguishes current verification from historical status and pending release gates.
