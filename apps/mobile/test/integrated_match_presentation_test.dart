@@ -82,8 +82,10 @@ void main() {
           final name = find.byKey(Key('profile_name_$color'));
           expect(avatar, findsOneWidget);
           expect(name, findsOneWidget);
-          final square = tester.getSize(avatar);
-          expect(square.width, square.height);
+          final square = tester.getRect(avatar).size;
+          expect(square.width, closeTo(square.height, .01));
+          expect(square.width, greaterThanOrEqualTo(32));
+          expect(tester.getRect(name).height, greaterThanOrEqualTo(12));
           expect(
             tester.getRect(name).bottom,
             lessThanOrEqualTo(tester.getRect(avatar).top),
@@ -99,8 +101,10 @@ void main() {
           Key('chat_button'),
           Key('quick_reactions_button'),
           Key('more_button'),
+          Key('exit_match'),
+          Key('roll_dice'),
         ]) {
-          final target = tester.getSize(find.byKey(key));
+          final target = tester.getRect(find.byKey(key)).size;
           expect(target.width, greaterThanOrEqualTo(48));
           expect(target.height, greaterThanOrEqualTo(48));
         }
@@ -116,6 +120,13 @@ void main() {
         expect(board.right, lessThanOrEqualTo(viewport.width + .01));
         expect(board.top, greaterThanOrEqualTo(-.01));
         expect(board.bottom, lessThanOrEqualTo(viewport.height + .01));
+        for (final color in const ['orange', 'green', 'magenta', 'blue']) {
+          expect(
+            tester.getRect(find.byKey(Key('profile_$color'))).overlaps(board),
+            isFalse,
+          );
+        }
+        expect(find.text('Roll dice'), findsOneWidget);
 
         // Engine/image callbacks and filesystem operations must run outside
         // the widget binding's fake-async zone. Keeping only writes in runAsync
