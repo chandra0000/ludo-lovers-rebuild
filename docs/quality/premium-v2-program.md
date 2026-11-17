@@ -107,3 +107,15 @@ names above square avatars in authoritative order, profiles above artwork, contr
 below the stage and 48dp primary targets. Enlarged-text and legal chooser behavior
 remain tested. Actual 320×640 and 393×873 rendered captures inspected; no owner
 9/10 visual approval is implied. Exterior HUD lighting is independent of artwork.
+
+## Sculpted material increment
+
+Pawn paint now has a rounded lit crown, neck ring, tapered body and raised circular
+foot inside the existing render box. Fixed directional highlights and opaque color
+depth preserve all four identities at small scales without a 3D engine. The gold
+die adds a finite late-roll settle pulse to its existing authoritative animation;
+no outcome/randomness/timing source changes. Existing reduced-motion paths bypass
+motion. Actual 393×873 screenshot inspected at gameplay scale; all pawn anchors
+remain canonical. A Flutter-rendered scale-study artifact covers 16/27/30/96 pixels
+in every brand color. Before captures are retained from predecessor #56; no
+physical smoothness or final visual score is inferred.

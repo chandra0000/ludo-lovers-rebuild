@@ -244,10 +244,13 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                     : _isAnimating
                         ? .93 + .07 * ((t - .12) / .88)
                         : 1.0;
+                final settle = _isAnimating && t > .82
+                    ? 1 + .035 * math.sin(math.pi * (t - .82) / .18)
+                    : 1.0;
                 return Transform.translate(
                   offset: Offset(0, -lift),
                   child: Transform.scale(
-                    scale: anticipation,
+                    scale: anticipation * settle,
                     child: _DiceCube(
                       key: const Key('six_face_dice_cube'),
                       size: widget.size,

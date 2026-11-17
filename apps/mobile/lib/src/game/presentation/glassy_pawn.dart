@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// A small translucent, glass-finish Ludo cone. This is presentation only:
+/// A sculpted glass-finish Ludo pawn with a rounded crown and raised foot. This is presentation only:
 /// ownership, position, selection and legal-move state come from the game.
 class GlassyPawn extends StatelessWidget {
   const GlassyPawn({
@@ -87,15 +87,16 @@ class _GlassyConePainter extends CustomPainter {
       Paint()..color = Colors.black.withValues(alpha: .28),
     );
 
+    // A neck, tapered shoulder and broad foot remain inside the original box.
+    // Board anchors and touch targets are independent of this silhouette.
     final body = Path()
-      ..moveTo(w * .5, h * .07)
-      ..cubicTo(w * .43, h * .07, w * .37, h * .14, w * .35, h * .23)
-      ..lineTo(w * .12, h * .72)
-      ..cubicTo(w * .04, h * .87, w * .16, h * .98, w * .32, h * .98)
-      ..lineTo(w * .68, h * .98)
-      ..cubicTo(w * .84, h * .98, w * .96, h * .87, w * .88, h * .72)
-      ..lineTo(w * .65, h * .23)
-      ..cubicTo(w * .63, h * .14, w * .57, h * .07, w * .5, h * .07)
+      ..moveTo(w * .39, h * .34)
+      ..quadraticBezierTo(w * .38, h * .48, w * .24, h * .65)
+      ..cubicTo(w * .17, h * .74, w * .10, h * .77, w * .12, h * .86)
+      ..quadraticBezierTo(w * .18, h * .97, w * .5, h * .98)
+      ..quadraticBezierTo(w * .82, h * .97, w * .88, h * .86)
+      ..cubicTo(w * .90, h * .77, w * .83, h * .74, w * .76, h * .65)
+      ..quadraticBezierTo(w * .62, h * .48, w * .61, h * .34)
       ..close();
 
     canvas.drawPath(
@@ -114,7 +115,7 @@ class _GlassyConePainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // A narrow shaded facet gives the cone a rounded, dimensional silhouette.
+    // A narrow shaded facet gives the body a rounded, dimensional silhouette.
     // It is clipped to the existing pawn path so the approved board anchors,
     // hit regions and visual extents remain exactly unchanged.
     canvas.save();
@@ -140,10 +141,10 @@ class _GlassyConePainter extends CustomPainter {
             : Colors.white.withValues(alpha: .82),
     );
 
-    // A narrow directional reflection preserves the glass silhouette.
+    // Controlled directional reflections emphasize the neck and tapered body.
     final shine = Path()
-      ..moveTo(w * .43, h * .17)
-      ..cubicTo(w * .32, h * .25, w * .25, h * .52, w * .22, h * .68);
+      ..moveTo(w * .41, h * .44)
+      ..cubicTo(w * .36, h * .53, w * .28, h * .65, w * .23, h * .75);
     canvas.drawPath(
       shine,
       Paint()
@@ -153,8 +154,8 @@ class _GlassyConePainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: .62),
     );
     final rimLight = Path()
-      ..moveTo(w * .66, h * .21)
-      ..quadraticBezierTo(w * .71, h * .4, w * .8, h * .68);
+      ..moveTo(w * .62, h * .46)
+      ..quadraticBezierTo(w * .70, h * .62, w * .79, h * .76);
     canvas.drawPath(
       rimLight,
       Paint()
@@ -163,13 +164,54 @@ class _GlassyConePainter extends CustomPainter {
         ..strokeWidth = w * .035
         ..color = Colors.white.withValues(alpha: .3),
     );
+    final neck = Rect.fromCenter(
+      center: Offset(w * .5, h * .395),
+      width: w * .34,
+      height: h * .085,
+    );
+    canvas.drawOval(
+      neck,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Color.lerp(color, Colors.white, .60)!,
+            color,
+            Color.lerp(color, Colors.black, .55)!,
+          ],
+        ).createShader(neck),
+    );
+
+    final crown = Rect.fromLTWH(w * .28, h * .045, w * .44, h * .36);
+    canvas.drawOval(
+      crown,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-.45, -.55),
+          radius: 1.1,
+          colors: [
+            Color.lerp(color, Colors.white, .88)!,
+            Color.lerp(color, Colors.white, .18)!,
+            Color.lerp(color, Colors.black, .58)!,
+          ],
+          stops: const [0, .46, 1],
+        ).createShader(crown),
+    );
+    canvas.drawOval(
+      crown,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * .035
+        ..color = isMovable
+            ? const Color(0xFFFFE6A2)
+            : Colors.white.withValues(alpha: .66),
+    );
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(w * .49, h * .13),
+        center: Offset(w * .42, h * .135),
         width: w * .13,
         height: h * .055,
       ),
-      Paint()..color = Colors.white.withValues(alpha: .9),
+      Paint()..color = Colors.white.withValues(alpha: .88),
     );
 
     // The broad circular foot makes the piece read as a classic Ludo cone.
