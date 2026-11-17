@@ -12,7 +12,9 @@ class PremiumMatchLayout extends StatelessWidget {
     required this.onExit,
     required this.reaction,
     required this.boardBuilder,
+    this.title = 'LOCAL MATCH',
   });
+  final String title;
   final Widget profiles;
   final Widget controls;
   final Widget reaction;
@@ -47,12 +49,12 @@ class PremiumMatchLayout extends StatelessWidget {
                     semanticLabel: 'Ludo Lovers',
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'LOCAL MATCH',
+                      title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFFFFD36B),
                         fontSize: 12,
                         fontWeight: FontWeight.w800,

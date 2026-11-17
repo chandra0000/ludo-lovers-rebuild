@@ -45,7 +45,7 @@ class ModeRegistry {
       name: 'Quick',
       description: 'First to finish any two pawns · Classic movement rules',
       playerCounts: [2, 3, 4],
-      availability: ModeAvailability.comingSoon,
+      availability: ModeAvailability.internalPreview,
     ),
     ModeDefinition(
       mode: MatchMode.teamUp,
@@ -72,9 +72,11 @@ class ModeRegistry {
       throw StateError('Mode has not passed its public release gates');
     }
     return LudoGame.initial(
-      ruleProfile: mode == MatchMode.classic
-          ? LudoRuleProfile.classicV1
-          : LudoRuleProfile.currentV1,
+      ruleProfile: switch (mode) {
+        MatchMode.classic => LudoRuleProfile.classicV1,
+        MatchMode.quick => LudoRuleProfile.quickV1,
+        _ => LudoRuleProfile.currentV1,
+      },
       configuration: MatchConfiguration.local(mode, playerCount: playerCount),
     );
   }
