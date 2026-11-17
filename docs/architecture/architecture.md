@@ -86,3 +86,12 @@ The game artwork is a visual layer. Pawns, dice, selection states, and transient
 ## Legacy repository boundary
 
 The older `chandra0000/ludo-lovers` repository is reference-only. Current app code, game state, geometry, assets, and tests must live in this rebuild. See [legacy repository isolation and migration guardrails](legacy-repository-isolation.md) before porting any old behavior. Do not introduce a second engine or coordinate table to preserve compatibility with the old app.
+
+## Premium V2 presentation ownership
+
+`MatchTurnCoordinator` coordinates command dispatch, engine-legal automatic
+selection and AI scheduling. It never calculates movement/capture/victory rules.
+MatchScreen owns route/lifecycle integration and passes accepted events to the
+animation lifecycle. Accepted command persistence has one serialized entry point.
+`MatchPawnLayer`, `MatchDestinationPreview` and `MatchResultPresentation` are
+read-only render/action surfaces. They do not own sessions, clocks or storage.

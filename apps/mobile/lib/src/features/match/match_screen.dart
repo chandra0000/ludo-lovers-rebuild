@@ -5,20 +5,15 @@ import 'package:flutter/material.dart';
 
 import '../../game/application/match_session.dart';
 import '../../game/domain/ai/seeded_ludo_ai.dart';
-import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
 import '../../game/domain/feedback_preferences.dart';
 import '../../game/infrastructure/persistence/feedback_preferences_store.dart';
 import '../../game/domain/persistence/saved_match.dart';
-import '../../game/presentation/destination_preview_painter.dart';
-import '../../game/presentation/glassy_pawn.dart';
 import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
-import 'game/systems/pawn_animator.dart';
-import 'game/systems/pawn_layout_solver.dart';
 import 'dice_control_dock.dart';
 import 'local_match_chat_sheet.dart';
 import 'match_board_artwork.dart';
@@ -28,10 +23,7 @@ import 'match_brand_mark.dart';
 import 'match_board_viewport.dart';
 import 'match_command_controller.dart';
 import 'match_move_presentation_plan.dart';
-import 'match_ai_turn_policy.dart';
-import 'match_ai_scheduler.dart';
 import 'match_animation_lifecycle.dart';
-import 'match_turn_resolution_controller.dart';
 import 'match_persistence_controller.dart';
 import 'match_fx_listener.dart';
 import 'match_dialogs.dart';
@@ -42,6 +34,12 @@ import 'match_hud_region_clipper.dart';
 import 'match_profiles_layer.dart';
 import 'match_reaction_controls.dart';
 import 'match_landing_celebration.dart';
+import 'match_pawn_layer.dart';
+import 'match_destination_preview.dart';
+import 'match_turn_coordinator.dart';
+import 'match_result_presentation.dart';
+import 'match_ai_scheduler.dart';
+import 'match_turn_resolution_controller.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -99,12 +97,27 @@ class _MatchScreenState extends State<MatchScreen>
   MatchPlayerProfile _profileFor(PlayerColor color) =>
       _profiles.singleWhere((profile) => profile.color == color);
 
-  MatchSession get _session => _matchController.session;
   LudoGame get _game => _matchController.game;
   late final math.Random _random = math.Random(widget.aiSeed);
-  final SeededLudoAi _ai = const SeededLudoAi();
-  final MatchAiTurnPolicy _aiTurnPolicy = const MatchAiTurnPolicy();
-  final MatchAiScheduler _aiScheduler = MatchAiScheduler();
+  late final MatchTurnCoordinator _turns = MatchTurnCoordinator(
+    controller: _matchController,
+    aiPlayers: widget.aiPlayers,
+    aiSeed: widget.aiSeed,
+    difficulty: widget.aiDifficulty,
+    isActive: () => mounted && _canAct,
+    movementBusy: () => _movementController.isAnimating,
+    diceBusy: () => _isDiceAnimating,
+    rollHuman: () => widget.rollDice?.call() ?? _random.nextInt(6) + 1,
+    execute: _applyCommand,
+    onRollAccepted: _presentAcceptedRoll,
+    onMoveAccepted: _presentAcceptedMove,
+    onDiceSettled: () => setState(_animations.completeDiceRoll),
+    onChanged: () {
+      if (mounted) setState(() {});
+    },
+    onPenalty: _showConsecutiveSixPenalty,
+  );
+  MatchAiScheduler get _aiScheduler => _turns.aiScheduler;
   bool _isAppResumed = true;
   bool _exitDialogOpen = false;
   bool _allowExit = false;
@@ -120,8 +133,7 @@ class _MatchScreenState extends State<MatchScreen>
   AnimationController get _previewController => _animations.preview;
   bool get _isDiceAnimating => _animations.isDiceAnimating;
   int get _diceRollId => _animations.diceRollId;
-  final MatchTurnResolutionController _turnResolution =
-      MatchTurnResolutionController();
+  MatchTurnResolutionController get _turnResolution => _turns.resolution;
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
   String? _activeReaction;
@@ -290,10 +302,11 @@ class _MatchScreenState extends State<MatchScreen>
         '${result.rejectionReason?.name} (${result.message})',
       );
     }
+    if (result.accepted) {
+      unawaited(_persistMatch());
+    }
     return result;
   }
-
-  bool _executeCommand(MatchCommand command) => _applyCommand(command).accepted;
 
   Future<void> _persistMatch() {
     // Serialize writes so a slower earlier preference write can never
@@ -312,90 +325,23 @@ class _MatchScreenState extends State<MatchScreen>
   void dispose() {
     _reactionDismissTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    _aiScheduler.cancel();
-    _turnResolution.cancel();
+    _turns.dispose();
     unawaited(_persistMatch());
     _animations.dispose();
     super.dispose();
   }
 
-  void _scheduleAiTurn() {
-    if (!_aiTurnPolicy.canSchedule(
-      session: _session,
-      aiPlayers: widget.aiPlayers,
-      isAppResumed: _canAct,
-      isScheduled: _aiScheduler.isScheduled,
-      isMovementAnimating: _movementController.isAnimating,
-      isDiceAnimating: _isDiceAnimating,
-    )) {
-      return;
-    }
-    _aiScheduler.schedule(() {
-      if (!mounted ||
-          !_canAct ||
-          !widget.aiPlayers.contains(_game.activePlayer) ||
-          _game.winner != null ||
-          _game.diceValue != null ||
-          _movementController.isAnimating ||
-          _isDiceAnimating) {
-        return;
-      }
-      final command = _aiTurnPolicy.createRoll(
-        session: _session,
-        aiSeed: widget.aiSeed,
-      );
-      if (!_executeCommand(command)) return;
-      _playFeedback(MatchFeedbackCue.roll);
-      final rolled = _game;
-      setState(() {
-        _animations.presentAcceptedRoll(
-          hasDiceResult: rolled.diceValue != null,
-        );
-      });
-      unawaited(_persistMatch());
-      // A third-six penalty is an accepted turn transition, not a dice
-      // result to animate. Continue immediately if the next seat is AI.
-      if (rolled.diceValue == null) {
-        _showConsecutiveSixPenalty();
-        _scheduleAiTurn();
-      }
-    });
-  }
+  void _scheduleAiTurn() => _turns.scheduleAi();
 
-  bool _roll({required bool isAi}) {
-    // The game engine remains authoritative; UI animation only presents
-    // the accepted result and cannot alter rules or generate another value.
-    if (!_canAct ||
-        _game.diceValue != null ||
-        _game.winner != null ||
-        _movementController.isAnimating ||
-        _isDiceAnimating) {
-      return false;
-    }
-    final value = isAi
-        ? math.Random(widget.aiSeed ^ _game.stateVersion).nextInt(6) + 1
-        : widget.rollDice?.call() ?? _random.nextInt(6) + 1;
-    final command = _matchController.buildRoll(
-      value: value,
-      isAi: isAi,
-      aiSeed: widget.aiSeed,
-    );
-    if (!_executeCommand(command)) return false;
+  bool _roll() => _turns.roll();
+
+  void _presentAcceptedRoll(LudoGame rolled) {
     _playFeedback(MatchFeedbackCue.roll);
-    final rolled = _game;
-    final wasPenalized =
-        rolled.events.whereType<ConsecutiveSixPenalty>().isNotEmpty;
-    setState(() {
-      _animations.presentAcceptedRoll(
+    setState(
+      () => _animations.presentAcceptedRoll(
         hasDiceResult: rolled.diceValue != null,
-      );
-    });
-    unawaited(_persistMatch());
-    if (wasPenalized) {
-      _showConsecutiveSixPenalty();
-      _scheduleAiTurn();
-    }
-    return true;
+      ),
+    );
   }
 
   void _showConsecutiveSixPenalty() {
@@ -411,66 +357,7 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
-  void _handleDiceAnimationComplete() {
-    if (!mounted || !_canAct || !_isDiceAnimating) return;
-    final legal = _game.legalPawnIndices();
-    setState(_animations.completeDiceRoll);
-
-    if (_game.diceValue == null) {
-      // Defensive recovery: a penalty or restored transition may already
-      // have advanced the turn without leaving a pending dice result.
-      _scheduleAiTurn();
-      return;
-    }
-    if (legal.isEmpty) {
-      _turnResolution.schedulePass(
-        matchId: _session.matchId,
-        stateVersion: _game.stateVersion,
-        currentMatchId: () => _session.matchId,
-        currentStateVersion: () => _game.stateVersion,
-        canExecute: () => mounted && _canAct && _game.diceValue != null,
-        onReady: () {
-          final command = _matchController.buildPass();
-          final accepted = _executeCommand(command);
-          setState(() {});
-          if (!accepted) return;
-          unawaited(_persistMatch());
-          _scheduleAiTurn();
-        },
-      );
-      setState(() {});
-      return;
-    }
-
-    final isAiTurn = widget.aiPlayers.contains(_game.activePlayer);
-    final selected = isAiTurn
-        ? _ai.choosePawn(
-            _game,
-            seed: widget.aiSeed ^ _game.stateVersion,
-            difficulty: widget.aiDifficulty,
-          )
-        : legal.length == 1
-            ? legal.single
-            : null;
-    if (selected != null) {
-      _turnResolution.schedulePawn(
-        matchId: _session.matchId,
-        stateVersion: _game.stateVersion,
-        currentMatchId: () => _session.matchId,
-        currentStateVersion: () => _game.stateVersion,
-        canExecute: () =>
-            mounted &&
-            _canAct &&
-            _game.diceValue != null &&
-            !_movementController.isAnimating,
-        onReady: () {
-          setState(() {});
-          _move(selected);
-        },
-      );
-      setState(() {});
-    }
-  }
+  void _handleDiceAnimationComplete() => _turns.completeDice();
 
   void _showInvalidMoveFeedback(int pawnIndex) {
     final evaluation = _game.evaluatePawnMove(pawnIndex);
@@ -491,22 +378,18 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
-  void _move(int pawnIndex) {
-    if (!_canAct ||
-        _isDiceAnimating ||
-        _turnResolution.isPending ||
-        !_game.legalPawnIndices().contains(pawnIndex)) {
-      return;
-    }
-    final movingColor = _game.activePlayer;
-    final reduceMotion = _reduceMotion;
-    final result = _applyCommand(_matchController.buildMove(pawnIndex));
-    if (!result.accepted) return;
+  void _move(int pawnIndex) => _turns.move(pawnIndex);
 
+  void _presentAcceptedMove(
+    PlayerColor movingColor,
+    int pawnIndex,
+    List<LudoGameEvent> events,
+  ) {
+    final reduceMotion = _reduceMotion;
     // Authoritative movement and feedback are projected from accepted events.
     // The UI must not recalculate capture or bonus rules from pawn snapshots.
     final plan = MatchMovePresentationPlan.fromEvents(
-      events: result.events,
+      events: events,
       player: movingColor,
       pawnIndex: pawnIndex,
     );
@@ -523,25 +406,7 @@ class _MatchScreenState extends State<MatchScreen>
         feedback: plan.feedback,
       );
     });
-    unawaited(_persistMatch());
     _animations.startPawnMovement();
-  }
-
-  NormalizedBoardPoint _pawnPosition(
-    PlayerColor color,
-    int pawnIndex,
-  ) {
-    final player = _game.players.firstWhere((item) => item.color == color);
-    return PawnAnimator.position(
-      color: color,
-      pawnIndex: pawnIndex,
-      progress: player.pawnProgress[pawnIndex],
-      isMoving: _animations.pawn.color == color &&
-          _animations.pawn.pawnIndex == pawnIndex,
-      startProgress: _animations.pawn.startProgress,
-      endProgress: _animations.pawn.endProgress,
-      animationValue: _movementController.value,
-    );
   }
 
   String get _statusText {
@@ -599,13 +464,33 @@ class _MatchScreenState extends State<MatchScreen>
                           canvasScale: scale,
                         ),
                       ),
-                    ..._buildPawnsWithClusters(scale),
+                    Positioned.fill(
+                      child: MatchPawnLayer(
+                        game: _game,
+                        animations: _animations,
+                        canvasScale: scale,
+                        isTurnResolutionPending: _turnResolution.isPending,
+                        aiPlayers: widget.aiPlayers,
+                        shakeKeys: _shakeKeys,
+                        reduceMotion: _reduceMotion,
+                        lastLandingPlan: _lastLandingPlan,
+                        landingSequence: _landingSequence,
+                        onMove: _selectOrMovePawn,
+                        onStackTap: _handleStackTap,
+                        onInvalidMove: _showInvalidMoveFeedback,
+                      ),
+                    ),
                     if (_landingSequence > 0 && _lastLandingPlan != null)
                       MatchLandingCelebration(
                         key: ValueKey(_landingSequence),
                         plan: _lastLandingPlan!,
                       ),
-                    if (_selectedPawnIndex != null) _buildDestinationPreview(),
+                    if (_selectedPawnIndex != null)
+                      MatchDestinationPreview(
+                        game: _game,
+                        selectedPawnIndex: _selectedPawnIndex!,
+                        animation: _previewController,
+                      ),
                     Positioned.fill(
                       child: ClipPath(
                         clipper: const MatchHudRegionClipper(),
@@ -629,7 +514,7 @@ class _MatchScreenState extends State<MatchScreen>
                                     .contains(_game.activePlayer)) {
                                   return;
                                 }
-                                _roll(isAi: false);
+                                _roll();
                               },
                               onAnimationComplete: _handleDiceAnimationComplete,
                             ),
@@ -730,18 +615,7 @@ class _MatchScreenState extends State<MatchScreen>
                       ),
                     ),
                     if (_game.winner != null)
-                      Positioned(
-                        left: 150,
-                        top: 480,
-                        width: 276,
-                        height: 80,
-                        child: Center(
-                          child: FilledButton(
-                            onPressed: _restartMatch,
-                            child: const Text('PLAY AGAIN'),
-                          ),
-                        ),
-                      ),
+                      MatchResultPresentation(onRematch: _restartMatch),
                   ],
                 ),
               ),
@@ -874,74 +748,6 @@ class _MatchScreenState extends State<MatchScreen>
     _move(pawnIndex);
   }
 
-  Widget _buildDestinationPreview() {
-    final pawnIndex = _selectedPawnIndex!;
-    final roll = _game.diceValue!;
-    final progress = _game.currentPlayer.pawnProgress[pawnIndex];
-    final target = progress == -1 ? 0 : progress + roll;
-    final point = BoardGeometry.canvasPosition(
-      BoardGeometry.normalizedPosition(_game.activePlayer, target, pawnIndex),
-    );
-    // Derive the visual arrows from the same authoritative progress anchors
-    // as pawn movement, including turns and home-lane transitions.
-    final routePoints = <Offset>[];
-    for (var step = progress; step <= target; step++) {
-      final anchor = BoardGeometry.canvasPosition(
-        BoardGeometry.normalizedPosition(
-          _game.activePlayer,
-          step,
-          pawnIndex,
-        ),
-      );
-      routePoints.add(Offset(anchor.x, anchor.y));
-    }
-    final evaluation = _game.evaluatePawnMove(pawnIndex);
-    var type = DestinationPreviewType.standard;
-    if (evaluation is ValidMove && evaluation.isCapture) {
-      type = DestinationPreviewType.capture;
-    } else if (target < BoardGeometry.playerTrackLength) {
-      final cell = BoardGeometry.physicalTrackCell(_game.activePlayer, target);
-      final hasOpponent = _game.players.any(
-        (player) =>
-            player.color != _game.activePlayer &&
-            player.pawnProgress.any(
-              (opponentProgress) =>
-                  opponentProgress >= 0 &&
-                  opponentProgress < BoardGeometry.playerTrackLength &&
-                  BoardGeometry.physicalTrackCell(
-                        player.color,
-                        opponentProgress,
-                      ) ==
-                      cell,
-            ),
-      );
-      if (hasOpponent && BoardGeometry.safeTrackCells.contains(cell)) {
-        type = DestinationPreviewType.safeCoexist;
-      }
-    }
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _previewController,
-          builder: (context, child) => CustomPaint(
-            key: const Key('destination_preview'),
-            painter: DestinationPreviewPainter(
-              targetCenter: Offset(point.x, point.y),
-              routePoints: routePoints,
-              cellSize: 36,
-              playerColor: _game.activePlayer.color,
-              previewType: type,
-              animationProgress:
-                  MediaQuery.maybeOf(context)?.disableAnimations == true
-                      ? 0
-                      : _previewController.value,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _handleStackTap(List<int> movablePawnIndices) {
     if (_selectedPawnIndex != null &&
         movablePawnIndices.contains(_selectedPawnIndex)) {
@@ -1002,203 +808,5 @@ class _MatchScreenState extends State<MatchScreen>
         _selectOrMovePawn(selectedIndex);
       }
     });
-  }
-
-  List<Widget> _buildPawnsWithClusters(double canvasScale) {
-    // Index players once per frame instead of searching for each pawn.
-    final playersByColor = {
-      for (final player in _game.players) player.color: player,
-    };
-    final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
-    for (final color in PlayerColor.turnOrder) {
-      final player = playersByColor[color]!;
-      for (var pawnIndex = 0;
-          pawnIndex < player.pawnProgress.length;
-          pawnIndex++) {
-        final point = _pawnPosition(color, pawnIndex);
-        final key = PawnLayoutSolver.clusterKey(point);
-        clusters.putIfAbsent(key, () => []).add(
-          (color: color, pawnIndex: pawnIndex),
-        );
-      }
-    }
-    for (final occupants in clusters.values) {
-      occupants.sort((a, b) {
-        final colorOrder = PlayerColor.turnOrder.indexOf(a.color).compareTo(
-              PlayerColor.turnOrder.indexOf(b.color),
-            );
-        return colorOrder != 0
-            ? colorOrder
-            : a.pawnIndex.compareTo(b.pawnIndex);
-      });
-    }
-    final legalIndices = _game.legalPawnIndices().toSet();
-    return [
-      for (final color in PlayerColor.turnOrder)
-        for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(
-            color,
-            pawnIndex,
-            playersByColor[color]!,
-            clusters,
-            legalIndices,
-            canvasScale,
-          ),
-    ];
-  }
-
-  Widget _buildPawn(
-    PlayerColor color,
-    int pawnIndex,
-    LudoPlayer player,
-    Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
-    Set<int> legalIndices,
-    double canvasScale,
-  ) {
-    final progress = player.pawnProgress[pawnIndex];
-    final normalized = _pawnPosition(color, pawnIndex);
-    final canvasPoint = BoardGeometry.canvasPosition(normalized);
-    final occupants = clusters[PawnLayoutSolver.clusterKey(normalized)] ??
-        [
-          (color: color, pawnIndex: pawnIndex),
-        ];
-    final stackIndex = occupants.indexWhere(
-      (item) => item.color == color && item.pawnIndex == pawnIndex,
-    );
-    final stacked = occupants.length > 1;
-    final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
-    final visualOffset = Offset(slot.x, slot.y);
-    final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
-    final isHumanTurn =
-        !widget.aiPlayers.contains(color) && color == _game.activePlayer;
-    final canMove = !_isDiceAnimating &&
-        !_movementController.isAnimating &&
-        !_turnResolution.isPending &&
-        isHumanTurn &&
-        legalIndices.contains(pawnIndex);
-    final canExplainInvalidMove = !_isDiceAnimating &&
-        !_movementController.isAnimating &&
-        !_turnResolution.isPending &&
-        isHumanTurn &&
-        _game.diceValue != null &&
-        !legalIndices.contains(pawnIndex);
-    final movableStackIndices = occupants
-        .where(
-          (item) =>
-              item.color == _game.activePlayer &&
-              legalIndices.contains(item.pawnIndex),
-        )
-        .map((item) => item.pawnIndex)
-        .toList(growable: false);
-    final stackTapIndex = occupants.indexWhere(
-      (item) =>
-          item.color == _game.activePlayer &&
-          legalIndices.contains(item.pawnIndex),
-    );
-    final isStackTapTarget = stacked && stackIndex == stackTapIndex;
-    final isCurrentPlayer = color == _game.activePlayer;
-    final tapPosition = stacked
-        ? Offset(canvasPoint.x, canvasPoint.y)
-        : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
-
-    // The canvas is scaled to fit the phone. Expand the design-space hitbox
-    // inversely so its transformed physical bounds never fall below 48×48 dp.
-    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
-    final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
-    final shakeKey = _shakeKeys.putIfAbsent(
-      '${color.name}-$pawnIndex',
-      GlobalKey<ShakeFeedbackWrapperState>.new,
-    );
-    return Positioned(
-      left: tapPosition.dx - hitTargetWidth / 2,
-      top: tapPosition.dy - hitTargetHeight / 2,
-      width: hitTargetWidth,
-      height: hitTargetHeight,
-      child: IgnorePointer(
-        // Inactive/non-legal pawns must not cover a legal pawn's enlarged
-        // touch target when adjacent cells overlap on compact screens.
-        ignoring:
-            stacked ? !isStackTapTarget : !canMove && !canExplainInvalidMove,
-        child: Semantics(
-          button: stacked ? isStackTapTarget : canMove || canExplainInvalidMove,
-          label: stacked
-              ? 'Choose a movable pawn from this shared cell'
-              : '${color.name} pawn ${pawnIndex + 1}',
-          value: progress == -1
-              ? 'In yard'
-              : progress == 56
-                  ? 'Home'
-                  : 'Progress $progress of 56',
-          hint: stacked
-              ? 'Double tap to choose which movable pawn to move.'
-              : canMove
-                  ? 'Double tap to move this pawn.'
-                  : canExplainInvalidMove
-                      ? 'Double tap to hear why this pawn cannot move.'
-                      : widget.aiPlayers.contains(color)
-                          ? 'Controlled by the AI opponent.'
-                          : 'Not movable on this turn.',
-          child: GestureDetector(
-            key: Key('pawn_${color.name}_$pawnIndex'),
-            behavior: HitTestBehavior.opaque,
-            onTap: stacked
-                ? (isStackTapTarget
-                    ? () => _handleStackTap(movableStackIndices)
-                    : null)
-                : canMove
-                    ? () => _selectOrMovePawn(pawnIndex)
-                    : canExplainInvalidMove
-                        ? () => _showInvalidMoveFeedback(pawnIndex)
-                        : null,
-            child: Center(
-              child: Transform.translate(
-                offset: visualOffset,
-                child: ShakeFeedbackWrapper(
-                  key: shakeKey,
-                  child: AnimatedScale(
-                    scale: canMove ? 1.12 : 1,
-                    duration: _reduceMotion
-                        ? Duration.zero
-                        : const Duration(milliseconds: 180),
-                    child: Transform.rotate(
-                      angle: _animations.pawn.color == color &&
-                              _animations.pawn.pawnIndex == pawnIndex
-                          ? math.sin(_movementController.value * math.pi * 2) *
-                              0.08
-                          : 0,
-                      child: TweenAnimationBuilder<double>(
-                        key: ValueKey(
-                          'landing-${color.name}-$pawnIndex-${_lastLandingPlan?.player == color && _lastLandingPlan?.pawnIndex == pawnIndex ? _landingSequence : 0}',
-                        ),
-                        tween: Tween(
-                          begin: _lastLandingPlan?.player == color &&
-                                  _lastLandingPlan?.pawnIndex == pawnIndex &&
-                                  !_reduceMotion
-                              ? 1.12
-                              : 1.0,
-                          end: 1.0,
-                        ),
-                        duration: _reduceMotion
-                            ? Duration.zero
-                            : const Duration(milliseconds: 260),
-                        curve: Curves.easeOutBack,
-                        builder: (context, value, child) =>
-                            Transform.scale(scale: value, child: child),
-                        child: GlassyPawn(
-                          color: color.color,
-                          size: size,
-                          isCurrentPlayer: isCurrentPlayer,
-                          isMovable: canMove,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
