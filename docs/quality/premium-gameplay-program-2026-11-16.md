@@ -183,3 +183,22 @@ These configurations model logical displays, not physical-device acceptance.
 App launch requests portraitUp, with a platform-channel regression test. Modern
 large-screen platform orientation policy may override this request; adaptive
 rendering remains necessary. No platform behavior is inferred from a mock test.
+
+## Phase E — restart and lifecycle hardening
+
+Reproduced three failing regressions before the fix: Classic restart and rematch
+silently selected the default rule profile; a stale human roll callback consumed
+randomness while backgrounded. Fresh MatchSession creation now preserves the
+current versioned rule profile, and command entry points guard resumed lifecycle
+before randomness or transitions. UI roll availability rebuilds on pause/resume.
+Rules, turn order and engine transitions are unchanged.
+
+The serialized persistence controller exposes the latest completed save outcome
+(null before completion). Failures still do not poison later writes. This supports
+accurate exit feedback without exposing storage implementation to the engine.
+A pre-existing reduced-motion test's redundant tap on an already moved, inactive
+pawn was replaced with assertions on persisted progress and cleared dice; its
+missed-hit warning no longer masks whether the first move actually happened.
+
+Focused verification: 26 tests passed, including pre-fix reproduction coverage,
+restored human turns, ordered saves and gameplay presentation.

@@ -250,14 +250,12 @@ class _MatchScreenState extends State<MatchScreen>
     _isAppResumed = state == AppLifecycleState.resumed;
     if (!_isAppResumed) {
       // Never execute an automatic pawn move or pass while backgrounded.
-      final hadPendingTurn = _turnResolution.isPending;
       _turnResolution.cancel();
-      if (hadPendingTurn) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
       unawaited(_persistMatch());
       return;
     }
+    if (mounted) setState(() {});
     // A paused dice widget may never send its animation-complete callback.
     // Resume the already accepted result without generating another roll.
     if (_game.diceValue != null && !_movementController.isAnimating) {
@@ -354,7 +352,8 @@ class _MatchScreenState extends State<MatchScreen>
   bool _roll({required bool isAi}) {
     // The game engine remains authoritative; UI animation only presents
     // the accepted result and cannot alter rules or generate another value.
-    if (_game.diceValue != null ||
+    if (!_isAppResumed ||
+        _game.diceValue != null ||
         _game.winner != null ||
         _movementController.isAnimating ||
         _isDiceAnimating) {
@@ -480,7 +479,8 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _move(int pawnIndex) {
-    if (_isDiceAnimating ||
+    if (!_isAppResumed ||
+        _isDiceAnimating ||
         _turnResolution.isPending ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
@@ -596,7 +596,8 @@ class _MatchScreenState extends State<MatchScreen>
                           DiceControlDock(
                             targetValue: _game.diceValue,
                             rollId: _diceRollId,
-                            canRoll: !widget.aiPlayers
+                            canRoll: _isAppResumed &&
+                                !widget.aiPlayers
                                     .contains(_game.activePlayer) &&
                                 _game.diceValue == null &&
                                 !_isDiceAnimating &&
@@ -803,7 +804,9 @@ class _MatchScreenState extends State<MatchScreen>
       _landingPlan = null;
       _lastLandingPlan = null;
       _landingSequence = 0;
-      _matchController.reset(_newMatchSession(LudoGame.initial()));
+      _matchController.reset(
+        _newMatchSession(LudoGame.initial(ruleProfile: _game.ruleProfile)),
+      );
       _selectedPawnIndex = null;
     });
     unawaited(_persistMatch());
@@ -814,7 +817,8 @@ class _MatchScreenState extends State<MatchScreen>
     // A tap on a legal pawn commits the move immediately. The dice has
     // already been accepted by MatchSession, so a second confirmation tap
     // adds friction without improving rule validation.
-    if (_turnResolution.isPending ||
+    if (!_isAppResumed ||
+        _turnResolution.isPending ||
         _isDiceAnimating ||
         _movementController.isAnimating ||
         !_game.legalPawnIndices().contains(pawnIndex)) {
