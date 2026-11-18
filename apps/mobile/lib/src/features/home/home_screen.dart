@@ -241,13 +241,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         key: const Key('open_mode_selection'),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => ModeSelectionScreen(
-                              allowInternalModes: widget.allowInternalModes,
-                            ),
-                          ),
-                        ),
+                        onPressed: () => Navigator.of(context)
+                            .push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ModeSelectionScreen(
+                                  allowInternalModes: widget.allowInternalModes,
+                                ),
+                              ),
+                            )
+                            .then((_) => _loadSavedMatch()),
                         icon: const Icon(Icons.dashboard_customize_outlined),
                         label: const Text('EXPLORE GAME MODES'),
                       ),
