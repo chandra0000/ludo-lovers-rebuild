@@ -35,9 +35,9 @@ import 'match_destination_preview.dart';
 import 'match_turn_coordinator.dart';
 import 'match_result_presentation.dart';
 import 'team_progress_panel.dart';
-import 'premium_match_layout.dart';
-import 'match_compact_profiles.dart';
-import 'match_bottom_controls.dart';
+import 'game_board_scaffold.dart';
+import 'match_utility_bar.dart';
+import '../../game/presentation/luxury_dice.dart';
 import 'match_ai_scheduler.dart';
 import 'match_turn_resolution_controller.dart';
 
@@ -463,44 +463,96 @@ class _MatchScreenState extends State<MatchScreen>
                 ),
               ),
               child: SafeArea(
-                child: PremiumMatchLayout(
-                  title: _game.configuration.id == 'local-current'
-                      ? 'LOCAL MATCH'
-                      : _game.configuration.id.toUpperCase(),
+                child: GameBoardScaffold(
+                  game: _game,
+                  profiles: _profiles,
                   onExit: _requestExit,
                   teamProgress: _game.configuration.isTeamUp
                       ? TeamProgressPanel(game: _game, profiles: _profiles)
                       : null,
                   teamProgressHeight:
                       _game.scheduledPlayer == _game.activePlayer ? 40 : 58,
-                  profiles: widget.showDynamicProfiles
-                      ? MatchCompactProfiles(
-                          profiles: _profiles,
-                          active: _game.activePlayer,
-                          activePlayers: _game.configuration.activePlayers,
-                        )
-                      : const SizedBox.shrink(),
-                  reaction: MatchReactionToast(
-                    reaction: _activeReaction,
-                    inline: true,
+                  reaction: Stack(
+                    children: [
+                      IconButton(
+                        key: const Key('quick_reactions_button'),
+                        tooltip: 'Local emoji reactions',
+                        onPressed: _showQuickReactions,
+                        icon: const Icon(
+                          Icons.emoji_emotions_outlined,
+                          color: Color(0xFFFFE3A0),
+                        ),
+                      ),
+                      if (_activeReaction != null)
+                        Positioned.fill(
+                          child: MatchReactionToast(
+                            reaction: _activeReaction,
+                            inline: true,
+                          ),
+                        ),
+                    ],
                   ),
-                  controls: MatchBottomControls(
-                    value: _game.diceValue,
-                    rollId: _diceRollId,
-                    canRoll: _canAct &&
-                        !widget.aiPlayers.contains(_game.activePlayer) &&
-                        _game.diceValue == null &&
-                        !_isDiceAnimating &&
-                        !_movementController.isAnimating &&
-                        _game.winner == null,
-                    waiting: _game.diceValue == null &&
-                        _game.winner == null &&
-                        !_movementController.isAnimating,
-                    onRoll: _roll,
-                    onDiceComplete: _handleDiceAnimationComplete,
-                    status: _statusText,
-                    instruction: _actionInstruction,
-                    active: _game.activePlayer,
+                  dice: SizedBox(
+                    key: const Key('roll_dice'),
+                    width: 88,
+                    height: 96,
+                    child: Center(
+                      child: LuxuryDiceButton(
+                        key: const Key('animated_dice'),
+                        size: 64,
+                        targetValue: _game.diceValue,
+                        rollId: _diceRollId,
+                        canRoll: _canAct &&
+                            !widget.aiPlayers.contains(_game.activePlayer) &&
+                            _game.diceValue == null &&
+                            !_isDiceAnimating &&
+                            !_movementController.isAnimating &&
+                            _game.winner == null,
+                        isWaitingForRoll: _game.diceValue == null &&
+                            _game.winner == null &&
+                            !_movementController.isAnimating,
+                        onRollRequested: _roll,
+                        onAnimationComplete: _handleDiceAnimationComplete,
+                      ),
+                    ),
+                  ),
+                  status: Semantics(
+                    liveRegion: true,
+                    label: '$_statusText. $_actionInstruction',
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _actionInstruction == 'Roll dice'
+                              ? 'Your turn'
+                              : _actionInstruction,
+                          key: const Key('match_action_instruction'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            height: 1,
+                          ),
+                        ),
+                        Text(
+                          _statusText,
+                          key: const Key('turn_status'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _game.activePlayer.color,
+                            fontSize: 10,
+                            height: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  utilities: MatchUtilityBar(
+                    onChat: _showLocalChat,
+                    onMore: _showMoreMenu,
+                    onPawn: _selectOrMovePawn,
                     legal: _canAct &&
                             !_isDiceAnimating &&
                             !_movementController.isAnimating &&
@@ -508,10 +560,6 @@ class _MatchScreenState extends State<MatchScreen>
                             !widget.aiPlayers.contains(_game.activePlayer)
                         ? _game.legalPawnIndices()
                         : const [],
-                    onPawn: _selectOrMovePawn,
-                    onChat: _showLocalChat,
-                    onReaction: _showQuickReactions,
-                    onMore: _showMoreMenu,
                   ),
                   boardBuilder: (context, scale) => Stack(
                     children: [
