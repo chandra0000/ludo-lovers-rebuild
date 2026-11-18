@@ -37,6 +37,7 @@ import 'match_result_presentation.dart';
 import 'team_progress_panel.dart';
 import 'game_board_scaffold.dart';
 import 'royal_backdrop.dart';
+import 'social_overlay_coordinator.dart';
 import 'match_utility_bar.dart';
 import '../../game/presentation/luxury_dice.dart';
 import 'match_ai_scheduler.dart';
@@ -137,7 +138,7 @@ class _MatchScreenState extends State<MatchScreen>
   MatchTurnResolutionController get _turnResolution => _turns.resolution;
   final Map<String, GlobalKey<ShakeFeedbackWrapperState>> _shakeKeys = {};
   int? _selectedPawnIndex;
-  String? _activeReaction;
+  final _social = SocialOverlayCoordinator();
   FeedbackPreferences _feedbackPreferences = const FeedbackPreferences();
   final _feedbackStore = const FeedbackPreferencesStore();
   final _feedback = MatchFeedback();
@@ -184,7 +185,6 @@ class _MatchScreenState extends State<MatchScreen>
     if (_isAppResumed) unawaited(_feedback.play(cue, _feedbackPreferences));
   }
 
-  Timer? _reactionDismissTimer;
   MatchMovePresentationPlan? _landingPlan;
   MatchMovePresentationPlan? _lastLandingPlan;
   int _landingSequence = 0;
@@ -192,6 +192,7 @@ class _MatchScreenState extends State<MatchScreen>
   @override
   void initState() {
     super.initState();
+    _social.addListener(_onSocialFeedback);
     WidgetsBinding.instance.addObserver(this);
     unawaited(_loadFeedbackPreferences());
     if (_game.diceValue != null) {
@@ -215,6 +216,10 @@ class _MatchScreenState extends State<MatchScreen>
         _scheduleAiTurn();
       }
     });
+  }
+
+  void _onSocialFeedback() {
+    if (mounted) setState(() {});
   }
 
   void _handleMovementTick() {
@@ -324,7 +329,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   void dispose() {
-    _reactionDismissTimer?.cancel();
+    _social.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _turns.dispose();
     unawaited(_persistMatch());
@@ -466,26 +471,13 @@ class _MatchScreenState extends State<MatchScreen>
                       : null,
                   teamProgressHeight:
                       _game.scheduledPlayer == _game.activePlayer ? 40 : 58,
-                  reaction: Stack(
-                    children: [
-                      IconButton(
-                        key: const Key('quick_reactions_button'),
-                        tooltip: 'Local emoji reactions',
-                        onPressed: _showQuickReactions,
-                        icon: const Icon(
-                          Icons.emoji_emotions_outlined,
-                          color: Color(0xFFFFE3A0),
-                        ),
-                      ),
-                      if (_activeReaction != null)
-                        Positioned.fill(
-                          child: MatchReactionToast(
-                            reaction: _activeReaction,
-                            inline: true,
-                          ),
-                        ),
-                    ],
-                  ),
+                  reaction: const SizedBox.shrink(),
+                  onPlayerChat: _showPlayerChat,
+                  onPlayerEmoji: _showPlayerReactions,
+                  social: _social,
+                  thinkingPlayer: _actionInstruction == 'AI thinking'
+                      ? _game.activePlayer
+                      : null,
                   dice: SizedBox(
                     key: const Key('roll_dice'),
                     width: 88,
@@ -637,25 +629,29 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
-  void _displayReaction(String reaction) {
-    if (!mounted) return;
-    _reactionDismissTimer?.cancel();
-    setState(() => _activeReaction = reaction);
-    _reactionDismissTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _activeReaction = null);
-      }
-    });
-  }
+  void _displayReaction(String reaction) =>
+      _social.show(_game.activePlayer, reaction);
 
-  void _showQuickReactions() {
+  void _showPlayerChat(PlayerColor player) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF17120B),
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF12121A),
+      builder: (_) => LocalMatchChatSheet(
+        profileName: _profileFor(player).displayName,
+        onMessage: (text) => _social.show(player, text),
+      ),
+    );
+  }
+
+  void _showPlayerReactions(PlayerColor player) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF12121A),
       builder: (pickerContext) => MatchReactionPicker(
         onReaction: (reaction) {
           Navigator.of(pickerContext).pop();
-          _displayReaction(reaction);
+          _social.show(player, reaction);
         },
       ),
     );
@@ -716,6 +712,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _restartMatch() {
+    _social.clear();
     _aiScheduler.cancel();
     _turnResolution.cancel();
     _animations.resetForNewMatch();

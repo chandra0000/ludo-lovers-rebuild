@@ -57,7 +57,10 @@ class TeamProgressPanel extends StatelessWidget {
         .expand((p) => p.pawnProgress)
         .where((v) => v == finishProgress)
         .length;
-    final label = 'TEAM ${team.name.toUpperCase()} · $finished/8';
+    final capacity = game.players
+        .where((p) => members.contains(p.color))
+        .fold(0, (total, p) => total + p.pawnProgress.length);
+    final label = 'TEAM ${team.name.toUpperCase()} · $finished/$capacity';
     return Semantics(
       label: '$label pawns home. $names',
       child: Container(

@@ -8,6 +8,9 @@ import 'player_profile_card.dart';
 import 'player_slot_resolver.dart';
 import 'royal_game_header.dart';
 import 'royal_dice_arena.dart';
+import 'profile_social_controls.dart';
+import 'social_overlay_coordinator.dart';
+import '../../game/domain/player_color.dart';
 
 /// One live surface for FFA, 1v1, AI and Team Up; contains no gameplay policies.
 class GameBoardScaffold extends StatelessWidget {
@@ -23,7 +26,14 @@ class GameBoardScaffold extends StatelessWidget {
     required this.boardBuilder,
     this.teamProgress,
     this.teamProgressHeight = 40,
+    this.onPlayerChat,
+    this.onPlayerEmoji,
+    this.social,
+    this.thinkingPlayer,
   });
+  final ValueChanged<PlayerColor>? onPlayerChat, onPlayerEmoji;
+  final SocialOverlayCoordinator? social;
+  final PlayerColor? thinkingPlayer;
   final LudoGame game;
   final List<MatchPlayerProfile> profiles;
   final VoidCallback onExit;
@@ -37,10 +47,28 @@ class GameBoardScaffold extends StatelessWidget {
         builder: (context, box) {
           final spacious = box.maxHeight >= 760;
           final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
-          final profileHeight = largeText ? 112.0 : 96.0;
-          final slots = PlayerSlotResolver.resolve(game, profiles);
-          Widget card(int index) =>
-              Expanded(child: PlayerProfileCard(slot: slots[index]));
+          final profileHeight = largeText ? 112.0 : 100.0;
+          final slots = PlayerSlotResolver.resolve(
+            game,
+            profiles,
+            thinkingPlayer: thinkingPlayer,
+          );
+          Widget card(int index) => Expanded(
+                child: PlayerProfileCard(
+                  slot: slots[index],
+                  feedback: social?.forPlayer(slots[index].profile.color),
+                  socialControls: onPlayerChat == null || onPlayerEmoji == null
+                      ? null
+                      : ProfileSocialControls(
+                          player: slots[index].profile.color,
+                          name: slots[index].profile.displayName,
+                          onChat: () =>
+                              onPlayerChat!(slots[index].profile.color),
+                          onEmoji: () =>
+                              onPlayerEmoji!(slots[index].profile.color),
+                        ),
+                ),
+              );
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Column(
