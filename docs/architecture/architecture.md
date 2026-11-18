@@ -95,3 +95,28 @@ MatchScreen owns route/lifecycle integration and passes accepted events to the
 animation lifecycle. Accepted command persistence has one serialized entry point.
 `MatchPawnLayer`, `MatchDestinationPreview` and `MatchResultPresentation` are
 read-only render/action surfaces. They do not own sessions, clocks or storage.
+
+## Versioned local modes and recovery — 2026-11-18
+
+The earlier schema-preservation note describes its historical increment. Current
+engine/save envelopes are v4, migrate supported v1–v3 data and fail closed for
+unknown versions, mismatched mode/profile/seat configuration and inconsistent team
+metadata. `MatchConfiguration` records mode/version/canonical active seats;
+`ModeRegistry` describes availability separately from the existence of engine code.
+Compatibility remains the default; Classic/Quick/Team are gated internal previews.
+Names/profiles persist independently from authoritative player IDs and team seats.
+
+Pure `TeamUpPolicy` defines friendly relationships, immutable unsafe-stack priority,
+departure/arrival resolution and scheduled-seat recipients. LudoGame invokes that
+policy and emits typed capture/priority/transfer/win events; read-only team HUD and
+AI consume those events/snapshots. A team result keeps winning team and final
+finisher. No widget decides stack, bonus or victory behavior.
+
+`PremiumMatchLayout` uses independent profile, square board-stage and bottom HUD
+regions. Only board overlays share the calibrated 576×1024 reference transform.
+The complete existing artwork extraction fits inside the square stage, and all
+logical pawn anchors/hitboxes remain unchanged.
+
+[Online architecture RFC](online-classic-private-rooms-rfc.md) is proposed, not an
+implemented transport/server or authorization to deploy. The existing pure engine
+will be shared after architecture acceptance; no duplicated online rules engine.

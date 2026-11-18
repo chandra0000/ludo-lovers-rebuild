@@ -27,3 +27,15 @@ Every material architecture, gameplay, asset, or workflow change must update the
 ## Current productionization evidence
 
 See [the 2026-11-16 baseline, Phase 0 diagnosis, and dependency ledger](quality/productionization-2026-11-16.md). It distinguishes current verification from historical status and pending release gates.
+
+## Premium Match V2 checkpoint
+
+Start with the [2026-11-18 release evidence](quality/premium-v2-release-readiness-2026-11-18.md)
+for current exact source SHAs, workflow/artifact receipts, provisional scores and
+open gates. The [execution ledger](quality/premium-v2-program.md) contains approved
+local-mode decisions and the audit against actual legacy source.
+[Quick v1](game/QUICK_RULES_v1.md) and [Team Up v1](game/TEAM_UP_RULES_v1.md) are
+implemented internal previews; public availability requires separate acceptance.
+The [online/private-room RFC](architecture/online-classic-private-rooms-rfc.md)
+is awaiting architecture acceptance, not shipped online functionality. Older
+evidence documents retain historical status and must not override this checkpoint.

@@ -1,0 +1,334 @@
+{
+  "baseline_main": "879f2b555c50575c5db066e0ac8bf530271a965a",
+  "legacy_reference": "ee7a4fe2ffcdde93f2945df345acec08e8f87a5f",
+  "pull_requests": [
+    {
+      "pr": 54,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/54",
+      "branch": "integrate/premium-v1-main",
+      "published_source_sha": "a8edd17362f1448b5460d990a89d5d71e5cabe95",
+      "tree_sha": "b6f599024a81d9e7d3b6d85191a5176be041d523",
+      "local_equivalent_sha": "eccaa730190190bd2f5c53547180b1730a06d1a5",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "A\t.github/scripts/android_integration.sh",
+        "M\t.github/workflows/android-integration.yml",
+        "M\tapps/mobile/integration_test/app_navigation_test.dart",
+        "M\tapps/mobile/integration_test/app_smoke_test.dart",
+        "M\tapps/mobile/lib/main.dart",
+        "M\tapps/mobile/lib/src/features/home/home_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/match_board_artwork.dart",
+        "M\tapps/mobile/lib/src/features/match/match_dialogs.dart",
+        "M\tapps/mobile/lib/src/features/match/match_dice_layer.dart",
+        "A\tapps/mobile/lib/src/features/match/match_feedback.dart",
+        "A\tapps/mobile/lib/src/features/match/match_feedback_settings.dart",
+        "M\tapps/mobile/lib/src/features/match/match_hud_overlay.dart",
+        "A\tapps/mobile/lib/src/features/match/match_hud_region_clipper.dart",
+        "M\tapps/mobile/lib/src/features/match/match_landing_celebration.dart",
+        "M\tapps/mobile/lib/src/features/match/match_persistence_controller.dart",
+        "M\tapps/mobile/lib/src/features/match/match_profiles_layer.dart",
+        "M\tapps/mobile/lib/src/features/match/match_safe_star_layer.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/setup/game_setup_screen.dart",
+        "A\tapps/mobile/lib/src/game/domain/feedback_preferences.dart",
+        "M\tapps/mobile/lib/src/game/domain/match_player_profile.dart",
+        "M\tapps/mobile/lib/src/game/domain/persistence/saved_match.dart",
+        "A\tapps/mobile/lib/src/game/domain/player_name.dart",
+        "A\tapps/mobile/lib/src/game/infrastructure/persistence/feedback_preferences_store.dart",
+        "A\tapps/mobile/lib/src/game/infrastructure/persistence/player_name_preferences.dart",
+        "M\tapps/mobile/lib/src/game/presentation/glassy_pawn.dart",
+        "M\tapps/mobile/lib/src/game/presentation/luxury_dice.dart",
+        "M\tapps/mobile/lib/src/game/presentation/shake_feedback_wrapper.dart",
+        "A\tapps/mobile/lib/src/portrait_orientation.dart",
+        "M\tapps/mobile/pubspec.lock",
+        "M\tapps/mobile/pubspec.yaml",
+        "M\tapps/mobile/test/app_test.dart",
+        "M\tapps/mobile/test/engine_architecture_boundary_test.dart",
+        "M\tapps/mobile/test/game_setup_ai_difficulty_test.dart",
+        "A\tapps/mobile/test/identity/named_match_flow_test.dart",
+        "A\tapps/mobile/test/identity/player_identity_persistence_test.dart",
+        "A\tapps/mobile/test/identity/player_name_test.dart",
+        "A\tapps/mobile/test/identity/player_seat_identity_test.dart",
+        "M\tapps/mobile/test/integrated_match_presentation_test.dart",
+        "M\tapps/mobile/test/luxury_dice_test.dart",
+        "A\tapps/mobile/test/match_adaptive_controls_test.dart",
+        "A\tapps/mobile/test/match_exit_confirmation_test.dart",
+        "A\tapps/mobile/test/match_feedback_settings_test.dart",
+        "A\tapps/mobile/test/match_hud_artwork_protection_test.dart",
+        "M\tapps/mobile/test/match_persistence_controller_test.dart",
+        "A\tapps/mobile/test/match_restart_lifecycle_test.dart",
+        "M\tapps/mobile/test/match_safe_star_layer_test.dart",
+        "A\tapps/mobile/test/portrait_orientation_test.dart",
+        "M\tapps/mobile/tool/verify_responsive_screenshots.py",
+        "A\tdocs/quality/evidence/ci-artifacts-9508b598-2026-11-17.json",
+        "A\tdocs/quality/evidence/engine-host-9508b598-2026-11-17.json",
+        "A\tdocs/quality/evidence/phase2-board-pixels-2026-11-16.json",
+        "A\tdocs/quality/premium-gameplay-program-2026-11-16.md",
+        "A\tdocs/quality/premium-release-evidence-2026-11-17.md",
+        "A\tdocs/quality/premium-v2-program.md",
+        "M\tdocs/quality/productionization-2026-11-16.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44006421732",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44006421737",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44006508670"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 55,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/55",
+      "branch": "refactor/match-scene-boundaries",
+      "published_source_sha": "23bcf306328dd7148440ab4edeaefc3063992fb1",
+      "tree_sha": "ca4955471fa0e918df6d90947cee7866bf43920e",
+      "local_equivalent_sha": "e544f4973ef889177ac88e7218b868c4545cc69a",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "A\tapps/mobile/lib/src/features/match/match_destination_preview.dart",
+        "A\tapps/mobile/lib/src/features/match/match_pawn_layer.dart",
+        "A\tapps/mobile/lib/src/features/match/match_result_presentation.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "A\tapps/mobile/lib/src/features/match/match_turn_coordinator.dart",
+        "A\tapps/mobile/test/match_turn_coordinator_test.dart",
+        "M\tdocs/architecture/architecture.md",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44007514601",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44007514609"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 56,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/56",
+      "branch": "feat/premium-match-v2-hud",
+      "published_source_sha": "8a066d95fd3fc2815e18a765def32147d61c9cb2",
+      "tree_sha": "657a913424640f882a039502549818fe58845dc4",
+      "local_equivalent_sha": "c612d5931dd1e92256bbb8e7b69f0cd01577e69f",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "A\tapps/mobile/lib/src/features/match/match_bottom_controls.dart",
+        "A\tapps/mobile/lib/src/features/match/match_compact_profiles.dart",
+        "M\tapps/mobile/lib/src/features/match/match_hud_overlay.dart",
+        "M\tapps/mobile/lib/src/features/match/match_reaction_controls.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "A\tapps/mobile/lib/src/features/match/premium_match_layout.dart",
+        "M\tapps/mobile/test/app_test.dart",
+        "M\tapps/mobile/test/integrated_match_presentation_test.dart",
+        "M\tapps/mobile/test/match_chrome_controls_test.dart",
+        "M\tapps/mobile/test/match_lifecycle_alignment_regression_test.dart",
+        "M\tapps/mobile/test/phase3_responsive_board_test.dart",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44008898841",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44008898856"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 57,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/57",
+      "branch": "feat/sculpted-glass-pawns",
+      "published_source_sha": "8117b6720d94fcab5403d20e31996529c5007faa",
+      "tree_sha": "d06733e01339703d5c38dbab109210b7a1dd9389",
+      "local_equivalent_sha": "cf450f3bb24c623b25702f7b1cb370c7d935d8d5",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/game/presentation/glassy_pawn.dart",
+        "M\tapps/mobile/lib/src/game/presentation/luxury_dice.dart",
+        "A\tapps/mobile/test/pawn_material_capture_test.dart",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44009518203",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44009518008"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 58,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/58",
+      "branch": "feat/versioned-local-modes",
+      "published_source_sha": "4faf005557c028a8301efb2993704445c833c1d7",
+      "tree_sha": "6b30b4c1182134badd0172e11b73e7e5fc283c68",
+      "local_equivalent_sha": "627474f6a0c177e88d078674315bc9914dd872f8",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/home/home_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/match_compact_profiles.dart",
+        "M\tapps/mobile/lib/src/features/match/match_pawn_layer.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/setup/game_setup_screen.dart",
+        "A\tapps/mobile/lib/src/features/setup/mode_selection_screen.dart",
+        "M\tapps/mobile/lib/src/game/application/match_session.dart",
+        "M\tapps/mobile/lib/src/game/domain/ludo_game.dart",
+        "A\tapps/mobile/lib/src/game/domain/match_configuration.dart",
+        "A\tapps/mobile/lib/src/game/domain/mode_registry.dart",
+        "M\tapps/mobile/lib/src/game/domain/persistence/saved_match.dart",
+        "A\tapps/mobile/test/modes/classic_mode_configuration_test.dart",
+        "M\tdocs/game/LUDO_LOVERS_CLASSIC_RULES_v1.md",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44010750402",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44010750356"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 59,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/59",
+      "branch": "feat/quick-two-finish-mode",
+      "published_source_sha": "a31fd2922e8a9e4418858a639922a2cd5023b7cd",
+      "tree_sha": "a3a6f4978eb919544e975a93233009d305a79c67",
+      "local_equivalent_sha": "073d2c14c0e95ecaffc1d8698f3624ccb7a802a6",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/premium_match_layout.dart",
+        "M\tapps/mobile/lib/src/game/domain/ludo_game.dart",
+        "M\tapps/mobile/lib/src/game/domain/mode_registry.dart",
+        "M\tapps/mobile/test/modes/classic_mode_configuration_test.dart",
+        "A\tapps/mobile/test/modes/quick_mode_test.dart",
+        "A\tapps/mobile/tool/mode_duration_simulation.dart",
+        "A\tdocs/game/QUICK_RULES_v1.md",
+        "A\tdocs/quality/evidence/quick-classic-roll-counts-2026-11-17.json",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44011652165",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44011652091"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 60,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/60",
+      "branch": "feat/team-up-domain-v1",
+      "published_source_sha": "a78be1e3afe80059bdd51cd8aa0f014b3cffedc0",
+      "tree_sha": "856e378b0891f3e841e366641746406274ba02fd",
+      "local_equivalent_sha": "b9ab7072dbe2db5421d70ed659af72f6ed186654",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/game/domain/ludo_game.dart",
+        "A\tapps/mobile/lib/src/game/domain/team_up_policy.dart",
+        "A\tapps/mobile/test/modes/team_up_domain_test.dart",
+        "A\tdocs/game/TEAM_UP_RULES_v1.md",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44012913757",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44012913692"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 61,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/61",
+      "branch": "feat/team-up-live-presentation",
+      "published_source_sha": "f0f46bfb1f3bbf8033c08d2e7a6b1e8b915663a3",
+      "tree_sha": "bf25f907f5dc3edeaafd03bdbc0f954f0be44a7c",
+      "local_equivalent_sha": "7174e2cc0a21a19b4491e9ec185897ad3b3fde13",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/home/home_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/match_dialogs.dart",
+        "M\tapps/mobile/lib/src/features/match/match_move_presentation_plan.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/premium_match_layout.dart",
+        "A\tapps/mobile/lib/src/features/match/team_progress_panel.dart",
+        "M\tapps/mobile/lib/src/game/domain/mode_registry.dart",
+        "M\tapps/mobile/test/modes/classic_mode_configuration_test.dart",
+        "A\tapps/mobile/test/modes/team_up_presentation_test.dart",
+        "A\tapps/mobile/test/modes/team_up_responsive_capture_test.dart",
+        "A\tapps/mobile/test/support/capture_artifact.dart",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44220435716",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44220435671"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 62,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/62",
+      "branch": "feat/team-aware-ai",
+      "published_source_sha": "842068272116575716718f60a688ad0d359b35dd",
+      "tree_sha": "643c316aa5e70cd53a238b40087cea920b4a95f5",
+      "local_equivalent_sha": "1e5ddc930fd3e9744575595d9ddec872fff7101f",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/game/domain/ai/seeded_ludo_ai.dart",
+        "A\tapps/mobile/test/modes/mode_aware_ai_test.dart",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221034621",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221034974"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 63,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/63",
+      "branch": "test/local-mode-platform-acceptance",
+      "published_source_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "tree_sha": "07ff312a7ebd449497dca5ee925dd5e2c92621a9",
+      "local_equivalent_sha": "2803729e03209ac53a071434a794bba6d956f856",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\t.github/scripts/android_integration.sh",
+        "A\t.github/scripts/ios_simulator_integration.sh",
+        "M\t.github/workflows/cross-platform-acceptance.yml",
+        "M\t.github/workflows/flutter.yml",
+        "M\tapps/mobile/integration_test/app_navigation_test.dart",
+        "M\tapps/mobile/lib/src/features/home/home_screen.dart",
+        "A\tapps/mobile/test/modes/local_mode_navigation_test.dart",
+        "A\tapps/mobile/test/modes/premium_flow_capture_test.dart",
+        "A\tapps/mobile/test/support/local_mode_navigation.dart",
+        "M\tapps/mobile/tool/verify_responsive_screenshots.py",
+        "M\tdocs/quality/premium-v2-program.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919424",
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221969152"
+      ],
+      "workflow_status": "success"
+    },
+    {
+      "pr": 64,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/64",
+      "branch": "docs/online-classic-architecture",
+      "published_source_sha": "608a92eb017760041826667de18f480a118e0e97",
+      "tree_sha": "be449eea28b27cc869d6b9a3c38b67a6d11192f5",
+      "local_equivalent_sha": "624d6ff748124d99d0b4faaa1dc3207123e2543f",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "A\tdocs/architecture/online-classic-private-rooms-rfc.md"
+      ],
+      "workflows": [],
+      "workflow_status": "not_applicable_documentation_only"
+    },
+    {
+      "pr": 65,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/65",
+      "branch": "ci/android-bundle-validation",
+      "published_source_sha": "b732a6189779613d019ee791a660ce8c82516dbd",
+      "tree_sha": "7edc918755f5a6592329889822db5e2f77bf9f76",
+      "local_equivalent_sha": "cd7bb3b3e633c073aebbc28f94b3ef5d957d7946",
+      "local_commit_is_not_published_sha": true,
+      "changed_files": [
+        "M\t.github/workflows/flutter.yml",
+        "A\tdocs/quality/android-bundle-validation.md"
+      ],
+      "workflows": [
+        "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44223326622"
+      ],
+      "workflow_status": "success"
+    }
+  ]
+}

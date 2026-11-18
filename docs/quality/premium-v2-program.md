@@ -235,3 +235,30 @@ fonts do not supply every fallback glyph (e.g. small setup arrows); installed
 platform font rendering remains separately verified. No mockups or regenerated
 board imagery are used. Full local suite: 414 tests passed; strict format and
 fatal-info analysis clean. Shell syntax and all 29 required PNGs verified.
+
+## Verified native runtime checkpoint — 2026-11-18
+
+PR #63 commit `2822cb969e8906f4c3b7ed093906dc0764badb6d` passed foundation
+44221919359, cross-platform 44221919424 and Android emulator 44221969152.
+Installed Android job 134525776535: both integration tests passed in 43 seconds.
+Installed iPhone 16 Pro simulator job 134525609912, Xcode16.4: both tests passed in
+53 seconds after actual app compilation/boot. These cover repeated compatibility
+navigation and Classic/Quick/Team roll/restart/exit/resume. Simulator results are
+not physical-iPhone acceptance. Both Linux and macOS screenshot archives were
+downloaded, their digests matched and all 29 required PNGs verified. Current debug
+APK downloaded, signature and SDK metadata verified. No new PR is merged.
+
+RFC #64 (`608a92eb017760041826667de18f480a118e0e97`) is a concrete online/private
+room design ready for owner acceptance; no backend runtime is claimed. #65 adds
+an explicitly nonproduction-signed validation AAB gate. The current release report
+and source/file manifests distinguish all artifact, code, visual and physical
+acceptance statuses. Existing Quick/Team acceptance decisions supersede earlier
+notes that those specifications were entirely missing. Historical renderer-first
+Notion guidance is superseded by the owner's measured Flutter-retention decision.
+
+#65 foundation 44223326622 is green, including actual release AAB compilation.
+Artifact 14391189823 downloaded, ZIP digest and bundle structure verified; its
+embedded certificate is Android Debug. This closes compilation evidence only;
+production signing/store acceptance remains BLOCKED. Selected source contrast
+pairs (names, seat/AI labels and gold controls) analytically exceed 4.5:1; this is
+not a complete pixel/native-assistive-technology audit.

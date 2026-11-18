@@ -1,0 +1,95 @@
+{
+  "benchmark": "ludo_lovers_engine",
+  "schemaVersion": 1,
+  "timestampUtc": "2026-11-18T02:17:34.825387Z",
+  "environment": {
+    "operatingSystem": "linux",
+    "operatingSystemVersion": "Linux 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+    "processorCount": 4,
+    "runnerName": "GitHub Actions 1000002880",
+    "appCommit": "2887ef09f80cd4d29589fa9334a3a5b1ee31a3e5",
+    "runtime": "3.9.2 (stable) (Wed Aug 27 03:49:40 2025 -0700) on \"linux_x64\"",
+    "executionMode": "dart-vm-jit",
+    "warmupIterationsPerCase": 200,
+    "samplesPerCase": 20,
+    "iterationsPerSample": 100,
+    "profiles": {
+      "compatibility": "ludo-lovers-current@1",
+      "classic": "classic@1"
+    }
+  },
+  "results": [
+    {
+      "name": "initial_state_creation",
+      "unit": "microseconds_per_operation",
+      "median": 8.59,
+      "p95": 12.18,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "legal_action_enumeration",
+      "unit": "microseconds_per_operation",
+      "median": 5.1,
+      "p95": 9.75,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "single_move_evaluation",
+      "unit": "microseconds_per_operation",
+      "median": 0.29,
+      "p95": 0.56,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "blockade_path_evaluation",
+      "unit": "microseconds_per_operation",
+      "median": 0.32,
+      "p95": 0.52,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "transition_and_event_generation",
+      "unit": "microseconds_per_operation",
+      "median": 4.92,
+      "p95": 6.85,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "capture_transition_and_events",
+      "unit": "microseconds_per_operation",
+      "median": 4.595,
+      "p95": 9.49,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "snapshot_encode",
+      "unit": "microseconds_per_operation",
+      "median": 11.31,
+      "p95": 25.61,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "snapshot_decode",
+      "unit": "microseconds_per_operation",
+      "median": 16.265,
+      "p95": 22.74,
+      "samples": 20,
+      "iterationsPerSample": 100
+    },
+    {
+      "name": "seeded_ai_decision",
+      "unit": "microseconds_per_operation",
+      "median": 12.29,
+      "p95": 13.56,
+      "samples": 20,
+      "iterationsPerSample": 100
+    }
+  ]
+}
