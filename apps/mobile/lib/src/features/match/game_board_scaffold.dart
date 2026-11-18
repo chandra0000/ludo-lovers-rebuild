@@ -6,6 +6,8 @@ import '../../game/domain/match_player_profile.dart';
 import 'match_board_artwork.dart';
 import 'player_profile_card.dart';
 import 'player_slot_resolver.dart';
+import 'royal_game_header.dart';
+import 'royal_dice_arena.dart';
 
 /// One live surface for FFA, 1v1, AI and Team Up; contains no gameplay policies.
 class GameBoardScaffold extends StatelessWidget {
@@ -44,40 +46,11 @@ class GameBoardScaffold extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(
-                  height: spacious ? 76 : 48,
-                  child: Stack(
-                    key: const Key('match_top_rail'),
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: IconButton(
-                          key: const Key('exit_match'),
-                          tooltip: 'Exit match',
-                          constraints: const BoxConstraints.tightFor(
-                            width: 48,
-                            height: 48,
-                          ),
-                          onPressed: onExit,
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Color(0xFFFFE3A0),
-                          ),
-                        ),
-                      ),
-                      Image.asset(
-                        'assets/images/branding/ludo_lovers_icon.webp',
-                        key: const Key('match_brand_mark'),
-                        width: spacious ? 72 : 44,
-                        height: spacious ? 72 : 44,
-                        cacheWidth: 216,
-                        semanticLabel: 'Ludo Lovers',
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(width: 48, height: 48, child: reaction),
-                      ),
-                    ],
+                  height: spacious ? 84 : 48,
+                  child: RoyalGameHeader(
+                    onExit: onExit,
+                    spacious: spacious,
+                    trailing: reaction,
                   ),
                 ),
                 if (teamProgress != null)
@@ -139,7 +112,10 @@ class GameBoardScaffold extends StatelessWidget {
                   child: Row(
                     children: [
                       card(2),
-                      SizedBox(width: spacious ? 104 : 88, child: dice),
+                      SizedBox(
+                        width: spacious ? 104 : 88,
+                        child: RoyalDiceArena(child: dice),
+                      ),
                       card(3),
                     ],
                   ),
