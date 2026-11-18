@@ -1,0 +1,142 @@
+{
+  "method": "WCAG sRGB relative luminance ratio; analytical source color pairs, not full-screen pixel or native assistive-tech audit",
+  "source": "apps/mobile/lib/src/features/match/match_compact_profiles.dart; match_bottom_controls.dart",
+  "profile_background": "Color.lerp(accent, #171320, .83), brightest endpoint of profile gradient",
+  "results": [
+    {
+      "element": "orange name",
+      "foreground_rgb": [
+        255,
+        255,
+        255
+      ],
+      "background_rgb": [
+        62,
+        39,
+        33
+      ],
+      "ratio": 13.843,
+      "threshold": 4.5
+    },
+    {
+      "element": "orange seat/AI label",
+      "foreground_rgb": [
+        255,
+        137,
+        40
+      ],
+      "background_rgb": [
+        62,
+        39,
+        33
+      ],
+      "ratio": 5.841,
+      "threshold": 4.5
+    },
+    {
+      "element": "green name",
+      "foreground_rgb": [
+        255,
+        255,
+        255
+      ],
+      "background_rgb": [
+        28,
+        59,
+        33
+      ],
+      "ratio": 12.375,
+      "threshold": 4.5
+    },
+    {
+      "element": "green seat/AI label",
+      "foreground_rgb": [
+        51,
+        255,
+        40
+      ],
+      "background_rgb": [
+        28,
+        59,
+        33
+      ],
+      "ratio": 9.12,
+      "threshold": 4.5
+    },
+    {
+      "element": "magenta name",
+      "foreground_rgb": [
+        255,
+        255,
+        255
+      ],
+      "background_rgb": [
+        61,
+        23,
+        70
+      ],
+      "ratio": 14.9,
+      "threshold": 4.5
+    },
+    {
+      "element": "magenta seat/AI label",
+      "foreground_rgb": [
+        244,
+        40,
+        255
+      ],
+      "background_rgb": [
+        61,
+        23,
+        70
+      ],
+      "ratio": 4.679,
+      "threshold": 4.5
+    },
+    {
+      "element": "blue name",
+      "foreground_rgb": [
+        255,
+        255,
+        255
+      ],
+      "background_rgb": [
+        26,
+        43,
+        70
+      ],
+      "ratio": 14.209,
+      "threshold": 4.5
+    },
+    {
+      "element": "blue seat/AI label",
+      "foreground_rgb": [
+        40,
+        158,
+        255
+      ],
+      "background_rgb": [
+        26,
+        43,
+        70
+      ],
+      "ratio": 5.024,
+      "threshold": 4.5
+    },
+    {
+      "element": "gold controls against darkest profile-independent HUD",
+      "foreground_rgb": [
+        255,
+        211,
+        107
+      ],
+      "background_rgb": [
+        23,
+        19,
+        32
+      ],
+      "ratio": 12.849,
+      "threshold": 4.5
+    }
+  ]
+}

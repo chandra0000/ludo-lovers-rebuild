@@ -20,6 +20,13 @@ Use at least one representative mid-range Android phone. Add a lower-memory devi
 
 ## 2. P0 gameplay acceptance
 
+Record the exact mode/profile with every scenario. The hard-blockade, third-six
+and four-finish scenarios below describe Classic; compatibility retains its own
+versioned flags. Quick ends at any two finishes. Team Up replaces Classic hard
+blockades with its approved priority/departure policy and ends at eight team
+finishes; execute [its full rule scenarios](game/TEAM_UP_RULES_v1.md) separately.
+Never use one mode's acceptance transcript as evidence for another.
+
 Use a deterministic test setup or debug fixture so the same positions can be repeated. Verify both the engine result and what the player sees:
 
 - Safe squares: all four coloured starts and four gold stars match the canonical artwork; an opponent cannot capture a pawn on any of them.
@@ -43,7 +50,7 @@ Keep the canonical 810×1440 artwork unchanged. At normal display scaling:
 6. Repeat on portrait 360×800, 393×873 and 412×915 logical-pixel layouts where supported; do not crop or stretch the source artwork.
 7. Inspect the screenshot at native resolution, not only a scaled chat preview.
 
-Record centre offset in physical pixels for every sampled pawn. Target <=2 physical pixels from the intended artwork centre, with no clipping or unintended overlap. Verify the effective hit target is at least 44×44 logical pixels and that adjacent pawns remain independently selectable.
+Record centre offset in physical pixels for every sampled pawn. Target <=2 physical pixels from the intended artwork centre, with no clipping or unintended overlap. Verify the effective hit target is at least 48×48 logical pixels and that adjacent pawns remain independently selectable.
 
 **Pass condition:** product owner approves the captures from the actual phone and the recorded touch tests pass. Until then keep `BoardGeometry.visualApprovalPending = true`.
 
@@ -94,10 +101,31 @@ Record a 3-minute profile session containing dice rolls, pawn release, a 6-step 
 | Memory after 20 min | Pending | No unexplained upward trend |
 | Battery: match / idle | Pending | Record both and delta |
 | Board centre offsets | Pending | <=2 physical px sampled |
-| Hit targets | Pending | >=44×44 logical px |
+| Hit targets | Pending | >=48×48 logical px |
 | Rule scenario recordings | Pending | All required scenarios captured |
 | Owner visual approval | Pending | Explicit approval required |
 
 ## 6. Release gate
 
 Do not mark P0 visual acceptance or P1 performance complete from GitHub Actions, screenshots rendered only in CI, or Android emulator tests. Attach the device record, screen recordings, screenshots and profiling exports to the release PR. Keep the compatibility profile as default and Classic opt-in until gameplay tests, safe-cell artwork review and owner acceptance are complete.
+
+## 7. Paired renderer and cross-platform evidence extension
+
+Physical iOS acceptance requires a real iPhone record (model/chipset, iOS version,
+refresh rate, source/build variant, trace method and tester), not a simulator pass.
+Run the same lifecycle, touch, VoiceOver, safe-area, long-match and memory scenarios.
+For Android include compact, representative midrange and large 6.1–6.9-inch devices;
+record logical viewport/DPR/insets rather than inferring layout from inches.
+
+For a Flutter-versus-Flame comparison, first make the experimental rendering
+scenario feature-equivalent: identical approved assets, board transform, all 16
+pawn positions and the same deterministic dice/selection/cell movement/capture/
+finish trace. PR #39's static board view alone is not a comparable gameplay run.
+Use the same physical device, OS, pinned Flutter version, renderer/backend,
+profile/release mode, refresh/thermal conditions and duration. Alternate run order,
+include warmup and record at least three repetitions. Export raw build/raster frame
+timings with p50/p95/p99, frame-budget misses, dropped frames, process RAM, startup
+and image-decode observations. Compare visual pixels/anchor parity and input
+behavior alongside timings. Keep Flutter production unless a reviewed report
+shows a meaningful repeatable benefit without correctness/maintenance regressions.
+No comparative measurements have yet been executed in this program.
