@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/royal_backdrop.dart';
+import 'package:ludo_lovers/src/features/match/royal_game_header.dart';
+import 'package:ludo_lovers/src/features/match/royal_crown.dart';
 
 void main() {
   for (final reduced in [false, true]) {
@@ -40,4 +42,27 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('header crown stays small and square beside the approved logo',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 84,
+            child: RoyalGameHeader(
+              onExit: () {},
+              spacious: true,
+              trailing: const SizedBox(),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(RoyalCrown)), const Size(16, 16));
+    expect(
+      tester.getSize(find.byKey(const Key('match_brand_mark'))),
+      const Size(72, 72),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

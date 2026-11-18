@@ -42,7 +42,16 @@ def main():
     parser.add_argument("--directory", type=Path,
                         default=Path("test-artifacts/acceptance"))
     parser.add_argument("--premium-flows", action="store_true")
+    parser.add_argument("--native-directory", type=Path)
     args = parser.parse_args()
+    if args.native_directory:
+        for name in ("ffa-match", "classic-match", "quick-match", "team-up-match", "computer-match", "emoji-picker", "profile-bubble", "local-chat"):
+            path = args.native_directory / f"native-{name}.png"
+            width, height = struct.unpack_from(">II", path.read_bytes(), 16)
+            if width < 320 or height < width:
+                raise ValueError(f"{path}: invalid native portrait dimensions")
+            verify(path, width, height)
+        return
     for width, height in VIEWPORTS:
         verify(args.directory / f"match-screen-{width}x{height}.png", width, height)
     for width, height in EXTENDED:
@@ -56,6 +65,8 @@ def main():
             verify(args.directory / f"flow-{name}.png", 393, 873)
         for width, height in (*VIEWPORTS, (320, 568)):
             verify(args.directory / f"team-up-match-{width}x{height}.png", width, height)
+        for name in ("ffa", "1v1", "computer", "team-up", "emoji-picker", "profile-bubble", "local-chat"):
+            verify(args.directory / f"royal-{name}-393x873.png", 393, 873)
         for state in ("transferred", "winning"):
             verify(args.directory / f"team-up-{state}-393x873.png", 393, 873)
 

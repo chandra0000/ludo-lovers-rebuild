@@ -6,48 +6,127 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../test/support/local_mode_navigation.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('home to local match navigation survives repeated exits', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'onboarding_completed_v1': true,
-    });
-
-    await tester.pumpWidget(const LudoLoversApp());
-    await tester.pump(const Duration(milliseconds: 1900));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
-
-    for (var cycle = 0; cycle < 3; cycle++) {
-      await tester.tap(find.byKey(const Key('open_game_setup')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('start_local_match')), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('start_local_match')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('board_artwork')), findsOneWidget);
-      expect(find.byKey(const Key('roll_dice')), findsOneWidget);
-      expect(tester.takeException(), isNull);
-
-      await tester.tap(find.byKey(const Key('exit_match')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('confirm_leave_match')));
-      await tester.pumpAndSettle();
-      // Exiting a match returns to Game Setup, not directly to Home.
-      expect(find.byKey(const Key('start_local_match')), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
-      expect(tester.takeException(), isNull);
+  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  var surfaceConverted = false;
+  setUp(() => surfaceConverted = false);
+  Future<void> capture(WidgetTester tester, String name) async {
+    final errors = <Object>[];
+    final context = tester.element(find.byType(MaterialApp));
+    final providers = tester
+        .widgetList<Image>(find.byType(Image))
+        .map((image) => image.image)
+        .toSet();
+    await tester.runAsync(
+      () => Future.wait(
+        providers.map(
+          (provider) => precacheImage(
+            provider,
+            context,
+            onError: (error, stack) => errors.add(error),
+          ),
+        ),
+      ).timeout(const Duration(seconds: 10)),
+    );
+    expect(errors, isEmpty, reason: 'Installed capture $name asset readiness');
+    await tester.pump();
+    if (!surfaceConverted) {
+      // SDK registers teardown to revert the Android image surface after each test.
+      await binding.convertFlutterSurfaceToImage();
+      surfaceConverted = true;
+      await tester.pump();
     }
-  });
-  testWidgets('installed local modes support roll, restart and saved resume',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    await verifyLocalModeNavigation(tester);
-  });
+    await binding.takeScreenshot(name).timeout(const Duration(seconds: 15));
+  }
+
+  testWidgets(
+    'home to local match navigation survives repeated exits',
+    (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'onboarding_completed_v1': true,
+      });
+
+      await tester.pumpWidget(const LudoLoversApp());
+      await tester.pump(const Duration(milliseconds: 1900));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+
+      for (var cycle = 0; cycle < 3; cycle++) {
+        await tester.tap(find.byKey(const Key('open_game_setup')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('start_local_match')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('board_artwork')), findsOneWidget);
+        expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+        if (cycle == 0) await capture(tester, 'native-ffa-match');
+        expect(tester.takeException(), isNull);
+
+        await tester.tap(find.byKey(const Key('exit_match')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('confirm_leave_match')));
+        await tester.pumpAndSettle();
+        // Exiting a match returns to Game Setup, not directly to Home.
+        expect(find.byKey(const Key('start_local_match')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+  testWidgets(
+    'installed local modes support roll, restart and saved resume',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await verifyLocalModeNavigation(
+        tester,
+        capture: (name) => capture(tester, name),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+  testWidgets(
+    'installed computer setup and profile social surfaces',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
+      await tester.pumpWidget(const LudoLoversApp());
+      await tester.pump(const Duration(milliseconds: 1900));
+      await tester.pumpAndSettle();
+      final modes = find.byKey(const Key('open_mode_selection'));
+      await tester.ensureVisible(modes);
+      await tester.tap(modes);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('launch_computer')));
+      await tester.pumpAndSettle();
+      final start = find.byKey(const Key('start_ai_match'));
+      await tester.scrollUntilVisible(
+        start,
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      await capture(tester, 'native-computer-match');
+      await tester.tap(find.byKey(const Key('profile_emoji_orange')));
+      await tester.pumpAndSettle();
+      await capture(tester, 'native-emoji-picker');
+      await tester.tap(find.text('🔥'));
+      await tester.pumpAndSettle();
+      await capture(tester, 'native-profile-bubble');
+      await tester.tap(find.byKey(const Key('profile_chat_orange')));
+      await tester.pumpAndSettle();
+      await capture(tester, 'native-local-chat');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
 }

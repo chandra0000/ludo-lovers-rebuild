@@ -77,7 +77,7 @@ jobs:
       - name: Run responsive and event presentation widget tests on macOS
         timeout-minutes: 12
         working-directory: apps/mobile
-        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart test/modes/team_up_responsive_capture_test.dart test/modes/premium_flow_capture_test.dart
+        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart test/modes/team_up_responsive_capture_test.dart test/modes/premium_flow_capture_test.dart test/royal_mode_capture_test.dart
       - name: Verify all responsive PNG artifacts
         working-directory: apps/mobile
         run: python3 tool/verify_responsive_screenshots.py --premium-flows
@@ -95,6 +95,13 @@ jobs:
         timeout-minutes: 15
         working-directory: apps/mobile
         run: bash ../../.github/scripts/ios_simulator_integration.sh
+      - name: Upload installed iPhone simulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-installed-ios-simulator-screenshots
+          path: apps/mobile/test-artifacts/native/*.png
+          if-no-files-found: error
       - name: Simulator diagnostics on failure
         if: failure()
         timeout-minutes: 2

@@ -14,6 +14,6 @@ if ! xcrun simctl list devices booted -j | python3 -c 'import json,os,sys; sys.e
   xcrun simctl boot "$SIMULATOR_ID"
 fi
 xcrun simctl bootstatus "$SIMULATOR_ID" -b
-flutter test integration_test/app_navigation_test.dart \
-  -d "$SIMULATOR_ID" --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true \
-  --timeout 3m --reporter expanded
+flutter drive --no-pub --driver=test_driver/native_capture_driver.dart --target=integration_test/app_navigation_test.dart \
+  -d "$SIMULATOR_ID" --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true
+python3 tool/verify_responsive_screenshots.py --native-directory test-artifacts/native

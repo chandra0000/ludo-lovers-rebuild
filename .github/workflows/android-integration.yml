@@ -58,6 +58,13 @@ jobs:
           disable-animations: true
           working-directory: apps/mobile
           script: bash ../../.github/scripts/android_integration.sh
+      - name: Upload installed Android emulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-installed-android-emulator-screenshots
+          path: apps/mobile/test-artifacts/native/*.png
+          if-no-files-found: error
       - name: Collect emulator diagnostics on failure
         if: failure() || cancelled()
         timeout-minutes: 2
