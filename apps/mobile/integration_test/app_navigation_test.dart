@@ -35,6 +35,11 @@ void main() {
       surfaceConverted = true;
       await tester.pump();
     }
+    // Live test bindings fade pointer crosses over two paint frames. Include
+    // one clean frame before capture; never retouch the resulting screenshot.
+    for (var frame = 0; frame < 3; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
     await binding.takeScreenshot(name).timeout(const Duration(seconds: 15));
   }
 
