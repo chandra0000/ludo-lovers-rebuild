@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../game/domain/persistence/saved_match.dart';
+import '../../game/domain/mode_registry.dart';
 import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
 import '../setup/mode_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+    this.allowInternalModes = ModeRegistry.internalBuild,
+  });
+  final bool allowInternalModes;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,6 +22,12 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
+  bool get _canResumeSaved =>
+      _savedMatch != null &&
+      ModeRegistry.canPlay(
+        _savedMatch!.game.configuration.mode,
+        allowInternal: widget.allowInternalModes,
+      );
 
   @override
   void initState() {
@@ -164,23 +175,31 @@ class _HomeScreenState extends State<HomeScreen> {
                               side: const BorderSide(color: _gold),
                               minimumSize: const Size.fromHeight(52),
                             ),
-                            onPressed: () => Navigator.of(context)
-                                .push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => MatchScreen(
-                                      initialGame: _savedMatch!.game,
-                                      aiPlayers: _savedMatch!.aiPlayers,
-                                      aiSeed: _savedMatch!.aiSeed,
-                                      profiles: _savedMatch!.profiles,
-                                      aiDifficulty: _savedMatch!.aiDifficulty,
-                                    ),
-                                  ),
-                                )
-                                .then((_) => _loadSavedMatch()),
+                            onPressed: _canResumeSaved
+                                ? () => Navigator.of(context)
+                                    .push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => MatchScreen(
+                                          initialGame: _savedMatch!.game,
+                                          aiPlayers: _savedMatch!.aiPlayers,
+                                          aiSeed: _savedMatch!.aiSeed,
+                                          profiles: _savedMatch!.profiles,
+                                          aiDifficulty:
+                                              _savedMatch!.aiDifficulty,
+                                        ),
+                                      ),
+                                    )
+                                    .then((_) => _loadSavedMatch())
+                                : null,
                             icon: const Icon(Icons.play_arrow_rounded),
                             label: const Text('RESUME SAVED MATCH'),
                           ),
                         ),
+                        if (!_canResumeSaved)
+                          const Text(
+                            'This saved mode is not enabled in this build.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
                         TextButton(
                           key: const Key('discard_saved_match'),
                           onPressed: _discardSavedMatch,
@@ -224,7 +243,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         key: const Key('open_mode_selection'),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const ModeSelectionScreen(),
+                            builder: (_) => ModeSelectionScreen(
+                              allowInternalModes: widget.allowInternalModes,
+                            ),
                           ),
                         ),
                         icon: const Icon(Icons.dashboard_customize_outlined),
