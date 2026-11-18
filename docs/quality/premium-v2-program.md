@@ -214,3 +214,24 @@ all four modes at all three difficulties. Candidate selection leaves the source
 snapshot unchanged and every chosen move is engine-legal. A third-six forfeiture
 is recognized as an already-resolved roll in simulation rather than passed twice.
 No claim is made about strategic optimality or physical-device execution time.
+
+## Local-mode runtime and visual acceptance expansion
+
+The same navigation scenario runs as a widget regression and installed integration
+smoke: Classic two seats, Quick three seats and Team Up four seats start, roll,
+restart, leave and resume. Home now reloads saves after returning from mode
+selection, fixing a stale resume card observed in the test. Both platform scripts
+run preview modes only in the test process; normal build artifacts retain public
+gates. The macOS job now boots an available iPhone simulator and executes the
+installed navigation suite after compiling. This new runtime gate is pending CI,
+not equivalent to a physical-device acceptance claim.
+
+Twelve additional actual Flutter-rendered captures cover live Home, mode selection,
+Classic/Quick/Team setup, AI setup, rolling, pawn selection/movement, capture,
+victory and rematch. Tests reuse the live app theme and bounded capture helper.
+CI requires these and seven Team Up PNGs in addition to the ten responsive PNGs.
+Classic setup and rolling at 393×873 were visually inspected. SDK-only capture
+fonts do not supply every fallback glyph (e.g. small setup arrows); installed
+platform font rendering remains separately verified. No mockups or regenerated
+board imagery are used. Full local suite: 414 tests passed; strict format and
+fatal-info analysis clean. Shell syntax and all 29 required PNGs verified.
