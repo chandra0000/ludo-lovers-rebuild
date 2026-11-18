@@ -85,7 +85,10 @@ void main() {
     final won = quick([56, 55, -1, -1]).roll(1).movePawn(1);
     await tester.pumpWidget(MaterialApp(home: MatchScreen(initialGame: won)));
     await tester.pumpAndSettle();
-    expect(find.text('QUICK'), findsOneWidget);
+    expect(
+      find.text('QUICK'),
+      findsNothing,
+    ); // Header is logo-only; mode stays in saved configuration.
     expect(find.text('ORANGE WINS'), findsOneWidget);
     await tester.tap(find.text('PLAY AGAIN'));
     await tester.pumpAndSettle();
