@@ -140,14 +140,14 @@ void responsiveTest(
         );
       }
       expect(find.byKey(const Key('chat_button')), findsOneWidget);
-      expect(find.byKey(const Key('quick_reactions_button')), findsOneWidget);
+      expect(find.byKey(const Key('profile_emoji_orange')), findsOneWidget);
       expect(find.byKey(const Key('turn_status')), findsOneWidget);
       expect(find.byKey(const Key('exit_match')), findsOneWidget);
       expect(find.byKey(const Key('more_button')), findsOneWidget);
       expect(tester.takeException(), isNull);
       for (final key in const [
         Key('chat_button'),
-        Key('quick_reactions_button'),
+        Key('profile_emoji_orange'),
         Key('more_button'),
         Key('exit_match'),
         Key('roll_dice'),
