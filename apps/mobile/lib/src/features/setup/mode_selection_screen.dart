@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../game/domain/mode_registry.dart';
+import '../../game/domain/match_configuration.dart';
 import 'game_setup_screen.dart';
 
 class ModeSelectionScreen extends StatelessWidget {
@@ -17,6 +18,65 @@ class ModeSelectionScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final entry in [
+                    (
+                      id: 'ffa',
+                      label: 'Four-player FFA',
+                      mode: MatchMode.compatibility,
+                      count: 4,
+                      computer: false
+                    ),
+                    (
+                      id: 'duel',
+                      label: 'Two-player 1v1',
+                      mode: MatchMode.classic,
+                      count: 2,
+                      computer: false
+                    ),
+                    (
+                      id: 'computer',
+                      label: 'VS Computer',
+                      mode: MatchMode.compatibility,
+                      count: 4,
+                      computer: true
+                    ),
+                    (
+                      id: 'team',
+                      label: 'Team-Up 2v2',
+                      mode: MatchMode.teamUp,
+                      count: 4,
+                      computer: false
+                    ),
+                  ])
+                    OutlinedButton(
+                      key: Key('launch_${entry.id}'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(144, 48),
+                      ),
+                      onPressed: ModeRegistry.canPlay(
+                        entry.mode,
+                        allowInternal: allowInternalModes,
+                      )
+                          ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => GameSetupScreen(
+                                    mode: entry.mode,
+                                    allowInternalModes: allowInternalModes,
+                                    initialPlayerCount: entry.count,
+                                    preferComputer: entry.computer,
+                                  ),
+                                ),
+                              )
+                          : null,
+                      child: Text(entry.label),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
               for (final mode in ModeRegistry.definitions)
                 Card(
                   color: const Color(0xFF1D1725),
