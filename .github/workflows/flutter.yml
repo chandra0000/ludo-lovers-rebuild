@@ -159,6 +159,21 @@ jobs:
         working-directory: apps/mobile
         run: ls -lh build/app/outputs/flutter-apk/*-release.apk
 
+      # The generated runner uses a debug signing certificate. This verifies
+      # bundle compilation only; it is deliberately not a store-ready artifact.
+      - name: Build validation-only release app bundle
+        working-directory: apps/mobile
+        run: flutter build appbundle --release
+      - name: Verify validation bundle exists
+        working-directory: apps/mobile
+        run: test -s build/app/outputs/bundle/release/app-release.aab
+      - name: Upload validation-only app bundle (not production signed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-validation-only-app-bundle-not-production-signed
+          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
       - name: Upload split profile APKs
         uses: actions/upload-artifact@v4
         with:
