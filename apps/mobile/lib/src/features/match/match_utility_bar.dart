@@ -18,7 +18,11 @@ class MatchUtilityBar extends StatelessWidget {
             child: OutlinedButton.icon(
               key: const Key('chat_button'),
               onPressed: onChat,
-              style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFFFE3A0),
+                side: const BorderSide(color: Color(0x88D9AD55)),
+                minimumSize: const Size(48, 48),
+              ),
               icon: const Icon(Icons.chat_bubble_outline, size: 20),
               label: const Text('Local Chat'),
             ),
@@ -48,7 +52,11 @@ class MatchUtilityBar extends StatelessWidget {
             child: OutlinedButton.icon(
               key: const Key('more_button'),
               onPressed: onMore,
-              style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFFFE3A0),
+                side: const BorderSide(color: Color(0x88D9AD55)),
+                minimumSize: const Size(48, 48),
+              ),
               icon: const Icon(Icons.tune, size: 20),
               label: const Text('Settings'),
             ),
