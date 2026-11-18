@@ -8,6 +8,8 @@ import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/domain/team_up_policy.dart';
+import '../../game/domain/mode_registry.dart';
 import '../../game/domain/feedback_preferences.dart';
 import '../../game/infrastructure/persistence/feedback_preferences_store.dart';
 import '../../game/domain/persistence/saved_match.dart';
@@ -32,6 +34,7 @@ import 'match_pawn_layer.dart';
 import 'match_destination_preview.dart';
 import 'match_turn_coordinator.dart';
 import 'match_result_presentation.dart';
+import 'team_progress_panel.dart';
 import 'premium_match_layout.dart';
 import 'match_compact_profiles.dart';
 import 'match_bottom_controls.dart';
@@ -387,6 +390,7 @@ class _MatchScreenState extends State<MatchScreen>
     // The UI must not recalculate capture or bonus rules from pawn snapshots.
     final plan = MatchMovePresentationPlan.fromEvents(
       events: events,
+      isTeamUp: _game.configuration.isTeamUp,
       player: movingColor,
       pawnIndex: pawnIndex,
     );
@@ -412,7 +416,14 @@ class _MatchScreenState extends State<MatchScreen>
       final label = winner.displayName == winner.color.name.toUpperCase()
           ? winner.displayName
           : '${winner.displayName} (${winner.color.name.toUpperCase()})';
+      if (_game.winningTeam != null) {
+        return 'TEAM ${_game.winningTeam!.name.toUpperCase()} WINS · ${winner.displayName}';
+      }
       return '$label WINS';
+    }
+    if (_game.configuration.isTeamUp) {
+      final name = _profileFor(_game.activePlayer).displayName;
+      return '$name · TEAM ${TeamUpPolicy.teamFor(_game.activePlayer).name.toUpperCase()}';
     }
     return widget.aiPlayers.contains(_game.activePlayer)
         ? '${_game.activePlayer.name.toUpperCase()} · AI TURN'
@@ -457,6 +468,11 @@ class _MatchScreenState extends State<MatchScreen>
                       ? 'LOCAL MATCH'
                       : _game.configuration.id.toUpperCase(),
                   onExit: _requestExit,
+                  teamProgress: _game.configuration.isTeamUp
+                      ? TeamProgressPanel(game: _game, profiles: _profiles)
+                      : null,
+                  teamProgressHeight:
+                      _game.scheduledPlayer == _game.activePlayer ? 40 : 58,
                   profiles: widget.showDynamicProfiles
                       ? MatchCompactProfiles(
                           profiles: _profiles,
@@ -606,7 +622,33 @@ class _MatchScreenState extends State<MatchScreen>
   void _showMoreMenu() {
     MatchDialogs.showMoreMenu(context).then((action) {
       if (!mounted) return;
-      if (action == 'feedback') {
+      if (action == 'rules') {
+        final profile = _game.ruleProfile;
+        final summary =
+            '${ModeRegistry.definition(_game.configuration.mode).description}\n\n'
+            'Profile: ${profile.id}@${profile.version}. Exact finish required.\n'
+            'Bonus on six: ${profile.extraTurnOnSix ? 'yes' : 'no'}; '
+            'capture: ${profile.extraTurnOnCapture ? 'yes' : 'no'}; '
+            'finish: ${profile.extraTurnOnFinish ? 'yes' : 'no'}.\n'
+            'Third-six forfeiture: ${profile.threeConsecutiveSixesPenalty ? 'yes' : 'no'}.\n'
+            '${_game.configuration.isTeamUp ? 'All eight team pawns must finish. Friendly losses do not earn capture bonuses.' : 'Finish ${_game.configuration.finishTarget} pawns to win.'}';
+        showDialog<void>(
+          context: context,
+          builder: (dialog) => Theme(
+            data: ThemeData.dark(),
+            child: AlertDialog(
+              title: const Text('Match rules'),
+              content: SingleChildScrollView(child: Text(summary)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialog).pop(),
+                  child: const Text('CLOSE'),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else if (action == 'feedback') {
         showModalBottomSheet<void>(
           context: context,
           backgroundColor: const Color(0xFF17120B),

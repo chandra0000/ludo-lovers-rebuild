@@ -1,5 +1,6 @@
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/domain/team_up_policy.dart';
 
 /// Immutable visual instructions projected from one *accepted* match command.
 ///
@@ -15,6 +16,7 @@ class MatchMovePresentationPlan {
     required this.stepCount,
     this.feedback,
     required this.captureCount,
+    required this.friendlyLossCount,
     required this.extraTurnGranted,
     required this.gameCompleted,
   });
@@ -28,6 +30,7 @@ class MatchMovePresentationPlan {
 
   /// Number of captures confirmed by authoritative accepted events.
   final int captureCount;
+  final int friendlyLossCount;
 
   /// Engine-confirmed bonus turn, never inferred from a six or a capture.
   final bool extraTurnGranted;
@@ -39,6 +42,7 @@ class MatchMovePresentationPlan {
 
   factory MatchMovePresentationPlan.fromEvents({
     required Iterable<LudoGameEvent> events,
+    bool isTeamUp = false,
     required PlayerColor player,
     required int pawnIndex,
   }) {
@@ -68,22 +72,46 @@ class MatchMovePresentationPlan {
         .whereType<GameCompleted>()
         .any((event) => event.winner == player);
     final captures = recorded
-        .whereType<PawnCaptured>()
-        .where((event) => event.by == player)
-        .length;
-    final extraTurn = recorded
-        .whereType<ExtraTurnGranted>()
-        .any((event) => event.player == player);
+            .whereType<PawnCaptured>()
+            .where((event) => event.by == player)
+            .length +
+        (isTeamUp
+            ? recorded
+                .whereType<TeamPawnCaptured>()
+                .where((event) => event.byTeam == TeamUpPolicy.teamFor(player))
+                .length
+            : 0);
+    final friendlyLosses = isTeamUp
+        ? recorded
+            .whereType<TeamPawnCaptured>()
+            .where(
+              (event) =>
+                  TeamUpPolicy.teamFor(event.victim) ==
+                  TeamUpPolicy.teamFor(player),
+            )
+            .length
+        : 0;
+    final extraTurn = recorded.whereType<ExtraTurnGranted>().any(
+          (event) =>
+              event.player == player ||
+              (isTeamUp &&
+                  TeamUpPolicy.teamFor(event.player) ==
+                      TeamUpPolicy.teamFor(player)),
+        );
     final finished = recorded.whereType<PawnFinished>().any(
           (event) => event.player == player && event.pawnIndex == pawnIndex,
         );
 
     final String? feedback;
     if (isWinner) {
-      feedback = '${player.name.toUpperCase()} WINS!';
+      feedback = isTeamUp
+          ? 'TEAM ${TeamUpPolicy.teamFor(player).name.toUpperCase()} WINS!'
+          : '${player.name.toUpperCase()} WINS!';
     } else if (captures > 0) {
       final label = captures == 1 ? 'CAPTURE!' : '$captures CAPTURES!';
       feedback = extraTurn ? '$label EXTRA TURN' : label;
+    } else if (friendlyLosses > 0) {
+      feedback = extraTurn ? 'STACK LOST · EXTRA TURN' : 'STACK LOST';
     } else if (finished) {
       feedback = extraTurn ? 'PAWN HOME! EXTRA TURN' : 'PAWN HOME!';
     } else {
@@ -98,6 +126,7 @@ class MatchMovePresentationPlan {
       stepCount: steps,
       feedback: feedback,
       captureCount: captures,
+      friendlyLossCount: friendlyLosses,
       extraTurnGranted: extraTurn,
       gameCompleted: isWinner,
     );
