@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../board_geometry.dart';
 import '../ludo_game.dart';
+import '../team_up_policy.dart';
 
 /// Difficulty presets for the local, engine-constrained AI.
 enum LudoAiDifficulty { easy, medium, hard }
@@ -52,7 +53,23 @@ class SeededLudoAi {
       }
 
       // Events belong to this transition, not the whole match history.
-      final captureCount = next.events.whereType<PawnCaptured>().length;
+      final movingTeam = TeamUpPolicy.teamFor(game.activePlayer);
+      final captureCount = game.configuration.isTeamUp
+          ? next.events
+              .whereType<TeamPawnCaptured>()
+              .where((event) => event.byTeam == movingTeam)
+              .length
+          : next.events.whereType<PawnCaptured>().length;
+      if (game.configuration.isTeamUp) {
+        // A protected departure can lose friendly pawns. Evaluate the engine's
+        // attributed events rather than treating every capture as our reward.
+        final friendlyLosses = next.events
+            .whereType<TeamPawnCaptured>()
+            .where((event) => event.byTeam != movingTeam)
+            .length;
+        score -= friendlyLosses *
+            (difficulty == LudoAiDifficulty.hard ? 1500 : 1000);
+      }
       score +=
           captureCount * (difficulty == LudoAiDifficulty.hard ? 1200 : 800);
 
@@ -141,6 +158,11 @@ class SeededLudoAi {
   bool _isThreatened(LudoGame game, int trackCell) {
     for (final opponent in game.players) {
       if (opponent.color == game.activePlayer) continue;
+      if (game.configuration.isTeamUp &&
+          TeamUpPolicy.teamFor(opponent.color) ==
+              TeamUpPolicy.teamFor(game.activePlayer)) {
+        continue;
+      }
 
       for (final progress in opponent.pawnProgress) {
         if (progress < 0 || progress >= playerTrackLength) continue;
