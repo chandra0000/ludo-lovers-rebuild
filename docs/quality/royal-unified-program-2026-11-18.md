@@ -95,3 +95,20 @@ analysis clean. Eight new social regressions cover four phone sizes, 48dp target
 no board overlap, attribution without a gameplay command, inactive seats, timer
 replacement/expiry/disposal and compact 150% text/keyboard chat. Actual 320×640
 final social/HUD capture inspected. Board pixel and geometry regressions pass.
+
+## Phase 5 — four local presentation configurations
+
+Mode selection exposes explicit FFA, 1v1, VS Computer and Team-Up launch presets.
+These are setup defaults over the same ModeRegistry/MatchConfiguration and shared
+MatchSession, not four new engines. FFA keeps compatibility defaults; 1v1 selects
+Classic's approved two-seat configuration; VS Computer initializes the existing
+human/AI setup and keeps at least one bot; Team-Up uses team-up@1. The ordinary
+Classic/Quick/configuration cards remain present. No profile or turn policy changes.
+Preview release gates cannot be bypassed through a preset. True 1v1 slot colors
+come from the authoritative configured roster, not a second UI mapping.
+
+Phase 5 verification: 435 full tests passed, strict format and fatal-info analysis
+clean. Five new preset tests verify real saved mode/seat/bot configuration and
+public availability gates; shared local-mode navigation still passes. No online
+rooms, friends, tournament or coin service is claimed. Approved Team Up and Quick
+rules are reused from the preceding verified migration, not copied again.
