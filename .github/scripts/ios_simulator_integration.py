@@ -4,9 +4,11 @@ import json
 import os
 from pathlib import Path
 import plistlib
-import re
+import socket
 import subprocess
 import time
+import urllib.error
+import urllib.request
 
 DIAGNOSTICS = Path('../../simulator-diagnostics')
 
@@ -17,9 +19,12 @@ def run(stage, args, seconds, capture=False):
                           stdout=subprocess.PIPE if capture else None).stdout
 
 
-def vm_uri(text):
-    match = re.search(r'Dart VM [Ss]ervice[^\n]*?(http://127\.0\.0\.1:\d+/[^\s]+/)', text)
-    return match.group(1) if match else None
+def vm_ready(uri):
+    try:
+        with urllib.request.urlopen(uri + 'getVM', timeout=1) as response:
+            return json.load(response).get('result', {}).get('type') == 'VM'
+    except (OSError, ValueError, urllib.error.URLError):
+        return False
 
 
 def main():
@@ -62,24 +67,32 @@ def main():
             'log', 'stream', '--style', 'compact', '--level', 'debug',
             '--predicate', 'process == "Runner"'], stdout=unified_log,
             stderr=subprocess.STDOUT, text=True)
+        # Avoid a race with the engine's one-shot startup log announcement.
+        # This isolated CI simulator exposes its debug service on loopback only;
+        # no auth relaxation is applied to production apps or device builds.
+        with socket.socket() as reservation:
+            reservation.bind(('127.0.0.1', 0))
+            port = reservation.getsockname()[1]
+        uri = f'http://127.0.0.1:{port}/'
         print('IOS STAGE: launch with captured console', flush=True)
         log_path = DIAGNOSTICS / 'integration-console.txt'
         log = log_path.open('w')
         console = subprocess.Popen(['xcrun', 'simctl', 'launch', '--console', '--terminate-running-process',
-            device_id, bundle_id, '--enable-dart-profiling', '--enable-checked-mode', '--verify-entry-points'],
+            device_id, bundle_id, '--enable-dart-profiling', '--enable-checked-mode', '--verify-entry-points',
+            f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication'],
             stdout=log, stderr=subprocess.STDOUT, text=True)
         deadline = time.monotonic() + 60
-        uri = None
+        ready = False
         while time.monotonic() < deadline:
-            uri = vm_uri(log_path.read_text() + '\n' + unified_path.read_text())
-            if uri:
+            ready = vm_ready(uri)
+            if ready:
                 break
             if console.poll() is not None:
                 raise RuntimeError('Simulator launch exited before VM service; see integration-console.txt')
             time.sleep(.1)
-        if not uri:
+        if not ready:
             raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
-        # Attach directly to the discovered local service instead of Flutter's
+        # Attach directly to the ready local service instead of Flutter's
         # implicit install/launch/log-discovery path that stalled in the failed run.
         run('attach integration driver', ['flutter', 'drive', '--no-pub',
             '--driver=test_driver/native_capture_driver.dart', '--use-existing-app=' + uri,
