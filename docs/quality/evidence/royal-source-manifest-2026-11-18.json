@@ -1,0 +1,230 @@
+{
+  "baseline_main": "879f2b555c50575c5db066e0ac8bf530271a965a",
+  "baseline_reviewed_source": "d2d8dc1bf2ffa8b961d2bd216cfef41cad64c6bb",
+  "legacy_main": "ee7a4fe2ffcdde93f2945df345acec08e8f87a5f",
+  "pull_requests": [
+    {
+      "pr": 67,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/67",
+      "branch": "feat/unified-gameboard-scaffold",
+      "published_source_sha": "f051cc485edf3c86df598b095ebe24be5ba2e5e7",
+      "tree_sha": "35899aeaf8673b1ad8c6d711e889f860da0709e6",
+      "local_equivalent_sha": "64bced850a71a43366a51a389ac0022666e5a4d5",
+      "local_sha_is_not_published_sha": true,
+      "changed_files": [
+        "A\tapps/mobile/lib/src/features/match/game_board_scaffold.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "A\tapps/mobile/lib/src/features/match/match_utility_bar.dart",
+        "A\tapps/mobile/lib/src/features/match/player_profile_card.dart",
+        "A\tapps/mobile/lib/src/features/match/player_slot_resolver.dart",
+        "M\tapps/mobile/test/integrated_match_presentation_test.dart",
+        "M\tapps/mobile/test/match_adaptive_controls_test.dart",
+        "M\tapps/mobile/test/modes/quick_mode_test.dart",
+        "M\tapps/mobile/test/phase3_responsive_board_test.dart",
+        "A\tapps/mobile/test/royal_board_pixel_test.dart",
+        "A\tapps/mobile/test/royal_scaffold_test.dart",
+        "A\tdocs/quality/royal-unified-program-2026-11-18.md"
+      ],
+      "workflows": [
+        {
+          "id": 44226738479,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44226738479",
+          "status": "success"
+        },
+        {
+          "id": 44226738480,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44226738480",
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pr": 68,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/68",
+      "branch": "feat/royal-dark-gold-theme",
+      "published_source_sha": "be61c23451a0079250a5a862f0c84a2e21a14e4e",
+      "tree_sha": "80ce752ad8dec46f80a14a163fa1e38306092ae5",
+      "local_equivalent_sha": "0d7881b6e3747175eefc15c8be882aee66e1b894",
+      "local_sha_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/match/game_board_scaffold.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/match_utility_bar.dart",
+        "M\tapps/mobile/lib/src/features/match/player_profile_card.dart",
+        "A\tapps/mobile/lib/src/features/match/royal_backdrop.dart",
+        "A\tapps/mobile/lib/src/features/match/royal_crown.dart",
+        "A\tapps/mobile/lib/src/features/match/royal_dice_arena.dart",
+        "A\tapps/mobile/lib/src/features/match/royal_game_header.dart",
+        "A\tapps/mobile/test/royal_backdrop_test.dart",
+        "M\tapps/mobile/test/royal_board_pixel_test.dart",
+        "M\tdocs/quality/royal-unified-program-2026-11-18.md"
+      ],
+      "workflows": [
+        {
+          "id": 44227428563,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44227428563",
+          "status": "success"
+        },
+        {
+          "id": 44227428597,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44227428597",
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pr": 69,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/69",
+      "branch": "feat/player-social-controls",
+      "published_source_sha": "5bfe64f41be61984bb2e108a03ea915694da1c7b",
+      "tree_sha": "8eef5c041ce2b2607ef09a4a7a39226ff3ecc46d",
+      "local_equivalent_sha": "e6b3d07eb07c51a33ae176d3f8270fba1d3c76e8",
+      "local_sha_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/match/game_board_scaffold.dart",
+        "M\tapps/mobile/lib/src/features/match/local_match_chat_sheet.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/player_profile_card.dart",
+        "M\tapps/mobile/lib/src/features/match/player_slot_resolver.dart",
+        "A\tapps/mobile/lib/src/features/match/profile_social_controls.dart",
+        "A\tapps/mobile/lib/src/features/match/social_overlay_coordinator.dart",
+        "M\tapps/mobile/lib/src/features/match/team_progress_panel.dart",
+        "M\tapps/mobile/test/integrated_match_presentation_test.dart",
+        "M\tapps/mobile/test/match_surface_chrome_test.dart",
+        "M\tapps/mobile/test/modes/team_up_responsive_capture_test.dart",
+        "A\tapps/mobile/test/profile_social_test.dart",
+        "M\tdocs/quality/royal-unified-program-2026-11-18.md"
+      ],
+      "workflows": [
+        {
+          "id": 44228516818,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44228516818",
+          "status": "success"
+        },
+        {
+          "id": 44228516780,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44228516780",
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pr": 70,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/70",
+      "branch": "feat/game-mode-completion",
+      "published_source_sha": "f70b9714722bbbc184f1bbbbe352257dff0a875d",
+      "tree_sha": "3bd6a95f9701191d786c29a9e177d0d081702979",
+      "local_equivalent_sha": "01b9aae9fe9d423a7a5d815eb9f9f48d9be1d65e",
+      "local_sha_is_not_published_sha": true,
+      "changed_files": [
+        "M\tapps/mobile/lib/src/features/setup/game_setup_screen.dart",
+        "M\tapps/mobile/lib/src/features/setup/mode_selection_screen.dart",
+        "M\tapps/mobile/test/modes/classic_mode_configuration_test.dart",
+        "A\tapps/mobile/test/royal_mode_entry_test.dart",
+        "M\tdocs/quality/royal-unified-program-2026-11-18.md"
+      ],
+      "workflows": [
+        {
+          "id": 44229267738,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44229267738",
+          "status": "success"
+        },
+        {
+          "id": 44229267765,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44229267765",
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "pr": 71,
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/71",
+      "branch": "fix/gameplay-production-hardening",
+      "published_source_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "tree_sha": "301b7098f7a3c18ffe525030a8da94f41fafa4c7",
+      "local_equivalent_sha": "5a4ba5f1f083d97c42d9e8f16a0e47312a42a621",
+      "local_sha_is_not_published_sha": true,
+      "changed_files": [
+        "M\t.github/scripts/android_integration.sh",
+        "A\t.github/scripts/ios_simulator_integration.py",
+        "M\t.github/scripts/ios_simulator_integration.sh",
+        "M\t.github/workflows/android-integration.yml",
+        "M\t.github/workflows/cross-platform-acceptance.yml",
+        "M\t.github/workflows/flutter.yml",
+        "M\tapps/mobile/integration_test/app_navigation_test.dart",
+        "M\tapps/mobile/lib/src/features/match/game_board_scaffold.dart",
+        "M\tapps/mobile/lib/src/features/match/local_match_chat_sheet.dart",
+        "M\tapps/mobile/lib/src/features/match/match_ai_scheduler.dart",
+        "M\tapps/mobile/lib/src/features/match/match_reaction_controls.dart",
+        "M\tapps/mobile/lib/src/features/match/match_screen.dart",
+        "M\tapps/mobile/lib/src/features/match/player_profile_card.dart",
+        "M\tapps/mobile/lib/src/features/match/profile_social_controls.dart",
+        "M\tapps/mobile/lib/src/features/match/royal_game_header.dart",
+        "M\tapps/mobile/test/royal_backdrop_test.dart",
+        "M\tapps/mobile/test/royal_board_pixel_test.dart",
+        "A\tapps/mobile/test/royal_mode_capture_test.dart",
+        "M\tapps/mobile/test/royal_scaffold_test.dart",
+        "M\tapps/mobile/test/support/load_sdk_fonts.dart",
+        "M\tapps/mobile/test/support/local_mode_navigation.dart",
+        "A\tapps/mobile/test_driver/native_capture_driver.dart",
+        "M\tapps/mobile/tool/verify_responsive_screenshots.py",
+        "M\tdocs/quality/royal-unified-program-2026-11-18.md"
+      ],
+      "workflows": [
+        {
+          "id": 44456771757,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757",
+          "status": "pending"
+        },
+        {
+          "id": 44456771700,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771700",
+          "status": "pending"
+        }
+      ],
+      "published_commits": [
+        "6722614c69808f4bea8dacb25039082272feac88",
+        "b6d031f6797294ab5e5726f9732a844220fbf2e4",
+        "53953bcb70775d34ca67383a96b321d61a4f3e33",
+        "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2"
+      ],
+      "historical_workflows": [
+        {
+          "id": 44232051170,
+          "conclusion": "success"
+        },
+        {
+          "id": 44232051087,
+          "conclusion": "success"
+        },
+        {
+          "id": 44232065474,
+          "conclusion": "success"
+        },
+        {
+          "id": 44233763765,
+          "conclusion": "success"
+        },
+        {
+          "id": 44233763881,
+          "conclusion": "failure",
+          "failed_job": 134565044481
+        },
+        {
+          "id": 44233862303,
+          "conclusion": "success"
+        },
+        {
+          "id": 44455344433,
+          "conclusion": "success"
+        },
+        {
+          "id": 44455344463,
+          "conclusion": "failure",
+          "failed_job": 135328900496
+        }
+      ],
+      "android_native_evidence_applies_to_current_source": "No Dart/application/integration-fixture changes after b6d031f; final source changes iOS launch scripts/workflow only."
+    }
+  ]
+}
