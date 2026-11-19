@@ -1,3 +1,21 @@
+## 2026-11-18 — Approved royal corner scaffold
+
+**Authority:** Latest owner master prompt explicitly supersedes the preceding
+all-profiles-on-top Premium V2 HUD. Physical slots: Orange top-left, Green top-right,
+Blue bottom-left, Magenta bottom-right. Engine turn order remains Orange → Green →
+Magenta → Blue; absent/finished-seat handling remains mode-authoritative.
+
+**Decision:** One GameBoardScaffold resolves actual profiles/configuration, with
+centered approved logo and gold die, complete RoyalBackdrop, square protected board
+stage and per-profile local social controls. Existing assets, geometry, pure engine,
+profiles and rule decisions remain authoritative. Static mode titles/shared emoji
+button/roll prompt pill are removed from live gameplay. Social effects are confined
+to HUD regions and are not online delivery. No default rule or mode availability
+changes. Internal profile APKs permit concrete QA review; production gates remain.
+
+**Acceptance:** Automated tests and real captures are evidence, not owner visual or
+physical-device sign-off. See the royal execution ledger and release report.
+
 ## 2026-11-10 — Preview before confirming a pawn move
 
 **Decision:** For a human turn with multiple legal pawns, the first tap selects a pawn and previews its destination; a second tap on that same pawn commits the move. A turn with exactly one legal pawn is resolved automatically after a 350 ms post-dice anticipation delay. A roll with no legal pawn is shown for 600 ms before the engine pass transition.
