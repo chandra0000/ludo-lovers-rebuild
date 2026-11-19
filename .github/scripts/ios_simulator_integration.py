@@ -27,6 +27,8 @@ def main():
     device_id = None
     console = None
     log = None
+    unified = None
+    unified_log = None
     try:
         devices = json.loads(run('discover runtimes', ['xcrun', 'simctl', 'list', 'devices', 'available', '-j'], 30, True))['devices']
         types = json.loads(run('discover device types', ['xcrun', 'simctl', 'list', 'devicetypes', '-j'], 30, True))['devicetypes']
@@ -51,6 +53,15 @@ def main():
         with (app / 'Info.plist').open('rb') as stream:
             bundle_id = plistlib.load(stream)['CFBundleIdentifier']
         run('install', ['xcrun', 'simctl', 'install', device_id, str(app)], 90)
+        # Flutter's engine publishes the VM-service URI through Apple's unified
+        # logging on modern iOS, not necessarily the simctl console stdout pipe.
+        # Match the SDK log reader's channel and start it before launching Runner.
+        unified_path = DIAGNOSTICS / 'integration-unified.txt'
+        unified_log = unified_path.open('w')
+        unified = subprocess.Popen(['xcrun', 'simctl', 'spawn', device_id,
+            'log', 'stream', '--style', 'compact', '--level', 'debug',
+            '--predicate', 'process == "Runner"'], stdout=unified_log,
+            stderr=subprocess.STDOUT, text=True)
         print('IOS STAGE: launch with captured console', flush=True)
         log_path = DIAGNOSTICS / 'integration-console.txt'
         log = log_path.open('w')
@@ -60,14 +71,14 @@ def main():
         deadline = time.monotonic() + 60
         uri = None
         while time.monotonic() < deadline:
-            uri = vm_uri(log_path.read_text())
+            uri = vm_uri(log_path.read_text() + '\n' + unified_path.read_text())
             if uri:
                 break
             if console.poll() is not None:
                 raise RuntimeError('Simulator launch exited before VM service; see integration-console.txt')
             time.sleep(.1)
         if not uri:
-            raise TimeoutError('No VM service within 60s; see integration-console.txt')
+            raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
         # Attach directly to the discovered local service instead of Flutter's
         # implicit install/launch/log-discovery path that stalled in the failed run.
         run('attach integration driver', ['flutter', 'drive', '--no-pub',
@@ -76,6 +87,15 @@ def main():
         run('verify native PNGs', ['python3', 'tool/verify_responsive_screenshots.py',
             '--native-directory', 'test-artifacts/native'], 30)
     finally:
+        if unified is not None and unified.poll() is None:
+            unified.terminate()
+            try:
+                unified.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                unified.kill()
+                unified.wait(timeout=5)
+        if unified_log is not None:
+            unified_log.close()
         if console is not None and console.poll() is None:
             console.terminate()
             try:
