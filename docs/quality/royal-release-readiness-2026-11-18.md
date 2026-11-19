@@ -28,7 +28,7 @@ published source SHAs. CI can record a synthetic PR merge SHA instead of its hea
 | [71](https://github.com/chandra0000/ludo-lovers-rebuild/pull/71) | 903f54377613602f6038ffe56949a0cb89b6c059 | AI cleanup, board pixels, captures and native QA gates |
 
 Recommended manual order: existing **#54 → … → #66 → #67 → #68 → #69 → #70 →
-#71 → evidence documentation**. After each approved predecessor reaches main,
+#71 → [#72 evidence documentation](https://github.com/chandra0000/ludo-lovers-rebuild/pull/72)**. After each approved predecessor reaches main,
 retarget the next PR to main and verify ancestry/checks. Merging a child into an
 already-merged parent branch does not promote that child to main. No automatic
 merge or force push was performed.
@@ -43,7 +43,7 @@ merge or force push was performed.
 | 3 dice/pawns | Reused sculpted glass pawns, authoritative gold cube, cell movement/landing/capture/finish; new bounded arena lighting | Existing die six-face/duplicate/interruption and pawn/geometry/stack suites retained | VERIFIED COMPLETE (automated) |
 | 4 social | Eight per-profile controls, presets, local emoji and avatar bubbles; shared emoji removed | 430 tests; fixed 10–12px compact control overflow without shrinking 48dp targets; sender/expiry/disposal/enlarged-text checks | VERIFIED COMPLETE (automated) |
 | 5 local configurations | FFA, true 1v1, configured AI and Team-Up presets over shared registry | 435 tests, real saved participant/bot counts, profile isolation and public gates; Quick remains separate | VERIFIED COMPLETE (automated) |
-| 6 hardening | Actual AI timer cancellation, crown constraint, emoji fallback, 36 software captures and installed screenshot driver | 445 local tests; new AI teardown regression first failed on 450ms orphan timer and now passes; composited board pixels protected | IMPLEMENTED, AWAITING VERIFICATION — final native CI pending |
+| 6 hardening | Actual AI timer cancellation, crown constraint, emoji fallback, 36 software captures and installed screenshot driver | 445 local tests; new AI teardown regression first failed on 450ms orphan timer and now passes; composited board pixels protected | VERIFIED COMPLETE (automated) — final CI/native captures passed |
 
 The final full suite passes **445 tests** in 137 seconds; the clean-pointer
 follow-up changes only integration capture framing and passes all 445 again in CI. Strict formatting of all
@@ -140,9 +140,18 @@ Linux artifact **14395577238** downloaded and all 36 required PNGs verified. ZIP
 SHA256 `99b34e108e039cdd4e3d9475ceac7c769a87a4a591a3f5f9185665f8ccf68366`
 matches GitHub digest. Compact social layout, 393×873 1v1/computer/Team and social
 captures inspected; downloaded CI emoji picker inspected with proper glyphs.
-These are actual Flutter renders, not concept art or owner visual sign-off.
+Final-source software artifact **14498133271** also downloaded: ZIP SHA256
+`21eefb1754cb6ccecc153a5c08c87daf2ea4686489d16f57178f4f974d16abef`
+matched; all 36 required PNGs verified. Pillow fully decoded all 37 PNGs in
+that archive (36 required plus the extra canvas) and all eight clean Android PNGs.
+All 37 final software images also match the initial source672 archive exactly
+in dimensions and complete RGBA byte arrays; the CI-launch fixes introduced no
+software-rendered pixel changes.
+The 320×640 match and 393×873 emoji picker
+were inspected, confirming compact composition and real emoji glyphs. These are
+actual Flutter renders, not concept art or owner visual sign-off.
 
-**Native installed captures — Android VERIFIED COMPLETE; final iOS AWAITING VERIFICATION:** new extended
+**Native installed captures — Android and iOS VERIFIED COMPLETE:** new extended
 integration driver requires eight PNGs separately on Android emulator and iPhone
 simulator (FFA, Classic, Quick, Team-Up, computer, picker, bubble, chat). Host writes
 validate signature and full PNG decoder/CRC checks reject missing/corrupt captures.
@@ -196,7 +205,22 @@ Unified console/logs remain diagnostic. A real local Dart VM successfully exerci
 the HTTP readiness check; connection refusal is rejected. The standalone Dart CLI
 rejected the iOS-only publication flag in the first local test command; removing
 that embedder-only flag from the local test allowed the protocol check to pass.
-Final installed capture verification remains pending.
+Final run **44458139058**, job **135338502738**, passed every stage: boot,
+build, install, loopback readiness, driver attach, scenarios, PNG verification and
+cleanup. Driver log reports `All tests passed.` Eight PNGs at 1206×2622 were
+required. Artifact **14498419118** downloaded; ZIP SHA256
+`f0b0ca4ce30df0ffb7545cd9883536b3f129762613271124aa7c0859275bb1e7`
+matched, all eight CRC/inflate checks and full Pillow pixel decodes passed.
+Team-Up and emoji picker were visually inspected: no synthetic pointer crosshair,
+correct quadrant identities, native emoji glyphs and complete board. Runtime:
+iPhone16Pro/iOS18.5/Xcode16.4. These are installed Flutter-view captures, not
+OS-chrome or physical-device screenshots and not owner visual acceptance.
+
+**Both current workflows are successful.** The dedicated readiness protocol fixes
+the demonstrated host discovery failure without increasing bounds or changing app
+tests/rules. The earlier opaque failure's exact hidden substep remains unproven;
+subsequent staged logs establish that healthy app tests could run while host
+startup-announcement discovery stalled.
 
 Earlier clean-pointer source workflows (iOS failed):
 
@@ -224,13 +248,19 @@ release APK and AAB were independently downloaded and verified for build/package
 structure evidence; their full receipts distinguish that source from the fixture
 follow-up. No production signing or full JAR signature acceptance is implied.
 
-Final-source internal profile artifact **14498223046** was also downloaded and
+Verified internal profile artifact **14498223046** (source36817b0; identical app
+code, before the CI-only loopback change) was also downloaded and
 its ZIP SHA256 `7a30f827adcd46a9df9ebef96a58dc3191e8fc3507c2bc0aa604240d3e91defb`
 verified. ARM64 APK SHA256
 `a3db480dfbdcf972969eb25c33c6abe5c25ee165235b114a533cfec4264277c9`.
 `apksigner verify --print-certs` passes (Android Debug certificate); package
 `com.ludolovers.ludo_lovers`, minimum SDK24, target/compile SDK36. This remains
 an internal review/profile artifact, not production signing or physical acceptance.
+Latest source903f543 foundation run **44458139120** also passed all 445 tests and
+profile/release/AAB builds. Its profile artifact **14498769144**, release APKs
+**14499151481** and AAB **14498699412** exist; these latest build archives were not
+independently downloaded in this checkpoint. Receipts distinguish CI evidence
+from the downloaded/signed APK checks above.
 
 Normal AppMain simulator artifact **14497084656** was downloaded and its ZIP
 SHA256 `31dbab3617e0dc02f09df2feb1b8995bd7822de585e8e7724792ca4c8ba6f04c`
@@ -302,8 +332,8 @@ No target score is assumed from task completion.
 | Per-profile social/presets/cleanup | VERIFIED COMPLETE (automated) | Native/device usability review; remains local-only |
 | Engine/geometry/persistence/lifecycle regression | VERIFIED COMPLETE (automated) | Physical long-match/process-kill testing |
 | 36 responsive/flow software screenshots | VERIFIED COMPLETE | Owner design approval distinct from inspection |
-| Final native screenshot/build/CI gates | IMPLEMENTED, AWAITING VERIFICATION | Finish running CI, download/inspect actual captures |
-| GitHub/Notion documentation | IMPLEMENTED, AWAITING VERIFICATION | Publish final receipts and project update |
+| Final native screenshot/build/CI gates | VERIFIED COMPLETE | Final workflows green; 8 Android + 8 iOS PNGs validated, downloaded and inspected |
+| GitHub/Notion documentation | VERIFIED COMPLETE | Evidence PR #72 and append-only project-hub checkpoints; all PRs unmerged |
 | Physical Android/iOS and measured renderer performance | BLOCKED | Actual hardware and traces |
 | Production signing/native/store release | BLOCKED | Approved native configuration, keys and distribution acceptance |
 | Online/private rooms/tournament/coins/social backend | BLOCKED | Existing RFC/policies/infrastructure gates; outside this local UI delivery |
@@ -331,17 +361,23 @@ deployment, new asset or production readiness is authorized by this report.
 | 10 legacy migration summary | VERIFIED COMPLETE | Existing Quick/Team/AI migration reused; unsupported services remain unavailable |
 | 11 performance benchmark | BLOCKED | Raw host CPU diagnostic available; physical Flutter/Flame measurements absent |
 | 12 CI workflow links | VERIFIED COMPLETE | Exact run URLs and historical conclusions in source manifest |
-| 13 Android/iOS build evidence | IMPLEMENTED, AWAITING VERIFICATION | Build/native receipts above; final iOS repair CI is a separate gate |
+| 13 Android/iOS build evidence | VERIFIED COMPLETE | APK/AAB and simulator build/runtime receipts above; physical/store gates separate |
 | 14 PRs and source SHAs | VERIFIED COMPLETE | #67–#71 and complete changed-file manifest; unmerged |
-| 15 GitHub/Notion docs | IMPLEMENTED, AWAITING VERIFICATION | This report/receipts prepared; final publication pending |
+| 15 GitHub/Notion docs | VERIFIED COMPLETE | Evidence PR #72 plus append-only Notion hub updates |
 | 16 outstanding blockers | VERIFIED COMPLETE | Explicit release gate table; no gate silently waived |
 | 17 visual quality score | IMPLEMENTED, AWAITING VERIFICATION | Provisional 8/10 engineering review; owner acceptance absent |
 | 18 engineering quality score | IMPLEMENTED, AWAITING VERIFICATION | Provisional 8.5/10 architecture/gameplay review; device limits remain |
 | 19 production verdict | VERIFIED COMPLETE | NO-GO, provisional 6.5/10; not production approval |
-| 20 merge order | VERIFIED COMPLETE | #54 through #71 then evidence; owner authorization required |
+| 20 merge order | VERIFIED COMPLETE | #54 through #72 in sequence; owner authorization required |
 
 Backend-dependent online Classic/private rooms, tournament and Love/social runtime
 are **NOT STARTED** in this royal increment and **BLOCKED** by the documented
 architecture/policy/service dependencies. No UI card implies that those services
 exist. Physical and visual acceptance require human evidence and cannot be replaced
 by another software test run.
+
+
+Notion project hub: https://app.notion.com/p/3f5d7b2be1cc81fea8f5f4b450a42160.
+The final checkpoint preserves historical decisions/failures and records the
+new approved corner direction, successful final CI, actual capture receipts and
+unchanged physical/performance/signing/owner gates.

@@ -174,12 +174,12 @@
         {
           "id": 44458139120,
           "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139120",
-          "status": "pending"
+          "status": "success"
         },
         {
           "id": 44458139058,
           "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139058",
-          "status": "pending"
+          "status": "success"
         }
       ],
       "published_commits": [
