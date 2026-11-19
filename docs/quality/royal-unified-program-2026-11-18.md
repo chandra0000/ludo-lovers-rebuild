@@ -112,3 +112,54 @@ clean. Five new preset tests verify real saved mode/seat/bot configuration and
 public availability gates; shared local-mode navigation still passes. No online
 rooms, friends, tournament or coin service is claimed. Approved Team Up and Quick
 rules are reused from the preceding verified migration, not copied again.
+
+## Phase 6 — final software/native acceptance expansion
+
+Seven additional real Flutter PNGs cover FFA, true 1v1 placeholders, computer
+robots, Team-Up, the emoji picker, avatar-centered bubble and local chat presets.
+The capture suite reuses the production app theme. CI verifies all 36 required
+software PNGs, including the earlier home/setup/roll/move/capture/win/rematch and
+responsive sets. Header screenshot review exposed a crown stretched to logo
+width; a bounded 16dp square constraint fixes it and a regression test protects it.
+Explicit native emoji fallback and an optional installed OS emoji face in tests
+prevent software capture tofu without adding/replacing runtime assets.
+
+Installed integration uses the SDK extended driver screenshot callback, checked
+against the pinned Flutter3.35.7 source. Host writes and full PNG validation are
+bounded/required. Android surface conversion is scoped to each test with the SDK's
+automatic teardown reversion. Captures are deliberately not performance traces.
+Eight emulator/simulator PNGs are required: FFA, Classic, Quick, Team-Up, computer,
+emoji picker, local bubble and local chat. Platform jobs upload them separately
+from software widget PNGs. Native results remain pending until actual CI completes.
+
+Profile APKs now explicitly enable the internal modes for concrete owner review
+and physical profiling, uploaded as `ludo-internal-modes-profile-apks`. Release
+APKs/AAB and normal debug acceptance APK keep default public gates. Profile
+artifacts are QA-only/debug-signed, not production-release acceptance. No extra
+native build is duplicated solely to create this review variant.
+
+### Final hardening root causes
+
+The new active-AI teardown test initially failed on a pending 450ms timer. Existing
+MatchAiScheduler used a generation-guarded Future.delayed: it blocked stale game
+commands but could not cancel the underlying timer. It now uses a cancellable
+Timer with the same delay, generation checks and authoritative callback. Cancel/
+restart/dispose remove the actual timer; no AI strategy, dice or rule change.
+The scheduler/active-thinking focused regression passes without flushing or hiding
+that timer. The existing profile-visibility calibration option remains honored.
+BoardGeometry.visualApprovalPending remains true; no gameplay-readiness approval
+or public preview promotion is inferred from test success.
+
+HUD profile rows explicitly clip decorative effects to their independent regions.
+A second pixel regression compares composited full-screen board pixels while
+turn glow moves to a bottom profile on a compact safe-area viewport. It passes
+alongside the exact old/new reference-canvas check. This guards actual composition,
+not only source-file hashes or isolated board paint.
+
+Phase 6 final local source gates: all 445 tests passed (137s), strict formatting of
+188 Dart files via `dart format --output=none --set-exit-if-changed .`, and clean
+fatal-info analysis. All 36 required software PNGs decode/verify. YAML and both
+platform scripts parse. Native fixtures include bounded asset readiness, 15-second
+screenshot transactions and three-minute per-test limits; workflow timeouts are
+not increased. Native captures and new build artifacts await CI on this source.
+No approved asset or pure domain/application file changed in this royal program.

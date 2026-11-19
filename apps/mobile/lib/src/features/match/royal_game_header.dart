@@ -56,7 +56,7 @@ class RoyalGameHeader extends StatelessWidget {
                   right: 0,
                   left: 0,
                   child: IgnorePointer(
-                    child: RoyalCrown(size: spacious ? 16 : 12),
+                    child: Center(child: RoyalCrown(size: spacious ? 16 : 12)),
                   ),
                 ),
               ],

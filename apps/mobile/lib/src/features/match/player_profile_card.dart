@@ -120,11 +120,31 @@ class PlayerProfileCard extends StatelessWidget {
                                   size: 32,
                                 )
                               : profile.isBot
-                                  ? Icon(
-                                      Icons.smart_toy_outlined,
-                                      key: Key('robot_${color.name}'),
-                                      color: accent,
-                                      size: 32,
+                                  ? Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.smart_toy_outlined,
+                                          key: Key('robot_${color.name}'),
+                                          color: accent,
+                                          size: 32,
+                                        ),
+                                        if (slot.thinking)
+                                          Positioned(
+                                            bottom: 0,
+                                            right: 0,
+                                            child: Icon(
+                                              Icons.more_horiz,
+                                              key: Key(
+                                                'ai_thinking_${color.name}',
+                                              ),
+                                              size: 14,
+                                              color: const Color(
+                                                0xFFFFE3A0,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     )
                                   : Image.asset(
                                       'assets/images/board/extracted/$image',
