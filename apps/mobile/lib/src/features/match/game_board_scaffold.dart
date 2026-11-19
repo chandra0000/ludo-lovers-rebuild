@@ -49,7 +49,14 @@ class GameBoardScaffold extends StatelessWidget {
         builder: (context, box) {
           final spacious = box.maxHeight >= 760;
           final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
-          final profileHeight = largeText ? 112.0 : 100.0;
+          final compact = box.maxHeight < 680;
+          final profileHeight = (compact
+                  ? 108.0
+                  : spacious
+                      ? 140.0
+                      : 124.0) +
+              (largeText ? 24 : 0);
+          final centerWidth = (box.maxWidth * .23).clamp(72.0, 112.0);
           final slots = PlayerSlotResolver.resolve(
             game,
             profiles,
@@ -79,10 +86,9 @@ class GameBoardScaffold extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(
-                  height: spacious ? 84 : 48,
+                  height: 48,
                   child: RoyalGameHeader(
                     onExit: onExit,
-                    spacious: spacious,
                     trailing: reaction,
                   ),
                 ),
@@ -92,7 +98,18 @@ class GameBoardScaffold extends StatelessWidget {
                   height: profileHeight,
                   child: ClipRect(
                     child: Row(
-                      children: [card(0), const SizedBox(width: 12), card(1)],
+                      children: [
+                        card(0),
+                        SizedBox(
+                          width: centerWidth,
+                          child: Center(
+                            child: RoyalBrandMark(
+                              size: (centerWidth - 12).clamp(56.0, 88.0),
+                            ),
+                          ),
+                        ),
+                        card(1),
+                      ],
                     ),
                   ),
                 ),
@@ -149,7 +166,7 @@ class GameBoardScaffold extends StatelessWidget {
                       children: [
                         card(2),
                         SizedBox(
-                          width: spacious ? 104 : 88,
+                          width: centerWidth,
                           child: RoyalDiceArena(child: dice),
                         ),
                         card(3),

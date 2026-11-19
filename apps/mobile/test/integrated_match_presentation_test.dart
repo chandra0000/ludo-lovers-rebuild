@@ -183,6 +183,20 @@ void responsiveTest(
           greaterThanOrEqualTo(canvas.bottom - .01),
         );
       }
+      final logo = tester.getRect(find.byKey(const Key('match_brand_mark')));
+      final leftProfile =
+          tester.getRect(find.byKey(const Key('profile_orange')));
+      final rightProfile =
+          tester.getRect(find.byKey(const Key('profile_green')));
+      expect(logo.left, greaterThanOrEqualTo(leftProfile.right));
+      expect(logo.right, lessThanOrEqualTo(rightProfile.left));
+      expect(logo.center.dy, closeTo(leftProfile.center.dy, .01));
+      for (final color in ['orange', 'green', 'blue', 'magenta']) {
+        expect(
+          tester.getSize(find.byKey(Key('profile_avatar_$color'))).width,
+          greaterThanOrEqualTo(52),
+        );
+      }
       final orange = tester.getCenter(find.byKey(const Key('profile_orange')));
       final green = tester.getCenter(find.byKey(const Key('profile_green')));
       final blue = tester.getCenter(find.byKey(const Key('profile_blue')));
