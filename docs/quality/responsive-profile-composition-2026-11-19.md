@@ -23,7 +23,7 @@ Both middle regions share one width and centerline. Navigation remains a separat
   bytes, accessible label, bounded gold glow and crown are reused.
 - Chat/emoji glyphs reduce 28→20dp. Each independent interaction stays 48×48dp with
   named local-only tooltips; inactive slots remain noninteractive.
-- RoyalBackdrop adds a fine low-opacity woven diamond texture, warmer top lighting
+- RoyalBackdrop uses warmer top lighting
   and a richer purple/midnight gradient. It remains static, cached, pointer-excluded
   and reduced-motion safe, with no new animation loop or blur filter.
 - Approved board/logo assets, uniform board transform, pawn anchors, safe stars,
@@ -60,3 +60,16 @@ physical performance and remaining release gates from PR #72 stay incomplete.
 Review after #72 and the existing #54–#71 chain. Retarget this PR to main only after
 its approved predecessors reach main, then recheck ancestry and CI. Do not merge a
 child into a parent branch that already reached main. No automatic merge.
+
+
+## Android rendering isolation
+
+The matched run44516771622 passed the known mobile baseline22bb509 but repeatedly
+lost QEMU with the revised presentation. Its first current-side attempt failed
+Kotlin POM resolution before runtime; the exact URLs recovered with HTTP200, and
+the targeted runtime retry again lost the emulator. This narrows the issue to
+changed presentation under that setup; it is not a general-environment pass.
+The optional complex closed-path background lattice is removed as the first
+isolated rendering candidate. Requested profile/logo/icon layout and royal
+lighting remain; the approved board/engine remain unchanged. New runtime outcome
+must be recorded before claiming this resolves the loss. No test is disabled.

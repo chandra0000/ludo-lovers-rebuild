@@ -72,3 +72,16 @@ Jobs and artifacts explicitly identify current versus known-baseline. Fail-fast
 is false so a failure cannot cancel the independent control. A baseline pass must
 never count as new-UI acceptance; this is a diagnostic comparison, not a renderer
 performance benchmark or a product-rule change.
+
+
+The paired control completed: known-baseline job135534696186 passed all scenarios
+and eight PNGs; current job135534695597 initially failed Kotlin POM resolution
+(exact URLs subsequently HTTP200). Its targeted retry135539921795 then reached
+runtime and lost QEMU while the baseline remained passed. This narrows the issue
+to presentation changes under this setup; infrastructure changes are not a proven
+resolution. UI follow-up1f4178e836c4b2acd1862f167ee1760f4d543a55 removes only the
+optional complex background lattice, retaining the requested profiles/logo/icons
+and royal lighting. The diagnostic old-version control is now removed after its
+purpose is fulfilled, avoiding duplicate routine builds; the entire current-app
+scenario/screenshot requirement remains. New runtime outcome is required before
+calling the rendering candidate a fix.
