@@ -45,3 +45,17 @@ metaspace and builds only android-x64, matching the emulator ABI and avoiding
 unnecessary ARM engine transforms. Compilation remains separated from QEMU;
 no test or timeout is relaxed. This build-cap adjustment is based on actual logs,
 not a claimed proof of the original emulator kill cause.
+
+
+Run44513158990 passed the4GB/x86 prebuild, then again lost QEMU during the first
+scenario. Downloaded host diagnostics14524093542 (ZIP SHA256
+`a38c105ec4297acf7ef21da931b60c4d702674e77f47e89a7e86ba6de27d2250`)
+show14,502MB available after failure and no kernel OOM/kill entry. A native crash
+reporter (`apport`) was present; this does not prove an exact graphics stack frame.
+Compilation overlap is not a sufficient explanation. The next checkpoint disables
+Vulkan software emulation while retaining SwiftShader OpenGL and the identical
+app/driver/scenarios/screenshots. Bounded, allowlisted native QEMU crash summaries are added; process environments
+and raw core/minidump contents are excluded.
+This is a headless-emulator backend configuration, not a change to the production
+Flutter renderer. Physical Vulkan acceptance remains unverified, and success on
+software OpenGL must not be reported as a physical GPU benchmark or Vulkan pass.

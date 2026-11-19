@@ -8,6 +8,7 @@ on:
       - "apps/mobile/**"
       - ".github/workflows/android-integration.yml"
       - ".github/scripts/android_integration.sh"
+      - ".github/scripts/summarize_emulator_crash.py"
   pull_request:
     types: [labeled]
 
@@ -74,7 +75,9 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           emulator-boot-timeout: 420
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          # Vulkan software emulation repeatedly terminated QEMU. Keep this
+          # headless UI checkpoint on software OpenGL; device Vulkan is separate.
           disable-animations: true
           working-directory: apps/mobile
           script: bash ../../.github/scripts/android_integration.sh
@@ -93,6 +96,11 @@ jobs:
           free -m > emulator-diagnostics/host-memory.txt
           ps -eo pid,ppid,rss,comm --sort=-rss | sed -n '1,40p' > emulator-diagnostics/host-processes.txt
           sudo dmesg -T | tail -200 > emulator-diagnostics/host-kernel.txt 2>&1 || true
+          sudo python3 .github/scripts/summarize_emulator_crash.py > emulator-diagnostics/qemu-native-summary.txt
+          if [ -d /tmp/android-runner ]; then
+            find /tmp/android-runner -type f -name '*crash*' -printf '%f %s bytes\n' > emulator-diagnostics/native-crash-files.txt
+          fi
+          sudo chown -R "$(id -u):$(id -g)" emulator-diagnostics
           timeout 15s adb devices -l > emulator-diagnostics/devices.txt 2>&1 || true
           timeout 15s adb -s emulator-5554 shell getprop > emulator-diagnostics/properties.txt 2>&1 || true
           timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
