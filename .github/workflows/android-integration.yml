@@ -47,13 +47,13 @@ jobs:
           lines = [line for line in path.read_text().splitlines()
                    if not line.startswith(('org.gradle.jvmargs=', 'org.gradle.daemon=',
                                            'org.gradle.workers.max=', 'kotlin.compiler.execution.strategy='))]
-          lines.extend(['org.gradle.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError',
+          lines.extend(['org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=1G -XX:+HeapDumpOnOutOfMemoryError',
                         'org.gradle.daemon=false', 'org.gradle.workers.max=2',
                         'kotlin.compiler.execution.strategy=in-process'])
           path.write_text('\n'.join(lines) + '\n')
           PY
           free -m
-          flutter build apk --debug --no-pub --target=integration_test/app_navigation_test.dart --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true
+          flutter build apk --debug --no-pub --target-platform=android-x64 --target=integration_test/app_navigation_test.dart --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true
           test -s build/app/outputs/flutter-apk/app-debug.apk
           (cd android && ./gradlew --stop)
           free -m

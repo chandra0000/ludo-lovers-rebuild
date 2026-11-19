@@ -17,9 +17,9 @@ risk on the standard hosted runner; an OOM kill is a hypothesis, not a proven ca
 
 The focused follow-up changes CI only:
 
-- Cap Gradle heap2GB/metaspace768MB, use two workers, compile Kotlin in-process,
+- Cap Gradle heap4GB/metaspace1GB, use two workers, compile Kotlin in-process,
   disable persistent Gradle daemons and explicitly stop them after compilation.
-- Build the identical debug integration target/defines before booting the emulator.
+- Build the identical x86_64 debug integration target/defines before booting the emulator.
 - Use the pinned SDK's supported `flutter drive --use-application-binary` path to
   install/launch that APK, retaining the same screenshot driver and scenarios.
 - Add host memory/process/kernel diagnostics so a further failure distinguishes
@@ -35,3 +35,13 @@ skipping compilation during emulator execution. Native result is recorded in the
 This is not evidence of phone performance or physical-device acceptance. Historical
 failed runs stay failed. No test is disabled and no PR is merged automatically.
 Review after #73, itself dependent on #72 and the preceding implementation stack.
+
+
+The first isolated run44512155537 failed before emulator boot because the initial
+2GB cap exhausted Java heap during JetifyTransform of the x86_64 debug engine.
+This is an explicit compiler-memory failure, distinct from the earlier emulator
+losses. Host telemetry reports15,701MB total RAM. The follow-up uses4GB heap/1GB
+metaspace and builds only android-x64, matching the emulator ABI and avoiding
+unnecessary ARM engine transforms. Compilation remains separated from QEMU;
+no test or timeout is relaxed. This build-cap adjustment is based on actual logs,
+not a claimed proof of the original emulator kill cause.
