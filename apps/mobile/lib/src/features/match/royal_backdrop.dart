@@ -47,24 +47,6 @@ class _RoyalBackdropPainter extends CustomPainter {
           colors: [Color(0x24D9AD55), Color(0x0012121A)],
         ).createShader(rect),
     );
-    // Fine woven diamonds add material depth without an expensive blur.
-    final weave = Paint()
-      ..color = const Color(0x08FFE3A0)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .5;
-    const step = 40.0;
-    final texture = Path();
-    for (var y = -step; y < size.height + step; y += step) {
-      for (var x = -step; x < size.width + step; x += step) {
-        texture
-          ..moveTo(x, y + step / 2)
-          ..lineTo(x + step / 2, y)
-          ..lineTo(x + step, y + step / 2)
-          ..lineTo(x + step / 2, y + step)
-          ..close();
-      }
-    }
-    canvas.drawPath(texture, weave);
     canvas.drawRect(
       rect,
       Paint()
