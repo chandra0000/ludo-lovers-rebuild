@@ -7,11 +7,13 @@ on:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
       - ".github/scripts/ios_simulator_integration.sh"
+      - ".github/scripts/ios_simulator_integration.py"
   pull_request:
     paths:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
       - ".github/scripts/ios_simulator_integration.sh"
+      - ".github/scripts/ios_simulator_integration.py"
   workflow_dispatch:
 
 concurrency:
@@ -91,6 +93,15 @@ jobs:
       - name: Build iOS simulator app with Xcode
         working-directory: apps/mobile
         run: flutter build ios --simulator --debug --no-codesign
+      - name: Verify simulator app artifact
+        working-directory: apps/mobile
+        run: test -d build/ios/iphonesimulator/Runner.app
+      - name: Upload unsigned iOS simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-ios-simulator-app
+          path: apps/mobile/build/ios/iphonesimulator/Runner.app
+          if-no-files-found: error
       - name: Run installed iPhone simulator navigation and local modes
         timeout-minutes: 15
         working-directory: apps/mobile
@@ -116,12 +127,3 @@ jobs:
           name: ludo-ios-simulator-diagnostics
           path: simulator-diagnostics/
           if-no-files-found: warn
-      - name: Verify simulator app artifact
-        working-directory: apps/mobile
-        run: test -d build/ios/iphonesimulator/Runner.app
-      - name: Upload unsigned iOS simulator build
-        uses: actions/upload-artifact@v4
-        with:
-          name: ludo-ios-simulator-app
-          path: apps/mobile/build/ios/iphonesimulator/Runner.app
-          if-no-files-found: error
