@@ -21,12 +21,25 @@ concurrency:
 
 jobs:
   android-integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [current, known-baseline]
+    name: android-integration (${{ matrix.source }})
     # PRs are opt-in via label; main and manual dispatch always run.
     if: github.event_name != 'pull_request' || github.event.label.name == 'run-android-integration'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Select explicitly labelled baseline control
+        if: matrix.source == 'known-baseline'
+        run: |
+          git restore --source=22bb509ec95af8c816d7a6ec6275fcf356d0edf1 --staged --worktree -- apps/mobile
+          git diff --exit-code 22bb509ec95af8c816d7a6ec6275fcf356d0edf1 -- apps/mobile
+          echo 'CONTROL ONLY: mobile source 22bb509ec95af8c816d7a6ec6275fcf356d0edf1; not new-UI acceptance'
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -85,7 +98,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-installed-android-emulator-screenshots
+          name: ludo-installed-android-emulator-screenshots-${{ matrix.source }}
           path: apps/mobile/test-artifacts/native/*.png
           if-no-files-found: error
       - name: Collect emulator diagnostics on failure
@@ -108,6 +121,6 @@ jobs:
         if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-lovers-emulator-diagnostics
+          name: ludo-lovers-emulator-diagnostics-${{ matrix.source }}
           path: emulator-diagnostics/
           if-no-files-found: warn

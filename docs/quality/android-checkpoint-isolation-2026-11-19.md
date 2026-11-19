@@ -59,3 +59,16 @@ and raw core/minidump contents are excluded.
 This is a headless-emulator backend configuration, not a change to the production
 Flutter renderer. Physical Vulkan acceptance remains unverified, and success on
 software OpenGL must not be reported as a physical GPU benchmark or Vulkan pass.
+
+OpenGL run44514945790 also lost QEMU (diagnostics14526285608, verified ZIP
+SHA25602fd9ee759f915e75b613a01b7e63d78d090c66bb5800c4d39699f2359782057).
+Host available RAM was14,885MB; no native summary/minidump filename was produced.
+Disabling Vulkan did not resolve the failure and must not be described as a fix.
+The next diagnostic matrix compares current UI with the previously verified mobile
+source22bb509ec95af8c816d7a6ec6275fcf356d0edf1. Both use identical current CI,
+Flutter/emulator configuration, prebuild, scenarios and screenshot requirements.
+Only the control's apps/mobile tree is restored in its isolated ephemeral checkout.
+Jobs and artifacts explicitly identify current versus known-baseline. Fail-fast
+is false so a failure cannot cancel the independent control. A baseline pass must
+never count as new-UI acceptance; this is a diagnostic comparison, not a renderer
+performance benchmark or a product-rule change.
