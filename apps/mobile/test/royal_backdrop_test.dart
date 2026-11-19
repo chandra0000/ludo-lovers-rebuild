@@ -45,15 +45,11 @@ void main() {
   testWidgets('header crown stays small and square beside the approved logo',
       (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: SizedBox(
             height: 84,
-            child: RoyalGameHeader(
-              onExit: () {},
-              spacious: true,
-              trailing: const SizedBox(),
-            ),
+            child: Center(child: RoyalBrandMark(size: 72)),
           ),
         ),
       ),

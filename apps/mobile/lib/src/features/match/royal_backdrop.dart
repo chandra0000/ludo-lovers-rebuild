@@ -35,7 +35,7 @@ class _RoyalBackdropPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF160B28), Color(0xFF0A0D1C)],
+          colors: [Color(0xFF241237), Color(0xFF101329), Color(0xFF090C19)],
         ).createShader(rect),
     );
     canvas.drawRect(
@@ -45,6 +45,33 @@ class _RoyalBackdropPainter extends CustomPainter {
           center: Alignment(0, -.05),
           radius: .72,
           colors: [Color(0x24D9AD55), Color(0x0012121A)],
+        ).createShader(rect),
+    );
+    // Fine woven diamonds add material depth without an expensive blur.
+    final weave = Paint()
+      ..color = const Color(0x08FFE3A0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .5;
+    const step = 40.0;
+    final texture = Path();
+    for (var y = -step; y < size.height + step; y += step) {
+      for (var x = -step; x < size.width + step; x += step) {
+        texture
+          ..moveTo(x, y + step / 2)
+          ..lineTo(x + step / 2, y)
+          ..lineTo(x + step, y + step / 2)
+          ..lineTo(x + step / 2, y + step)
+          ..close();
+      }
+    }
+    canvas.drawPath(texture, weave);
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0, -.85),
+          radius: .65,
+          colors: [Color(0x30D9AD55), Color(0x00D9AD55)],
         ).createShader(rect),
     );
     // Deterministic ambient bokeh; static even when reduced motion is disabled.

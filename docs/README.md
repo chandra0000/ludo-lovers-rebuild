@@ -48,3 +48,10 @@ The owner's final corner-profile direction supersedes the top-only V2 HUD. Read
 The approved board, logo, geometry, rules and turn order remain unchanged. Native
 installed-app screenshots, software captures and physical-device acceptance are
 distinct evidence classes. No review-stack PR is automatically merged.
+
+
+## Responsive profile refinement
+
+The [2026-11-19 composition update](quality/responsive-profile-composition-2026-11-19.md)
+implements the owner's larger responsive avatars, logo between the top profiles,
+smaller social icons and richer static backdrop. The board and engine remain unchanged.

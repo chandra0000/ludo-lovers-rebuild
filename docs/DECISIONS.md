@@ -1,3 +1,18 @@
+## 2026-11-19 — Responsive profiles flank the approved logo
+
+**Authority:** Owner feedback explicitly requests the application logo between the
+profiles, like the bottom dice, larger responsive profiles and smaller chat/emoji
+icons. This supersedes the separate logo-header composition from 2026-11-18.
+
+**Decision:** Top profiles flank RoyalBrandMark using the same central column as
+the bottom dice. Responsive avatar/card dimensions reserve independent 48dp social
+targets; icons are 20dp. Static royal texture/lighting is refined. Approved board,
+logo bytes, seat positions, turn order, geometry and gameplay rules are unchanged.
+
+**Acceptance:** Actual Flutter screenshots and regression evidence are recorded in
+[the profile composition report](quality/responsive-profile-composition-2026-11-19.md).
+Owner visual and physical-device acceptance remain separate; no automatic merges.
+
 ## 2026-11-18 — Approved royal corner scaffold
 
 **Authority:** Latest owner master prompt explicitly supersedes the preceding
