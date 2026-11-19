@@ -6,7 +6,7 @@ icons. This supersedes the separate logo-header composition from 2026-11-18.
 
 **Decision:** Top profiles flank RoyalBrandMark using the same central column as
 the bottom dice. Responsive avatar/card dimensions reserve independent 48dp social
-targets; icons are 20dp. Static royal lighting is refined. Approved board,
+targets; icons are 20dp. The verified full-screen royal lighting is retained. Approved board,
 logo bytes, seat positions, turn order, geometry and gameplay rules are unchanged.
 
 **Acceptance:** Actual Flutter screenshots and regression evidence are recorded in

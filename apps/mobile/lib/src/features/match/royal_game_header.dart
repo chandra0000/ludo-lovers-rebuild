@@ -58,7 +58,7 @@ class RoyalBrandMark extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/branding/ludo_lovers_icon.webp',
                   key: const Key('match_brand_mark'),
-                  cacheWidth: 264,
+                  cacheWidth: 216,
                   semanticLabel: 'Ludo Lovers',
                 ),
               ),
