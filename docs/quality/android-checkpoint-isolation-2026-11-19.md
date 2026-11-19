@@ -85,3 +85,13 @@ and royal lighting. The diagnostic old-version control is now removed after its
 purpose is fulfilled, avoiding duplicate routine builds; the entire current-app
 scenario/screenshot requirement remains. New runtime outcome is required before
 calling the rendering candidate a fix.
+
+The no-lattice checkpoint44520076712 also lost QEMU after its first scenario;
+removing that decoration alone is not a verified fix. Current UI follow-up
+50ae0cf14ac4e7a66cc56e9599cb6c90971aff2b retains the requested profile/logo/icon
+layout but restores the exact baseline RoyalBackdrop and bounded avatar/logo
+decode widths128/216. Source portraits are only145–168px. This branch incorporates
+that conservative rendering candidate; native validation is still required.
+Separately, cross-platform debug job135545241936 failed before app compilation
+because Maven Central explicitly returned HTTP429 for Kotlin dependencies. This
+is recorded as dependency-service throttling, not an application assertion.

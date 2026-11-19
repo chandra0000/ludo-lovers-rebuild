@@ -156,7 +156,7 @@ class PlayerProfileCard extends StatelessWidget {
                                       : Image.asset(
                                           'assets/images/board/extracted/$image',
                                           fit: BoxFit.cover,
-                                          cacheWidth: 240,
+                                          cacheWidth: 128,
                                           errorBuilder: (_, __, ___) =>
                                               Icon(Icons.person, color: accent),
                                         ),

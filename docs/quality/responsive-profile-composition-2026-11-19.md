@@ -23,8 +23,8 @@ Both middle regions share one width and centerline. Navigation remains a separat
   bytes, accessible label, bounded gold glow and crown are reused.
 - Chat/emoji glyphs reduce 28→20dp. Each independent interaction stays 48×48dp with
   named local-only tooltips; inactive slots remain noninteractive.
-- RoyalBackdrop uses warmer top lighting
-  and a richer purple/midnight gradient. It remains static, cached, pointer-excluded
+- RoyalBackdrop retains its verified full-screen royal purple/midnight gradients,
+  gold lighting, filigree and bokeh. It remains static, cached, pointer-excluded
   and reduced-motion safe, with no new animation loop or blur filter.
 - Approved board/logo assets, uniform board transform, pawn anchors, safe stars,
   brand identity, engine scheduling, mode profiles and persistence are unchanged.
@@ -73,3 +73,13 @@ The optional complex closed-path background lattice is removed as the first
 isolated rendering candidate. Requested profile/logo/icon layout and royal
 lighting remain; the approved board/engine remain unchanged. New runtime outcome
 must be recorded before claiming this resolves the loss. No test is disabled.
+
+
+Removing the lattice alone did not resolve QEMU loss: checkpoint44520076712
+completed the first scenario, then lost the VM/emulator during local-mode checks.
+The next conservative candidate restores the exact verified RoyalBackdrop painter
+and the prior bounded avatar/logo decode widths128/216, while preserving larger
+on-screen avatar/profile dimensions, centered logo and20dp social glyphs. The
+source portraits are only145–168px; requesting240px decodes provided no new source
+detail. No artwork is modified. This isolates additional painting/decode changes;
+Android runtime resolution remains unverified until the next checkpoint passes.
