@@ -1,5 +1,5 @@
 {
-  "current_source": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+  "current_source": "903f54377613602f6038ffe56949a0cb89b6c059",
   "initial_passed_source": "6722614c69808f4bea8dacb25039082272feac88",
   "initial_ci_merge_sha": "96b7d9b2535cdaaa1cb0b767bb04542b50fca9b4",
   "artifacts": [
@@ -299,6 +299,96 @@
       "source_head_sha": "53953bcb70775d34ca67383a96b321d61a4f3e33",
       "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44455344433/artifacts/14496534594",
       "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498865870,
+      "name": "ludo-lovers-board-calibration-preview",
+      "size_in_bytes": 20887,
+      "digest": "sha256:0b2b705aff8eb604417f204121541c6b2774cab98ccf6a7e5e4ca4b2b1909ada",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498865870",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498596339,
+      "name": "ludo-lovers-canonical-board-artwork",
+      "size_in_bytes": 254262,
+      "digest": "sha256:99c5455d3767c8bf0f9748bf2f2047ab00fc5921e7802a7bf7dea2f0cde13e38",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498596339",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498557355,
+      "name": "ludo-lovers-release-apks",
+      "size_in_bytes": 29397918,
+      "digest": "sha256:f47421e8b6e764f143f5eb81adf43189c08b4ca7ad142ee6b31f3be9c80bde0c",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498557355",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498511411,
+      "name": "ludo-lovers-engine-benchmark",
+      "size_in_bytes": 887,
+      "digest": "sha256:ce910f1ead494d70f2711017d7042c0be7983c45271c6bc6e3947cd78167e79b",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498511411",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498392615,
+      "name": "ludo-validation-only-app-bundle-not-production-signed",
+      "size_in_bytes": 43158335,
+      "digest": "sha256:f5a119b821465f6708ac870a4f0f9fa4040bdcd867583bd3dd4c8e073884e451",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498392615",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14498223046,
+      "name": "ludo-internal-modes-profile-apks",
+      "size_in_bytes": 51780559,
+      "digest": "sha256:7a30f827adcd46a9df9ebef96a58dc3191e8fc3507c2bc0aa604240d3e91defb",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14498223046",
+      "downloaded_in_this_checkpoint": true
+    },
+    {
+      "id": 14497838168,
+      "name": "ludo-lovers-match-screen-393x873",
+      "size_in_bytes": 403481,
+      "digest": "sha256:fdf541c03d98bc55f2a012ee5cb50f680e67c7071130d2716150935a77c3d2d7",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14497838168",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14497593959,
+      "name": "ludo-linux-responsive-screenshots",
+      "size_in_bytes": 12175425,
+      "digest": "sha256:4b165fd390af762abdb3b9bfe37123784537a1bf7039b01adf61130d5b186ece",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14497593959",
+      "downloaded_in_this_checkpoint": false
+    },
+    {
+      "id": 14497369946,
+      "name": "ludo-lovers-match-canvas-393x699",
+      "size_in_bytes": 275657,
+      "digest": "sha256:8c3f06ce62729cfa84498c32ed6ce969de099f3b50c70cd124e64ddf3ed368d8",
+      "workflow_run_id": 44456771757,
+      "source_head_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757/artifacts/14497369946",
+      "downloaded_in_this_checkpoint": false
     }
   ],
   "downloads_verified": [
@@ -310,7 +400,8 @@
     14396410312,
     14396657022,
     14397245639,
-    14497084656
+    14497084656,
+    14498223046
   ],
   "software_pngs_required_and_verified": 36,
   "android_clean_native": {
@@ -356,12 +447,18 @@
     "physical_device": false
   },
   "current_arm64_profile_apk": {
-    "artifact": 14396657022,
-    "sha256": "dec6e8fd6be7f6976ca02406c2e1e6a40d6bfce0bc5689b19f70fb8bfe6762a3",
+    "artifact": 14498223046,
+    "source": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+    "run": 44456771757,
+    "sha256": "a3db480dfbdcf972969eb25c33c6abe5c25ee165235b114a533cfec4264277c9",
     "signature_verified": true,
     "certificate": "Android Debug",
-    "certificate_sha256": "53e4d6b1a52643f01912a4642685d05969db17701316d7f3393334ffc79534bc",
-    "internal_modes_enabled": true
+    "certificate_sha256": "c5d96c0b4498425cc924108b1eba334f96d39a7c7526449ef6bb008d50012dff",
+    "internal_modes_enabled": true,
+    "package": "com.ludolovers.ludo_lovers",
+    "min_sdk": 24,
+    "target_sdk": 36,
+    "compile_sdk": 36
   },
   "initial_arm64_release_apk": {
     "artifact": 14396470273,
@@ -443,6 +540,40 @@
       "maven_central_stdlib": "HTTP 200, 2322 bytes",
       "plugin_portal_bom": "HTTP 200, 4269 bytes"
     },
-    "retry": "pending targeted failed job only"
+    "retry": {
+      "job": 135336992229,
+      "conclusion": "success",
+      "scope": "only failed Android job"
+    }
+  },
+  "prior_clean_arm64_profile_apk": {
+    "artifact": 14396657022,
+    "sha256": "dec6e8fd6be7f6976ca02406c2e1e6a40d6bfce0bc5689b19f70fb8bfe6762a3",
+    "signature_verified": true,
+    "certificate": "Android Debug",
+    "certificate_sha256": "53e4d6b1a52643f01912a4642685d05969db17701316d7f3393334ffc79534bc",
+    "internal_modes_enabled": true
+  },
+  "unified_ios_discovery_failure": {
+    "source": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+    "run": 44456771700,
+    "job": 135333584331,
+    "conclusion": "failure",
+    "app_tests": "00:55 +4: All tests passed!",
+    "native_PNGs_host_captured": 0,
+    "diagnostic_artifact": 14498422068,
+    "diagnostic_zip_sha256": "4bdb8ff34fa427376a5dd82056957170f28ace959255aecfc5ee28a6cfc36031",
+    "diagnostic_digest_verified": true,
+    "proven_failure": "Host depends on absent one-shot VM-service announcement despite running Dart tests",
+    "repair": "Dedicated ephemeral loopback service port and bounded typed HTTP getVM readiness",
+    "real_local_Dart_VM_protocol_check": "passed",
+    "repair_source": "903f54377613602f6038ffe56949a0cb89b6c059"
+  },
+  "prior_foundation_final_source": {
+    "source": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+    "run": 44456771757,
+    "conclusion": "success",
+    "tests": 445,
+    "profile_release_AAB": "success"
   }
 }

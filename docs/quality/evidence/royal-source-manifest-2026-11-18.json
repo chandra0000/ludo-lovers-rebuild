@@ -140,9 +140,9 @@
       "pr": 71,
       "url": "https://github.com/chandra0000/ludo-lovers-rebuild/pull/71",
       "branch": "fix/gameplay-production-hardening",
-      "published_source_sha": "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
-      "tree_sha": "301b7098f7a3c18ffe525030a8da94f41fafa4c7",
-      "local_equivalent_sha": "5a4ba5f1f083d97c42d9e8f16a0e47312a42a621",
+      "published_source_sha": "903f54377613602f6038ffe56949a0cb89b6c059",
+      "tree_sha": "0d1ba0ae6056923d9aac2102b39000fa9c2aec59",
+      "local_equivalent_sha": "24633a31858530890a8f95b80679011bd1c70fd6",
       "local_sha_is_not_published_sha": true,
       "changed_files": [
         "M\t.github/scripts/android_integration.sh",
@@ -172,13 +172,13 @@
       ],
       "workflows": [
         {
-          "id": 44456771757,
-          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757",
+          "id": 44458139120,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139120",
           "status": "pending"
         },
         {
-          "id": 44456771700,
-          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771700",
+          "id": 44458139058,
+          "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139058",
           "status": "pending"
         }
       ],
@@ -186,7 +186,8 @@
         "6722614c69808f4bea8dacb25039082272feac88",
         "b6d031f6797294ab5e5726f9732a844220fbf2e4",
         "53953bcb70775d34ca67383a96b321d61a4f3e33",
-        "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2"
+        "36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2",
+        "903f54377613602f6038ffe56949a0cb89b6c059"
       ],
       "historical_workflows": [
         {
@@ -222,6 +223,20 @@
           "id": 44455344463,
           "conclusion": "failure",
           "failed_job": 135328900496
+        },
+        {
+          "id": 44456771757,
+          "conclusion": "success"
+        },
+        {
+          "id": 44456771700,
+          "conclusion": "failure",
+          "failed_ios_job": 135333584331,
+          "first_failed_android_job": 135333584633,
+          "android_targeted_retry": {
+            "job": 135336992229,
+            "conclusion": "success"
+          }
         }
       ],
       "android_native_evidence_applies_to_current_source": "No Dart/application/integration-fixture changes after b6d031f; final source changes iOS launch scripts/workflow only."

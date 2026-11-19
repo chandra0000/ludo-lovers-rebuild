@@ -97,8 +97,10 @@ measured build/raster frame times, memory, startup, image decode and rebuild ana
 From `apps/mobile` on a Mac with an available iPhone simulator runtime, run
 `bash ../../.github/scripts/ios_simulator_integration.sh`. The Python launcher
 creates its own simulator, bounds boot/build/install/launch/driver attach separately,
-connects to the console's loopback Dart VM-service URI, requires eight native PNGs,
-and deletes only its simulator on teardown. Diagnostic console/runtime metadata
+probes a dedicated ephemeral loopback Dart VM-service port, requires eight native PNGs,
+and deletes only its simulator on teardown. The CI simulator launch disables service auth codes/publication only for that
+loopback debug process; production/native builds retain their normal settings.
+Diagnostic console/unified-log/runtime metadata
 is saved at repository-root `simulator-diagnostics/`. CI uploads the normal
 AppMain `.app` before building the integration target, so the normal bundle and
 installed test-harness evidence stay distinct. Do not increase timeouts or blindly

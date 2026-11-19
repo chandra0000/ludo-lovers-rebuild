@@ -25,7 +25,7 @@ published source SHAs. CI can record a synthetic PR merge SHA instead of its hea
 | [68](https://github.com/chandra0000/ludo-lovers-rebuild/pull/68) | be61c23451a0079250a5a862f0c84a2e21a14e4e | Royal background, crown/header, bounded gold lighting |
 | [69](https://github.com/chandra0000/ludo-lovers-rebuild/pull/69) | 5bfe64f41be61984bb2e108a03ea915694da1c7b | Per-profile local social controls and lifecycle |
 | [70](https://github.com/chandra0000/ludo-lovers-rebuild/pull/70) | f70b9714722bbbc184f1bbbbe352257dff0a875d | FFA/1v1/computer/Team setup presets |
-| [71](https://github.com/chandra0000/ludo-lovers-rebuild/pull/71) | 36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2 | AI cleanup, board pixels, captures and native QA gates |
+| [71](https://github.com/chandra0000/ludo-lovers-rebuild/pull/71) | 903f54377613602f6038ffe56949a0cb89b6c059 | AI cleanup, board pixels, captures and native QA gates |
 
 Recommended manual order: existing **#54 → … → #66 → #67 → #68 → #69 → #70 →
 #71 → evidence documentation**. After each approved predecessor reaches main,
@@ -180,7 +180,23 @@ Apple's unified log, which the new launcher had omitted. Follow-up source
 `36817b0c1db94ba4f12cf2eb0fe9a3c5d312aba2` starts and preserves that stream before
 launch and discovers the service from either channel. Four local URI fixtures
 (including a native-style line and rejection of non-loopback URLs) pass. Bounds,
-required scenarios and captures are unchanged. Final native verification is pending.
+required scenarios and captures are unchanged.
+
+That unified-log run 44456771700 still failed host discovery, but artifact
+14498422068 proves Runner executed all three scenarios: `00:55 +4: All tests
+passed!`. No VM-service announcement was captured and the screenshot driver never
+attached, so this is **not** successful native capture acceptance. The exact reason
+the one-shot engine announcement is absent is not proven. Source
+`903f54377613602f6038ffe56949a0cb89b6c059` removes that dependency: it reserves an
+ephemeral loopback port, launches this isolated CI simulator with explicit service
+port/publication/auth flags, polls `getVM` for a typed VM response within the same
+60-second bound, then attaches the unchanged driver. Auth relaxation is scoped to
+the isolated simulator debug process, not a production build or physical device.
+Unified console/logs remain diagnostic. A real local Dart VM successfully exercised
+the HTTP readiness check; connection refusal is rejected. The standalone Dart CLI
+rejected the iOS-only publication flag in the first local test command; removing
+that embedder-only flag from the local test allowed the protocol check to pass.
+Final installed capture verification remains pending.
 
 Earlier clean-pointer source workflows (iOS failed):
 
@@ -191,14 +207,15 @@ Earlier clean-pointer source workflows (iOS failed):
 #67–#70 required CI passed, including installed iOS navigation. The original final-source
 full gates passed; the clean-pointer source also passed all 445 CI tests and Android
 builds. Its clean Android capture job also passed; its iOS job failed as described above.
-Current unified-log repair workflows are [foundation](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771757)
-and [cross-platform](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44456771700).
-Foundation run 44455344433 passed all tests and profile/release/AAB builds.
+Current loopback-readiness workflows are [foundation](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139120)
+and [cross-platform](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44458139058).
+Foundation runs 44455344433 and 44456771757 passed all 445 tests and
+profile/release/AAB builds.
 The repair changes only iOS launch scripts and workflow order; application/Dart
 fixture code is identical to the verified clean Android source. Profile APKs now
 include internal modes for concrete owner/device review, clearly named
 `ludo-internal-modes-profile-apks`. Release APK/AAB/default debug builds retain
-normal public gates. Final internal profile artifact **14396657022** downloaded: ZIP SHA256
+normal public gates. Earlier clean-source internal profile artifact **14396657022** downloaded: ZIP SHA256
 `1b6fafd1001f2265513cb7c7cbe3b9b41ddaa36080314017a4ee6afb0dc33723` matches digest.
 ARM64 profile APK SHA256
 `dec6e8fd6be7f6976ca02406c2e1e6a40d6bfce0bc5689b19f70fb8bfe6762a3`;
@@ -206,6 +223,14 @@ APK signature verifies with Android Debug certificate. Initial final-code ARM64
 release APK and AAB were independently downloaded and verified for build/package/
 structure evidence; their full receipts distinguish that source from the fixture
 follow-up. No production signing or full JAR signature acceptance is implied.
+
+Final-source internal profile artifact **14498223046** was also downloaded and
+its ZIP SHA256 `7a30f827adcd46a9df9ebef96a58dc3191e8fc3507c2bc0aa604240d3e91defb`
+verified. ARM64 APK SHA256
+`a3db480dfbdcf972969eb25c33c6abe5c25ee165235b114a533cfec4264277c9`.
+`apksigner verify --print-certs` passes (Android Debug certificate); package
+`com.ludolovers.ludo_lovers`, minimum SDK24, target/compile SDK36. This remains
+an internal review/profile artifact, not production signing or physical acceptance.
 
 Normal AppMain simulator artifact **14497084656** was downloaded and its ZIP
 SHA256 `31dbab3617e0dc02f09df2feb1b8995bd7822de585e8e7724792ca4c8ba6f04c`
@@ -223,9 +248,8 @@ The first Android debug attempt on run 44456771700 (job 135333584633) failed
 before app compilation: Gradle could not resolve Kotlin2.0.21 stdlib/plugin/BOM
 POMs from plugins.gradle.org. Direct checks of the exact stdlib/BOM URLs and the
 Maven Central stdlib endpoint subsequently returned HTTP200 with valid POM bytes.
-The preceding identical application build passed. A targeted failed-job retry is
-appropriate after this diagnosis; its result must be recorded separately and the
-original failure retained. No dependency/rule/test is changed to hide the outage.
+The preceding identical application build passed. A targeted retry of only the failed Android job passed
+(job 135336992229). The original failure is retained; iOS was not retried blindly. No dependency/rule/test is changed to hide the outage.
 
 ## Accessibility and performance limits
 
