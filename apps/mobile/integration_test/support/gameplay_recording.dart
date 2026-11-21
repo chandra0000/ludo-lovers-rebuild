@@ -18,6 +18,14 @@ void registerGameplayRecording({bool realTime = true}) {
   testWidgets(
     'seeded actual gameplay recording and authoritative assertions',
     (tester) async {
+      final binding = tester.binding;
+      final live = binding is LiveTestWidgetsFlutterBinding ? binding : null;
+      final previousPolicy = live?.framePolicy;
+      // Native recordings must render every production animation frame, not just
+      // the sparse frames explicitly requested by test pumps.
+      if (live != null) {
+        live.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
+      }
       SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
       final snapshots = <SavedMatch>[];
       var elapsedMs = 0;
@@ -231,6 +239,7 @@ void registerGameplayRecording({bool realTime = true}) {
         await wait(2000);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();
+        if (live != null) live.framePolicy = previousPolicy!;
       }
     },
     timeout: const Timeout(Duration(minutes: 2)),

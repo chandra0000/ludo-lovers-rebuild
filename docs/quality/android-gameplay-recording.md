@@ -106,3 +106,17 @@ signing and other release gates remain unchanged.
 
 Current execution receipts and any failure must be attached to the QA PR before
 claiming Android/video verification. Do not merge automatically.
+
+## Local execution checkpoint
+
+447 tests pass locally, including the shared seeded gameplay fixture; strict
+formatting and fatal-info analysis pass. Five host recorder checks verify SIGINT
+and process-exit ordering before pull, idempotent cleanup, duplicate-start rejection
+and invalid capture rejection. The recording explicitly enables the live binding's
+fullyLive policy for its duration, restoring the prior policy afterward; the SDK
+default fadePointers policy cannot be used as evidence of continuous animation.
+Existing installed navigation also edits Unicode player names during setup.
+No production source or asset bytes changed. CI run44865723200 is the initial
+capture-path experiment; its original fixture predates the explicit live-frame
+policy and must not be promoted as final motion acceptance. Final run/commit/video
+receipts will be recorded separately after inspection.

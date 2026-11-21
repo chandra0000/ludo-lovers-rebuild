@@ -75,6 +75,27 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('start_local_match')), findsOneWidget);
 
+        if (cycle == 0) {
+          await tester.tap(find.byKey(const Key('edit_player_names')));
+          await tester.pumpAndSettle();
+          await tester
+              .ensureVisible(find.byKey(const Key('player_name_orange')));
+          await tester.enterText(
+            find.byKey(const Key('player_name_orange')),
+            'Élan',
+          );
+          await tester
+              .ensureVisible(find.byKey(const Key('player_name_green')));
+          await tester.enterText(
+            find.byKey(const Key('player_name_green')),
+            'Renée',
+          );
+          await tester
+              .ensureVisible(find.byKey(const Key('edit_player_names')));
+          await tester.tap(find.byKey(const Key('edit_player_names')));
+          await tester.pumpAndSettle();
+        }
+        await tester.ensureVisible(find.byKey(const Key('start_local_match')));
         await tester.tap(find.byKey(const Key('start_local_match')));
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('board_artwork')), findsOneWidget);
