@@ -8,7 +8,11 @@ whose application source is the enlarged-profile/centered-logo UI from PR #73
 `879f2b555c50575c5db066e0ac8bf530271a965a` at this audit. No AGENTS.md was found
 in the repository or workspace parents. Read architecture/architecture.md,
 DECISIONS.md, engineering/development-and-testing.md and release gates first.
-No production Dart, artwork, geometry, rules or availability gate is changed.
+The only production Dart change pairs dark/gold SnackBar colors after native
+recording exposed low-contrast feedback; a regression test covers it. Artwork,
+geometry, rules, pawn/dice rendering and availability gates are unchanged.
+See [the final verified QA report](android-gameplay-qa-report-2026-11-21.md) for
+the inspected corrected recording and exact commits.
 Public compatibility and internal Classic/Quick/Team-Up remain distinct.
 
 This cloud environment has Flutter3.35.7/Dart3.9.2, Java21 runtime, ADB and
