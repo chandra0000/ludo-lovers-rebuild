@@ -4,7 +4,7 @@ import json
 import importlib.util
 from pathlib import Path
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 spec = importlib.util.spec_from_file_location(
     'native_qa', Path(__file__).with_name('android_native_qa.py'))
@@ -16,13 +16,18 @@ class RecorderChecks(unittest.TestCase):
     def test_sigint_and_process_exit_precede_pull_and_stop_is_idempotent(self):
         recorder = qa.Recorder()
         recorder.pid = 123
+        recorder.process = Mock()
+        recorder.process.wait.return_value = 0
+        order = Mock()
+        order.attach_mock(recorder.process.wait, 'wait')
         with patch.object(qa, 'adb', return_value='') as adb:
+            order.attach_mock(adb, 'adb')
             recorder.stop()
             recorder.stop()
-        self.assertEqual(adb.call_args_list[0].args, ('shell', 'kill', '-2', '123'))
-        self.assertIn('/proc/123/stat', adb.call_args_list[1].args[1])
-        self.assertEqual(adb.call_args_list[2].args[0], 'pull')
-        self.assertEqual(adb.call_count, 3)
+        self.assertEqual(order.mock_calls[0].args, ('shell', 'kill', '-2', '123'))
+        self.assertEqual(order.mock_calls[1].kwargs, {'timeout': 12})
+        self.assertEqual(order.mock_calls[2].args[0], 'pull')
+        self.assertEqual(len(order.mock_calls), 3)
 
     def test_duplicate_start_cannot_replace_a_recording(self):
         recorder = qa.Recorder()
@@ -41,14 +46,25 @@ class RecorderChecks(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 qa.screenshot('native-match')
 
-    def test_active_recorder_is_waited_for_before_pull(self):
+    def test_failed_recorder_exit_never_pulls_unfinalized_video(self):
         recorder = qa.Recorder()
         recorder.pid = 456
-        with patch.object(qa, 'adb', side_effect=['', '456 (screenrecord) S', '', '']) as adb:
-            with patch.object(qa.time, 'sleep') as sleep:
+        recorder.process = Mock()
+        recorder.process.wait.return_value = 1
+        with patch.object(qa, 'adb', return_value='') as adb:
+            with self.assertRaises(RuntimeError):
                 recorder.stop()
-        sleep.assert_called_once_with(.25)
-        self.assertEqual(adb.call_args_list[-1].args[0], 'pull')
+        self.assertEqual(adb.call_count, 1)
+
+    def test_recorder_timeout_is_not_reported_as_valid_video(self):
+        recorder = qa.Recorder()
+        recorder.pid = 456
+        recorder.process = Mock()
+        recorder.process.wait.side_effect = qa.subprocess.TimeoutExpired('record', 12)
+        with patch.object(qa, 'adb', return_value='') as adb:
+            with self.assertRaises(RuntimeError):
+                recorder.stop()
+        self.assertEqual(adb.call_count, 1)
 
 
 class ChunkChecks(unittest.TestCase):

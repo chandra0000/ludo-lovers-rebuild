@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import select
 import signal
 import subprocess
 import sys
@@ -55,32 +56,48 @@ class StateChunks:
 
 class Recorder:
     pid = None
+    process = None
     stopped = False
 
     def start(self):
         if self.pid is not None:
             raise RuntimeError('Duplicate recording start')
         adb('shell', 'rm', '-f', REMOTE)
-        result = adb('shell', 'screenrecord --bit-rate 6000000 --time-limit 120 '
-                     + REMOTE + ' >/sdcard/ludo-qa-recorder.log 2>&1 & echo $!')
-        self.pid = int(result.strip())
+        # Keep screenrecord in the foreground on a dedicated ADB connection.
+        # exec preserves the printed shell PID; no asynchronous shell job or
+        # /proc polling heuristic is involved in recorder completion.
+        self.process = subprocess.Popen([
+            'adb', '-s', SERIAL, 'shell', '-T',
+            'echo $$; exec screenrecord --bit-rate 6000000 --time-limit 120 ' + REMOTE,
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        ready, _, _ = select.select([self.process.stdout], [], [], 10)
+        if not ready:
+            raise RuntimeError('Recorder PID readiness timed out')
+        self.pid = int(self.process.stdout.readline().strip())
         adb('shell', 'kill', '-0', str(self.pid))
 
     def stop(self):
         if self.pid is None or self.stopped:
             return
-        # SIGINT lets Android screenrecord write the MP4 moov atom before pull.
         adb('shell', 'kill', '-2', str(self.pid))
-        deadline = time.monotonic() + 12
-        while time.monotonic() < deadline:
-            live = adb('shell', f'if kill -0 {self.pid} 2>/dev/null; then cat /proc/{self.pid}/stat; fi', timeout=15).strip()
-            if not live or live.split()[2] == 'Z':
-                break
-            time.sleep(.25)
-        else:
-            raise RuntimeError('Recorder did not finalize after SIGINT')
+        try:
+            result = self.process.wait(timeout=12)
+        except subprocess.TimeoutExpired as error:
+            raise RuntimeError('Recorder did not finalize after SIGINT') from error
+        if result != 0:
+            raise RuntimeError('Recorder exited unsuccessfully: ' + str(result))
+        # Successful remote process exit follows MediaMuxer finalization.
         adb('pull', REMOTE, str(VIDEO / 'gameplay-android.mp4'))
         self.stopped = True
+
+    def close(self):
+        if self.process is not None and self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait(timeout=3)
 
 
 def main():
@@ -165,6 +182,7 @@ def main():
             cleanup_error = error
             print('Recorder cleanup failure: ' + repr(error), flush=True)
         finally:
+            recorder.close()
             logcat.terminate()
             logcat.wait(timeout=5)
             log_file.close()

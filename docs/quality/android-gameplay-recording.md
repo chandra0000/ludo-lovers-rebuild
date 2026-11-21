@@ -183,3 +183,17 @@ explicitly excluding idle holds; it records whether the30fps target was reached.
 It still requires duration, full decode, H.264, portrait, sustained changing frames
 and visual review. Low cadence is reported as a limitation, never a performance
 pass. No frame-rate conversion is applied to the deliverable.
+
+## Recorder completion contract
+
+Run44868357623 reached the AI handoff and no-move pass, but its background recorder
+failed the bounded SIGINT finalization/process-state poll. No MP4 was pulled or
+accepted. The recorder now runs in the foreground on a dedicated ADB connection:
+print the remote shell PID, exec screenrecord in place, SIGINT that exact process,
+and require successful connection/process exit before pull. This removes shell
+background signal inheritance and /proc polling races without extending the12second
+finalization bound. Tests reject nonzero exits/timeouts and prove signal→wait→pull
+ordering. The emulator runner cleans the guest even on failure. The exact underlying
+prior flush/poll failure remains unproven; the foreground contract is the correction
+under test. Device properties collected at launch are preserved separately from
+post-emulator diagnostics, and artifact names identify the actual QA checkout.

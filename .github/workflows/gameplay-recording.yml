@@ -94,12 +94,12 @@ jobs:
           git rev-parse HEAD > apps/mobile/test-artifacts/gameplay/qa-commit.txt
           git rev-parse HEAD:apps/mobile/lib > apps/mobile/test-artifacts/gameplay/application-lib-tree.txt
           flutter --version > apps/mobile/test-artifacts/gameplay/flutter-version.txt
-          timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties.txt 2>&1 || true
+          timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties-after-exit.txt 2>&1 || true
       - name: Upload recording, assertions and live diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-gameplay-android-seeded-${{ github.sha }}
+          name: ludo-gameplay-android-seeded-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
           retention-days: 30
           if-no-files-found: error
