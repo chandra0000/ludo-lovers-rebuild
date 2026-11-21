@@ -9,6 +9,8 @@ import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 
+import '../support/setup_navigation.dart';
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('setup names survive gameplay, restart and home resume',
@@ -24,13 +26,17 @@ void main() {
     final field = find.byKey(const Key('player_name_orange'));
     await tester.ensureVisible(field);
     await tester.enterText(field, '  Zoë   王 ');
-    final start = find.byKey(const Key('start_local_match'));
-    await tester.scrollUntilVisible(
-      start,
-      250,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.byKey(const Key('player_name_green')));
+    await tester.enterText(find.byKey(const Key('player_name_green')), 'Renée');
+    FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('edit_player_names')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('edit_player_names')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('player_name_orange')), findsNothing);
+    await revealLocalMatchStart(tester);
+    final start = find.byKey(const Key('start_local_match'));
     await tester.tap(start);
     await tester.pumpAndSettle();
     expect(find.text('Zoë 王'), findsOneWidget);

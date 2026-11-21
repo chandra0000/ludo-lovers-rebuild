@@ -5,6 +5,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../test/support/local_mode_navigation.dart';
+import '../test/support/setup_navigation.dart';
 import 'support/gameplay_recording.dart';
 
 void main() {
@@ -90,12 +91,18 @@ void main() {
             find.byKey(const Key('player_name_green')),
             'Renée',
           );
+          FocusManager.instance.primaryFocus?.unfocus();
+          await tester.pumpAndSettle();
           await tester
               .ensureVisible(find.byKey(const Key('edit_player_names')));
+          await tester.pumpAndSettle();
           await tester.tap(find.byKey(const Key('edit_player_names')));
           await tester.pumpAndSettle();
+          expect(find.byKey(const Key('player_name_orange')), findsNothing);
         }
-        await tester.ensureVisible(find.byKey(const Key('start_local_match')));
+        // Setup uses a lazy ListView. Collapsing the name editor can leave the
+        // start card outside the built sliver; ensureVisible alone cannot find it.
+        await revealLocalMatchStart(tester);
         await tester.tap(find.byKey(const Key('start_local_match')));
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('board_artwork')), findsOneWidget);

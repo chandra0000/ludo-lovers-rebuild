@@ -144,3 +144,10 @@ renderer configuration. This flag is supported by pinned Flutter3.35.7 for Andro
 emulator debugging, not used in production builds. Any resulting footage must be
 labelled **Android emulator / Skia software / debug**. It cannot approve production
 OpenGL/Vulkan or physical GPU performance. Launch argv/configuration is retained.
+
+The new Unicode setup check exposed a harness finder error on iOS in
+run44865991872/job136731488302: after collapsing the editor, the lazy ListView's
+start card was unmounted, so ensureVisible threw No element at line98. The test
+now returns the setup scroll position to the top and uses bounded scrollUntilVisible
+to build/find the actual start card. The name-editing check remains enabled; no
+production layout or navigation is changed.
