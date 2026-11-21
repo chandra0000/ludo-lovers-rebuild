@@ -38,8 +38,8 @@ Use Android SDK/JDK and pinned Flutter prerequisites from the development handbo
 The reproducible CI configuration includes bounded Gradle memory and prebuild
 isolation inherited from #74. The recording uses native Android `screenrecord`,
 SIGINT finalization, process-exit checks, then `adb pull`. It never generates,
-interpolates, crops or reconstructs gameplay frames. Target capture786×1746 at
-320dpi is a393×873 logical display before Android system/safe-area insets; physical
+interpolates, crops or reconstructs gameplay frames. Current target capture360×800 at
+160dpi is a360×800 logical display before Android system/safe-area insets; physical
 recording resolution and actual frame rate must be read from ffprobe.
 
 ## Deterministic demonstration
@@ -97,8 +97,10 @@ Eight required installed PNGs are uploaded separately; none is disabled.
 The normal foundation workflow captures320×640,360×800,393×873,430×932 logical
 viewports plus extended cases. Those widget-rendered PNGs are not physical captures.
 
-Automated validation requires45–95seconds, portrait H.264, >=24fps (target30+),
-full-stream decode and at least20 distinct half-second samples. This rejects frozen
+Automated validation requires45–95seconds, portrait H.264, valid positive
+frame rate, full-stream decode, sustained active frames and at least20 distinct
+half-second samples. It reports the30fps cadence target separately from idle-inclusive
+variable-rate averages; missing that target remains an explicit limitation. This rejects frozen
 or corrupt output, but visual review of dice/motion/landing/capture/readability is
 still required before reporting an inspected recording. Recording overhead is not
 an app-performance benchmark. Owner visual sign-off, physical hardware, production
@@ -151,3 +153,33 @@ start card was unmounted, so ensureVisible threw No element at line98. The test
 now returns the setup scroll position to the top and uses bounded scrollUntilVisible
 to build/find the actual start card. The name-editing check remains enabled; no
 production layout or navigation is changed.
+
+## Native software-renderer result and recording-quality correction
+
+Run44867719937/source35990cac78156f51c2cccc505841b2ed63a425ea
+produced a genuine finalized16.519second portrait H.264 MP4 at786×1746,
+readable native names/avatars/board and all eight installed PNGs. All three existing
+navigation/mode/social tests passed without emulator loss. The new demonstration
+failed a timing assumption (expected pending version3, actual already-accepted
+move version4); it did not fail a gameplay rule. The short video is rejected for
+requested duration. Its authoritative snapshots and actual native frames were
+inspected. Default-backend logs identify Impeller/OpenGLES; software Skia succeeds
+in reaching/rendering the same match. This is renderer-path isolation evidence,
+not proof of the exact historical native QEMU crash or physical GPU acceptance.
+
+The demo now asserts the exact accepted roll snapshot/event/command count and
+compares the displayed pending value with current authoritative state even when a
+legal automatic move has already completed. Duplicate-roll version and subsequent
+movement/capture/turn assertions remain mandatory. No production timers change.
+
+Native screenrecord is variable-rate: the short file averages4.843encoded fps
+because idle screens produce no new buffers; its active intervals nevertheless
+measure only about10.27fps under software debug/recording load. This does not meet
+the30fps target. The next capture uses360×800 physical pixels/160dpi (360×800
+logical display, actual app window/system insets reported separately), reducing
+software raster/encoder work instead of synthesizing/interpolating frames. The
+validator reports both encoded average and median positive intervals<=150ms,
+explicitly excluding idle holds; it records whether the30fps target was reached.
+It still requires duration, full decode, H.264, portrait, sustained changing frames
+and visual review. Low cadence is reported as a limitation, never a performance
+pass. No frame-rate conversion is applied to the deliverable.

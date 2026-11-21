@@ -83,8 +83,8 @@ jobs:
           disable-animations: false
           working-directory: apps/mobile
           script: |
-            adb -s emulator-5554 shell wm size 786x1746
-            adb -s emulator-5554 shell wm density 320
+            adb -s emulator-5554 shell wm size 360x800
+            adb -s emulator-5554 shell wm density 160
             bash ../../.github/scripts/android_integration.sh
             python3 ../../.github/scripts/verify_gameplay_video.py test-artifacts/gameplay/gameplay-android.mp4
       - name: Record exact source and runtime

@@ -141,13 +141,24 @@ void registerGameplayRecording({bool realTime = true}) {
           await tap('roll_dice');
         }
         await wait(180);
-        expect(getGame().stateVersion, version + 1);
-        expect(getGame().diceValue, value);
+        // On a live device the legal automatic move may finish before this
+        // host assertion. Inspect the exact accepted roll version, not a clock
+        // assumption about which transition is still pending.
+        final rolled = snapshots
+            .firstWhere(
+              (snapshot) => snapshot.game.stateVersion == version + 1,
+            )
+            .game;
+        expect(rolled.diceValue, value);
+        expect(rolled.events.whereType<DiceRolled>().single.value, value);
+        expect(rolled.appliedCommandIds.length, version + 1);
+        if (duplicate) expect(getGame().stateVersion, version + 1);
         expect(
           tester
               .widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton))
               .targetValue,
-          value,
+          getGame().diceValue,
+          reason: 'Displayed pending result always matches authoritative state',
         );
         mark('roll-$value-authoritative');
         await wait(700);
