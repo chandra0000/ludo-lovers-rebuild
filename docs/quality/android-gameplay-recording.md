@@ -128,3 +128,19 @@ transport evidence, not an emulator-root-cause conclusion. Snapshot transport no
 uses numbered480character base64 chunks with reassembly/corruption/missing-part
 checks. The cleanup query uses the same bounded15second ADB budget as the other
 native operations, preserving the primary failure if cleanup also fails.
+
+## Bounded renderer isolation
+
+Run44866649368 on QA sourceb516385cc20388d0aec700049f4971759150e1ef
+reassembled the snapshot correctly, then lost the driver/ADB/QEMU before any dice
+roll. Its sole native PNG is black except system bars and is rejected as gameplay
+evidence. Capture-path changes alone do not resolve the historical runtime loss.
+There is still no native crash stack establishing its underlying cause.
+
+The next run changes only Flutter's runtime renderer: the same APK is launched
+with --enable-software-rendering --no-enable-impeller. The dedicated workflow
+sets LUDO_SOFTWARE_RENDERING=true; the regular checkpoint keeps its original
+renderer configuration. This flag is supported by pinned Flutter3.35.7 for Android
+emulator debugging, not used in production builds. Any resulting footage must be
+labelled **Android emulator / Skia software / debug**. It cannot approve production
+OpenGL/Vulkan or physical GPU performance. Launch argv/configuration is retained.

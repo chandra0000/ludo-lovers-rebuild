@@ -100,6 +100,14 @@ def main():
                '--driver=test_driver/native_capture_driver.dart',
                '--target=integration_test/app_navigation_test.dart',
                '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true', '-d', SERIAL]
+    if os.environ.get('LUDO_SOFTWARE_RENDERING') == 'true':
+        command.extend(['--enable-software-rendering', '--no-enable-impeller'])
+    (VIDEO / 'launch-configuration.json').write_text(json.dumps({
+        'argv': command,
+        'renderer': 'Skia software' if os.environ.get('LUDO_SOFTWARE_RENDERING') == 'true'
+                    else 'Flutter default (emulator software OpenGL)',
+        'buildMode': 'debug integration APK',
+    }, indent=2))
     if os.environ.get('LUDO_GAMEPLAY_RECORDING') == 'true':
         command.append('--dart-define=LUDO_RECORD_GAMEPLAY=true')
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

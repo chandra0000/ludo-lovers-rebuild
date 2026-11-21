@@ -16,6 +16,7 @@ jobs:
   android-recording:
     env:
       LUDO_GAMEPLAY_RECORDING: "true"
+      LUDO_SOFTWARE_RENDERING: "true"
     # PRs are opt-in via label; main and manual dispatch always run.
     if: github.event_name != 'pull_request' || github.event.label.name == 'run-gameplay-recording'
     runs-on: ubuntu-24.04
