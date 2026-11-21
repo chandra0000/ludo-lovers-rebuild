@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -166,6 +168,11 @@ void registerGameplayRecording({bool realTime = true}) {
 
       await tester.pumpWidget(const LudoLoversApp());
       await wait(2200);
+      final ack = File('/data/user/0/com.ludolovers.ludo_lovers/cache/'
+          'ludo-recording-finalized');
+      if (realTime && Platform.isAndroid && await ack.exists()) {
+        await ack.delete();
+      }
       debugPrint('LUDO_RECORD_START');
       await wait(
         3000,
@@ -261,7 +268,21 @@ void registerGameplayRecording({bool realTime = true}) {
         expect(tester.takeException(), isNull);
       } finally {
         debugPrint('LUDO_RECORD_STOP');
-        await wait(2000);
+        if (realTime && Platform.isAndroid) {
+          await tester.runAsync(() async {
+            final deadline = DateTime.now().add(const Duration(seconds: 20));
+            while (!await ack.exists()) {
+              if (DateTime.now().isAfter(deadline)) {
+                throw TimeoutException(
+                  'Host recorder finalization acknowledgement missing',
+                );
+              }
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+            }
+          });
+        } else {
+          await wait(2000);
+        }
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();
         if (live != null) live.framePolicy = previousPolicy!;

@@ -30,7 +30,7 @@ For an already booted local emulator, from apps/mobile:
 
 ```bash
 flutter build apk --debug --target-platform=android-x64 --target=integration_test/app_navigation_test.dart --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true --dart-define=LUDO_RECORD_GAMEPLAY=true
-LUDO_GAMEPLAY_RECORDING=true bash ../../.github/scripts/android_integration.sh
+LUDO_GAMEPLAY_RECORDING=true LUDO_SOFTWARE_RENDERING=true bash ../../.github/scripts/android_integration.sh
 python3 ../../.github/scripts/verify_gameplay_video.py test-artifacts/gameplay/gameplay-android.mp4
 ```
 
@@ -197,3 +197,23 @@ ordering. The emulator runner cleans the guest even on failure. The exact underl
 prior flush/poll failure remains unproven; the foreground contract is the correction
 under test. Device properties collected at launch are preserved separately from
 post-emulator diagnostics, and artifact names identify the actual QA checkout.
+
+## Established file-finalization failure and focused correction
+
+Run44869475517/source50fd5f5e1dad405e00f56f9e13d184f14ca8dfe3
+proved the native writer completed: recorder PID3957 logged all tracks stopped
+Status0,56801118us duration, MOOV written, final fsync and exact2628699byte file
+at05:21:04.304UTC. It then hung after MediaCodec flushMediametrics; waiting for
+process exit rejected a file already finalized. A second signal during failure
+cleanup exited130. The emulator/app remained alive. The full recording was not
+pulled in that failed run and is not delivered as evidence.
+
+The correction keeps the original12second stop budget: send SIGINT once, poll
+successful exit OR recorder-PID-scoped MOOV+final-fsync evidence plus an exact
+remote stat size match. Only after durable-file proof may a stuck codec process
+be killed, then the file pulled and fully decoded. Nonzero exits/timeouts without
+proof still fail. Finalization mode, native writer log and exit code are retained.
+This fixes the host's incorrect completion proxy; it does not claim a native codec
+teardown fix. The test waits for a bounded debug-app cache acknowledgement after
+pull, preventing later screenshot scenes from advancing during host cleanup.
+No production timers, gameplay, test disablement or stop-timeout inflation.

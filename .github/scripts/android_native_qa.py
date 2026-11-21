@@ -54,6 +54,15 @@ class StateChunks:
                                           validate=True).decode('utf-8'))
 
 
+def finalized_size(logs):
+    """A preallocation/estimated moov log is NOT durable-file completion."""
+    marker = logs.rfind('MOOV atom was written to the file')
+    if marker < 0:
+        return None
+    sizes = re.findall(r'final fsync\(\) takes \d+ ms, file size (\d+)', logs[marker:])
+    return int(sizes[-1]) if sizes and int(sizes[-1]) > 1024 else None
+
+
 class Recorder:
     pid = None
     process = None
@@ -76,17 +85,44 @@ class Recorder:
         self.pid = int(self.process.stdout.readline().strip())
         adb('shell', 'kill', '-0', str(self.pid))
 
+    def finalized_file_size(self):
+        logs = adb('logcat', '-d', '--pid=' + str(self.pid), '-s', 'MPEG4Writer:D')
+        (VIDEO / 'recorder-muxer.log').write_text(logs)
+        size = finalized_size(logs)
+        if size is None:
+            return None
+        actual = int(adb('shell', 'stat', '-c', '%s', REMOTE).strip())
+        return size if size == actual else None
+
     def stop(self):
         if self.pid is None or self.stopped:
             return
         adb('shell', 'kill', '-2', str(self.pid))
-        try:
-            result = self.process.wait(timeout=12)
-        except subprocess.TimeoutExpired as error:
-            raise RuntimeError('Recorder did not finalize after SIGINT') from error
-        if result != 0:
-            raise RuntimeError('Recorder exited unsuccessfully: ' + str(result))
-        # Successful remote process exit follows MediaMuxer finalization.
+        deadline = time.monotonic() + 12
+        finalized = None
+        while time.monotonic() < deadline:
+            result = self.process.poll()
+            if result == 0:
+                break
+            finalized = self.finalized_file_size()
+            if finalized is not None:
+                # API33 may hang in MediaCodec release AFTER MOOV/fsync/close.
+                # Terminate only after PID-scoped durable-file evidence matches.
+                if result is None:
+                    adb('shell', 'kill', '-9', str(self.pid))
+                    self.process.wait(timeout=3)
+                break
+            if result is not None:
+                raise RuntimeError('Unproven recorder exit: ' + str(result))
+            time.sleep(.25)
+        else:
+            raise RuntimeError('No finalized recorder file within bounded stop')
+        (VIDEO / 'recorder-finalization.json').write_text(json.dumps({
+            'pid': self.pid, 'processExitCode': self.process.poll(),
+            'finalizedBytes': finalized,
+            'method': 'PID-scoped MOOV+fsync+size; post-file codec cleanup'
+                      if finalized is not None else 'successful process exit',
+        }, indent=2))
         adb('pull', REMOTE, str(VIDEO / 'gameplay-android.mp4'))
         self.stopped = True
 
@@ -148,6 +184,8 @@ def main():
                     recorder.start()
                 elif 'LUDO_RECORD_STOP' in line:
                     recorder.stop()
+                    adb('shell', 'run-as', 'com.ludolovers.ludo_lovers',
+                        'touch', 'cache/ludo-recording-finalized')
                 match = re.search(r'LUDO_NATIVE_CAPTURE:(native-[a-z0-9-]+)', line)
                 if match:
                     screenshot(match[1])

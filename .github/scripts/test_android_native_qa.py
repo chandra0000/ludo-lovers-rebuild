@@ -17,17 +17,16 @@ class RecorderChecks(unittest.TestCase):
         recorder = qa.Recorder()
         recorder.pid = 123
         recorder.process = Mock()
-        recorder.process.wait.return_value = 0
+        recorder.process.poll.return_value = 0
         order = Mock()
-        order.attach_mock(recorder.process.wait, 'wait')
-        with patch.object(qa, 'adb', return_value='') as adb:
+        order.attach_mock(recorder.process.poll, 'poll')
+        with patch.object(qa, 'VIDEO') as video, patch.object(qa, 'adb', return_value='') as adb:
             order.attach_mock(adb, 'adb')
             recorder.stop()
             recorder.stop()
         self.assertEqual(order.mock_calls[0].args, ('shell', 'kill', '-2', '123'))
-        self.assertEqual(order.mock_calls[1].kwargs, {'timeout': 12})
-        self.assertEqual(order.mock_calls[2].args[0], 'pull')
-        self.assertEqual(len(order.mock_calls), 3)
+        self.assertEqual(order.mock_calls[-1].args[0], 'pull')
+        self.assertEqual(adb.call_count, 2)
 
     def test_duplicate_start_cannot_replace_a_recording(self):
         recorder = qa.Recorder()
@@ -50,21 +49,44 @@ class RecorderChecks(unittest.TestCase):
         recorder = qa.Recorder()
         recorder.pid = 456
         recorder.process = Mock()
-        recorder.process.wait.return_value = 1
-        with patch.object(qa, 'adb', return_value='') as adb:
-            with self.assertRaises(RuntimeError):
-                recorder.stop()
+        recorder.process.poll.return_value = 1
+        with patch.object(recorder, 'finalized_file_size', return_value=None):
+            with patch.object(qa, 'adb', return_value='') as adb:
+                with self.assertRaises(RuntimeError):
+                    recorder.stop()
         self.assertEqual(adb.call_count, 1)
 
-    def test_recorder_timeout_is_not_reported_as_valid_video(self):
+    def test_timeout_without_durable_file_is_rejected(self):
         recorder = qa.Recorder()
         recorder.pid = 456
         recorder.process = Mock()
-        recorder.process.wait.side_effect = qa.subprocess.TimeoutExpired('record', 12)
-        with patch.object(qa, 'adb', return_value='') as adb:
-            with self.assertRaises(RuntimeError):
-                recorder.stop()
+        recorder.process.poll.return_value = None
+        with patch.object(recorder, 'finalized_file_size', return_value=None):
+            with patch.object(qa.time, 'monotonic', side_effect=[0, 13]):
+                with patch.object(qa, 'adb', return_value='') as adb:
+                    with self.assertRaises(RuntimeError):
+                        recorder.stop()
         self.assertEqual(adb.call_count, 1)
+
+    def test_stuck_codec_cleanup_requires_proven_file_before_kill_and_pull(self):
+        recorder = qa.Recorder()
+        recorder.pid = 456
+        recorder.process = Mock()
+        recorder.process.poll.side_effect = [None, -9]
+        recorder.process.wait.return_value = -9
+        with patch.object(recorder, 'finalized_file_size', return_value=2628699):
+            with patch.object(qa, 'VIDEO'), patch.object(qa, 'adb', return_value='') as adb:
+                recorder.stop()
+        self.assertEqual(adb.call_args_list[0].args, ('shell', 'kill', '-2', '456'))
+        self.assertEqual(adb.call_args_list[1].args, ('shell', 'kill', '-9', '456'))
+        self.assertEqual(adb.call_args_list[2].args[0], 'pull')
+
+    def test_native_finalization_parser_requires_moov_then_fsync(self):
+        self.assertIsNone(qa.finalized_size('estimated moov size 3192'))
+        self.assertIsNone(qa.finalized_size('MOOV atom was written to the file'))
+        self.assertIsNone(qa.finalized_size('final fsync() takes 0 ms, file size 9999'))
+        self.assertEqual(qa.finalized_size(
+            'MOOV atom was written to the file\nfinal fsync() takes 0 ms, file size 2628699'), 2628699)
 
 
 class ChunkChecks(unittest.TestCase):
