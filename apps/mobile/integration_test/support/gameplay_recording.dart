@@ -29,6 +29,7 @@ void registerGameplayRecording({bool realTime = true}) {
       SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
       final snapshots = <SavedMatch>[];
       var elapsedMs = 0;
+      var snapshotId = 0;
       void mark(String stage) => debugPrint('LUDO_QA_EVENT:${jsonEncode({
                 'stage': stage,
                 'elapsedMs': elapsedMs,
@@ -100,14 +101,27 @@ void registerGameplayRecording({bool realTime = true}) {
                   },
                   saveMatch: (snapshot) async {
                     snapshots.add(snapshot);
-                    debugPrint('LUDO_QA_STATE:${jsonEncode({
+                    final payload = base64Encode(
+                      utf8.encode(
+                        jsonEncode({
                           'fixture': label,
                           'elapsedMs': elapsedMs,
                           'snapshot': snapshot.toJson(),
                           'events': snapshot.game.events
                               .map((event) => event.runtimeType.toString())
                               .toList(),
-                        })}');
+                        }),
+                      ),
+                    );
+                    // Android truncates individual Flutter log messages near1KB.
+                    // Numbered ASCII chunks preserve full Unicode snapshots.
+                    final id = snapshotId++;
+                    final count = (payload.length / 480).ceil();
+                    for (var part = 0; part < count; part++) {
+                      final end = ((part + 1) * 480).clamp(0, payload.length);
+                      debugPrint('LUDO_QA_CHUNK:$id:$part:$count:'
+                          '${payload.substring(part * 480, end)}');
+                    }
                     await const SavedMatchStore().save(snapshot);
                   },
                 ),

@@ -1,4 +1,6 @@
 """Host recording protocol regression checks; no emulator or generated footage."""
+import base64
+import json
 import importlib.util
 from pathlib import Path
 import unittest
@@ -47,6 +49,28 @@ class RecorderChecks(unittest.TestCase):
                 recorder.stop()
         sleep.assert_called_once_with(.25)
         self.assertEqual(adb.call_args_list[-1].args[0], 'pull')
+
+
+class ChunkChecks(unittest.TestCase):
+    def test_long_unicode_snapshot_survives_android_log_limit_and_reordering(self):
+        expected = {'name': 'Renée🧡' * 500, 'stateVersion': 9}
+        encoded = base64.b64encode(json.dumps(expected).encode()).decode()
+        parts = [encoded[i:i + 480] for i in range(0, len(encoded), 480)]
+        chunks = qa.StateChunks()
+        result = None
+        for i in reversed(range(len(parts))):
+            line = f'I/flutter: LUDO_QA_CHUNK:7:{i}:{len(parts)}:{parts[i]}'
+            self.assertLess(len(line), 900)
+            result = chunks.accept(line)
+        self.assertEqual(result, expected)
+        self.assertFalse(chunks.pending)
+
+    def test_missing_and_duplicate_chunks_are_not_silent_success(self):
+        chunks = qa.StateChunks()
+        self.assertIsNone(chunks.accept('LUDO_QA_CHUNK:1:0:2:e30='))
+        self.assertTrue(chunks.pending)
+        with self.assertRaises(ValueError):
+            chunks.accept('LUDO_QA_CHUNK:1:0:2:e30=')
 
 
 if __name__ == '__main__':

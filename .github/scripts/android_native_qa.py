@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run the real Flutter integration APK; capture Android's display, never a Flutter image surface."""
+import base64
 import json
 import os
 from pathlib import Path
@@ -29,6 +30,29 @@ def screenshot(name):
     (OUT / (name + '.png')).write_bytes(data)
 
 
+class StateChunks:
+    """Reassemble sub-logcat-limit Unicode snapshots; reject missing/corrupt data."""
+    def __init__(self):
+        self.pending = {}
+
+    def accept(self, line):
+        match = re.search(r'LUDO_QA_CHUNK:(\d+):(\d+):(\d+):([A-Za-z0-9+/=]+)', line)
+        if not match:
+            return None
+        ident, index, count = map(int, match.group(1, 2, 3))
+        if not 0 <= index < count <= 128:
+            raise ValueError('Invalid snapshot chunk bounds')
+        total, parts = self.pending.setdefault(ident, (count, {}))
+        if total != count or index in parts:
+            raise ValueError('Inconsistent/duplicate snapshot chunk')
+        parts[index] = match[4]
+        if len(parts) < count:
+            return None
+        del self.pending[ident]
+        return json.loads(base64.b64decode(''.join(parts[i] for i in range(count)),
+                                          validate=True).decode('utf-8'))
+
+
 class Recorder:
     pid = None
     stopped = False
@@ -49,7 +73,7 @@ class Recorder:
         adb('shell', 'kill', '-2', str(self.pid))
         deadline = time.monotonic() + 12
         while time.monotonic() < deadline:
-            live = adb('shell', f'if kill -0 {self.pid} 2>/dev/null; then cat /proc/{self.pid}/stat; fi', timeout=3).strip()
+            live = adb('shell', f'if kill -0 {self.pid} 2>/dev/null; then cat /proc/{self.pid}/stat; fi', timeout=15).strip()
             if not live or live.split()[2] == 'Z':
                 break
             time.sleep(.25)
@@ -66,6 +90,7 @@ def main():
     (VIDEO / 'display.txt').write_text(adb('shell', 'wm size; wm density'))
     recorder = Recorder()
     events = []
+    chunks = StateChunks()
     # Collect while the emulator is alive; post-mortem ADB may already be offline.
     log_file = (VIDEO / 'android-logcat.txt').open('w')
     logcat = subprocess.Popen(['adb', '-s', SERIAL, 'logcat', '-v', 'threadtime'],
@@ -101,13 +126,19 @@ def main():
                 match = re.search(r'LUDO_NATIVE_CAPTURE:(native-[a-z0-9-]+)', line)
                 if match:
                     screenshot(match[1])
-                for marker in ['LUDO_QA_EVENT:', 'LUDO_QA_STATE:']:
+                snapshot = chunks.accept(line)
+                if snapshot is not None:
+                    snapshot['hostMonotonic'] = time.monotonic()
+                    events.append(snapshot)
+                for marker in ['LUDO_QA_EVENT:']:
                     if marker in line:
                         data = json.loads(line.split(marker, 1)[1])
                         data['hostMonotonic'] = time.monotonic()
                         events.append(data)
                         if marker == 'LUDO_QA_EVENT:':
                             screenshot('recording-' + data['stage'])
+            if chunks.pending:
+                raise RuntimeError('Missing authoritative snapshot chunks')
             result = proc.wait(timeout=10)
             if expired.is_set():
                 raise RuntimeError('Integration exceeded bounded 360s execution')
@@ -118,8 +149,13 @@ def main():
     finally:
         watchdog.cancel()
         (VIDEO / 'authoritative-events.json').write_text(json.dumps(events, indent=2))
+        primary_failure = sys.exc_info()[0] is not None
+        cleanup_error = None
         try:
             recorder.stop()
+        except Exception as error:
+            cleanup_error = error
+            print('Recorder cleanup failure: ' + repr(error), flush=True)
         finally:
             logcat.terminate()
             logcat.wait(timeout=5)
@@ -131,6 +167,8 @@ def main():
                 except subprocess.TimeoutExpired:
                     os.killpg(proc.pid, signal.SIGKILL)
                     proc.wait(timeout=5)
+        if cleanup_error is not None and not primary_failure:
+            raise cleanup_error
 
 
 if __name__ == '__main__':

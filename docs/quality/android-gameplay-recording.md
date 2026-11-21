@@ -120,3 +120,11 @@ No production source or asset bytes changed. CI run44865723200 is the initial
 capture-path experiment; its original fixture predates the explicit live-frame
 policy and must not be promoted as final motion acceptance. Final run/commit/video
 receipts will be recorded separately after inspection.
+
+Run44865723200 reached native recorder startup but failed the new host parser:
+Android truncated a long JSON log message at approximately1KB. Its cleanup query
+also exceeded the original3second ADB probe. No MP4 was pulled; this is failed QA
+transport evidence, not an emulator-root-cause conclusion. Snapshot transport now
+uses numbered480character base64 chunks with reassembly/corruption/missing-part
+checks. The cleanup query uses the same bounded15second ADB budget as the other
+native operations, preserving the primary failure if cleanup also fails.
