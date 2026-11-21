@@ -76,8 +76,8 @@ jobs:
           heap-size: 512M
           emulator-boot-timeout: 420
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
-          # Vulkan software emulation repeatedly terminated QEMU. Keep this
-          # headless UI checkpoint on software OpenGL; device Vulkan is separate.
+          # Software OpenGL is the checkpoint configuration, not a physical GPU
+          # acceptance result or a proven fix for historical emulator loss.
           disable-animations: true
           working-directory: apps/mobile
           script: bash ../../.github/scripts/android_integration.sh
