@@ -19,6 +19,12 @@ class LudoLoversApp extends StatelessWidget {
           secondary: Color(0xFFFF8928),
           surface: Color(0xFF151515),
         ),
+        // Gameplay uses dark floating feedback surfaces. Material3's inverse
+        // snackbar text is dark, so define both colors as one readable pair.
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Color(0xFF211A0D),
+          contentTextStyle: TextStyle(color: Color(0xFFFFE3A0)),
+        ),
         useMaterial3: true,
       ),
       home: const SplashScreen(),

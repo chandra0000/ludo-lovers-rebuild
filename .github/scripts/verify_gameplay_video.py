@@ -32,6 +32,7 @@ def verify(path):
     active_fps = 1 / statistics.median(active)
     # No frame generation, interpolation, crops or transcoding. Decode every frame.
     subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-i', str(path),
+                    '-map', '0:v:0', '-fps_mode', 'passthrough', '-enc_time_base', '-1',
                     '-f', 'null', '-'], check=True, timeout=120)
     # Sparse hashes detect frozen footage; actual motion/readability still needs review.
     hashes = subprocess.check_output([

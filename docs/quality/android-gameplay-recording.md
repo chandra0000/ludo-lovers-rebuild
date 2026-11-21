@@ -217,3 +217,31 @@ This fixes the host's incorrect completion proxy; it does not claim a native cod
 teardown fix. The test waits for a bounded debug-app cache acknowledgement after
 pull, preventing later screenshot scenes from advancing during host cleanup.
 No production timers, gameplay, test disablement or stop-timeout inflation.
+
+## Verified native baseline and visual review finding
+
+Run44871386017 on QA source45448df3586a19a1df481bb5096a06c074f76b06
+passed all four installed scenarios and required PNG checks. Its genuine raw
+55.232411second360×800 H.264 MP4 fully decodes:615 strictly increasing input
+packet timestamps,71 distinct half-second samples,11.135encoded fps including
+idle holds and28.423fps median active intervals. The30fps target is not met and
+is not represented as a production-performance pass. Native emulator37.3.10.0
+build16970787, Android13/API33 imageTE1A.240213.009/12342917, Skia software/debug.
+
+Recorder PID3956 completed MOOV/fsync at3003818bytes, then required post-file
+codec cleanup (exit137), explicitly recorded in recorder-finalization.json. The
+MP4 SHA256 is92d31540d0e283f36d5726d8f59e24bb8f479a8278a554d52883a597e8a2cdc0;
+artifact14694675627 ZIP SHA256dd5a06acd5e92459f01556499aef126a3dabc617188ebad762096a32bc8097e6.
+Frames7/10/22/26/34 were inspected: actual six, yard release, capture setup/result
+and AI-to-human handoff. The approved board/slots/names are intact. A dark-on-dark
+transient snackbar is a real Material3 theme contrast defect, not an Ahem-font
+artifact; the next focused change defines paired dark background/gold foreground
+in the production snackbar theme and adds a resolved-rendered-text contrast test.
+It does not change assets, geometry, gameplay or pawn/dice styling.
+
+For independent full decoding, preserve the demux timebase and pass through VFR
+timestamps. A null output with its inferred low average frame rate otherwise
+prints duplicate output-DTS rounding warnings despite strictly increasing input
+packet DTS. The corrected command decodes all video frames with zero stderr; it
+does not transcode or alter the deliverable. Final corrected-UI recording receipts
+will be attached after actual execution/inspection.
