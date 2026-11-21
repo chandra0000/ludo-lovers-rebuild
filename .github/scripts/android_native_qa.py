@@ -110,7 +110,9 @@ class Recorder:
                 # Terminate only after PID-scoped durable-file evidence matches.
                 if result is None:
                     adb('shell', 'kill', '-9', str(self.pid))
-                    self.process.wait(timeout=3)
+                    # The shell transport can retain an inherited output FD
+                    # even after remote kill. Close only this recording client.
+                    self.close()
                 break
             if result is not None:
                 raise RuntimeError('Unproven recorder exit: ' + str(result))

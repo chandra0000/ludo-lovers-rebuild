@@ -245,3 +245,11 @@ prints duplicate output-DTS rounding warnings despite strictly increasing input
 packet DTS. The corrected command decodes all video frames with zero stderr; it
 does not transcode or alter the deliverable. Final corrected-UI recording receipts
 will be attached after actual execution/inspection.
+
+Run44874091176 on corrected-UI sourcead16fed reached every gameplay assertion
+and again proved a finalized59661959us/2336687byte MP4. Its dedicated ADB recording
+client did not exit within3seconds after the remote recorder kill, so the run
+failed before pull. The completion path now closes only that dedicated client
+after native MOOV/fsync/size proof and remote cleanup; the application/driver and
+ADB server remain untouched. The regression checks this lingering-client case and
+rejects a remote file-size mismatch. No wait bound or gameplay changes.

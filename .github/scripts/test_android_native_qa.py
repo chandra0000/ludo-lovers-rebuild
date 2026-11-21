@@ -72,14 +72,23 @@ class RecorderChecks(unittest.TestCase):
         recorder = qa.Recorder()
         recorder.pid = 456
         recorder.process = Mock()
-        recorder.process.poll.side_effect = [None, -9]
-        recorder.process.wait.return_value = -9
+        recorder.process.poll.side_effect = [None, None, -15]
+        recorder.process.wait.return_value = -15
         with patch.object(recorder, 'finalized_file_size', return_value=2628699):
             with patch.object(qa, 'VIDEO'), patch.object(qa, 'adb', return_value='') as adb:
                 recorder.stop()
         self.assertEqual(adb.call_args_list[0].args, ('shell', 'kill', '-2', '456'))
         self.assertEqual(adb.call_args_list[1].args, ('shell', 'kill', '-9', '456'))
         self.assertEqual(adb.call_args_list[2].args[0], 'pull')
+        recorder.process.terminate.assert_called_once()
+        recorder.process.wait.assert_called_once_with(timeout=3)
+
+    def test_finalized_size_must_match_remote_file(self):
+        recorder = qa.Recorder()
+        recorder.pid = 456
+        logs = 'MOOV atom was written to the file\nfinal fsync() takes 0 ms, file size 2628699'
+        with patch.object(qa, 'VIDEO'), patch.object(qa, 'adb', side_effect=[logs, '2628000']):
+            self.assertIsNone(recorder.finalized_file_size())
 
     def test_native_finalization_parser_requires_moov_then_fsync(self):
         self.assertIsNone(qa.finalized_size('estimated moov size 3192'))
