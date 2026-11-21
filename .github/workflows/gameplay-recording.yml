@@ -1,0 +1,132 @@
+name: Android gameplay recording (seeded QA)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-recording-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  android-recording:
+    env:
+      LUDO_GAMEPLAY_RECORDING: "true"
+    # PRs are opt-in via label; main and manual dispatch always run.
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-gameplay-recording'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.35.7'
+          cache: true
+      - name: Install video verifier
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Resolve dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Generate Android project files
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Bound build memory and compile before booting emulator
+        timeout-minutes: 10
+        working-directory: apps/mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('android/gradle.properties')
+          lines = [line for line in path.read_text().splitlines()
+                   if not line.startswith(('org.gradle.jvmargs=', 'org.gradle.daemon=',
+                                           'org.gradle.workers.max=', 'kotlin.compiler.execution.strategy='))]
+          lines.extend(['org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=1G -XX:+HeapDumpOnOutOfMemoryError',
+                        'org.gradle.daemon=false', 'org.gradle.workers.max=2',
+                        'kotlin.compiler.execution.strategy=in-process'])
+          path.write_text('\n'.join(lines) + '\n')
+          PY
+          free -m
+          flutter build apk --debug --no-pub --target-platform=android-x64 --target=integration_test/app_navigation_test.dart --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true --dart-define=LUDO_RECORD_GAMEPLAY=true
+          test -s build/app/outputs/flutter-apk/app-debug.apk
+          (cd android && ./gradlew --stop)
+          free -m
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+      - name: Android emulator integration smoke test
+        timeout-minutes: 20
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 2048M
+          heap-size: 512M
+          emulator-boot-timeout: 420
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          # Software OpenGL is the checkpoint configuration, not a physical GPU
+          # acceptance result or a proven fix for historical emulator loss.
+          disable-animations: false
+          working-directory: apps/mobile
+          script: |
+            adb -s emulator-5554 shell wm size 786x1746
+            adb -s emulator-5554 shell wm density 320
+            bash ../../.github/scripts/android_integration.sh
+            python3 ../../.github/scripts/verify_gameplay_video.py test-artifacts/gameplay/gameplay-android.mp4
+      - name: Record exact source and runtime
+        if: always()
+        run: |
+          mkdir -p apps/mobile/test-artifacts/gameplay
+          git rev-parse HEAD > apps/mobile/test-artifacts/gameplay/qa-commit.txt
+          git rev-parse HEAD:apps/mobile/lib > apps/mobile/test-artifacts/gameplay/application-lib-tree.txt
+          flutter --version > apps/mobile/test-artifacts/gameplay/flutter-version.txt
+          timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties.txt 2>&1 || true
+      - name: Upload recording, assertions and live diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-gameplay-android-seeded-${{ github.sha }}
+          path: apps/mobile/test-artifacts/gameplay/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload installed Android emulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-recording-native-screenshots
+          path: apps/mobile/test-artifacts/native/*.png
+          if-no-files-found: error
+      - name: Collect emulator diagnostics on failure
+        if: failure() || cancelled()
+        timeout-minutes: 2
+        run: |
+          mkdir -p emulator-diagnostics
+          free -m > emulator-diagnostics/host-memory.txt
+          ps -eo pid,ppid,rss,comm --sort=-rss | sed -n '1,40p' > emulator-diagnostics/host-processes.txt
+          sudo dmesg -T | tail -200 > emulator-diagnostics/host-kernel.txt 2>&1 || true
+          sudo python3 .github/scripts/summarize_emulator_crash.py > emulator-diagnostics/qemu-native-summary.txt
+          if [ -d /tmp/android-runner ]; then
+            find /tmp/android-runner -type f -name '*crash*' -printf '%f %s bytes\n' > emulator-diagnostics/native-crash-files.txt
+          fi
+          sudo chown -R "$(id -u):$(id -g)" emulator-diagnostics
+          timeout 15s adb devices -l > emulator-diagnostics/devices.txt 2>&1 || true
+          timeout 15s adb -s emulator-5554 shell getprop > emulator-diagnostics/properties.txt 2>&1 || true
+          timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
+      - name: Upload emulator diagnostics
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-recording-failure-diagnostics
+          path: emulator-diagnostics/
+          if-no-files-found: warn

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../test/support/local_mode_navigation.dart';
+import 'support/gameplay_recording.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +31,13 @@ void main() {
     );
     expect(errors, isEmpty, reason: 'Installed capture $name asset readiness');
     await tester.pump();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // Capture the actual Android display without replacing Flutter's surface.
+      debugPrint('LUDO_NATIVE_CAPTURE:$name');
+      await tester
+          .runAsync(() => Future<void>.delayed(const Duration(seconds: 3)));
+      return;
+    }
     if (!surfaceConverted) {
       // SDK registers teardown to revert the Android image surface after each test.
       await binding.convertFlutterSurfaceToImage();
@@ -43,6 +52,9 @@ void main() {
     await binding.takeScreenshot(name).timeout(const Duration(seconds: 15));
   }
 
+  if (const bool.fromEnvironment('LUDO_RECORD_GAMEPLAY')) {
+    registerGameplayRecording();
+  }
   testWidgets(
     'home to local match navigation survives repeated exits',
     (
