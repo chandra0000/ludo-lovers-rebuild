@@ -54,7 +54,7 @@ void main() {
       for (final key in [
         'roll_dice',
         'chat_button',
-        'quick_reactions_button',
+        'profile_emoji_orange',
         'more_button',
         'exit_match',
       ]) {

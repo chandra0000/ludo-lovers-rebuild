@@ -70,3 +70,28 @@ pixel test also wraps the unified surface in RoyalBackdrop. All ten responsive
 captures regenerate; actual compact 320×640 lighting inspected. No repeated idle
 animation controller or full-screen image allocation is added. Shadows/lighting
 are presentation-only; physical GPU/60fps acceptance is still unavailable.
+
+## Phase 4 — per-profile local social interaction
+
+Every participating profile has 28dp chat/emoji icons in two independent 48dp
+controls; inactive slots have none. The shared emoji entry is removed. The footer
+retains Local Chat, Settings and the conditional accessible legal-pawn chooser.
+Per-profile actions capture the originating seat; local presets/reactions never
+follow a later active-player change. SocialOverlayCoordinator bounds feedback to
+one bubble/timer per seat and replaces, expires, clears on rematch and cancels on
+disposal. Floating bubbles remain inside avatar-card bounds, with reduced-motion
+alternatives and live semantics. No message is sent online or represented as a
+remote delivery. The existing chat sheet now has presets, sender naming and an
+intentional scroll surface for compact/enlarged-text/keyboard constraints.
+
+AI state is sourced from actual turn presentation, not a fake progress loop;
+robot cards expose thinking semantics and the live status line shows AI thinking.
+Team badges use domain team identity and team score capacity derives from actual
+pawn lists rather than a hardcoded initial score. Names remain above square
+avatars; inline active crowns cannot overlap social controls.
+
+Verification: all 430 tests pass (123s); strict 183-file format and fatal-info
+analysis clean. Eight new social regressions cover four phone sizes, 48dp targets,
+no board overlap, attribution without a gameplay command, inactive seats, timer
+replacement/expiry/disposal and compact 150% text/keyboard chat. Actual 320×640
+final social/HUD capture inspected. Board pixel and geometry regressions pass.

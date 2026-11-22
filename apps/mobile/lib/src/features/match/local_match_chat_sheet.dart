@@ -5,7 +5,15 @@ const localMatchReactions = <String>['👏', '😂', '❤️', '🔥', '👍', '
 
 /// Local-only match communication. No messages leave the device.
 class LocalMatchChatSheet extends StatefulWidget {
-  const LocalMatchChatSheet({super.key, this.onReaction});
+  const LocalMatchChatSheet({
+    super.key,
+    this.onReaction,
+    this.onMessage,
+    this.profileName,
+  });
+
+  final ValueChanged<String>? onMessage;
+  final String? profileName;
 
   final ValueChanged<String>? onReaction;
 
@@ -25,6 +33,7 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
       _messages.add(value);
     });
     _controller.clear();
+    widget.onMessage?.call(value);
     if (localMatchReactions.contains(value)) {
       widget.onReaction?.call(value);
     }
@@ -48,82 +57,109 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
         ),
         child: SizedBox(
           height: 360,
-          child: Column(
-            children: [
-              const Text(
-                'Match chat · On this device',
-                style: TextStyle(
-                  color: Color(0xFFFFD36B),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.profileName == null
+                      ? 'Match chat · On this device'
+                      : '${widget.profileName} · On this device',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFFFD36B),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Messages and reactions are local only. Online delivery will be added with multiplayer.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final reaction in localMatchReactions)
-                    IconButton(
-                      tooltip: 'React $reaction',
-                      onPressed: () => _send(reaction),
-                      icon: Text(
-                        reaction,
-                        style: const TextStyle(fontSize: 24),
+                const SizedBox(height: 8),
+                const Text(
+                  'Messages and reactions are local only. Online delivery will be added with multiplayer.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final reaction in localMatchReactions)
+                      IconButton(
+                        tooltip: 'React $reaction',
+                        onPressed: () => _send(reaction),
+                        icon: Text(
+                          reaction,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(
+                  height: 48,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (final phrase in const [
+                        'Nice move!',
+                        'Good luck!',
+                        'Well played!',
+                        'Your turn!',
+                      ])
+                        TextButton(
+                          key: ValueKey('preset_$phrase'),
+                          onPressed: () => _send(phrase),
+                          child: Text(phrase),
+                        ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    key: const Key('local_chat_messages'),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) => Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Text(
+                          _messages[index],
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
-                ],
-              ),
-              Expanded(
-                child: ListView.builder(
-                  key: const Key('local_chat_messages'),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) => Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Text(
-                        _messages[index],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const Key('local_chat_input'),
+                        controller: _controller,
+                        maxLength: 160,
+                        maxLines: 1,
                         style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Type a local message',
+                          hintStyle: TextStyle(color: Colors.white54),
+                          counterText: '',
+                        ),
+                        onSubmitted: _send,
                       ),
                     ),
-                  ),
+                    IconButton(
+                      key: const Key('local_chat_send'),
+                      tooltip: 'Send local message',
+                      onPressed: () => _send(_controller.text),
+                      icon: const Icon(
+                        Icons.send,
+                        color: Color(0xFFFFD36B),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      key: const Key('local_chat_input'),
-                      controller: _controller,
-                      maxLength: 160,
-                      maxLines: 1,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: 'Type a local message',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        counterText: '',
-                      ),
-                      onSubmitted: _send,
-                    ),
-                  ),
-                  IconButton(
-                    key: const Key('local_chat_send'),
-                    tooltip: 'Send local message',
-                    onPressed: () => _send(_controller.text),
-                    icon: const Icon(
-                      Icons.send,
-                      color: Color(0xFFFFD36B),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
