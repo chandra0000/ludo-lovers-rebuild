@@ -299,7 +299,9 @@ void registerGameplayRecording({bool realTime = true}) {
         expect(getGame().toSnapshot(), fresh.toSnapshot());
         expect(find.text('Victory!'), findsNothing);
         expect(
-            find.byKey(const Key('roll_dice')).hitTestable(), findsOneWidget);
+          find.byKey(const Key('roll_dice')).hitTestable(),
+          findsOneWidget,
+        );
         final rematch = await const SavedMatchStore().load();
         expect(rematch!.game.toSnapshot(), fresh.toSnapshot());
         expect(rematch.profiles.first.displayName, 'Aarya');
