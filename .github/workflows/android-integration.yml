@@ -2,6 +2,17 @@ name: Android integration (checkpoint)
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      revision:
+        required: true
+        type: string
+      comparison-case:
+        required: true
+        type: string
+      software-rendering:
+        required: true
+        type: boolean
   push:
     branches: [main]
     paths:
@@ -16,17 +27,42 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-checkpoint-${{ github.ref }}
+  group: android-checkpoint-${{ github.ref }}-${{ inputs.comparison-case || 'standard' }}
   cancel-in-progress: false
 
 jobs:
   android-integration:
     # PRs are opt-in via label; main and manual dispatch always run.
-    if: github.event_name != 'pull_request' || github.event.label.name == 'run-android-integration'
+    if: inputs.comparison-case != '' || github.event_name != 'pull_request' || github.event.label.name == 'run-android-integration'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      LUDO_COMPARISON_CASE: ${{ inputs.comparison-case }}
+      LUDO_SOFTWARE_RENDERING: ${{ inputs.software-rendering == true }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+      - name: Check out common comparison harness
+        if: inputs.comparison-case != ''
+        uses: actions/checkout@v4
+        with:
+          ref: e6a6fa785a243c0b410e43228445ec6bfb12af5f
+          path: comparison-harness
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/scripts/android_native_qa.py
+            /apps/mobile/integration_test/app_navigation_test.dart
+            /apps/mobile/integration_test/support/gameplay_recording.dart
+      - name: Use the same installed test and host driver in every comparison
+        if: inputs.comparison-case != ''
+        run: |
+          for path in .github/scripts/android_native_qa.py \
+            apps/mobile/integration_test/app_navigation_test.dart \
+            apps/mobile/integration_test/support/gameplay_recording.dart; do
+            cp "comparison-harness/$path" "$path"
+          done
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -40,7 +76,12 @@ jobs:
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
       - name: Restore approved native branding after scaffolding
         working-directory: apps/mobile
-        run: python3 tool/generate_branding.py --apply
+        run: |
+          if [ -f tool/generate_branding.py ]; then
+            python3 tool/generate_branding.py --apply
+          else
+            test "$(git rev-parse HEAD)" = e6a6fa785a243c0b410e43228445ec6bfb12af5f
+          fi
       - name: Cache pinned Android Gradle dependencies
         uses: actions/cache@v4
         with:
@@ -92,12 +133,28 @@ jobs:
           # acceptance result or a proven fix for historical emulator loss.
           disable-animations: true
           working-directory: apps/mobile
-          script: bash ../../.github/scripts/android_integration.sh
+          script: |
+            set -eu
+            if [ -n "$LUDO_COMPARISON_CASE" ]; then
+              adb -s emulator-5554 shell wm size 360x800
+              adb -s emulator-5554 shell wm density 160
+              mkdir -p test-artifacts/gameplay
+              {
+                git rev-parse HEAD
+                printf 'GitHub runner image: %s %s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
+                emulator -version
+                adb version
+                flutter --version
+                sha256sum build/app/outputs/flutter-apk/app-debug.apk
+                adb -s emulator-5554 shell getprop ro.build.fingerprint
+              } > test-artifacts/gameplay/comparison-environment.txt 2>&1
+            fi
+            bash ../../.github/scripts/android_integration.sh
       - name: Upload installed Android emulator screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-installed-android-emulator-screenshots
+          name: ludo-installed-android-emulator-screenshots${{ inputs.comparison-case && format('-{0}', inputs.comparison-case) || '' }}
           path: apps/mobile/test-artifacts/native/*.png
           if-no-files-found: error
       - name: Collect emulator diagnostics on failure
@@ -120,6 +177,13 @@ jobs:
         if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-lovers-emulator-diagnostics
+          name: ludo-lovers-emulator-diagnostics${{ inputs.comparison-case && format('-{0}', inputs.comparison-case) || '' }}
           path: emulator-diagnostics/
+          if-no-files-found: warn
+      - name: Upload live comparison logs
+        if: always() && inputs.comparison-case != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-comparison-${{ inputs.comparison-case }}
+          path: apps/mobile/test-artifacts/gameplay/
           if-no-files-found: warn
