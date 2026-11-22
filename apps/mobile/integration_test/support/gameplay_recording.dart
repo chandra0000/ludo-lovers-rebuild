@@ -196,14 +196,14 @@ void registerGameplayRecording({bool realTime = true}) {
         expect(getGame().stateVersion, 2);
         expect(getGame().activePlayer, PlayerColor.orange);
         mark('yard-release-landed');
-        await wait(2000);
+        await wait(1300);
         await roll(3);
         await wait(2000);
         expect(progress(PlayerColor.orange, 0), 3);
         expect(getGame().activePlayer, PlayerColor.green);
         expect(getGame().stateVersion, 4);
         mark('three-cell-travel-landed-turn-green');
-        await wait(2000);
+        await wait(1300);
 
         // Explicit staged capture: Green progress42 shares Orange track cell3.
         // The next roll/move/capture are executed only through the live UI/session.
@@ -250,21 +250,61 @@ void registerGameplayRecording({bool realTime = true}) {
         );
         expect(getGame().activePlayer, PlayerColor.magenta);
         mark('seeded-ai-roll-move-human-handoff');
-        await wait(2000);
+        await wait(1300);
         // No legal move progresses through the authoritative pass command.
         await roll(1);
         await wait(1400);
         expect(getGame().activePlayer, PlayerColor.blue);
         mark('no-legal-move-pass');
-        await wait(2000);
+        await wait(800);
         final saved = await const SavedMatchStore().load();
         expect(saved!.game.toSnapshot(), getGame().toSnapshot());
         expect(saved.profiles.first.displayName, 'Aarya');
-        // Startup is now part of the continuous native clip. Keep just a short
-        // final idle hold; production dice/pawn animation durations are unchanged.
-        while (elapsedMs < 38000) {
-          await wait(500);
-        }
+
+        // Stage one legal step before victory. Only the live dice control and
+        // MatchSession can complete the match.
+        final nearFinish = LudoGame.fromProgress(
+          activePlayer: PlayerColor.orange,
+          pawnProgress: {
+            PlayerColor.orange: [
+              finishProgress - 1,
+              finishProgress,
+              finishProgress,
+              finishProgress,
+            ],
+          },
+        );
+        await mountFixture('one-step-from-victory', nearFinish, [1]);
+        expect(getGame().winner, isNull);
+        await roll(1);
+        await wait(1600);
+        final won = getGame();
+        expect(won.stateVersion, nearFinish.stateVersion + 2);
+        expect(progress(PlayerColor.orange, 0), finishProgress);
+        expect(won.winner, PlayerColor.orange);
+        expect(won.events.whereType<PawnFinished>(), hasLength(1));
+        expect(won.events.whereType<GameCompleted>(), hasLength(1));
+        expect(find.text('Victory!').hitTestable(), findsOneWidget);
+        final replay = find.text('PLAY AGAIN').hitTestable();
+        expect(replay, findsOneWidget);
+        mark('victory-confirmed');
+        await wait(1000);
+
+        await tester.tap(replay);
+        await wait(800);
+        final fresh = LudoGame.initial(
+          ruleProfile: nearFinish.ruleProfile,
+          configuration: nearFinish.configuration,
+        );
+        expect(getGame().toSnapshot(), fresh.toSnapshot());
+        expect(find.text('Victory!'), findsNothing);
+        expect(
+            find.byKey(const Key('roll_dice')).hitTestable(), findsOneWidget);
+        final rematch = await const SavedMatchStore().load();
+        expect(rematch!.game.toSnapshot(), fresh.toSnapshot());
+        expect(rematch.profiles.first.displayName, 'Aarya');
+        mark('rematch-confirmed');
+        await wait(500);
         expect(tester.takeException(), isNull);
       } finally {
         debugPrint('LUDO_RECORD_STOP');
