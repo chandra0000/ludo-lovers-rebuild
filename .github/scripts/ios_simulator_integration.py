@@ -6,6 +6,7 @@ from pathlib import Path
 import plistlib
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -30,8 +31,6 @@ def vm_ready(uri):
 def main():
     DIAGNOSTICS.mkdir(parents=True, exist_ok=True)
     device_id = None
-    console = None
-    log = None
     unified = None
     unified_log = None
     try:
@@ -44,6 +43,9 @@ def main():
         if not choices:
             raise RuntimeError('No compatible available iPhone simulator runtime')
         runtime, template = choices[0]
+        # Keep Xcode/Flutter compilation out of the running simulator's resource budget.
+        run('build integration app', ['flutter', 'build', 'ios', '--simulator', '--debug', '--no-codesign', '--no-pub',
+            '--target=integration_test/app_navigation_test.dart', '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true'], 300)
         device_id = run('create isolated simulator', ['xcrun', 'simctl', 'create',
                         'Ludo CI ' + os.environ.get('GITHUB_RUN_ID', 'local'),
                         type_ids[template['name']], runtime], 30, True).strip()
@@ -52,8 +54,6 @@ def main():
         print(f'Selected {template["name"]}, {runtime}, {device_id}', flush=True)
         run('boot', ['xcrun', 'simctl', 'boot', device_id], 30)
         run('boot readiness', ['xcrun', 'simctl', 'bootstatus', device_id, '-b'], 180)
-        run('build integration app', ['flutter', 'build', 'ios', '--simulator', '--debug', '--no-codesign', '--no-pub',
-            '--target=integration_test/app_navigation_test.dart', '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true'], 300)
         app = Path('build/ios/iphonesimulator/Runner.app').resolve()
         with (app / 'Info.plist').open('rb') as stream:
             bundle_id = plistlib.load(stream)['CFBundleIdentifier']
@@ -80,8 +80,16 @@ def main():
         launch_args = ['xcrun', 'simctl', 'launch', '--terminate-running-process',
             device_id, bundle_id, '--enable-dart-profiling',
             f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication']
-        result = subprocess.run(launch_args, text=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, timeout=30)
+        (DIAGNOSTICS / 'launch-configuration.json').write_text(json.dumps(launch_args, indent=2))
+        try:
+            result = subprocess.run(launch_args, text=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, timeout=30)
+        except subprocess.TimeoutExpired as error:
+            partial = error.stdout or ''
+            if isinstance(partial, bytes):
+                partial = partial.decode(errors='replace')
+            (DIAGNOSTICS / 'integration-console.txt').write_text(partial)
+            raise
         (DIAGNOSTICS / 'integration-console.txt').write_text(result.stdout)
         print('IOS STAGE: launch acknowledgement\n' + result.stdout, flush=True)
         result.check_returncode()
@@ -111,16 +119,19 @@ def main():
                 unified.wait(timeout=5)
         if unified_log is not None:
             unified_log.close()
-        if console is not None and console.poll() is None:
-            console.terminate()
-            try:
-                console.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                console.kill()
-                console.wait(timeout=5)
-        if log is not None:
-            log.close()
         if device_id:
+            if sys.exc_info()[0] is not None:
+                for label, command in [
+                    ('failure-state.png', ['xcrun','simctl','io',device_id,'screenshot',str(DIAGNOSTICS/'failure-state.png')]),
+                    ('failure-services.txt', ['xcrun','simctl','spawn',device_id,'log','show','--last','2m','--style','compact',
+                        '--predicate','process == "Runner" OR process == "SpringBoard" OR process == "launchd_sim"']),
+                ]:
+                    try:
+                        captured = run('failure diagnostic '+label, command, 10, True)
+                        if label.endswith('.txt'):
+                            (DIAGNOSTICS/label).write_text(captured)
+                    except (subprocess.SubprocessError, OSError) as error:
+                        print('Failure diagnostic unavailable: '+str(error), flush=True)
             for action in ['shutdown', 'delete']:
                 try:
                     run('cleanup ' + action, ['xcrun', 'simctl', action, device_id], 20)

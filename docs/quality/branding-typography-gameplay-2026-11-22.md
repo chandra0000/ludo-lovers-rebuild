@@ -156,3 +156,29 @@ The cached default Android renderer reproduced driver/ADB/QEMU loss after first
 FFA capture; no kernel OOM/native crash signature was captured. The cause remains
 unproven, with viewport1080×1920 versus recording360×800 also differing. Do not
 claim a controlled renderer-only comparison or production GPU acceptance.
+
+## Verified Android result and isolated iOS follow-up
+
+Application source85c10f554847ec6529a3894b429f8e96d1b971a4 passed native recording
+run45015085591, all four installed scenarios and all required PNGs. Unedited
+H.264 Constrained Baseline/yuv420p MP4:90.681878s,360×800,694 frames,
+SHA2567bf275a42883440d6a4dfcac4ae976502cd41f3bf984be76fa9d3ca02f8cf80d.
+Video ZIP artifact14751477914; native PNG artifact14752370005. Full-stream decode
+has zero errors and strictly increasing packet DTS. Active median22.10fps /
+encoded mean7.65fps including holds;30fps target is NOT met. This is not a
+physical performance comparison with the earlier recording.
+
+Full-duration contact sheets and motion-frame review confirm real changing
+launcher/native launch/onboarding/home/setup, pawn chooser, dice/release/travel,
+capture bonus and AI handoff. One1.06s empty royal interval remains at44.0s in
+the integration-entry/driver handoff, not in the separately recorded normal cold
+startup or staged match replacement. It is disclosed, not cut out. Owner visual
+acceptance remains pending.
+
+Current iOS run45015050589 compiled both apps but simctl launch timed out before
+acknowledging a PID. Earlier source014bd8cb did attach/run and saved eight PNGs,
+then failed first-test SemanticsHandle verification. Neither is a native iOS pass.
+The QA-only follow-up builds the integration app before booting the simulator,
+retains partial launch output, a failure-state screenshot and service logs. All
+existing timeouts and assertions remain; this is a controlled resource-isolation
+attempt, not an established root-cause claim. Application Dart/assets are unchanged.
