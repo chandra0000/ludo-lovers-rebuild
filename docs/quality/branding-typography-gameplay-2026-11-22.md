@@ -1,7 +1,9 @@
 # Branding, typography and gameplay presentation
 
-Status: IMPLEMENTED, AWAITING COMPLETE VERIFICATION. This ledger will be updated
-with exact tested commits and CI artifacts. No release or visual gate is cleared.
+Status: VERIFIED COMPLETE for the scoped Android software-rendered implementation
+and recording; IMPLEMENTED, AWAITING VERIFICATION for native iOS acceptance.
+Production readiness remains BLOCKED. See [final evidence report](branding-final-qa-2026-11-22.md).
+No release or owner visual-approval gate is cleared.
 
 ## Baseline and authority
 
@@ -96,8 +98,9 @@ APK for deterministic gameplay. No footage is edited or interpolated.
 
 ## Validation and open gates
 
-Pending final results: full format/analyze/tests, four viewport and200% captures,
-Android builds and native recording, iOS simulator, launcher/native splash review.
+Verified: strict formatting, fatal-info analysis,471 tests, four viewport and200%
+widget captures, Android debug/profile/release builds and installed software-rendered
+recording including launcher/native splash. Native iOS acceptance remains open.
 The previous software/debug recording's9.16fps average /20.67fps active cadence
 are historical, not improved performance measurements. Default GPU failure is
 still unresolved. Physical Android/iOS, process-death/soak/performance, signing,
@@ -182,3 +185,12 @@ The QA-only follow-up builds the integration app before booting the simulator,
 retains partial launch output, a failure-state screenshot and service logs. All
 existing timeouts and assertions remain; this is a controlled resource-isolation
 attempt, not an established root-cause claim. Application Dart/assets are unchanged.
+
+Final host checkeba8213412cc5c30ffa4d0b6951e7ddf8ef6b92f invokes the SDK's same
+Dart driver directly against the existing VM. Prior45016648518 logs confirm all
+four installed tests passed with native semantics handles1/1; Flutter CLI host
+attachment exhausted180s while collecting results. Latest45017921725 failed
+earlier at simctl install90s before launch, so the direct-host correction remains
+unverified. No timeout was raised or test disabled. Foundation45017921726 and
+Android debug pass; iOS/runtime and default GPU acceptance remain open.
+See the final evidence report for exact receipts and limits.
