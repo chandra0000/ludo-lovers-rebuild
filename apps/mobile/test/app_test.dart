@@ -124,9 +124,11 @@ void main() {
       await tester.pump();
 
       final canvas = tester.getSize(find.byKey(const Key('match_canvas')));
+      final stage = tester.getSize(find.byKey(const Key('board_stage')));
+      expect(stage.width, closeTo(stage.height, .001));
       final artwork = tester.getSize(find.byKey(const Key('board_artwork')));
       expect(canvas.width, lessThanOrEqualTo(viewport.width));
-      expect(canvas.height, lessThanOrEqualTo(viewport.height));
+      expect(stage.height, lessThanOrEqualTo(viewport.height));
       expect(canvas.width / canvas.height, closeTo(9 / 16, 0.001));
       expect(artwork.width / artwork.height, closeTo(835 / 851, 0.001));
       expect(

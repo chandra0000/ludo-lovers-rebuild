@@ -37,60 +37,67 @@ class MatchReactionButton extends StatelessWidget {
 }
 
 class MatchReactionToast extends StatelessWidget {
-  const MatchReactionToast({super.key, required this.reaction});
+  const MatchReactionToast({
+    super.key,
+    required this.reaction,
+    this.inline = false,
+  });
 
   final String? reaction;
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
+    final content = IgnorePointer(
+      child: AnimatedSwitcher(
+        duration: MediaQuery.maybeOf(context)?.disableAnimations == true
+            ? Duration.zero
+            : const Duration(milliseconds: 320),
+        switchInCurve: Curves.easeOutBack,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, .25),
+              end: Offset.zero,
+            ).animate(animation),
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+        ),
+        child: reaction == null
+            ? const SizedBox.shrink()
+            : Semantics(
+                key: ValueKey(reaction),
+                liveRegion: true,
+                label: 'Local reaction $reaction',
+                child: Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xEF17120B),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFFFFD36B)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Text(
+                        reaction!,
+                        key: const Key('local_reaction_toast'),
+                        style: const TextStyle(fontSize: 34),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+      ),
+    );
+    if (inline) return content;
     return Positioned(
       left: 392,
       top: 778,
       width: 92,
       height: 70,
-      child: IgnorePointer(
-        child: AnimatedSwitcher(
-          duration: MediaQuery.maybeOf(context)?.disableAnimations == true
-              ? Duration.zero
-              : const Duration(milliseconds: 320),
-          switchInCurve: Curves.easeOutBack,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, .25),
-                end: Offset.zero,
-              ).animate(animation),
-              child: ScaleTransition(scale: animation, child: child),
-            ),
-          ),
-          child: reaction == null
-              ? const SizedBox.shrink()
-              : Semantics(
-                  key: ValueKey(reaction),
-                  liveRegion: true,
-                  label: 'Local reaction $reaction',
-                  child: Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: const Color(0xEF17120B),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: const Color(0xFFFFD36B)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Text(
-                          reaction!,
-                          key: const Key('local_reaction_toast'),
-                          style: const TextStyle(fontSize: 34),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-        ),
-      ),
+      child: content,
     );
   }
 }

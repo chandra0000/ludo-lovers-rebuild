@@ -55,7 +55,7 @@ void main() {
     final exitButton = tester.widget<IconButton>(
       find.byKey(const Key('exit_match')),
     );
-    expect(exitButton.constraints?.minWidth, 72);
-    expect(exitButton.constraints?.minHeight, 72);
+    expect(exitButton.constraints?.minWidth, 48);
+    expect(exitButton.constraints?.minHeight, 48);
   });
 }

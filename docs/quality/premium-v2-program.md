@@ -90,3 +90,20 @@ Accepted commands now use one persistence entry point. MatchScreen decreases fro
 All four mandatory captures have zero RGB differences against pre-refactor images.
 New coordinator tests verify guarded randomness, repeated completion and disposal
 of pending AI scheduling. Existing restore/exit/anchor regressions remain active.
+
+## Responsive Premium Match V2
+
+Live match HUD uses independent logical-pixel regions: all four fixed-identity
+profiles above, a square stage containing the entire approved artwork, and dice /
+status / local social settings below. The 576×1024 reference canvas remains inside
+one uniform board transform; the visible square stage, not that reference canvas,
+is the viewport containment contract. Existing logical artwork registration and
+pawn anchors remain unchanged. The source portrait canvas capture is retained for
+calibration evidence. Old position-only tests now check the visible board stage;
+no coordinate or hitbox assertion is removed.
+
+Ten responsive fixtures assert square stage, full artwork containment, all four
+names above square avatars in authoritative order, profiles above artwork, controls
+below the stage and 48dp primary targets. Enlarged-text and legal chooser behavior
+remain tested. Actual 320×640 and 393×873 rendered captures inspected; no owner
+9/10 visual approval is implied. Exterior HUD lighting is independent of artwork.
