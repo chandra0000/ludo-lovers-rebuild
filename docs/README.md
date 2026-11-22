@@ -39,3 +39,12 @@ implemented internal previews; public availability requires separate acceptance.
 The [online/private-room RFC](architecture/online-classic-private-rooms-rfc.md)
 is awaiting architecture acceptance, not shipped online functionality. Older
 evidence documents retain historical status and must not override this checkpoint.
+
+## Royal unified gameplay checkpoint
+
+The owner's final corner-profile direction supersedes the top-only V2 HUD. Read
+[the royal execution ledger](quality/royal-unified-program-2026-11-18.md) and
+[current royal release evidence](quality/royal-release-readiness-2026-11-18.md).
+The approved board, logo, geometry, rules and turn order remain unchanged. Native
+installed-app screenshots, software captures and physical-device acceptance are
+distinct evidence classes. No review-stack PR is automatically merged.

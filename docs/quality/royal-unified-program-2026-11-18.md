@@ -163,3 +163,31 @@ platform scripts parse. Native fixtures include bounded asset readiness, 15-seco
 screenshot transactions and three-minute per-test limits; workflow timeouts are
 not increased. Native captures and new build artifacts await CI on this source.
 No approved asset or pure domain/application file changed in this royal program.
+
+
+## Verified final CI checkpoint — 2026-11-19
+
+The earlier pending statements above are historical. Final source
+`903f54377613602f6038ffe56949a0cb89b6c059` passes foundation run44458139120
+(strict188-file format, fatal-info analysis,445 tests,36 required PNGs,
+profile/release APKs and validation AAB) and cross-platform run44458139058
+(Android debug and installed iOS simulator). Clean Android run44233862303
+validates eight native PNGs on identical application/fixture code; the later
+changes are confined to iOS launch scripts/workflow. Final iOS job135338502738
+passes the unchanged three scenarios through the screenshot driver; eight PNGs
+were downloaded, digest/CRC/inflate/full-pixel-decoder checked and Team/emoji
+visually inspected (iPhone16Pro, iOS18.5, Xcode16.4). No physical acceptance claim.
+
+The staged iOS diagnosis proved healthy app tests could finish while the host
+waited forever for a missed VM-service startup announcement. The isolated simulator
+now uses a dedicated ephemeral loopback port and typed HTTP readiness, preserving
+unified logs and bounded build/install/launch/attach/cleanup. The same driver/tests
+and outer timeouts remain. A transient Kotlin plugin-POM failure was diagnosed
+with exact HTTP200 endpoint checks; only that Android job was retried and passed.
+Historical failed runs remain failures in the receipts.
+
+[Final release evidence](royal-release-readiness-2026-11-18.md) and PR #72 record
+all source/tree/file manifests, downloaded artifacts and remaining gates. All
+#54–#72 remain unmerged. Physical hardware, renderer measurements, native release
+configuration/signing, native accessibility and owner visual/mode approval remain
+incomplete. Production release is NO-GO; public preview gates stay unchanged.

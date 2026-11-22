@@ -120,3 +120,19 @@ logical pawn anchors/hitboxes remain unchanged.
 [Online architecture RFC](online-classic-private-rooms-rfc.md) is proposed, not an
 implemented transport/server or authorization to deploy. The existing pure engine
 will be shared after architecture acceptance; no duplicated online rules engine.
+
+## Royal unified scaffold — current live presentation
+
+The owner's final royal UI prompt supersedes the earlier PremiumMatchLayout
+top-only profile row. GameBoardScaffold now owns one adaptive surface for FFA,
+1v1, computer and Team-Up configurations. PlayerSlotResolver separates visual
+Orange/Green and Blue/Magenta slots from authoritative turn order. PlayerProfileCard
+shows stable profile IDs/names, participation, robot/thinking state and domain
+team identity. Header/dice centers align; board overlays retain the same transform.
+
+RoyalBackdrop uses a static, cached, pointer/semantics-excluded painter; profile
+rows and dice effects clip to HUD bounds. SocialOverlayCoordinator is local-only
+presentation with bounded per-seat feedback and cancelable expiry. MatchAiScheduler
+now cancels its actual timer on pause/restart/dispose as well as invalidating the
+generation; the authoritative session and AI evaluation are unchanged. The
+legacy layout stays only as a pixel-regression reference.
