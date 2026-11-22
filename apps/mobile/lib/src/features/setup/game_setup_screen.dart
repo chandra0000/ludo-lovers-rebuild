@@ -4,6 +4,7 @@ import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/presentation/player_color_theme.dart';
 import '../board_preview/board_preview_screen.dart';
 import '../match/match_screen.dart';
 
