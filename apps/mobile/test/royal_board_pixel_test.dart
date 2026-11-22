@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/game_board_scaffold.dart';
+import 'package:ludo_lovers/src/features/match/royal_backdrop.dart';
 import 'package:ludo_lovers/src/features/match/premium_match_layout.dart';
 import 'package:ludo_lovers/src/features/match/match_board_artwork.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
@@ -36,7 +37,11 @@ void main() {
               reaction: const SizedBox(),
               boardBuilder: (_, __) => const MatchBoardArtwork(),
             );
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: child)));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: unified ? RoyalBackdrop(child: child) : child),
+        ),
+      );
       final context = tester.element(find.byType(MaterialApp));
       await tester.runAsync(
         () => precacheImage(

@@ -36,6 +36,7 @@ import 'match_turn_coordinator.dart';
 import 'match_result_presentation.dart';
 import 'team_progress_panel.dart';
 import 'game_board_scaffold.dart';
+import 'royal_backdrop.dart';
 import 'match_utility_bar.dart';
 import '../../game/presentation/luxury_dice.dart';
 import 'match_ai_scheduler.dart';
@@ -454,14 +455,7 @@ class _MatchScreenState extends State<MatchScreen>
           key: const Key('match_screen_capture'),
           child: Scaffold(
             backgroundColor: const Color(0xFF080808),
-            body: DecoratedBox(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.4,
-                  colors: [Color(0xFF20152C), Color(0xFF080A13)],
-                ),
-              ),
+            body: RoyalBackdrop(
               child: SafeArea(
                 child: GameBoardScaffold(
                   game: _game,
