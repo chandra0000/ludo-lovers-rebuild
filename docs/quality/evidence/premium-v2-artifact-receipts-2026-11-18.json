@@ -1,0 +1,141 @@
+{
+  "source_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+  "ci_merge_sha": "2887ef09f80cd4d29589fa9334a3a5b1ee31a3e5",
+  "retrieved_utc": "2026-11-18",
+  "artifacts": [
+    {
+      "id": 14391640331,
+      "name": "ludo-lovers-canonical-board-artwork",
+      "size_in_bytes": 254262,
+      "digest": "sha256:eb4f913c34130160c9d7111f1e3af9b30b1e72ee63b587bb724363fa5f25e013",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14391640331"
+    },
+    {
+      "id": 14391386458,
+      "name": "ludo-lovers-engine-benchmark",
+      "size_in_bytes": 884,
+      "digest": "sha256:74a7616c6e2613881d1933d0a69a88ce6db9fce822bc27d877357bc2babd7fba",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14391386458"
+    },
+    {
+      "id": 14391132421,
+      "name": "ludo-lovers-match-canvas-393x699",
+      "size_in_bytes": 275657,
+      "digest": "sha256:f145b0ea98571b28df776e81c24720c99fbb7eff2399a341550c92e03c6161b8",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14391132421"
+    },
+    {
+      "id": 14391132410,
+      "name": "ludo-linux-responsive-screenshots",
+      "size_in_bytes": 8697253,
+      "digest": "sha256:96c40c6e4b02512b40f07ca89ac3c8cd5d2dd61aa8c42333248e2e74b8f686a4",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14391132410"
+    },
+    {
+      "id": 14391002951,
+      "name": "ludo-lovers-match-screen-393x873",
+      "size_in_bytes": 354295,
+      "digest": "sha256:40abb0edf93efbf125874cc1c9d18efc6affa81fbd1a83c1be1bb91d4ad961e1",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14391002951"
+    },
+    {
+      "id": 14390419679,
+      "name": "ludo-lovers-board-calibration-preview",
+      "size_in_bytes": 20887,
+      "digest": "sha256:f946c2321e91a9d710d8a1f50acda39d62df739014ad606741991eebb876e419",
+      "run_id": 44221919359,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919359/artifacts/14390419679"
+    },
+    {
+      "id": 14391845174,
+      "name": "ludo-android-acceptance-apk",
+      "size_in_bytes": 71270708,
+      "digest": "sha256:0368d23f1a4a7de49d4e5fcb2465cd9d0c60193c683bde0d267becc5097f4e40",
+      "run_id": 44221919424,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919424/artifacts/14391845174"
+    },
+    {
+      "id": 14391635476,
+      "name": "ludo-macos-responsive-widget-screenshots",
+      "size_in_bytes": 8694211,
+      "digest": "sha256:a122936ad2e6791ab4fb230e40811899030bb62948c5d1af864c71e871d57921",
+      "run_id": 44221919424,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919424/artifacts/14391635476"
+    },
+    {
+      "id": 14391617229,
+      "name": "ludo-ios-simulator-app",
+      "size_in_bytes": 34758390,
+      "digest": "sha256:806efbf31529d856a828308b86cf374a4a8c1b6540b99c2b654b08a02181f141",
+      "run_id": 44221919424,
+      "head_sha": "2822cb969e8906f4c3b7ed093906dc0764badb6d",
+      "url": "https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/44221919424/artifacts/14391617229"
+    }
+  ],
+  "independently_downloaded_artifact_ids": [
+    14391132410,
+    14391386458,
+    14391845174,
+    14391635476,
+    14391617229
+  ],
+  "png_verification": {
+    "linux_required": 29,
+    "macos_required": 29
+  },
+  "apk": {
+    "sha256": "86e5a94732423d17430c86a9d4ec3a06329c5d91b44b4951b9676971a0c0a3f4",
+    "signature_verified": true,
+    "certificate": "Android Debug",
+    "package": "com.ludolovers.ludo_lovers",
+    "min_sdk": 24,
+    "target_sdk": 36,
+    "compile_sdk": 36
+  },
+  "runtime": {
+    "android": {
+      "job": 134525776535,
+      "tests_passed": 2,
+      "test_duration_seconds": 43,
+      "physical": false
+    },
+    "ios": {
+      "job": 134525609912,
+      "device": "iPhone 16 Pro simulator",
+      "os": "iOS18.5",
+      "xcode": "16.4",
+      "tests_passed": 2,
+      "test_duration_seconds": 53,
+      "physical": false
+    }
+  },
+  "validation_bundle": {
+    "pr": 65,
+    "source_sha": "b732a6189779613d019ee791a660ce8c82516dbd",
+    "workflow_run": 44223326622,
+    "artifact_id": 14391189823,
+    "zip_sha256": "ef5fbdabd37b4ba6d54632f6fd88ae302fe6553868777b829cf66ea8acb8da53",
+    "aab_sha256": "7278959bb12e929ee439624db8107f516138d17273688f1ea7b56ea57c18af20",
+    "structure_verified": [
+      "BundleConfig.pb",
+      "base/manifest/AndroidManifest.xml",
+      "base/lib/"
+    ],
+    "certificate_subject": "CN=Android Debug, O=Android, C=US",
+    "jar_certificate_integrity_verification_executed": false,
+    "production_signed": false
+  }
+}
