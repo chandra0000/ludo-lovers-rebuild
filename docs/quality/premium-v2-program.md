@@ -201,3 +201,16 @@ physical-device acceptance remain incomplete. Board/logo bytes are unchanged.
 
 Screenshot encoding, filesystem I/O, decoding and frame disposal run in real
 async with bounded waits; assertion failure still disposes decoded frames.
+
+## Mode-aware AI
+
+The existing Easy/Medium/Hard selector remains engine-constrained and seeded.
+Medium/Hard now evaluate typed Team Up capture attribution, penalize friendly
+protected-stack losses and exclude teammates from opponent-threat estimates.
+Easy, compatibility, Classic and Quick scoring are unchanged. Dice generation is
+unchanged and difficulty never modifies outcomes. Eighteen new regressions cover
+three team tactics at both tactical difficulties, and repeated complete games for
+all four modes at all three difficulties. Candidate selection leaves the source
+snapshot unchanged and every chosen move is engine-legal. A third-six forfeiture
+is recognized as an already-resolved roll in simulation rather than passed twice.
+No claim is made about strategic optimality or physical-device execution time.
