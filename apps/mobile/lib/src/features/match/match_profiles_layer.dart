@@ -71,8 +71,8 @@ class MatchPlayerBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             children: [
-              SizedBox(
-                width: 100,
+              Expanded(
+                flex: 3,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -125,6 +125,7 @@ class MatchPlayerBadge extends StatelessWidget {
                 ),
               ),
               Expanded(
+                flex: 2,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
