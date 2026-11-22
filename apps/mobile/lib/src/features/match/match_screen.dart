@@ -542,9 +542,8 @@ class _MatchScreenState extends State<MatchScreen>
                         ? _game.legalPawnIndices()
                         : const [],
                   ),
-                  boardBuilder: (context, scale) => Stack(
-                    children: [
-                      const Positioned.fill(child: MatchBoardArtwork()),
+                  boardBuilder: (context, scale) => MatchBoardArtwork(
+                    overlays: [
                       const MatchBoardFocusFrame(),
                       const MatchSafeStarLayer(),
                       Positioned.fill(

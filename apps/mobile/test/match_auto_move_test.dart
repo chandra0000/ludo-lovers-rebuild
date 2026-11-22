@@ -4,6 +4,8 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
+import 'support/wait_for_board_artwork.dart';
+
 void main() {
   testWidgets('single legal pawn moves after a 350 ms anticipation delay',
       (tester) async {
@@ -58,6 +60,7 @@ void main() {
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_1')), findsOneWidget);
     // Multiple legal moves require choosing WHICH pawn, not tapping it twice.
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);

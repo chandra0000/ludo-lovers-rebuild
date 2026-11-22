@@ -14,6 +14,7 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
+import 'support/wait_for_board_artwork.dart';
 
 Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
@@ -226,6 +227,7 @@ void main() {
       6,
     );
 
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     // One tap now commits the legal pawn move; six grants another turn.
@@ -289,6 +291,7 @@ void main() {
     expect(secondHitTarget.width, greaterThanOrEqualTo(44));
     expect(secondHitTarget.height, greaterThanOrEqualTo(44));
 
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
 
@@ -378,6 +381,7 @@ void main() {
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
+      await waitForBoardArtwork(tester);
       await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
@@ -417,6 +421,7 @@ void main() {
       expect(rollCount, 1);
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
+      await waitForBoardArtwork(tester);
       await tester.tap(pawn);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
@@ -453,6 +458,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     final saved = await const SavedMatchStore().load();
