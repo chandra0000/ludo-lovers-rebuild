@@ -72,3 +72,21 @@ physical acceptance, online security or 9/10 scores from automated checks.
 Full suite, strict format, fatal-info analysis, assets and remote CI are checked
 on the published candidate. Previously reviewed source had 334 passing tests;
 that historical number is not assigned to main without execution evidence.
+
+## Reconciliation and refactor evidence
+
+PR #54 source `a8edd17362f1448b5460d990a89d5d71e5cabe95`: 334 local tests,
+strict format and analysis pass. Remote foundation 44006421732, cross-platform
+44006421737 and Android integration 44006508670 all succeeded. Emulator job
+133783054945 reports `All tests passed`; installed navigation ran successfully.
+This repairs the prior shell error, not a physical-device acceptance gate.
+
+The next focused refactor extracts read-only pawn clustering/rendering,
+geometry-based destination previews, result presentation and a turn coordinator.
+MatchSession owns transitions; coordinator calls engine legal moves/events and
+retains bounded AI/automatic scheduling, pause guards and disposal cancellation.
+Accepted commands now use one persistence entry point. MatchScreen decreases from
+42,980 to 28,497 bytes. Full suite: 336 tests pass in 85s; strict analysis passes.
+All four mandatory captures have zero RGB differences against pre-refactor images.
+New coordinator tests verify guarded randomness, repeated completion and disposal
+of pending AI scheduling. Existing restore/exit/anchor regressions remain active.
