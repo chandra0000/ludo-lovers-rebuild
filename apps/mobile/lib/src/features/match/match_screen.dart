@@ -889,7 +889,21 @@ class _MatchScreenState extends State<MatchScreen>
     );
     final stacked = occupants.length > 1;
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
-    final visualOffset = Offset(slot.x, slot.y);
+    // Presentation-only hop per traversed cell. The pawn's actual route and
+    // landing position still come exclusively from BoardGeometry/PawnAnimator.
+    final movingThisPawn = _animations.pawn.color == color &&
+        _animations.pawn.pawnIndex == pawnIndex &&
+        _movementController.isAnimating;
+    final movementSteps = math.max(
+      1,
+      (_animations.pawn.endProgress - _animations.pawn.startProgress).abs(),
+    );
+    final hopPhase = (_movementController.value * movementSteps) % 1.0;
+    final hopLift = movingThisPawn &&
+            MediaQuery.maybeOf(context)?.disableAnimations != true
+        ? math.sin(math.pi * hopPhase) * 3.0
+        : 0.0;
+    final visualOffset = Offset(slot.x, slot.y - hopLift);
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
