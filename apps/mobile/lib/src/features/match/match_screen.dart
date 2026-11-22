@@ -889,7 +889,21 @@ class _MatchScreenState extends State<MatchScreen>
     );
     final stacked = occupants.length > 1;
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
-    final visualOffset = Offset(slot.x, slot.y);
+    // Presentation-only hop per traversed cell. The pawn's actual route and
+    // landing position still come exclusively from BoardGeometry/PawnAnimator.
+    final movingThisPawn = _animations.pawn.color == color &&
+        _animations.pawn.pawnIndex == pawnIndex &&
+        _movementController.isAnimating;
+    final movementSteps = math.max(
+      1,
+      (_animations.pawn.endProgress - _animations.pawn.startProgress).abs(),
+    );
+    final hopPhase = (_movementController.value * movementSteps) % 1.0;
+    final hopLift = movingThisPawn &&
+            MediaQuery.maybeOf(context)?.disableAnimations != true
+        ? math.sin(math.pi * hopPhase) * 3.0
+        : 0.0;
+    final visualOffset = Offset(slot.x, slot.y - hopLift);
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !widget.aiPlayers.contains(color) && color == _game.activePlayer;
@@ -924,8 +938,10 @@ class _MatchScreenState extends State<MatchScreen>
         : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
-    // inversely so its transformed physical bounds never fall below 44×48 dp.
-    final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
+    // inversely so its transformed physical bounds are at least 48×48 dp.
+    // This is the minimum touch target for both pawn axes, including compact
+    // portrait layouts where the design canvas is scaled down.
+    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
     final shakeKey = _shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
