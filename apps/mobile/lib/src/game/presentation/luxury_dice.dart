@@ -228,15 +228,23 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                 final lift = _isAnimating
                     ? math.sin(math.pi * t) * widget.size * .22
                     : 0.0;
+                // A subtle squash-free scale pulse communicates lift and
+                // landing without changing the authoritative die face.
+                final scale = _isAnimating
+                    ? 1.0 + math.sin(math.pi * t) * .08
+                    : 1.0;
                 return Transform.translate(
                   offset: Offset(0, -lift),
-                  child: _DiceCube(
-                    key: const Key('six_face_dice_cube'),
-                    size: widget.size,
-                    value: target,
-                    isInteractive: interactive,
-                    xAngle: angles.$1 + spin,
-                    yAngle: angles.$2 + spin * .83,
+                  child: Transform.scale(
+                    scale: scale,
+                    child: _DiceCube(
+                      key: const Key('six_face_dice_cube'),
+                      size: widget.size,
+                      value: target,
+                      isInteractive: interactive,
+                      xAngle: angles.$1 + spin,
+                      yAngle: angles.$2 + spin * .83,
+                    ),
                   ),
                 );
               },
