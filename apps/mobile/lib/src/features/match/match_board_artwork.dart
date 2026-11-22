@@ -19,6 +19,14 @@ class MatchBoardArtwork extends StatelessWidget {
   static const _canvasWidth = 576.0;
   static const _canvasHeight = 1024.0;
 
+  /// Existing derivative registration; shared only by presentation clipping.
+  static const artworkRect = Rect.fromLTWH(
+    15 / _referenceWidth * _canvasWidth,
+    307 / _referenceHeight * _canvasHeight,
+    835 / _referenceWidth * _canvasWidth,
+    851 / _referenceHeight * _canvasHeight,
+  );
+
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -28,10 +36,10 @@ class MatchBoardArtwork extends StatelessWidget {
             child: ColoredBox(color: Color(0xFF0C0A10)),
           ),
           Positioned(
-            left: 15 / _referenceWidth * _canvasWidth,
-            top: 307 / _referenceHeight * _canvasHeight,
-            width: 835 / _referenceWidth * _canvasWidth,
-            height: 851 / _referenceHeight * _canvasHeight,
+            left: artworkRect.left,
+            top: artworkRect.top,
+            width: artworkRect.width,
+            height: artworkRect.height,
             child: Image.asset(
               assetPath,
               key: const Key('board_artwork'),

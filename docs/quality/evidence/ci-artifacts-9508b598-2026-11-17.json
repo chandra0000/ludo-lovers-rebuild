@@ -1,0 +1,98 @@
+{
+  "applicationCommit": "9508b598d346d9beeb770a5a240f7a49f192301f",
+  "runs": [
+    {
+      "id": 43998543984,
+      "jobs": {
+        "verify": "success",
+        "Android profile and release APKs": "success"
+      }
+    },
+    {
+      "id": 43998544082,
+      "jobs": {
+        "android": "success",
+        "ios-simulator": "success"
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14291521256,
+      "name": "ludo-macos-responsive-widget-screenshots",
+      "size_in_bytes": 3879038,
+      "digest": "sha256:71764068237093170f7b2ad0bc961af2ac53835080a4c85fce4b7c9f9b1cf97d",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290733617,
+      "name": "ludo-android-acceptance-apk",
+      "size_in_bytes": 71234127,
+      "digest": "sha256:38ec25c0e6f9c0d065cf00a9456f856ab8d9792c4ec9c51fc8d38254ac5d452b",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290593758,
+      "name": "ludo-ios-simulator-app",
+      "size_in_bytes": 47666032,
+      "digest": "sha256:8b635341474feba21f7f828c14e2c983531365a0db6d74c20313f839ffa148d3",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14292080009,
+      "name": "ludo-lovers-release-apks",
+      "size_in_bytes": 29248051,
+      "digest": "sha256:4cf8dfc8daf9ef4f731a33523db31a4c1e1e9ad047a8c49b13a1e36ac3f12728",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14291675376,
+      "name": "ludo-lovers-match-canvas-393x699",
+      "size_in_bytes": 365579,
+      "digest": "sha256:e737e232f619cc102de5d47c6ce63789d39c0e54251a458a56661c75912c0f8c",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14291625518,
+      "name": "ludo-lovers-board-calibration-preview",
+      "size_in_bytes": 20887,
+      "digest": "sha256:a5dd63523e21c5c426eef2fc59a2628da442cf7211f6b68669e67b71bb52b7b7",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14291292429,
+      "name": "ludo-lovers-profile-apks",
+      "size_in_bytes": 51587451,
+      "digest": "sha256:a26692e2229d0d9a1e552a5f7f5194f5072fa3e3ec6cbd9f00adae43efe48991",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290802950,
+      "name": "ludo-lovers-canonical-board-artwork",
+      "size_in_bytes": 254262,
+      "digest": "sha256:4b32698aa51b1ea4df613b9a198d11cd965776a2a2fea0db0c658f79d7b49939",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290792964,
+      "name": "ludo-lovers-match-screen-393x873",
+      "size_in_bytes": 368877,
+      "digest": "sha256:d2519b99e5ea1dddb2dfaa9ef613ca8bec2842fadf6efb4b52e31884128b4204",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290738229,
+      "name": "ludo-lovers-engine-benchmark",
+      "size_in_bytes": 884,
+      "digest": "sha256:40a40b763253d131341eb1dadbf7897ec97b3b3426d35935118f510fa86553ce",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    },
+    {
+      "id": 14290578510,
+      "name": "ludo-linux-responsive-screenshots",
+      "size_in_bytes": 3874820,
+      "digest": "sha256:eb835672d47366f08f17622563e83ec25263f31dbfd2c0e646e047cac8fbb75a",
+      "head_sha": "9508b598d346d9beeb770a5a240f7a49f192301f"
+    }
+  ]
+}

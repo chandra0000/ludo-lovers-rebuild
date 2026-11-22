@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Reusable, presentation-only rejection feedback for an interactive pawn.
 class ShakeFeedbackWrapper extends StatefulWidget {
@@ -21,7 +20,7 @@ class ShakeFeedbackWrapperState extends State<ShakeFeedbackWrapper>
   );
 
   void triggerShake() {
-    HapticFeedback.lightImpact();
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return;
     _controller.forward(from: 0);
   }
 

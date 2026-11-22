@@ -7,6 +7,7 @@ on:
     paths:
       - "apps/mobile/**"
       - ".github/workflows/android-integration.yml"
+      - ".github/scripts/android_integration.sh"
   pull_request:
     types: [labeled]
 
@@ -56,20 +57,17 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: apps/mobile
-          script: |
-            set -euo pipefail
-            adb devices -l
-            adb shell getprop sys.boot_completed
-            flutter test integration_test/app_navigation_test.dart --timeout 3m --reporter expanded -d emulator-5554
+          script: bash ../../.github/scripts/android_integration.sh
       - name: Collect emulator diagnostics on failure
-        if: failure()
+        if: failure() || cancelled()
+        timeout-minutes: 2
         run: |
           mkdir -p emulator-diagnostics
-          adb devices -l > emulator-diagnostics/devices.txt 2>&1 || true
-          adb shell getprop > emulator-diagnostics/properties.txt 2>&1 || true
-          adb logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
+          timeout 15s adb devices -l > emulator-diagnostics/devices.txt 2>&1 || true
+          timeout 15s adb -s emulator-5554 shell getprop > emulator-diagnostics/properties.txt 2>&1 || true
+          timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
       - name: Upload emulator diagnostics
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: ludo-lovers-emulator-diagnostics

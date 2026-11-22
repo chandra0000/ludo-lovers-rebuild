@@ -13,6 +13,7 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
+import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 
 Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
@@ -449,8 +450,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
+    final saved = await const SavedMatchStore().load();
+    expect(saved!.game.players.first.pawnProgress[0], 0);
+    expect(saved.game.diceValue, isNull);
     expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
   });
@@ -540,6 +542,8 @@ void main() {
         );
         expect(find.byKey(const Key('roll_dice')), findsOneWidget);
         await tester.tap(find.byKey(const Key('exit_match')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('confirm_leave_match')));
         await tester.pumpAndSettle();
       }
     },

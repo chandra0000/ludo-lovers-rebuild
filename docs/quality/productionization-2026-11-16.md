@@ -240,3 +240,76 @@ Downloaded Phase 0 debug APK: SHA-256
 reports `com.ludolovers.ludo_lovers`, versionCode 1 / versionName 0.1.0,
 minSdk 24 / targetSdk 36 / compileSdk 36. It is debug-signed, not a release
 acceptance artifact. No physical installation is claimed.
+
+## Phase 1 remote verification and integration
+
+PR [#45](https://github.com/chandra0000/ludo-lovers-rebuild/pull/45) passed all four
+required jobs on `db89b27b66b69f8cc1d2cd06a41a1f1b07a00d4a`:
+[foundation](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43800187634)
+and [Android/iOS acceptance](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/43800187677).
+No review submissions or unresolved threads blocked it. It was merged into #43's
+integration branch as `a1ef5846d2a5f4fe3f66b1e9ee344c93c4e626bb`, with the identical
+checked tree `ba19bc11e135429567d0e4d6fb97ca83036ba8f4`. Phase 1 code and automated
+acceptance are **VERIFIED COMPLETE**; physical process interruption remains a
+separate device gate. Main remains unchanged.
+
+## Phase 2 presentation increment
+
+Addresses observed screenshot issues without changing approved art or pawn geometry:
+
+- Names render at 14dp before user text scaling and use the full profile width;
+  square avatars render at 40dp (32dp with 150% text). LOCAL/BOT labels and gold
+  active-turn feedback remain. Growth is bounded in constrained diagnostics.
+- Top and bottom profile regions remain outside the existing artwork rectangle.
+  Profile glow and rolling-die effects are clipped away from protected artwork.
+- Enlarged 120×120 design-space dice target and 96-unit cube retain authoritative
+  values and the existing animation; no second die or different outcome source.
+- Next action (Roll dice / Rolling dice / Choose a pawn / Pawn moving / No legal
+  move / AI thinking / Match finished) is explicit beside the existing turn label.
+- The action dock becomes a legal-pawn popup when there are multiple human choices.
+  It dispatches the existing selection command, including for adjacent/stacked
+  choices; it does not evaluate rules. Local chat/reactions remain local.
+- Exit and pawn hitboxes meet 48dp after scaling. Existing social controls remain.
+  The responsive test now uses `getRect` for **transformed** control bounds instead
+  of `getSize`, which only checked the unscaled design-space render box.
+
+The artwork registration is exposed as one presentation constant with identical
+numeric values, not a new geometry mapping. All four initial-state captures have
+**zero changed RGB pixels** in the fully interior board region versus the Phase 1
+baseline using the same state, fonts, insets and viewport. The exact regions and
+counts are recorded in [the pixel comparison](evidence/phase2-board-pixels-2026-11-16.json).
+This proves preservation by this increment, not approval of the existing derivative
+against the immutable full portrait source; issue #41 remains relevant.
+
+New checks cover 150% text at 320×640 and 430×932, actual >=48dp exit/dice/chooser
+bounds, complete legal-pawn popup selection with exactly one roll/move, and native
+576×1024 alpha transparency inside the board during profile glow and rolling dice.
+Existing landscape diagnostics remain supported without changing portrait geometry.
+
+Actual screenshots were inspected at all four requested sizes. Names and next
+actions are visibly larger; all profiles and the complete board remain visible.
+No 9/10 visual acceptance, TalkBack/device acceptance or production release is
+claimed. Owner screenshot review and 6.1–6.9-inch physical Android evidence remain
+required before promoting the presentation to main.
+
+### Scope of remaining mode evidence
+
+Read the actual diff and documentation in #23, rather than its title: it contains
+a Team Up **implementation plan** and historical MatchSession work, not a shipped
+Team Up engine. Current main already incorporates the session boundary via other
+work. Do not blindly integrate the old branch or describe Team Up as implemented.
+Issue #19 and the plan specify its acceptance matrix; mode availability remains
+blocked until engine/UI/persistence integration and owner/device acceptance.
+Quick and Tournament behavior still lacks an approved executable specification.
+
+### Runtime limitations found
+
+The current entry point does not explicitly lock orientation. Production portrait
+configuration and native platform project pinning remain Phase 6 work; the Phase 2
+layout checks do not establish a runtime orientation guarantee. Physical Android,
+iOS simulator interaction, physical iOS, signed AAB, and Flutter-versus-Flame device
+measurements remain unexecuted. Retain Flutter as production renderer.
+
+Phase 2 local final gates: **298 tests passed** in 103 seconds, fatal-infos analysis
+**no issues**, strict formatting **131 files with zero changes**, and all four PNG
+integrity/dimension checks passed. Runtime/native/device claims remain separate.

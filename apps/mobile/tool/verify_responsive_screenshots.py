@@ -7,6 +7,8 @@ import struct
 import zlib
 
 VIEWPORTS = ((320, 640), (360, 800), (393, 873), (430, 932))
+EXTENDED = ((320, 568), (375, 667), (393, 873), (440, 956),
+            (360, 780), (600, 1024))
 
 
 def verify(path, width, height):
@@ -42,6 +44,9 @@ def main():
     args = parser.parse_args()
     for width, height in VIEWPORTS:
         verify(args.directory / f"match-screen-{width}x{height}.png", width, height)
+    for width, height in EXTENDED:
+        verify(args.directory / f"extended-match-screen-{width}x{height}.png",
+               width, height)
 
 
 if __name__ == "__main__":
