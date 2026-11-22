@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'board_geometry.dart';
 import 'player_color.dart';
+import 'match_configuration.dart';
 
 const int sharedTrackLength = BoardGeometry.trackLength;
 const int playerTrackLength = BoardGeometry.playerTrackLength;
@@ -227,6 +228,7 @@ class InvalidMove extends MoveEvaluationResult {
 class LudoGame {
   LudoGame._({
     required this.players,
+    this.configuration = MatchConfiguration.compatibility,
     required this.activePlayer,
     required this.ruleProfile,
     required this.stateVersion,
@@ -237,43 +239,66 @@ class LudoGame {
     this.winner,
   });
 
+  static MatchConfiguration _configurationFor(
+    LudoRuleProfile profile,
+    MatchConfiguration? requested,
+  ) {
+    final config = requested ??
+        (profile.id == 'classic'
+            ? MatchConfiguration.local(MatchMode.classic)
+            : MatchConfiguration.compatibility);
+    if (config.mode != MatchMode.compatibility &&
+        config.mode != MatchMode.classic) {
+      throw const FormatException('Mode engine is not implemented');
+    }
+    if (config.mode == MatchMode.classic && profile.id != 'classic') {
+      throw const FormatException('Mode and rule profile disagree');
+    }
+    return config;
+  }
+
   factory LudoGame.fromProgress({
     required PlayerColor activePlayer,
     required Map<PlayerColor, List<int>> pawnProgress,
     LudoRuleProfile ruleProfile = LudoRuleProfile.currentV1,
-  }) =>
-      LudoGame._(
-        players: List<LudoPlayer>.unmodifiable(
-          PlayerColor.turnOrder.map(
-            (color) => LudoPlayer(
-              color,
-              pawnProgress: pawnProgress[color] ?? List<int>.filled(4, -1),
-            ),
+    MatchConfiguration? configuration,
+  }) {
+    final config = _configurationFor(ruleProfile, configuration);
+    if (!config.activePlayers.contains(activePlayer) ||
+        pawnProgress.keys.any((c) => !config.activePlayers.contains(c))) {
+      throw ArgumentError('Progress references an inactive seat');
+    }
+    return LudoGame._(
+      configuration: config,
+      players: List<LudoPlayer>.unmodifiable(
+        config.activePlayers.map(
+          (color) => LudoPlayer(
+            color,
+            pawnProgress: pawnProgress[color] ?? List<int>.filled(4, -1),
           ),
         ),
-        activePlayer: activePlayer,
-        ruleProfile: ruleProfile,
-        stateVersion: 0,
-        consecutiveSixes: 0,
-        appliedCommandIds: const <String>{},
-        events: const <LudoGameEvent>[],
-      );
+      ),
+      activePlayer: activePlayer,
+      ruleProfile: ruleProfile,
+      stateVersion: 0,
+      consecutiveSixes: 0,
+      appliedCommandIds: const <String>{},
+      events: const <LudoGameEvent>[],
+    );
+  }
 
   factory LudoGame.initial({
     LudoRuleProfile ruleProfile = LudoRuleProfile.currentV1,
+    MatchConfiguration? configuration,
   }) =>
-      LudoGame._(
-        players: List<LudoPlayer>.unmodifiable(
-          PlayerColor.turnOrder.map((color) => LudoPlayer(color)),
-        ),
+      LudoGame.fromProgress(
         activePlayer: PlayerColor.orange,
+        pawnProgress: const {},
         ruleProfile: ruleProfile,
-        stateVersion: 0,
-        consecutiveSixes: 0,
-        appliedCommandIds: const <String>{},
-        events: const <LudoGameEvent>[],
+        configuration: configuration,
       );
 
+  final MatchConfiguration configuration;
   final List<LudoPlayer> players;
   final PlayerColor activePlayer;
   final int? diceValue;
@@ -294,13 +319,14 @@ class LudoGame {
   bool get awaitingPass =>
       diceValue != null && winner == null && legalPawnIndices().isEmpty;
 
-  /// Encodes the authoritative match state for local resume (schema v2).
+  /// Encodes the authoritative match state for local resume (schema v4).
   ///
   /// Presentation-only animation progress and transient events are purposely
   /// excluded. The state version and accepted command IDs survive restoration
   /// so stale/duplicate commands remain rejectable after an app restart.
   Map<String, Object?> toSnapshot() => {
-        'schemaVersion': 3,
+        'schemaVersion': 4,
+        'configuration': configuration.toJson(),
         'players': <Map<String, Object?>>[
           for (final player in players)
             <String, Object?>{
@@ -330,18 +356,22 @@ class LudoGame {
 
   String encodeSnapshot() => jsonEncode(toSnapshot());
 
-  /// Restores schema-v1, schema-v2 or schema-v3 snapshots. Malformed
+  /// Restores supported schema-v1 through schema-v4 snapshots. Malformed
   /// snapshots fail closed; callers should start a fresh match instead.
   factory LudoGame.fromSnapshot(Map<String, dynamic> snapshot) {
     final schemaVersion = snapshot['schemaVersion'];
-    if (schemaVersion != 1 && schemaVersion != 2 && schemaVersion != 3) {
+    if (schemaVersion != 1 &&
+        schemaVersion != 2 &&
+        schemaVersion != 3 &&
+        schemaVersion != 4) {
       throw const FormatException('Unsupported Ludo snapshot schema.');
     }
     final rawPlayers = snapshot['players'];
     final rawProfile = snapshot['ruleProfile'];
     final rawCommandIds = snapshot['appliedCommandIds'];
     if (rawPlayers is! List ||
-        rawPlayers.length != PlayerColor.turnOrder.length ||
+        rawPlayers.length < 2 ||
+        rawPlayers.length > 4 ||
         rawProfile is! Map ||
         rawCommandIds is! List) {
       throw const FormatException('Malformed Ludo snapshot.');
@@ -375,9 +405,6 @@ class LudoGame {
         throw const FormatException('Duplicate player in Ludo snapshot.');
       }
       progressByColor[color] = rawProgress.cast<int>();
-    }
-    if (!PlayerColor.turnOrder.every(progressByColor.containsKey)) {
-      throw const FormatException('Ludo snapshot is missing a player.');
     }
 
     bool requiredBool(String key) {
@@ -415,6 +442,19 @@ class LudoGame {
           schemaVersion < 3 ? false : requiredBool('enableHardBlockade'),
     );
 
+    final config = _configurationFor(
+      profile,
+      schemaVersion == 4
+          ? MatchConfiguration.fromJson(snapshot['configuration'])
+          : null,
+    );
+    if (progressByColor.length != config.activePlayers.length ||
+        !config.activePlayers.every(progressByColor.containsKey)) {
+      throw const FormatException(
+        'Snapshot players disagree with configured seats',
+      );
+    }
+
     final activeName = snapshot['activePlayer'];
     final winnerName = snapshot['winner'];
     final savedDice = snapshot['diceValue'];
@@ -436,9 +476,13 @@ class LudoGame {
     final winnerColor =
         winnerName == null ? null : parseColor(winnerName, 'winner');
     final restoredPlayers = <LudoPlayer>[
-      for (final color in PlayerColor.turnOrder)
+      for (final color in config.activePlayers)
         LudoPlayer(color, pawnProgress: progressByColor[color]),
     ];
+    if (!config.activePlayers.contains(activeColor) ||
+        (winnerColor != null && !config.activePlayers.contains(winnerColor))) {
+      throw const FormatException('Active/winning player is not participating');
+    }
     final completed = restoredPlayers.where((player) => player.hasWon).toList();
     if ((winnerColor == null && completed.isNotEmpty) ||
         (winnerColor != null &&
@@ -456,6 +500,7 @@ class LudoGame {
     }
 
     return LudoGame._(
+      configuration: config,
       players: List<LudoPlayer>.unmodifiable(restoredPlayers),
       activePlayer: activeColor,
       diceValue: savedDice as int?,
@@ -480,9 +525,9 @@ class LudoGame {
   /// This also keeps restored/custom snapshots with completed players safe.
   PlayerColor _nextActivePlayer([PlayerColor? from]) {
     var candidate = (from ?? activePlayer).next;
-    for (var i = 0; i < players.length; i++) {
-      final player = players.firstWhere((item) => item.color == candidate);
-      if (!player.hasWon) return candidate;
+    for (var i = 0; i < PlayerColor.turnOrder.length; i++) {
+      final candidates = players.where((item) => item.color == candidate);
+      if (candidates.isNotEmpty && !candidates.single.hasWon) return candidate;
       candidate = candidate.next;
     }
     return from ?? activePlayer;
@@ -625,6 +670,7 @@ class LudoGame {
         nextSixes >= 3) {
       final nextPlayer = _nextActivePlayer();
       return LudoGame._(
+        configuration: configuration,
         players: players,
         activePlayer: nextPlayer,
         ruleProfile: ruleProfile,
@@ -646,6 +692,7 @@ class LudoGame {
 
     final version = stateVersion + 1;
     final nextGame = LudoGame._(
+      configuration: configuration,
       players: players,
       activePlayer: activePlayer,
       diceValue: value,
@@ -666,6 +713,7 @@ class LudoGame {
   }
 
   LudoGame _withEvents(List<LudoGameEvent> nextEvents) => LudoGame._(
+        configuration: configuration,
         players: players,
         activePlayer: activePlayer,
         diceValue: diceValue,
@@ -701,6 +749,7 @@ class LudoGame {
       events.add(ExtraTurnGranted(0, stateVersion + 1, activePlayer));
     }
     return LudoGame._(
+      configuration: configuration,
       players: players,
       activePlayer: nextPlayer,
       ruleProfile: ruleProfile,
@@ -826,6 +875,7 @@ class LudoGame {
     }
 
     return LudoGame._(
+      configuration: configuration,
       players: List<LudoPlayer>.unmodifiable(updatedPlayers),
       activePlayer: nextPlayer,
       ruleProfile: ruleProfile,

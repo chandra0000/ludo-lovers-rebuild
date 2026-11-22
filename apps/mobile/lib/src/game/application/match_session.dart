@@ -105,8 +105,8 @@ class MatchSession {
     if (matchId.trim().isEmpty) {
       throw ArgumentError.value(matchId, 'matchId', 'Must not be empty.');
     }
-    if (actorIds.length != PlayerColor.turnOrder.length ||
-        !PlayerColor.turnOrder.every(actorIds.containsKey)) {
+    if (actorIds.length != game.players.length ||
+        !game.players.every((p) => actorIds.containsKey(p.color))) {
       throw ArgumentError.value(
         actorIds,
         'actorIds',
@@ -137,8 +137,8 @@ class MatchSession {
         matchId: matchId,
         game: game,
         actorIds: {
-          for (final color in PlayerColor.turnOrder)
-            color: 'local-seat-${color.name}',
+          for (final player in game.players)
+            player.color: 'local-seat-${player.color.name}',
         },
       );
 
