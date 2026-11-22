@@ -36,3 +36,11 @@ This PR deliberately addresses one source-confirmed accessibility defect: the pa
 ## Required CI and device checklist
 
 Run from `apps/mobile`: `dart format --output=none --set-exit-if-changed lib test integration_test`, `flutter analyze --fatal-infos`, `flutter test`, and the repository Android integration / profile / release workflows. Capture side-by-side screenshots and a fresh recording on representative 6.1–6.9-inch phones; compare with the original recording. Track failures as separate scoped PRs rather than merging unverified broad redesigns.
+
+## Follow-up implementation: editable local player names
+
+- Match setup now offers optional, 20-character name fields for all four colors, in canonical turn order.
+- Whitespace is trimmed before passing names to `MatchScreen.profiles`; blank names retain the existing color defaults.
+- AI-controlled seats retain their bot labels regardless of text entered in setup.
+- Added `apps/mobile/test/game_setup_player_names_test.dart` for local-name propagation and AI-seat identity behavior.
+- **Validation pending:** Flutter formatting, analyzer, widget tests and device screenshots were not executed here. Verify field scrolling, keyboard insets and profile text truncation on compact portrait phones.
