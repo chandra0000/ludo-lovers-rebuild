@@ -66,3 +66,10 @@ Run from `apps/mobile`: `dart format --output=none --set-exit-if-changed lib tes
 3. Capture roll, same-value consecutive rolls, six-step movement, capture, finish, restart, background/resume, and TalkBack/reduced-motion runs. Verify that each accepted engine roll generates exactly one animation-completion callback and that the pawn lands on the authoritative destination.
 4. Verify all four profile badges remain readable and non-overlapping, and that the board is never cropped or stretched. Test on physical Android phones and an iOS simulator/device where available.
 5. Record test outputs, screenshots, device models, frame times and owner acceptance before marking these items complete. No device/emulator execution was available in this editing environment.
+
+## Perfect-cube dice presentation follow-up
+
+- The six-face dice renderer now applies a small resting camera tilt to show multiple cube faces instead of a flat front-facing square.
+- Face gradients are modulated by orientation to add depth without changing pip arrangement or authoritative dice results.
+- Rolling, same-value roll IDs, reduced-motion handling and exactly-once completion callback logic are preserved.
+- **Pending:** verify all six settled faces, opposite-face pairing, visible cube depth, no clipping at 90×90 design-canvas control size, and correct animation completion in widget tests and Android screenshots. No device capture or Flutter run was performed in this session.
