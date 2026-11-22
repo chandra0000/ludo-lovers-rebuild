@@ -24,13 +24,13 @@ void main() {
     // Establish the dice ticker's start frame before advancing its duration.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 610));
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 349));
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1));
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -54,13 +54,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 610));
 
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_1')), findsOneWidget);
     // Multiple legal moves require choosing WHICH pawn, not tapping it twice.
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

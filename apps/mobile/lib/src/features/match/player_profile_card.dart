@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_typography.dart';
 import '../../game/presentation/player_color_theme.dart';
 import 'player_slot_resolver.dart';
 import 'royal_crown.dart';
@@ -32,8 +33,8 @@ class PlayerProfileCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
-        final avatarSize = (constraints.maxHeight * (largeText ? .43 : .54))
-            .clamp(52.0, 80.0)
+        final avatarSize = (constraints.maxHeight * (largeText ? .35 : .54))
+            .clamp(largeText ? 40.0 : 52.0, 80.0)
             .clamp(32.0, (constraints.maxWidth - 60).clamp(32.0, 80.0));
         return Semantics(
           container: true,
@@ -70,130 +71,137 @@ class PlayerProfileCard extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Row(
+                Column(
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isActive)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 2),
+                            child: RoyalCrown(size: 10),
+                          ),
+                        Flexible(
+                          child: Text(
+                            slot.participating
+                                ? profile.displayName
+                                : 'EMPTY / WAITING',
+                            key: Key('profile_name_${color.name}'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                AppTypography.playerName.copyWith(height: 1.1),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Row(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (isActive)
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 2),
-                                  child: RoyalCrown(size: 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  key: Key('profile_avatar_${color.name}'),
+                                  width: avatarSize,
+                                  height: avatarSize,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: accent, width: 2),
+                                    borderRadius: BorderRadius.circular(9),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: accent.withValues(alpha: .18),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(7),
+                                    child: !slot.participating
+                                        ? Icon(
+                                            Icons.person_outline,
+                                            color:
+                                                accent.withValues(alpha: .35),
+                                            size: 32,
+                                          )
+                                        : profile.isBot
+                                            ? Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.smart_toy_outlined,
+                                                    key: Key(
+                                                      'robot_${color.name}',
+                                                    ),
+                                                    color: accent,
+                                                    size: 32,
+                                                  ),
+                                                  if (slot.thinking)
+                                                    Positioned(
+                                                      bottom: 0,
+                                                      right: 0,
+                                                      child: Icon(
+                                                        Icons.more_horiz,
+                                                        key: Key(
+                                                          'ai_thinking_${color.name}',
+                                                        ),
+                                                        size: 14,
+                                                        color: const Color(
+                                                          0xFFFFE3A0,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              )
+                                            : Image.asset(
+                                                'assets/images/board/extracted/$image',
+                                                fit: BoxFit.cover,
+                                                cacheWidth: 128,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Icon(
+                                                  Icons.person,
+                                                  color: accent,
+                                                ),
+                                              ),
+                                  ),
                                 ),
-                              Flexible(
-                                child: Text(
-                                  slot.participating
-                                      ? profile.displayName
-                                      : 'EMPTY / WAITING',
-                                  key: Key('profile_name_${color.name}'),
+                                const SizedBox(height: 2),
+                                Text(
+                                  !slot.participating
+                                      ? 'EMPTY'
+                                      : profile.isBot
+                                          ? 'BOT · AI'
+                                          : 'LOCAL',
+                                  key: Key('profile_seat_${color.name}'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize:
-                                        constraints.maxWidth >= 150 ? 16 : 14,
+                                    color: accent,
+                                    fontSize: 10,
                                     height: 1.1,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Container(
-                            key: Key('profile_avatar_${color.name}'),
-                            width: avatarSize,
-                            height: avatarSize,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: accent, width: 2),
-                              borderRadius: BorderRadius.circular(9),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accent.withValues(alpha: .18),
-                                  blurRadius: 8,
-                                ),
+                                if (slot.team != null)
+                                  Text(
+                                    'TEAM ${slot.team!.name.toUpperCase()}',
+                                    key: Key('profile_team_${color.name}'),
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFE3A0),
+                                      fontSize: 10,
+                                      height: 1.1,
+                                    ),
+                                  ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(7),
-                              child: !slot.participating
-                                  ? Icon(
-                                      Icons.person_outline,
-                                      color: accent.withValues(alpha: .35),
-                                      size: 32,
-                                    )
-                                  : profile.isBot
-                                      ? Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.smart_toy_outlined,
-                                              key: Key('robot_${color.name}'),
-                                              color: accent,
-                                              size: 32,
-                                            ),
-                                            if (slot.thinking)
-                                              Positioned(
-                                                bottom: 0,
-                                                right: 0,
-                                                child: Icon(
-                                                  Icons.more_horiz,
-                                                  key: Key(
-                                                    'ai_thinking_${color.name}',
-                                                  ),
-                                                  size: 14,
-                                                  color: const Color(
-                                                    0xFFFFE3A0,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        )
-                                      : Image.asset(
-                                          'assets/images/board/extracted/$image',
-                                          fit: BoxFit.cover,
-                                          cacheWidth: 128,
-                                          errorBuilder: (_, __, ___) =>
-                                              Icon(Icons.person, color: accent),
-                                        ),
-                            ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            !slot.participating
-                                ? 'EMPTY'
-                                : profile.isBot
-                                    ? 'BOT · AI'
-                                    : 'LOCAL',
-                            key: Key('profile_seat_${color.name}'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: accent,
-                              fontSize: 10,
-                              height: 1.1,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (slot.team != null)
-                            Text(
-                              'TEAM ${slot.team!.name.toUpperCase()}',
-                              key: Key('profile_team_${color.name}'),
-                              style: const TextStyle(
-                                color: Color(0xFFFFE3A0),
-                                fontSize: 10,
-                                height: 1.1,
-                              ),
-                            ),
+                          if (slot.participating && socialControls != null)
+                            socialControls!,
                         ],
                       ),
                     ),
-                    if (slot.participating && socialControls != null)
-                      socialControls!,
                   ],
                 ),
                 if (feedback != null)

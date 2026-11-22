@@ -71,8 +71,6 @@ void registerGameplayRecording({bool realTime = true}) {
         List<int> rolls, {
         Set<PlayerColor> ai = const {},
       }) async {
-        await tester.pumpWidget(const SizedBox.shrink());
-        await wait(200);
         snapshots.clear();
         var nextRoll = 0;
         final profiles = MatchPlayerProfile.local(

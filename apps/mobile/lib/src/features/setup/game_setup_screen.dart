@@ -1,3 +1,4 @@
+import '../../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -250,12 +251,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               widget.mode == MatchMode.compatibility
                   ? 'CHOOSE YOUR GAME'
                   : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} RULES',
-              style: const TextStyle(
-                color: Color(0xFFFFC857),
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-              ),
+              style: AppTypography.heading,
             ),
             const SizedBox(height: 8),
             const Text(
@@ -376,8 +372,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       '${_playerCount - _humanPlayers} AI opponent(s) · '
                       'Orange → Green → Magenta → Blue',
                       style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
+                        color: Color(0xFFFFF4DF),
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -425,8 +421,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                           'Hard · More strongly prioritises tactics and safety.',
                       },
                       style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
+                        color: Color(0xFFFFF4DF),
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -467,7 +463,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               'Preview anchors are diagnostic only. Final visual approval '
               'requires pixel measurement and real-device verification.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white38, fontSize: 11),
+              style: TextStyle(color: Color(0xFFFFF4DF), fontSize: 14),
             ),
           ],
         ),
@@ -518,12 +514,15 @@ class _ModeCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: enabled ? const Color(0xFFFFC857) : Colors.white38,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color:
+                            enabled ? const Color(0xFFFFC857) : Colors.white38,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ],

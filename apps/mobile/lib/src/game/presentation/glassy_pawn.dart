@@ -60,7 +60,7 @@ class _GlassyConePainter extends CustomPainter {
     canvas.drawOval(
       baseRect.shift(Offset(0, h * .035)),
       Paint()
-        ..color = Colors.black.withValues(alpha: .42)
+        ..color = Colors.black.withValues(alpha: .60)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5),
     );
     if (isCurrentPlayer || isMovable) {
@@ -131,6 +131,13 @@ class _GlassyConePainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(w * .56, 0, w * .34, h)),
     );
     canvas.restore();
+    canvas.drawPath(
+      body,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..color = const Color(0xDD160B28),
+    );
     canvas.drawPath(
       body,
       Paint()

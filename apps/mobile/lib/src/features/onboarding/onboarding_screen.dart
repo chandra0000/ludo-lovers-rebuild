@@ -1,3 +1,4 @@
+import '../../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -101,12 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           item.title,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFFFFC857),
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.1,
-                          ),
+                          style: AppTypography.heading,
                         ),
                         const SizedBox(height: 16),
                         Text(

@@ -43,6 +43,9 @@ jobs:
           if [ ! -f android/app/build.gradle.kts ] && [ ! -f android/app/build.gradle ]; then
             flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
           fi
+      - name: Restore approved native branding after scaffolding
+        working-directory: apps/mobile
+        run: python3 tool/generate_branding.py --apply
       - name: Build Android debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
@@ -73,6 +76,9 @@ jobs:
           if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
             flutter create --platforms=ios --project-name ludo_lovers --org com.ludolovers .
           fi
+      - name: Restore approved native branding after scaffolding
+        working-directory: apps/mobile
+        run: python3 tool/generate_branding.py --apply
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get

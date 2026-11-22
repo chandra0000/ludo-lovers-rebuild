@@ -1,3 +1,4 @@
+import '../../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 
 import '../../game/domain/persistence/saved_match.dart';
@@ -124,12 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Text(
                         'LUDO LOVERS',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _gold,
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 3,
-                        ),
+                        style: AppTypography.heading,
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -231,9 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Text(
                             'PLAY NOW',
                             style: TextStyle(
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                               letterSpacing: 1.1,
-                              fontSize: 15,
+                              fontSize: 16,
                             ),
                           ),
                         ),

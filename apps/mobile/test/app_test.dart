@@ -230,7 +230,7 @@ void main() {
     await tester.pumpAndSettle();
     // One tap now commits the legal pawn move; six grants another turn.
     expect(find.byKey(const Key('destination_preview')), findsNothing);
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     expect(
       tester
           .widget<Semantics>(find.byKey(const Key('luxury_dice_semantics')))
@@ -250,11 +250,11 @@ void main() {
 
     // Only the pawn already on the track can use a non-six roll, so it moves
     // automatically after the dice reveal and 350 ms anticipation window.
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 349));
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1));
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     await tester.pumpAndSettle();
   });
 
@@ -293,7 +293,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('CHOOSE A PAWN'), findsOneWidget);
+    expect(find.text('Choose a pawn'), findsOneWidget);
     expect(find.text('Pawn 1'), findsOneWidget);
     expect(find.text('Pawn 2'), findsOneWidget);
 
@@ -301,7 +301,7 @@ void main() {
     await tester.pumpAndSettle();
     // Choosing from a shared-cell sheet is the single move selection.
     expect(find.byKey(const Key('destination_preview')), findsNothing);
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
   testWidgets('AI dice roll animates before its move or turn pass',
       (tester) async {
@@ -356,13 +356,13 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump();
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
 
     // Complete the 600 ms dice reveal, then the 600 ms visible no-move delay.
     await tester.pump(const Duration(milliseconds: 610));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
 
   testWidgets(
@@ -390,7 +390,10 @@ void main() {
       await tester.pumpAndSettle();
       final finish = tester.getTopLeft(pawn);
       expect(finish, isNot(inMotion));
-      expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')),
+        findsOneWidget,
+      );
     },
   );
 
@@ -455,7 +458,7 @@ void main() {
     final saved = await const SavedMatchStore().load();
     expect(saved!.game.players.first.pawnProgress[0], 0);
     expect(saved.game.diceValue, isNull);
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);
   });
 
@@ -481,7 +484,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CAPTURE! EXTRA TURN'), findsOneWidget);
-    expect(find.text('ORANGE · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
   });
 
   testWidgets('shows home feedback when a pawn reaches the finish',
