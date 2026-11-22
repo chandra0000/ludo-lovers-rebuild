@@ -50,9 +50,13 @@ class ModeRegistry {
     ModeDefinition(
       mode: MatchMode.teamUp,
       name: 'Team Up',
-      description: 'Orange + Magenta versus Green + Blue',
+      description:
+          'Orange + Magenta versus Green + Blue. All eight team pawns must finish. '
+          'Safe cells protect everyone; mixed unsafe stacks use last-arrival priority. '
+          'Protected departure loses remaining friends; equal arrival captures opponents. '
+          'Six/capture/finish bonuses and the third-six penalty apply.',
       playerCounts: [4],
-      availability: ModeAvailability.comingSoon,
+      availability: ModeAvailability.internalPreview,
     ),
   ];
 
@@ -75,6 +79,7 @@ class ModeRegistry {
       ruleProfile: switch (mode) {
         MatchMode.classic => LudoRuleProfile.classicV1,
         MatchMode.quick => LudoRuleProfile.quickV1,
+        MatchMode.teamUp => LudoRuleProfile.teamUpV1,
         _ => LudoRuleProfile.currentV1,
       },
       configuration: MatchConfiguration.local(mode, playerCount: playerCount),

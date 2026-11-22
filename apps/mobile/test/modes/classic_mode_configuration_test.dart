@@ -27,7 +27,7 @@ void main() {
       throwsStateError,
     );
     expect(
-      () => ModeRegistry.create(MatchMode.teamUp, allowInternal: true),
+      () => ModeRegistry.create(MatchMode.teamUp),
       throwsStateError,
     );
   });

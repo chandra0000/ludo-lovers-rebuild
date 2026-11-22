@@ -179,3 +179,25 @@ merge #54 into main only with owner approval; then retarget its successor to mai
 and verify its parent is in main before merging that successor. Repeat for each
 increment. Merging a child into an already-merged parent branch does not update
 main. No agent automatic merges or force pushes are authorized.
+
+## Team Up live presentation — 2026-11-18
+
+Internal Team Up setup now launches the actual MatchScreen with fixed team
+identities, eight-pawn progress, transferred-turn indication, final finishing
+player, winning-team result and rematch. Public builds continue to gate preview
+modes, including saved-match resume; gated saves are retained for an internal
+build or explicit discard. Match rules are available from Settings. Presentation
+uses domain capture attribution, so protected friendly departures show STACK LOST
+and cannot masquerade as an earned capture.
+
+387 local tests passed (full suite, 91 seconds), with clean fatal-info analysis.
+Seven dedicated live tests cover setup, transfer restoration, public resume gating,
+friendly loss, individual finish, team victory/rematch and pending transferred AI
+recovery without duplicate commands. Seven additional capture cases cover all four
+mandatory viewports, compact 320×568, transfer and victory. Real Flutter PNGs were
+inspected at 320×640 and 393×873 (transfer/victory): board visible, stable colors,
+names above square avatars and separated controls. Owner visual approval and
+physical-device acceptance remain incomplete. Board/logo bytes are unchanged.
+
+Screenshot encoding, filesystem I/O, decoding and frame disposal run in real
+async with bounded waits; assertion failure still disposes decoded frames.

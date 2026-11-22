@@ -13,8 +13,12 @@ class PremiumMatchLayout extends StatelessWidget {
     required this.reaction,
     required this.boardBuilder,
     this.title = 'LOCAL MATCH',
+    this.teamProgress,
+    this.teamProgressHeight = 40,
   });
   final String title;
+  final Widget? teamProgress;
+  final double teamProgressHeight;
   final Widget profiles;
   final Widget controls;
   final Widget reaction;
@@ -70,6 +74,10 @@ class PremiumMatchLayout extends StatelessWidget {
               height: MediaQuery.textScalerOf(context).scale(14) > 17 ? 96 : 84,
               child: profiles,
             ),
+            if (teamProgress != null) ...[
+              const SizedBox(height: 4),
+              SizedBox(height: teamProgressHeight, child: teamProgress),
+            ],
             const SizedBox(height: 8),
             Expanded(
               child: Center(
