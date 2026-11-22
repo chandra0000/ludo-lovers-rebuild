@@ -176,7 +176,6 @@ void responsiveTest(
       for (final key in [
         'roll_dice',
         'chat_button',
-        'quick_reactions_button',
         'more_button',
       ]) {
         expect(
@@ -184,13 +183,24 @@ void responsiveTest(
           greaterThanOrEqualTo(canvas.bottom - .01),
         );
       }
-      final profileCenters = ['orange', 'green', 'magenta', 'blue']
-          .map((color) => tester.getCenter(find.byKey(Key('profile_$color'))))
-          .toList();
-      for (var i = 1; i < profileCenters.length; i++) {
-        expect(profileCenters[i].dx, greaterThan(profileCenters[i - 1].dx));
-        expect(profileCenters[i].dy, closeTo(profileCenters[0].dy, .01));
-      }
+      final orange = tester.getCenter(find.byKey(const Key('profile_orange')));
+      final green = tester.getCenter(find.byKey(const Key('profile_green')));
+      final blue = tester.getCenter(find.byKey(const Key('profile_blue')));
+      final magenta =
+          tester.getCenter(find.byKey(const Key('profile_magenta')));
+      expect(orange.dx, lessThan(green.dx));
+      expect(blue.dx, lessThan(magenta.dx));
+      expect(orange.dy, lessThan(canvas.top));
+      expect(green.dy, lessThan(canvas.top));
+      expect(blue.dy, greaterThan(canvas.bottom));
+      expect(magenta.dy, greaterThan(canvas.bottom));
+      expect(
+        tester.getCenter(find.byKey(const Key('match_brand_mark'))).dx,
+        closeTo(
+          tester.getCenter(find.byKey(const Key('roll_dice'))).dx,
+          .01,
+        ),
+      );
 
       for (final color in const ['orange', 'green', 'magenta', 'blue']) {
         expect(
@@ -198,7 +208,8 @@ void responsiveTest(
           isFalse,
         );
       }
-      expect(find.text('Roll dice'), findsOneWidget);
+      expect(find.text('Roll dice'), findsNothing);
+      expect(find.text('Your turn'), findsOneWidget);
 
       // Engine/image callbacks and filesystem operations must run outside
       // the widget binding's fake-async zone. Keeping only writes in runAsync

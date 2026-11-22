@@ -31,7 +31,7 @@ void main() {
         expect(avatar.width, greaterThanOrEqualTo(31.99));
         expect(avatar.width, closeTo(avatar.height, .01));
       }
-      expect(find.text('Roll dice'), findsOneWidget);
+      expect(find.text('Your turn'), findsOneWidget);
       expect(
         tester.getRect(find.byKey(const Key('exit_match'))).width,
         greaterThanOrEqualTo(48),
