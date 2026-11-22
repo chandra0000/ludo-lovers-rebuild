@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
+import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
 import '../board_preview/board_preview_screen.dart';
 import '../match/match_screen.dart';
@@ -16,6 +17,7 @@ class GameSetupScreen extends StatefulWidget {
 class _GameSetupScreenState extends State<GameSetupScreen> {
   int _humanPlayers = 1;
   LudoAiDifficulty _aiDifficulty = LudoAiDifficulty.medium;
+  final Map<PlayerColor, String> _playerNames = {};
 
   Set<PlayerColor> get _aiPlayers =>
       PlayerColor.turnOrder.skip(_humanPlayers).toSet();
@@ -30,6 +32,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
           aiPlayers: withAi ? _aiPlayers : const {},
           aiSeed: 20261110,
           aiDifficulty: _aiDifficulty,
+          profiles: MatchPlayerProfile.local(
+            aiPlayers: withAi ? _aiPlayers : const {},
+          ).map((profile) {
+            final customName = _playerNames[profile.color]?.trim();
+            return customName == null || customName.isEmpty || profile.isBot
+                ? profile
+                : profile.copyWith(displayName: customName);
+          }).toList(growable: false),
         ),
       ),
     );
@@ -64,6 +74,44 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 style: TextStyle(color: Colors.white70, height: 1.45),
               ),
               const SizedBox(height: 22),
+              const Text(
+                'PLAYER NAMES',
+                style: TextStyle(
+                  color: Color(0xFFFFC857),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Optional names for local seats. AI seats keep their bot labels.',
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              for (final color in PlayerColor.turnOrder)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: TextField(
+                    key: Key('player_name_${color.name}'),
+                    maxLength: 20,
+                    textCapitalization: TextCapitalization.words,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: '${color.name.toUpperCase()} player',
+                      labelStyle: TextStyle(color: color.color),
+                      hintText: color.name.toUpperCase(),
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      counterStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white30),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: color.color),
+                      ),
+                    ),
+                    onChanged: (value) => _playerNames[color] = value,
+                  ),
+                ),
+              const SizedBox(height: 12),
               _ModeCard(
                 title: 'LOCAL FOUR-PLAYER',
                 subtitle: 'Pass-and-play · Current compatibility rules',
