@@ -383,7 +383,7 @@ class _DiceFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shade = (0.78 + light * 0.22).clamp(0.0, 1.0);
+    final shade = (0.78 + light * 0.22).clamp(0.0, 1.0).toDouble();
     return Container(
       width: size,
       height: size,
