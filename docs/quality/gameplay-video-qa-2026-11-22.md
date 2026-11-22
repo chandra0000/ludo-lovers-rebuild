@@ -44,3 +44,10 @@ Run from `apps/mobile`: `dart format --output=none --set-exit-if-changed lib tes
 - AI-controlled seats retain their bot labels regardless of text entered in setup.
 - Added `apps/mobile/test/game_setup_player_names_test.dart` for local-name propagation and AI-seat identity behavior.
 - **Validation pending:** Flutter formatting, analyzer, widget tests and device screenshots were not executed here. Verify field scrolling, keyboard insets and profile text truncation on compact portrait phones.
+
+## HUD quadrant correction
+
+- Corrected the profile presentation positions: orange top-left, green top-right, blue bottom-left, magenta bottom-right.
+- This is a presentation-only correction; engine turn order remains orange → green → magenta → blue.
+- Added `apps/mobile/test/match_profile_quadrants_test.dart` to guard the approved seat coordinates against regressions.
+- Pending: execute the widget test, check actual artwork overlay, inspect full-size and compact portrait captures, and verify there is no HUD overlap.
