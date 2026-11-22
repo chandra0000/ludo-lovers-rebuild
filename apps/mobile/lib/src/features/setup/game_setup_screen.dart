@@ -16,9 +16,13 @@ class GameSetupScreen extends StatefulWidget {
     super.key,
     this.mode = MatchMode.compatibility,
     this.allowInternalModes = ModeRegistry.internalBuild,
+    this.initialPlayerCount = 4,
+    this.preferComputer = false,
   });
   final MatchMode mode;
   final bool allowInternalModes;
+  final int initialPlayerCount;
+  final bool preferComputer;
 
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
@@ -51,6 +55,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   @override
   void initState() {
     super.initState();
+    if (!ModeRegistry.definition(widget.mode)
+        .playerCounts
+        .contains(widget.initialPlayerCount)) {
+      throw ArgumentError('Unsupported setup participant count');
+    }
+    _playerCount = widget.initialPlayerCount;
     _loadNames();
   }
 
@@ -227,7 +237,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF080808),
       appBar: AppBar(
-        title: const Text('GAME SETUP'),
+        title: Text(widget.preferComputer ? 'VS COMPUTER SETUP' : 'GAME SETUP'),
         backgroundColor: const Color(0xFF100D08),
         foregroundColor: const Color(0xFFFFC857),
       ),
@@ -279,28 +289,32 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   if (count != null) {
                     setState(() {
                       _playerCount = count;
-                      _humanPlayers = _humanPlayers.clamp(1, count);
+                      _humanPlayers = _humanPlayers.clamp(
+                        1,
+                        count - (widget.preferComputer ? 1 : 0),
+                      );
                     });
                   }
                 },
               ),
             _nameEditor(),
             const SizedBox(height: 12),
-            _ModeCard(
-              title: widget.mode == MatchMode.compatibility
-                  ? 'LOCAL FOUR-PLAYER'
-                  : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} · $_playerCount PLAYERS',
-              subtitle: ModeRegistry.definition(widget.mode).description,
-              enabled: ModeRegistry.canPlay(
-                widget.mode,
-                allowInternal: widget.allowInternalModes,
+            if (!widget.preferComputer)
+              _ModeCard(
+                title: widget.mode == MatchMode.compatibility
+                    ? 'LOCAL FOUR-PLAYER'
+                    : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} · $_playerCount PLAYERS',
+                subtitle: ModeRegistry.definition(widget.mode).description,
+                enabled: ModeRegistry.canPlay(
+                  widget.mode,
+                  allowInternal: widget.allowInternalModes,
+                ),
+                label: widget.mode == MatchMode.compatibility
+                    ? 'AVAILABLE'
+                    : 'INTERNAL PREVIEW',
+                onTap: () => _startMatch(withAi: false),
+                buttonKey: const Key('start_local_match'),
               ),
-              label: widget.mode == MatchMode.compatibility
-                  ? 'AVAILABLE'
-                  : 'INTERNAL PREVIEW',
-              onTap: () => _startMatch(withAi: false),
-              buttonKey: const Key('start_local_match'),
-            ),
             const SizedBox(height: 16),
             Card(
               color: const Color(0xFF17130D),
@@ -339,15 +353,17 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                           key: const Key('human_player_count'),
                           value: _humanPlayers,
                           dropdownColor: const Color(0xFF17130D),
-                          items:
-                              List.generate(_playerCount, (index) => index + 1)
-                                  .map(
-                                    (count) => DropdownMenuItem<int>(
-                                      value: count,
-                                      child: Text('$count'),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: List.generate(
+                            _playerCount - (widget.preferComputer ? 1 : 0),
+                            (index) => index + 1,
+                          )
+                              .map(
+                                (count) => DropdownMenuItem<int>(
+                                  value: count,
+                                  child: Text('$count'),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (value) {
                             if (value != null) {
                               setState(() => _humanPlayers = value);

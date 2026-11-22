@@ -143,15 +143,20 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: ModeSelectionScreen()));
     expect(
       tester
-          .widget<FilledButton>(find.byKey(const Key('mode_classic')))
-          .onPressed,
-      isNull,
-    );
-    expect(
-      tester
           .widget<FilledButton>(find.byKey(const Key('mode_compatibility')))
           .onPressed,
       isNotNull,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('mode_classic')),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('mode_classic')))
+          .onPressed,
+      isNull,
     );
     expect(find.textContaining('COMING SOON'), findsWidgets);
   });
