@@ -138,3 +138,21 @@ uid501 lookup warning and no VM service. The follow-up separates a30s non-consol
 launch acknowledgement from the existing60s VM readiness check, retaining unified
 logs. The underlying simulator launch cause is not established as an app defect
 or infrastructure defect. Installed iOS verification remains pending a new run.
+
+Source014bd8cb's software native job45013353444 reproduced a Flutter frame-timing
+assertion after the widget-owned frame hold changed sendFramesToEngine during
+render finalization. A phase-recording binding regression fails on that timing.
+The correction moves cold deferral before runApp into StartupFrameGate; Splash
+only reports first-view readiness/error/disposal, and the gate releases once in
+a post-frame callback. Integration tests do not own production bootstrap holds.
+No exception is filtered or suppressed.
+
+The no-console iOS launch now acknowledges the app, attaches the driver and saves
+all eight native screenshots. Its first navigation test reports an outstanding
+SemanticsHandle at teardown. The next harness logs native accessibility activation
+and handle counts to distinguish platform-owned activation from a real leak;
+semantics and leak checks remain enabled. Native iOS acceptance is still pending.
+The cached default Android renderer reproduced driver/ADB/QEMU loss after first
+FFA capture; no kernel OOM/native crash signature was captured. The cause remains
+unproven, with viewport1080×1920 versus recording360×800 also differing. Do not
+claim a controlled renderer-only comparison or production GPU acceptance.

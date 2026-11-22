@@ -5,7 +5,8 @@ import 'theme/app_typography.dart';
 import 'features/splash/splash_screen.dart';
 
 class LudoLoversApp extends StatelessWidget {
-  const LudoLoversApp({super.key});
+  const LudoLoversApp({super.key, this.onFirstViewReady});
+  final VoidCallback? onFirstViewReady;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +62,7 @@ class LudoLoversApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(onFirstViewReady: onFirstViewReady),
     );
   }
 }

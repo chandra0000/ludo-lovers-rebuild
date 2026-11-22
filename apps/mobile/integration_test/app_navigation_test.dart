@@ -15,6 +15,31 @@ void main() {
     // surface. Normal release/default integration entrypoints are unchanged.
     runApp(const LudoLoversApp());
   }
+  // Diagnose native accessibility activation separately from test-owned handles.
+  final dispatcher = binding.platformDispatcher;
+  final previousSemanticsCallback = dispatcher.onSemanticsEnabledChanged;
+  dispatcher.onSemanticsEnabledChanged = () {
+    debugPrint(
+      'NATIVE_SEMANTICS before=${binding.debugOutstandingSemanticsHandles} enabled=${dispatcher.semanticsEnabled}',
+    );
+    previousSemanticsCallback?.call();
+    debugPrint(
+      'NATIVE_SEMANTICS after=${binding.debugOutstandingSemanticsHandles}',
+    );
+  };
+  tearDownAll(
+    () => dispatcher.onSemanticsEnabledChanged = previousSemanticsCallback,
+  );
+  setUp(
+    () => debugPrint(
+      'TEST_SEMANTICS start=${binding.debugOutstandingSemanticsHandles} native=${dispatcher.semanticsEnabled}',
+    ),
+  );
+  tearDown(
+    () => debugPrint(
+      'TEST_SEMANTICS end=${binding.debugOutstandingSemanticsHandles} native=${dispatcher.semanticsEnabled}',
+    ),
+  );
   var surfaceConverted = false;
   setUp(() => surfaceConverted = false);
   Future<void> capture(WidgetTester tester, String name) async {
