@@ -288,7 +288,12 @@ class _DiceCube extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final half = size / 2;
+    // Keep the die visibly cubic even at rest: the selected face remains
+    // forward while the camera sees a sliver of the top and right faces.
+    // All six faces share this same rigid camera transform.
     final rotation = Matrix4.identity()
+      ..rotateX(-0.22)
+      ..rotateY(-0.28)
       ..rotateX(xAngle)
       ..rotateY(yAngle);
     final faces = <({int value, Matrix4 transform, double depth})>[];
@@ -353,6 +358,7 @@ class _DiceCube extends StatelessWidget {
                 size: size,
                 value: face.value,
                 isInteractive: isInteractive,
+                light: face.depth,
               ),
             ),
         ],
@@ -367,26 +373,29 @@ class _DiceFace extends StatelessWidget {
     required this.size,
     required this.value,
     required this.isInteractive,
+    required this.light,
   });
 
   final double size;
   final int value;
   final bool isInteractive;
+  final double light;
 
   @override
   Widget build(BuildContext context) {
+    final shade = (0.78 + light * 0.22).clamp(0.0, 1.0);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFFFFFFF),
-            Color(0xFFF6F3EA),
-            Color(0xFFE2DCCB),
+            Color.lerp(const Color(0xFFB8AC91), Colors.white, shade)!,
+            Color.lerp(const Color(0xFFAA9A7B), const Color(0xFFF6F3EA), shade)!,
+            Color.lerp(const Color(0xFF97896C), const Color(0xFFE2DCCB), shade)!,
           ],
         ),
         border: Border.all(
