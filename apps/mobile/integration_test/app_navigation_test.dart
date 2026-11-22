@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../test/support/local_mode_navigation.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -43,5 +44,10 @@ void main() {
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
       expect(tester.takeException(), isNull);
     }
+  });
+  testWidgets('installed local modes support roll, restart and saved resume',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await verifyLocalModeNavigation(tester);
   });
 }

@@ -6,10 +6,12 @@ on:
     paths:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
+      - ".github/scripts/ios_simulator_integration.sh"
   pull_request:
     paths:
       - "apps/mobile/**"
       - ".github/workflows/cross-platform-acceptance.yml"
+      - ".github/scripts/ios_simulator_integration.sh"
   workflow_dispatch:
 
 concurrency:
@@ -75,10 +77,10 @@ jobs:
       - name: Run responsive and event presentation widget tests on macOS
         timeout-minutes: 12
         working-directory: apps/mobile
-        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart
+        run: flutter test test/integrated_match_presentation_test.dart test/match_profiles_layer_test.dart test/match_move_presentation_plan_test.dart test/modes/team_up_responsive_capture_test.dart test/modes/premium_flow_capture_test.dart
       - name: Verify all responsive PNG artifacts
         working-directory: apps/mobile
-        run: python3 tool/verify_responsive_screenshots.py
+        run: python3 tool/verify_responsive_screenshots.py --premium-flows
       - name: Upload macOS-rendered widget screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,6 +91,24 @@ jobs:
       - name: Build iOS simulator app with Xcode
         working-directory: apps/mobile
         run: flutter build ios --simulator --debug --no-codesign
+      - name: Run installed iPhone simulator navigation and local modes
+        timeout-minutes: 15
+        working-directory: apps/mobile
+        run: bash ../../.github/scripts/ios_simulator_integration.sh
+      - name: Simulator diagnostics on failure
+        if: failure()
+        timeout-minutes: 2
+        run: |
+          mkdir -p simulator-diagnostics
+          xcrun simctl list devices > simulator-diagnostics/devices.txt
+          xcrun simctl spawn booted log show --last 2m --style compact --predicate 'process == "Runner"' > simulator-diagnostics/runner.txt 2>&1 || true
+      - name: Upload simulator diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-ios-simulator-diagnostics
+          path: simulator-diagnostics/
+          if-no-files-found: warn
       - name: Verify simulator app artifact
         working-directory: apps/mobile
         run: test -d build/ios/iphonesimulator/Runner.app

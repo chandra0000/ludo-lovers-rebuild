@@ -41,12 +41,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path,
                         default=Path("test-artifacts/acceptance"))
+    parser.add_argument("--premium-flows", action="store_true")
     args = parser.parse_args()
     for width, height in VIEWPORTS:
         verify(args.directory / f"match-screen-{width}x{height}.png", width, height)
     for width, height in EXTENDED:
         verify(args.directory / f"extended-match-screen-{width}x{height}.png",
                width, height)
+
+    if args.premium_flows:
+        for name in ("home", "mode-selection", "classic-setup", "quick-setup",
+                     "team-up-setup", "ai-setup", "dice-rolling", "pawn-selection",
+                     "pawn-moving", "capture", "winning", "rematch"):
+            verify(args.directory / f"flow-{name}.png", 393, 873)
+        for width, height in (*VIEWPORTS, (320, 568)):
+            verify(args.directory / f"team-up-match-{width}x{height}.png", width, height)
+        for state in ("transferred", "winning"):
+            verify(args.directory / f"team-up-{state}-393x873.png", 393, 873)
 
 
 if __name__ == "__main__":
