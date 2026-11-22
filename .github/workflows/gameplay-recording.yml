@@ -50,6 +50,15 @@ jobs:
       - name: Restore approved native branding after scaffolding
         working-directory: apps/mobile
         run: python3 tool/generate_branding.py --apply
+      - name: Cache pinned Android Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/pubspec.lock', 'apps/mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: Bound build memory and compile before booting emulator
         timeout-minutes: 10
         working-directory: apps/mobile

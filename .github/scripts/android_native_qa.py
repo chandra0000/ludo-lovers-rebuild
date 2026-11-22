@@ -208,11 +208,22 @@ def branding_prelude(recorder):
         if any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
             screenshot('native-branded-home')
             time.sleep(2)
+            adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+            time.sleep(.5)
+            screenshot('native-normal-background')
+            adb(*args)
+            nodes = ui_nodes()
+            if not any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
+                raise RuntimeError('Warm foreground return did not retain home')
+            screenshot('native-warm-home')
             if not tap_label('PLAY NOW', nodes):
                 raise RuntimeError('Home action disappeared during startup')
             time.sleep(1)
             screenshot('native-branded-setup')
             time.sleep(2)
+            # Keep the actual launcher visible during the disclosed APK switch.
+            adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+            time.sleep(.5)
             return
         time.sleep(.5)
     raise RuntimeError('Cold startup did not reach recoverable home/setup within bounded readiness checks')

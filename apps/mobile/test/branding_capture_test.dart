@@ -1,3 +1,8 @@
+import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
+import 'package:ludo_lovers/src/game/domain/mode_registry.dart';
+import 'package:ludo_lovers/src/features/home/home_screen.dart';
+import 'package:ludo_lovers/src/features/setup/game_setup_screen.dart';
+import 'package:ludo_lovers/src/features/setup/mode_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,6 +99,93 @@ void main() {
       });
     }
   }
+  for (final surface in <String, Widget>{
+    'home': const HomeScreen(),
+    'setup': const GameSetupScreen(),
+    'modes': const ModeSelectionScreen(),
+  }.entries) {
+    testWidgets('${surface.key} is readable at 200% on compact phone',
+        (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 640);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: const Key('large_surface'),
+          child: Builder(
+            builder: (context) {
+              final theme =
+                  (const LudoLoversApp().build(context) as MaterialApp).theme;
+              return MaterialApp(
+                theme: theme,
+                debugShowCheckedModeBanner: false,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: const TextScaler.linear(2)),
+                  child: child!,
+                ),
+                home: surface.value,
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await captureArtifact(
+        tester,
+        'branding-${surface.key}-320x640-2x',
+        key: const Key('large_surface'),
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+  }
+  testWidgets('Team Up scores remain readable at 200% on compact phone',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.padding = const FakeViewPadding(top: 24, bottom: 24);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: const Key('large_team'),
+        child: Builder(
+          builder: (context) {
+            final theme =
+                (const LudoLoversApp().build(context) as MaterialApp).theme;
+            return MaterialApp(
+              theme: theme,
+              debugShowCheckedModeBanner: false,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(2)),
+                child: child!,
+              ),
+              home: MatchScreen(
+                initialGame: ModeRegistry.create(
+                  MatchMode.teamUp,
+                  allowInternal: true,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await captureArtifact(
+      tester,
+      'branding-team-up-320x640-2x',
+      key: const Key('large_team'),
+    );
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
   testWidgets('capture actual proportional Flutter splash before readiness',
       (tester) async {
     await tester.pumpWidget(

@@ -40,7 +40,7 @@ class PlayerProfileCard extends StatelessWidget {
           container: true,
           value: slot.thinking ? 'AI thinking' : null,
           label:
-              '${profile.displayName}, ${color.name}, seat ${PlayerColor.turnOrder.indexOf(color) + 1}, ${slot.participating ? profile.presenceLabel : "EMPTY / WAITING"}${isActive ? ', current turn' : ''}',
+              '${profile.displayName}, ${color.name}, seat ${PlayerColor.turnOrder.indexOf(color) + 1}, ${slot.participating ? profile.presenceLabel : "EMPTY / WAITING"}${isActive ? ', current turn' : ''}${slot.team != null ? ', team ${slot.team!.name.toUpperCase()}' : ''}',
           child: AnimatedContainer(
             key: Key('profile_${color.name}'),
             duration: MediaQuery.disableAnimationsOf(context)
@@ -186,8 +186,12 @@ class PlayerProfileCard extends StatelessWidget {
                                 ),
                                 if (slot.team != null)
                                   Text(
-                                    'TEAM ${slot.team!.name.toUpperCase()}',
+                                    largeText
+                                        ? slot.team!.name.toUpperCase()
+                                        : 'TEAM ${slot.team!.name.toUpperCase()}',
                                     key: Key('profile_team_${color.name}'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: Color(0xFFFFE3A0),
                                       fontSize: 10,

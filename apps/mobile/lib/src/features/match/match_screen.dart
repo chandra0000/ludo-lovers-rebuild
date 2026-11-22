@@ -471,8 +471,16 @@ class _MatchScreenState extends State<MatchScreen>
                   teamProgress: _game.configuration.isTeamUp
                       ? TeamProgressPanel(game: _game, profiles: _profiles)
                       : null,
-                  teamProgressHeight:
-                      _game.scheduledPlayer == _game.activePlayer ? 40 : 58,
+                  teamProgressHeight: () {
+                    final scaled = MediaQuery.textScalerOf(context).scale(14);
+                    final badge = (scaled * 1.2 * (scaled > 18 ? 1 : 2) + 8)
+                        .clamp(40.0, double.infinity);
+                    return badge +
+                        (_game.scheduledPlayer == _game.activePlayer
+                            ? 0
+                            : MediaQuery.textScalerOf(context).scale(11) * 1.5 +
+                                2);
+                  }(),
                   reaction: const SizedBox.shrink(),
                   onPlayerChat: _showPlayerChat,
                   onPlayerEmoji: _showPlayerReactions,

@@ -74,21 +74,23 @@ def main():
             reservation.bind(('127.0.0.1', 0))
             port = reservation.getsockname()[1]
         uri = f'http://127.0.0.1:{port}/'
-        print('IOS STAGE: launch with captured console', flush=True)
-        log_path = DIAGNOSTICS / 'integration-console.txt'
-        log = log_path.open('w')
-        console = subprocess.Popen(['xcrun', 'simctl', 'launch', '--console', '--terminate-running-process',
-            device_id, bundle_id, '--enable-dart-profiling', '--enable-checked-mode', '--verify-entry-points',
-            f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication'],
-            stdout=log, stderr=subprocess.STDOUT, text=True)
+        # A console-attached simctl launch stalled without acknowledging a PID
+        # in run45011448495. Separate launch acknowledgement from VM readiness;
+        # retain unified logs rather than blocking launch on console attachment.
+        launch_args = ['xcrun', 'simctl', 'launch', '--terminate-running-process',
+            device_id, bundle_id, '--enable-dart-profiling',
+            f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication']
+        result = subprocess.run(launch_args, text=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        (DIAGNOSTICS / 'integration-console.txt').write_text(result.stdout)
+        print('IOS STAGE: launch acknowledgement\n' + result.stdout, flush=True)
+        result.check_returncode()
         deadline = time.monotonic() + 60
         ready = False
         while time.monotonic() < deadline:
             ready = vm_ready(uri)
             if ready:
                 break
-            if console.poll() is not None:
-                raise RuntimeError('Simulator launch exited before VM service; see integration-console.txt')
             time.sleep(.1)
         if not ready:
             raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')

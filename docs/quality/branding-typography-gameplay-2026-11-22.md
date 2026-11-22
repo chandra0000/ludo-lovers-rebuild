@@ -102,3 +102,39 @@ The previous software/debug recording's9.16fps average /20.67fps active cadence
 are historical, not improved performance measurements. Default GPU failure is
 still unresolved. Physical Android/iOS, process-death/soak/performance, signing,
 store configuration and owner visual approval remain separate incomplete gates.
+
+## Native investigation follow-up
+
+First source44b135df run45011467680 passed all four installed scenarios and all
+native screenshots. The unedited95.743711s MP4 failed the unchanged45–95s duration
+gate. Added normal startup and test APK installation made the old final13s idle
+hold excessive. The follow-up shortens only this QA idle hold, never production
+animations, and adds an actual home/background/warm-return assertion.
+
+Frame inspection separated three transitions: a0.65s empty royal first Flutter
+frame during normal startup; a0.74s black interval during the disclosed APK
+replacement; and a3.31s empty integration-test surface while attaching the driver.
+Startup now holds the native branded first frame until destination readiness,
+with zero extra route animation; timeout/error/disposal always release the hold.
+The QA host returns to the actual launcher before APK replacement, and the
+recording-only integration entry paints LudoLoversApp while the driver attaches.
+These changes require new native capture; no footage is edited to hide intervals.
+
+A new200% Team-Up regression reproduced score-strip and wrapped badge overflows.
+The follow-up derives strip height from TextScaler, keeps scores/identity in
+semantics, removes redundant teammate-name repetition in the enlarged strip and
+uses compact A/B labels. All teammate profiles remain visible. No scoring/rule
+logic changes. Source44b135df's normal-size native Team-Up test already passed;
+this correction addresses enlarged-text presentation.
+
+The first default-renderer attempt45012211468 did not run the app: Maven returned
+HTTP429 for Kotlin2.0.21 POMs. It is not GPU runtime evidence. Checkpoint/recording
+now reuse the existing pinned Gradle cache rather than repeatedly downloading
+those same artifacts. No dependency version or timeout is relaxed.
+
+iOS source44b135df compiled both normal and integration apps, then the console-
+attached simctl launch never acknowledged startup; its logs contained only a
+uid501 lookup warning and no VM service. The follow-up separates a30s non-console
+launch acknowledgement from the existing60s VM readiness check, retaining unified
+logs. The underlying simulator launch cause is not established as an app defect
+or infrastructure defect. Installed iOS verification remains pending a new run.

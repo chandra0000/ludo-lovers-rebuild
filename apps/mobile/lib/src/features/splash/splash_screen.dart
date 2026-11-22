@@ -18,11 +18,19 @@ class _SplashScreenState extends State<SplashScreen>
   bool? _completed;
   bool _failed = false;
   bool _navigated = false;
+  bool _holdsFirstFrame = false;
   int _attempt = 0;
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    final binding = WidgetsBinding.instance;
+    // Keep the native branded window until the first destination is ready;
+    // publishing an asset-loading Flutter frame exposes an empty background.
+    if (!binding.firstFrameRasterized) {
+      binding.deferFirstFrame();
+      _holdsFirstFrame = true;
+    }
+    binding.addObserver(this);
     unawaited(_initialize());
   }
 
@@ -40,7 +48,10 @@ class _SplashScreenState extends State<SplashScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) => _navigate());
       WidgetsBinding.instance.scheduleFrame();
     } catch (_) {
-      if (mounted && attempt == _attempt) setState(() => _failed = true);
+      if (mounted && attempt == _attempt) {
+        setState(() => _failed = true);
+        _releaseFirstFrame();
+      }
     }
   }
 
@@ -54,11 +65,21 @@ class _SplashScreenState extends State<SplashScreen>
     }
     _navigated = true;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) =>
+      PageRouteBuilder<void>(
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) =>
             _completed! ? const HomeScreen() : const OnboardingScreen(),
       ),
     );
+    _releaseFirstFrame();
+  }
+
+  void _releaseFirstFrame() {
+    if (_holdsFirstFrame) {
+      _holdsFirstFrame = false;
+      WidgetsBinding.instance.allowFirstFrame();
+    }
   }
 
   @override
@@ -69,6 +90,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _attempt++;
+    _releaseFirstFrame();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

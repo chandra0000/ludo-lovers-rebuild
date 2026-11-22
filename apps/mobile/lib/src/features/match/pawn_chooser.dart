@@ -32,7 +32,7 @@ Future<void> showPawnChooser(
             for (var pawn = 0; pawn < 4; pawn++)
               Semantics(
                 label:
-                    'Pawn ${pawn + 1}, ${legal.contains(pawn) ? "legal move" : "no legal move"}',
+                    'Pawn ${pawn + 1}, ${legal.contains(pawn) ? "legal move" : "unavailable in this chooser"}',
                 child: ListTile(
                   key: Key('pawn_choice_$pawn'),
                   minTileHeight: 56,

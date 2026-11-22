@@ -10,6 +10,11 @@ import 'support/gameplay_recording.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (const bool.fromEnvironment('LUDO_RECORD_GAMEPLAY')) {
+    // Paint the real app while the driver attaches, rather than an empty test
+    // surface. Normal release/default integration entrypoints are unchanged.
+    runApp(const LudoLoversApp());
+  }
   var surfaceConverted = false;
   setUp(() => surfaceConverted = false);
   Future<void> capture(WidgetTester tester, String name) async {

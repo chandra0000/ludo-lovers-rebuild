@@ -260,7 +260,9 @@ void registerGameplayRecording({bool realTime = true}) {
         final saved = await const SavedMatchStore().load();
         expect(saved!.game.toSnapshot(), getGame().toSnapshot());
         expect(saved.profiles.first.displayName, 'Aarya');
-        while (elapsedMs < 50000) {
+        // Startup is now part of the continuous native clip. Keep just a short
+        // final idle hold; production dice/pawn animation durations are unchanged.
+        while (elapsedMs < 38000) {
           await wait(500);
         }
         expect(tester.takeException(), isNull);
