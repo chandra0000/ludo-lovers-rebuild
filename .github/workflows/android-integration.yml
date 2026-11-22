@@ -117,6 +117,27 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm
+      - name: Prepare checkpoint launch script
+        run: |
+          cat > "$RUNNER_TEMP/ludo-android-checkpoint.sh" <<'BASH'
+          set -euo pipefail
+          if [ -n "$LUDO_COMPARISON_CASE" ]; then
+            adb -s emulator-5554 shell wm size 360x800
+            adb -s emulator-5554 shell wm density 160
+            mkdir -p test-artifacts/gameplay
+            {
+              git rev-parse HEAD
+              printf 'GitHub runner image: %s %s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
+              "$ANDROID_HOME/emulator/emulator" -version
+              adb version
+              flutter --version
+              sha256sum build/app/outputs/flutter-apk/app-debug.apk
+              adb -s emulator-5554 shell getprop ro.build.fingerprint
+            } > test-artifacts/gameplay/comparison-environment.txt 2>&1
+          fi
+          bash ../../.github/scripts/android_integration.sh
+          BASH
+          bash -n "$RUNNER_TEMP/ludo-android-checkpoint.sh"
       - name: Android emulator integration smoke test
         timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
@@ -133,23 +154,7 @@ jobs:
           # acceptance result or a proven fix for historical emulator loss.
           disable-animations: true
           working-directory: apps/mobile
-          script: |
-            set -eu
-            if [ -n "$LUDO_COMPARISON_CASE" ]; then
-              adb -s emulator-5554 shell wm size 360x800
-              adb -s emulator-5554 shell wm density 160
-              mkdir -p test-artifacts/gameplay
-              {
-                git rev-parse HEAD
-                printf 'GitHub runner image: %s %s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
-                emulator -version
-                adb version
-                flutter --version
-                sha256sum build/app/outputs/flutter-apk/app-debug.apk
-                adb -s emulator-5554 shell getprop ro.build.fingerprint
-              } > test-artifacts/gameplay/comparison-environment.txt 2>&1
-            fi
-            bash ../../.github/scripts/android_integration.sh
+          script: bash "$RUNNER_TEMP/ludo-android-checkpoint.sh"
       - name: Upload installed Android emulator screenshots
         if: always()
         uses: actions/upload-artifact@v4
