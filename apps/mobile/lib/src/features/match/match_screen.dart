@@ -924,8 +924,10 @@ class _MatchScreenState extends State<MatchScreen>
         : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
-    // inversely so its transformed physical bounds never fall below 44×48 dp.
-    final hitTargetWidth = math.max(44.0, 44.0 / canvasScale);
+    // inversely so its transformed physical bounds are at least 48×48 dp.
+    // This is the minimum touch target for both pawn axes, including compact
+    // portrait layouts where the design canvas is scaled down.
+    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
     final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
     final shakeKey = _shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
