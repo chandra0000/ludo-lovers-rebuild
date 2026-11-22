@@ -128,7 +128,9 @@ jobs:
             {
               git rev-parse HEAD
               printf 'GitHub runner image: %s %s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
-              "$ANDROID_HOME/emulator/emulator" -version
+              if [ -r "$ANDROID_HOME/emulator/source.properties" ]; then
+                cat "$ANDROID_HOME/emulator/source.properties"
+              fi
               adb version
               flutter --version
               sha256sum build/app/outputs/flutter-apk/app-debug.apk
