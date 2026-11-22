@@ -83,7 +83,13 @@ class MatchReactionToast extends StatelessWidget {
                       child: Text(
                         reaction!,
                         key: const Key('local_reaction_toast'),
-                        style: const TextStyle(fontSize: 34),
+                        style: const TextStyle(
+                          fontSize: 34,
+                          fontFamilyFallback: [
+                            'Noto Color Emoji',
+                            'Apple Color Emoji',
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -139,7 +145,13 @@ class MatchReactionPicker extends StatelessWidget {
                       onPressed: () => onReaction(reaction),
                       icon: Text(
                         reaction,
-                        style: const TextStyle(fontSize: 28),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontFamilyFallback: [
+                            'Noto Color Emoji',
+                            'Apple Color Emoji',
+                          ],
+                        ),
                       ),
                     ),
                   ),

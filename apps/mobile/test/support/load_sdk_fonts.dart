@@ -37,4 +37,17 @@ Future<void> loadSdkFonts() async {
     }
     await loader.load();
   }
+  // Use the installed OS emoji face for real software-rendered social captures.
+  // No runtime asset is added or replaced; native captures use platform fonts.
+  final emoji = File('/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf');
+  if (await emoji.exists()) {
+    final loader = FontLoader('Noto Color Emoji');
+    loader.addFont(
+      emoji.readAsBytes().then(
+            (bytes) => bytes.buffer
+                .asByteData(bytes.offsetInBytes, bytes.lengthInBytes),
+          ),
+    );
+    await loader.load();
+  }
 }

@@ -465,6 +465,7 @@ class _MatchScreenState extends State<MatchScreen>
                 child: GameBoardScaffold(
                   game: _game,
                   profiles: _profiles,
+                  showProfiles: widget.showDynamicProfiles,
                   onExit: _requestExit,
                   teamProgress: _game.configuration.isTeamUp
                       ? TeamProgressPanel(game: _game, profiles: _profiles)

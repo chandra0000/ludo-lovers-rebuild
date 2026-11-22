@@ -90,6 +90,10 @@ class ProfileSocialBubble extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFFFFE3A0),
                     fontSize: 14,
+                    fontFamilyFallback: [
+                      'Noto Color Emoji',
+                      'Apple Color Emoji',
+                    ],
                   ),
                 ),
               ),

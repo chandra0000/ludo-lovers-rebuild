@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ludo_lovers/src/app.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/home/home_screen.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
@@ -6,7 +7,10 @@ import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 
 /// Shared by fast widget regression and installed Android/iOS smoke tests.
-Future<void> verifyLocalModeNavigation(WidgetTester tester) async {
+Future<void> verifyLocalModeNavigation(
+  WidgetTester tester, {
+  Future<void> Function(String)? capture,
+}) async {
   Future<void> settled() => tester.pumpAndSettle(
         const Duration(milliseconds: 100),
         EnginePhase.sendSemanticsUpdate,
@@ -26,7 +30,16 @@ Future<void> verifyLocalModeNavigation(WidgetTester tester) async {
   }
 
   await tester.pumpWidget(
-    const MaterialApp(home: HomeScreen(allowInternalModes: true)),
+    Builder(
+      builder: (context) {
+        final app = const LudoLoversApp().build(context) as MaterialApp;
+        return MaterialApp(
+          theme: app.theme,
+          debugShowCheckedModeBanner: false,
+          home: const HomeScreen(allowInternalModes: true),
+        );
+      },
+    ),
   );
   await settled();
   for (final fixture in [
@@ -62,6 +75,7 @@ Future<void> verifyLocalModeNavigation(WidgetTester tester) async {
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
     final initial = (await const SavedMatchStore().load())!;
     expect(initial.game.configuration.mode, fixture.$1);
+    await capture?.call('native-${initial.game.configuration.id}-match');
     expect(initial.game.configuration.activePlayers, hasLength(fixture.$2));
     await tap(const Key('roll_dice'));
     await tester.pump(const Duration(seconds: 2));

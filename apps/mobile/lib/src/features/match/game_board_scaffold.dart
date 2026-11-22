@@ -30,10 +30,12 @@ class GameBoardScaffold extends StatelessWidget {
     this.onPlayerEmoji,
     this.social,
     this.thinkingPlayer,
+    this.showProfiles = true,
   });
   final ValueChanged<PlayerColor>? onPlayerChat, onPlayerEmoji;
   final SocialOverlayCoordinator? social;
   final PlayerColor? thinkingPlayer;
+  final bool showProfiles;
   final LudoGame game;
   final List<MatchPlayerProfile> profiles;
   final VoidCallback onExit;
@@ -54,20 +56,23 @@ class GameBoardScaffold extends StatelessWidget {
             thinkingPlayer: thinkingPlayer,
           );
           Widget card(int index) => Expanded(
-                child: PlayerProfileCard(
-                  slot: slots[index],
-                  feedback: social?.forPlayer(slots[index].profile.color),
-                  socialControls: onPlayerChat == null || onPlayerEmoji == null
-                      ? null
-                      : ProfileSocialControls(
-                          player: slots[index].profile.color,
-                          name: slots[index].profile.displayName,
-                          onChat: () =>
-                              onPlayerChat!(slots[index].profile.color),
-                          onEmoji: () =>
-                              onPlayerEmoji!(slots[index].profile.color),
-                        ),
-                ),
+                child: !showProfiles
+                    ? const SizedBox.shrink()
+                    : PlayerProfileCard(
+                        slot: slots[index],
+                        feedback: social?.forPlayer(slots[index].profile.color),
+                        socialControls: onPlayerChat == null ||
+                                onPlayerEmoji == null
+                            ? null
+                            : ProfileSocialControls(
+                                player: slots[index].profile.color,
+                                name: slots[index].profile.displayName,
+                                onChat: () =>
+                                    onPlayerChat!(slots[index].profile.color),
+                                onEmoji: () =>
+                                    onPlayerEmoji!(slots[index].profile.color),
+                              ),
+                      ),
               );
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -85,8 +90,10 @@ class GameBoardScaffold extends StatelessWidget {
                   SizedBox(height: teamProgressHeight, child: teamProgress),
                 SizedBox(
                   height: profileHeight,
-                  child: Row(
-                    children: [card(0), const SizedBox(width: 12), card(1)],
+                  child: ClipRect(
+                    child: Row(
+                      children: [card(0), const SizedBox(width: 12), card(1)],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -137,15 +144,17 @@ class GameBoardScaffold extends StatelessWidget {
                 SizedBox(
                   key: const Key('match_bottom_rail'),
                   height: profileHeight,
-                  child: Row(
-                    children: [
-                      card(2),
-                      SizedBox(
-                        width: spacious ? 104 : 88,
-                        child: RoyalDiceArena(child: dice),
-                      ),
-                      card(3),
-                    ],
+                  child: ClipRect(
+                    child: Row(
+                      children: [
+                        card(2),
+                        SizedBox(
+                          width: spacious ? 104 : 88,
+                          child: RoyalDiceArena(child: dice),
+                        ),
+                        card(3),
+                      ],
+                    ),
                   ),
                 ),
                 SizedBox(height: largeText ? 40 : 24, child: status),

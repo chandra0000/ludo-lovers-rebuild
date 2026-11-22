@@ -89,7 +89,13 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
                         onPressed: () => _send(reaction),
                         icon: Text(
                           reaction,
-                          style: const TextStyle(fontSize: 24),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontFamilyFallback: [
+                              'Noto Color Emoji',
+                              'Apple Color Emoji',
+                            ],
+                          ),
                         ),
                       ),
                   ],
@@ -124,7 +130,13 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: Text(
                           _messages[index],
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamilyFallback: [
+                              'Noto Color Emoji',
+                              'Apple Color Emoji',
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -138,7 +150,13 @@ class _LocalMatchChatSheetState extends State<LocalMatchChatSheet> {
                         controller: _controller,
                         maxLength: 160,
                         maxLines: 1,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamilyFallback: [
+                            'Noto Color Emoji',
+                            'Apple Color Emoji',
+                          ],
+                        ),
                         decoration: const InputDecoration(
                           hintText: 'Type a local message',
                           hintStyle: TextStyle(color: Colors.white54),

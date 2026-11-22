@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/features/match/player_slot_resolver.dart';
 import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
+import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/mode_registry.dart';
 import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
@@ -70,5 +71,38 @@ void main() {
     expect(find.text('Roll dice'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
+  });
+  testWidgets(
+      'calibration can still hide dynamic profiles without moving board geometry',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: MatchScreen(showDynamicProfiles: false)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('profile_orange')), findsNothing);
+    expect(find.byKey(const Key('board_artwork')), findsOneWidget);
+    expect(find.byKey(const Key('roll_dice')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+      'robot thinking indicator reflects the actual active AI presentation',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchScreen(
+          initialGame: LudoGame.fromProgress(
+            activePlayer: PlayerColor.green,
+            pawnProgress: const {},
+          ),
+          aiPlayers: const {PlayerColor.green},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('ai_thinking_green')), findsOneWidget);
+    expect(find.text('AI thinking'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 }
