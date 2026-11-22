@@ -51,3 +51,18 @@ Run from `apps/mobile`: `dart format --output=none --set-exit-if-changed lib tes
 - This is a presentation-only correction; engine turn order remains orange → green → magenta → blue.
 - Added `apps/mobile/test/match_profile_quadrants_test.dart` to guard the approved seat coordinates against regressions.
 - Pending: execute the widget test, check actual artwork overlay, inspect full-size and compact portrait captures, and verify there is no HUD overlap.
+
+## Responsive HUD, motion and calibration instrumentation follow-up
+
+- Profile badges now proportionally divide their fixed design-canvas width between player identity and status; this reduces name/status collisions while preserving the authoritative canvas and approved board art.
+- The luxury die now applies a small lift-scale pulse during the existing engine-result-driven tumble. No additional roll or random face is generated; reduced-motion users continue to receive the settled result without a tumble.
+- The moving pawn now has a small per-cell vertical hop, calculated from the existing presentation controller and disabled when system reduced motion is requested. BoardGeometry remains the source of truth for movement coordinates.
+- The assert-only `LUDO_DEBUG_BOARD` overlay now draws 52 track positions, 20 home-lane positions, 16 yard sockets and the finish anchor, enabling a complete side-by-side alignment audit. **Overlay presence is not evidence that alignment is correct.**
+
+### Validation / device test procedure (not yet executed)
+
+1. Run `flutter test`, `flutter analyze --fatal-infos` and repository CI against this PR.
+2. Launch a debug build with `--dart-define=LUDO_DEBUG_BOARD=true` and capture screenshots on 320×640, 360×800, 393×873 and 430×932 layouts; check all 89 anchors (52+20+16+finish) against the approved board art.
+3. Capture roll, same-value consecutive rolls, six-step movement, capture, finish, restart, background/resume, and TalkBack/reduced-motion runs. Verify that each accepted engine roll generates exactly one animation-completion callback and that the pawn lands on the authoritative destination.
+4. Verify all four profile badges remain readable and non-overlapping, and that the board is never cropped or stretched. Test on physical Android phones and an iOS simulator/device where available.
+5. Record test outputs, screenshots, device models, frame times and owner acceptance before marking these items complete. No device/emulator execution was available in this editing environment.
