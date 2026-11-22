@@ -27,7 +27,7 @@ class ProfileSocialControls extends StatelessWidget {
               onPressed: onChat,
               icon: const Icon(
                 Icons.chat_bubble_outline,
-                size: 28,
+                size: 20,
                 color: Color(0xFFFFE3A0),
               ),
             ),
@@ -39,7 +39,7 @@ class ProfileSocialControls extends StatelessWidget {
               onPressed: onEmoji,
               icon: const Icon(
                 Icons.emoji_emotions_outlined,
-                size: 28,
+                size: 20,
                 color: Color(0xFFFFE3A0),
               ),
             ),

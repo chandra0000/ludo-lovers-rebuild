@@ -30,6 +30,13 @@ void main() {
         for (final action in ['chat', 'emoji']) {
           final rect = tester
               .getRect(find.byKey(Key('profile_${action}_${player.name}')));
+          final icon = tester.widget<Icon>(
+            find.descendant(
+              of: find.byKey(Key('profile_${action}_${player.name}')),
+              matching: find.byType(Icon),
+            ),
+          );
+          expect(icon.size, 20);
           expect(rect.size.width, greaterThanOrEqualTo(48));
           expect(rect.size.height, greaterThanOrEqualTo(48));
           expect(rect.overlaps(board), isFalse);
@@ -40,6 +47,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('profiles and square avatars grow with usable portrait space',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final avatars = <double>[];
+    final heights = <double>[];
+    for (final size in [const Size(320, 640), const Size(430, 932)]) {
+      tester.view.physicalSize = size;
+      await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+      await tester.pumpAndSettle();
+      avatars.add(
+        tester.getSize(find.byKey(const Key('profile_avatar_orange'))).width,
+      );
+      heights
+          .add(tester.getSize(find.byKey(const Key('profile_orange'))).height);
+      expect(tester.takeException(), isNull);
+    }
+    expect(avatars.first, greaterThan(40));
+    expect(avatars.last, greaterThan(avatars.first + 15));
+    expect(heights.last, greaterThan(heights.first));
+  });
   testWidgets('preset is attributed to selected seat without a game command',
       (tester) async {
     final versions = <int>[];
