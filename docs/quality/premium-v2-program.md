@@ -143,3 +143,15 @@ Seventeen focused tests pass, including two deterministic complete simulations
 for every 2/3/4-seat Classic configuration, mode locks, v3 migration/v4 corruption,
 actor assignment, live two-seat setup and restart. Existing 70 engine/session/save
 and identity checks also pass. No compatibility or Classic rule flags changed.
+
+## Quick implementation and measured simulation
+
+Quick v1 implements the approved two-finish objective in the shared engine with a
+separate versioned profile. First finish continues; second completes immediately,
+with no post-victory bonus. Mode/profile relabelling is rejected. Live result and
+rematch preserve mode and fixed seats. Quick is internal-preview, publicly gated.
+352 full local tests pass, including objective, terminal events, Classic isolation,
+pending-result/command recovery and live result/rematch. Simulation of 100 seeds
+for each 2/3/4-player Classic/Quick configuration completed all 600 games. Median
+rolls: 175→98, 326→180, 539→255 respectively. Raw samples, p95s, method and limits
+are in the Quick rule document and evidence JSON; no human-duration claim.

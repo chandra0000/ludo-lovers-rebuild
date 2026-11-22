@@ -453,6 +453,9 @@ class _MatchScreenState extends State<MatchScreen>
               ),
               child: SafeArea(
                 child: PremiumMatchLayout(
+                  title: _game.configuration.id == 'local-current'
+                      ? 'LOCAL MATCH'
+                      : _game.configuration.id.toUpperCase(),
                   onExit: _requestExit,
                   profiles: widget.showDynamicProfiles
                       ? MatchCompactProfiles(
