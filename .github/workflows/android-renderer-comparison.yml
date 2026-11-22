@@ -1,0 +1,32 @@
+name: Android renderer comparison
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/android-renderer-comparison.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  installed:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - name: control
+            sha: e6a6fa785a243c0b410e43228445ec6bfb12af5f
+          - name: candidate
+            sha: 85c10f554847ec6529a3894b429f8e96d1b971a4
+        renderer:
+          - name: default
+            software: false
+          - name: software
+            software: true
+    uses: ./.github/workflows/android-integration.yml
+    with:
+      revision: ${{ matrix.revision.sha }}
+      comparison-case: ${{ format('{0}-{1}', matrix.revision.name, matrix.renderer.name) }}
+      software-rendering: ${{ matrix.renderer.software }}
