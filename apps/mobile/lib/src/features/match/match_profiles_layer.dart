@@ -171,6 +171,8 @@ class MatchPlayerBadge extends StatelessWidget {
 
 /// Explicit design-canvas positions, independent from player profile identity.
 /// Seats sit outside the board-only artwork, so no baked-in avatars overlap.
+/// Visual quadrants are orange TL, green TR, blue BL, magenta BR;
+/// the authoritative turn order remains orange, green, magenta, blue.
 class MatchProfilesLayer extends StatelessWidget {
   const MatchProfilesLayer({
     super.key,
@@ -186,8 +188,8 @@ class MatchProfilesLayer extends StatelessWidget {
     const seats = <PlayerColor, Offset>{
       PlayerColor.orange: Offset(12, 88),
       PlayerColor.green: Offset(378, 88),
-      PlayerColor.magenta: Offset(12, 832),
-      PlayerColor.blue: Offset(378, 832),
+      PlayerColor.blue: Offset(12, 832),
+      PlayerColor.magenta: Offset(378, 832),
     };
     return Stack(
       children: [
