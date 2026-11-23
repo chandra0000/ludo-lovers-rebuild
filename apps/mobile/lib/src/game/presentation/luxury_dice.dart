@@ -467,7 +467,7 @@ class _DicePips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = _positions[value]!;
-    final pipSize = size * 0.17;
+    final pipSize = size * 0.20;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
