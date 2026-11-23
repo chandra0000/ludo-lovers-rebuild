@@ -346,9 +346,8 @@ class _HomeScreenState extends State<HomeScreen> {
         side: BorderSide(color: border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      onPressed: available
-          ? () => _openSetup(mode: mode, computer: computer)
-          : null,
+      onPressed:
+          available ? () => _openSetup(mode: mode, computer: computer) : null,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
