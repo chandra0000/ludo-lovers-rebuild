@@ -55,7 +55,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.text('LUDO LOVERS'), findsOneWidget);
-      expect(find.text('PLAY • CONNECT • LOVE'), findsOneWidget);
+      expect(find.text('VS Computer'), findsOneWidget);
       expect(find.byKey(const Key('brand_logo')), findsOneWidget);
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
@@ -69,19 +69,16 @@ void main() {
     },
   );
 
-  testWidgets('first launch shows onboarding and skip reaches home',
+  testWidgets('first launch goes straight from splash to Play Now',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.byKey(const Key('splash_background')), findsOneWidget);
     expect(find.text('LUDO LOVERS'), findsNothing);
 
-    await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
 
-    expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('skip_onboarding')));
-    await tester.pumpAndSettle();
+    expect(find.byType(OnboardingScreen), findsNothing);
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);

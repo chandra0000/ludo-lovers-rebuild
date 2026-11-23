@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/persistence/saved_match.dart';
 import '../../game/domain/mode_registry.dart';
+import '../../game/domain/match_configuration.dart';
 import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
@@ -50,9 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final logoSize = (screenSize.width * 0.48)
-        .clamp(144.0, screenSize.height < 700 ? 164.0 : 200.0)
+    final logoSize = (MediaQuery.sizeOf(context).width * .29)
+        .clamp(88.0, 132.0)
         .toDouble();
 
     return Scaffold(
@@ -82,85 +82,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: logoSize,
-                        height: logoSize,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(
-                            color: _gold.withValues(alpha: 0.65),
-                            width: 1.5,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x55FFC857),
-                              blurRadius: 30,
-                              spreadRadius: 2,
-                            ),
-                          ],
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'LUDO LOVERS',
+                          style: AppTypography.heading,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            'assets/images/branding/ludo_lovers_icon.webp',
-                            key: const Key('brand_logo'),
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const ColoredBox(
-                              color: Color(0xFF141722),
-                              child: Center(
-                                child: Icon(
-                                  Icons.casino,
-                                  color: _gold,
-                                  size: 64,
-                                ),
+                      ),
+                      SizedBox(
+                        height: logoSize + 20,
+                        width: double.infinity,
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            gradient: RadialGradient(
+                              radius: .46,
+                              colors: [
+                                Color(0xAA7B358D),
+                                Color(0x557A390C),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/branding/ludo_lovers_icon.webp',
+                                key: const Key('brand_logo'),
+                                width: logoSize,
+                                height: logoSize,
+                                fit: BoxFit.cover,
+                                semanticLabel: 'Ludo Lovers',
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'LUDO LOVERS',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.heading,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'PLAY • CONNECT • LOVE',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          letterSpacing: 2.2,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'Bring everyone to one board.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Roll the dice, move your glass pawns and race all four '
-                        'colours home. More modes are being added after their '
-                        'rules are verified.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
                       if (_savedMatch != null) ...[
                         SizedBox(
                           width: double.infinity,
@@ -214,25 +170,75 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: _gold,
                             foregroundColor: const Color(0xFF17110A),
                             minimumSize: const Size.fromHeight(56),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            shape: const StadiumBorder(
+                              side: BorderSide(color: Color(0xFFFFEA9A)),
                             ),
                             elevation: 4,
                           ),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const GameSetupScreen(),
-                            ),
-                          ),
+                          onPressed: () => _openSetup(),
                           child: const Text(
                             'PLAY NOW',
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.1,
-                              fontSize: 16,
+                              fontSize: 24,
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _modeTile(
+                              'Classic',
+                              Icons.emoji_events_outlined,
+                              const Color(0xFFA5E651),
+                              mode: MatchMode.classic,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _modeTile(
+                              'Quick',
+                              Icons.bolt_rounded,
+                              const Color(0xFFFF72B8),
+                              mode: MatchMode.quick,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _modeTile(
+                              'Team Up',
+                              Icons.groups_rounded,
+                              const Color(0xFFC0B6FF),
+                              mode: MatchMode.teamUp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _modeTile(
+                              'VS Computer',
+                              Icons.smart_toy_outlined,
+                              const Color(0xFF72D9FC),
+                              computer: true,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _modeTile(
+                              'Local',
+                              Icons.people_alt_outlined,
+                              const Color(0xFFFFD36B),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
@@ -249,15 +255,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: const Icon(Icons.dashboard_customize_outlined),
                         label: const Text('EXPLORE GAME MODES'),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Four colours · Four pawns each · One shared board',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -265,6 +262,63 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openSetup({
+    MatchMode mode = MatchMode.compatibility,
+    bool computer = false,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GameSetupScreen(
+          mode: mode,
+          preferComputer: computer,
+          allowInternalModes: widget.allowInternalModes,
+        ),
+      ),
+    );
+    await _loadSavedMatch();
+  }
+
+  Widget _modeTile(
+    String title,
+    IconData icon,
+    Color accent, {
+    MatchMode mode = MatchMode.compatibility,
+    bool computer = false,
+  }) {
+    final available = ModeRegistry.canPlay(
+      mode,
+      allowInternal: widget.allowInternalModes,
+    );
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 92),
+        foregroundColor: accent,
+        disabledForegroundColor: accent.withValues(alpha: .65),
+        backgroundColor: accent.withValues(alpha: .10),
+        disabledBackgroundColor: accent.withValues(alpha: .06),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        side: BorderSide(color: accent.withValues(alpha: available ? .85 : .4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      onPressed:
+          available ? () => _openSetup(mode: mode, computer: computer) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 30),
+          const SizedBox(height: 6),
+          Text(title, textAlign: TextAlign.center),
+          if (!available)
+            const Text(
+              'Preview',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11),
+            ),
+        ],
       ),
     );
   }

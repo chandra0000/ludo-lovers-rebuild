@@ -26,8 +26,7 @@ void main() {
       }
     }
   });
-  testWidgets('ready startup has no fixed branding delay', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarding_completed_v1': true});
+  testWidgets('fresh startup opens Play Now without a fixed delay', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
