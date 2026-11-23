@@ -7,7 +7,12 @@ import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_stor
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  for (final size in const [Size(320, 640), Size(430, 932)]) {
+  for (final size in const [
+    Size(320, 640),
+    Size(360, 800),
+    Size(393, 873),
+    Size(430, 932),
+  ]) {
     testWidgets('profiles and status fit at 150 percent text on $size',
         (tester) async {
       addTearDown(tester.view.resetPhysicalSize);
@@ -31,7 +36,9 @@ void main() {
         expect(avatar.width, greaterThanOrEqualTo(31.99));
         expect(avatar.width, closeTo(avatar.height, .01));
       }
-      expect(find.textContaining('Roll dice'), findsOneWidget);
+      final header = tester.getRect(find.byKey(const Key('match_top_rail')));
+      final instruction = tester.getRect(find.textContaining('Roll dice'));
+      expect(header.contains(instruction.center), isTrue);
       expect(
         tester.getRect(find.byKey(const Key('exit_match'))).width,
         greaterThanOrEqualTo(48),
