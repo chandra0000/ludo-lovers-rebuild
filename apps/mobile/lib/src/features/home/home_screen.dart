@@ -23,8 +23,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _profileAvatar =
-      'assets/images/board/extracted/avatar_aldo.webp';
+  static const _profileAvatar = 'assets/images/board/extracted/avatar_aldo.webp';
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
@@ -62,9 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final logoSize = (MediaQuery.sizeOf(context).width * .29)
-        .clamp(88.0, 132.0)
-        .toDouble();
+    final width = MediaQuery.sizeOf(context).width;
+    final logoSize = (width * .29).clamp(88.0, 132.0).toDouble();
 
     return Scaffold(
       backgroundColor: _background,
