@@ -33,7 +33,9 @@ class MatchSafeStarLayer extends StatelessWidget {
       height: 26,
       child: Semantics(
         key: Key('safe_cell_$index'),
-        label: 'Safe cell ${index + 1}',
+        label: BoardGeometry.starTrackCells.contains(index)
+            ? 'Safe star, track cell ${index + 1}'
+            : 'Safe entry, track cell ${index + 1}',
         readOnly: true,
         child: const SizedBox.expand(),
       ),

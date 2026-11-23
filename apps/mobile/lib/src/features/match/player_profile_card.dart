@@ -89,8 +89,10 @@ class PlayerProfileCard extends StatelessWidget {
                             key: Key('profile_name_${color.name}'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style:
-                                AppTypography.playerName.copyWith(height: 1.1),
+                            style: AppTypography.playerName.copyWith(
+                              height: 1.1,
+                              color: isActive ? const Color(0xFFFFE3A0) : null,
+                            ),
                           ),
                         ),
                       ],
