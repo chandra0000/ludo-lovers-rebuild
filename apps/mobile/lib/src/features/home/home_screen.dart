@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _profileAvatar = 'assets/images/board/extracted/avatar_aldo.webp';
+  static const _avatar = 'assets/images/board/extracted/avatar_aldo.webp';
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: _gold,
                             child: CircleAvatar(
                               radius: 24,
-                              backgroundImage: AssetImage(_profileAvatar),
+                              backgroundImage: AssetImage(_avatar),
                             ),
                           ),
                           const SizedBox(width: 12),
