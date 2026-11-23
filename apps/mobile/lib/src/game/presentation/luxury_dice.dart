@@ -186,7 +186,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     }
 
     _requestPending = true;
-    Feedback.forTap(context);
     widget.onRollRequested();
   }
 
@@ -424,7 +423,7 @@ class _DiceFace extends StatelessWidget {
         border: Border.all(
           color:
               isInteractive ? const Color(0xFFFFEBA3) : const Color(0xFFD39F35),
-          width: 2.2,
+          width: isInteractive ? 3.2 : 2.2,
         ),
         boxShadow: [
           const BoxShadow(
@@ -434,7 +433,7 @@ class _DiceFace extends StatelessWidget {
           ),
           if (isInteractive)
             const BoxShadow(
-              color: Color(0x66FFB300),
+              color: Color(0x88FFB300),
               blurRadius: 14,
               spreadRadius: 2,
             ),
