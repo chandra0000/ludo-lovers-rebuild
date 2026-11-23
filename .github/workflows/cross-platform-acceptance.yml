@@ -109,6 +109,8 @@ jobs:
           path: apps/mobile/build/ios/iphonesimulator/Runner.app
           if-no-files-found: error
       - name: Run installed iPhone simulator navigation and local modes
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
         timeout-minutes: 15
         working-directory: apps/mobile
         run: bash ../../.github/scripts/ios_simulator_integration.sh
