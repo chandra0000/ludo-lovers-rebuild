@@ -23,6 +23,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _profileAvatar =
+      'assets/images/board/extracted/avatar_aldo.webp';
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
@@ -99,9 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: _gold,
                             child: CircleAvatar(
                               radius: 24,
-                              backgroundImage: AssetImage(
-                                'assets/images/board/extracted/avatar_aldo.webp',
-                              ),
+                              backgroundImage: AssetImage(_profileAvatar),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -283,15 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         key: const Key('open_mode_selection'),
-                        onPressed: () => Navigator.of(context)
-                            .push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ModeSelectionScreen(
-                                  allowInternalModes: widget.allowInternalModes,
-                                ),
-                              ),
-                            )
-                            .then((_) => _loadSavedMatch()),
+                        onPressed: _openModeSelection,
                         icon: const Icon(Icons.dashboard_customize_outlined),
                         label: const Text('EXPLORE GAME MODES'),
                       ),
@@ -304,6 +296,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openModeSelection() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ModeSelectionScreen(
+          allowInternalModes: widget.allowInternalModes,
+        ),
+      ),
+    );
+    await Future.wait([_loadSavedMatch(), _loadPlayerName()]);
   }
 
   Future<void> _openSetup({
@@ -333,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
       mode,
       allowInternal: widget.allowInternalModes,
     );
+    final border = accent.withValues(alpha: available ? .85 : .4);
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 92),
@@ -341,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: accent.withValues(alpha: .10),
         disabledBackgroundColor: accent.withValues(alpha: .06),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        side: BorderSide(color: accent.withValues(alpha: available ? .85 : .4)),
+        side: BorderSide(color: border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       onPressed: available
