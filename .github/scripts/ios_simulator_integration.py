@@ -77,31 +77,31 @@ def main():
         # A console-attached simctl launch stalled without acknowledging a PID
         # in run45011448495. Separate launch acknowledgement from VM readiness;
         # retain unified logs rather than blocking launch on console attachment.
-        launch_args = ['xcrun', 'simctl', 'launch', '--terminate-running-process',
+        launch_args = ['xcrun', 'simctl', 'launch',
             device_id, bundle_id, '--enable-dart-profiling',
             f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication']
         (DIAGNOSTICS / 'launch-configuration.json').write_text(json.dumps(launch_args, indent=2))
-        try:
-            result = subprocess.run(launch_args, text=True, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, timeout=30)
-        except subprocess.TimeoutExpired as error:
-            partial = error.stdout or ''
-            if isinstance(partial, bytes):
-                partial = partial.decode(errors='replace')
-            (DIAGNOSTICS / 'integration-console.txt').write_text(partial)
-            raise
-        (DIAGNOSTICS / 'integration-console.txt').write_text(result.stdout)
-        print('IOS STAGE: launch acknowledgement\n' + result.stdout, flush=True)
-        result.check_returncode()
-        deadline = time.monotonic() + 60
-        ready = False
-        while time.monotonic() < deadline:
-            ready = vm_ready(uri)
-            if ready:
-                break
-            time.sleep(.1)
-        if not ready:
-            raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
+        # The fresh simulator has no previous Runner. Wait for the service
+        # directly so a delayed simctl acknowledgement cannot mask a ready VM.
+        with (DIAGNOSTICS / 'integration-console.txt').open('w') as console:
+            launch = subprocess.Popen(launch_args, stdout=console, stderr=subprocess.STDOUT)
+            try:
+                deadline = time.monotonic() + 60
+                while not vm_ready(uri):
+                    status = launch.poll()
+                    if status not in (None, 0):
+                        raise subprocess.CalledProcessError(status, launch_args)
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError('Simulator VM service did not become ready within 60s')
+                    time.sleep(.25)
+            finally:
+                if launch.poll() is None:
+                    launch.terminate()
+                    try:
+                        launch.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        launch.kill()
+                        launch.wait(timeout=5)
         # Run the same Dart host driver used by Flutter's startTest directly.
         # run45016648518 completed all four on-device tests, but flutter drive
         # spent ~172s in attach/tool setup before its host connected, exhausting

@@ -29,6 +29,12 @@ def screenshot(name):
     data = adb('exec-out', 'screencap', '-p', binary=True)
     if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 1000:
         raise RuntimeError('Invalid native screenshot: ' + name)
+    expected = os.environ.get('LUDO_CAPTURE_SIZE')
+    if expected:
+        width = int.from_bytes(data[16:20], 'big')
+        height = int.from_bytes(data[20:24], 'big')
+        if f'{width}x{height}' != expected:
+            raise RuntimeError(f'{name}: captured {width}x{height}, expected {expected}')
     (OUT / (name + '.png')).write_bytes(data)
 
 
@@ -154,9 +160,9 @@ def tap_label(label, nodes):
     return False
 
 
-def branding_prelude(recorder):
+def branding_prelude():
     """Actual normal entrypoint, launcher and cold startup before seeded integration.
-    Native screenrecord remains continuous across the disclosed test APK switch.
+    Branding uses native screenshots. Video starts at the seeded gameplay marker.
     """
     package = 'com.ludolovers.ludo_lovers'
     baseline = list(Path('test-artifacts/baseline-apk').rglob('*.apk'))
@@ -165,7 +171,7 @@ def branding_prelude(recorder):
     adb('install', '-r', str(baseline[0]), timeout=60)
     adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
     time.sleep(1)
-    adb('shell', 'input', 'swipe', '180', '740', '180', '240', '400')
+    adb('shell', 'input', 'swipe', '150', '570', '150', '160', '400')
     time.sleep(1)
     screenshot('before-installed-launcher')
     adb('shell', 'am', 'start', '-n', package + '/.MainActivity',
@@ -181,7 +187,7 @@ def branding_prelude(recorder):
     adb('shell', 'am', 'force-stop', package)
     adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
     time.sleep(1)
-    adb('shell', 'input', 'swipe', '180', '740', '180', '240', '400')
+    adb('shell', 'input', 'swipe', '150', '570', '150', '160', '400')
     time.sleep(1)
     nodes = ui_nodes()
     screenshot('native-installed-launcher')
@@ -189,9 +195,6 @@ def branding_prelude(recorder):
         raise RuntimeError('Installed launcher label Ludo Lovers was not visible in app drawer')
     (VIDEO / 'launcher-ui.xml').write_text(adb('shell', 'cat', '/sdcard/ludo-window.xml'))
     (VIDEO / 'launcher-nodes.json').write_text(json.dumps([n.attrib for n in nodes], indent=2))
-    recorder.start()
-    screenshot('native-installed-launcher')
-    time.sleep(2)
     # Same Activity/renderer flags used by Flutter CLI; normal production entry.
     args = ['shell', 'am', 'start', '-n', package + '/.MainActivity']
     if os.environ.get('LUDO_SOFTWARE_RENDERING') == 'true':
@@ -269,7 +272,7 @@ def main():
     watchdog.start()
     try:
         if os.environ.get('LUDO_BRANDING_RECORDING') == 'true':
-            branding_prelude(recorder)
+            branding_prelude()
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, bufsize=1, start_new_session=True)
         with (VIDEO / 'integration.log').open('w') as transcript:

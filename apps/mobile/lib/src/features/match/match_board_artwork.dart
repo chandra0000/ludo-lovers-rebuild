@@ -39,8 +39,24 @@ class MatchBoardArtwork extends StatelessWidget {
       fit: BoxFit.fill,
       gaplessPlayback: true,
       filterQuality: FilterQuality.medium,
-      frameBuilder: (context, artwork, frame, _) =>
-          _buildCanvas(artwork, visible: frame != null),
+      frameBuilder: (context, artwork, frame, _) => _buildCanvas(
+        frame == null
+            ? const ColoredBox(
+                color: Color(0xFF21162D),
+                child: Center(
+                  child: Text(
+                    'Preparing the board…',
+                    style: TextStyle(
+                      color: Color(0xFFFFE3A0),
+                      fontSize: 26,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              )
+            : artwork,
+        visible: frame != null,
+      ),
       errorBuilder: (context, error, stackTrace) => _buildCanvas(
         const ColoredBox(
           color: Color(0xFF211A0D),
@@ -77,7 +93,7 @@ class MatchBoardArtwork extends StatelessWidget {
               child: Stack(children: overlays),
             ),
           ),
-        if (showDebugOverlay && debugBoardOverlayEnabled)
+        if (visible && showDebugOverlay && debugBoardOverlayEnabled)
           const Positioned.fill(child: DebugBoardOverlay()),
       ],
     );

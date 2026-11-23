@@ -20,7 +20,12 @@ concurrency:
 
 jobs:
   android-recording:
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [320x640, 360x800, 393x873, 430x932]
     env:
+      LUDO_CAPTURE_SIZE: ${{ matrix.viewport }}
       LUDO_GAMEPLAY_RECORDING: "true"
       LUDO_BRANDING_RECORDING: "true"
       LUDO_SOFTWARE_RENDERING: "true"
@@ -91,7 +96,7 @@ jobs:
       - name: Upload updated normal installed-app APK
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-branded-normal-debug-apk
+          name: ludo-branded-normal-debug-apk-${{ matrix.viewport }}
           path: apps/mobile/build/app/outputs/flutter-apk/app-branding-debug.apk
           retention-days: 30
           if-no-files-found: error
@@ -118,7 +123,7 @@ jobs:
           disable-animations: false
           working-directory: apps/mobile
           script: |
-            adb -s emulator-5554 shell wm size 360x800
+            adb -s emulator-5554 shell wm size ${{ matrix.viewport }}
             adb -s emulator-5554 shell wm density 160
             bash ../../.github/scripts/android_integration.sh
             python3 ../../.github/scripts/verify_gameplay_video.py test-artifacts/gameplay/gameplay-android.mp4
@@ -134,7 +139,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-gameplay-android-seeded-${{ github.event.pull_request.head.sha || github.sha }}
+          name: ludo-gameplay-android-seeded-${{ matrix.viewport }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
           retention-days: 30
           if-no-files-found: error
@@ -142,7 +147,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-recording-native-screenshots
+          name: ludo-recording-native-screenshots-${{ matrix.viewport }}
           path: apps/mobile/test-artifacts/native/*.png
           if-no-files-found: error
       - name: Collect emulator diagnostics on failure
@@ -165,6 +170,6 @@ jobs:
         if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
-          name: ludo-recording-failure-diagnostics
+          name: ludo-recording-failure-diagnostics-${{ matrix.viewport }}
           path: emulator-diagnostics/
           if-no-files-found: warn

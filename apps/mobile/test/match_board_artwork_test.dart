@@ -35,6 +35,7 @@ void main() {
         of: find.byType(MatchBoardArtwork),
         matching: find.byType(Visibility),
       );
+      expect(find.text('Preparing the board…'), findsOneWidget);
       expect(tester.widget<Visibility>(visibleOverlay).visible, isFalse);
       expect(find.byKey(pawn).hitTestable(), findsNothing);
 
@@ -51,6 +52,7 @@ void main() {
       image.frame.complete(ImageInfo(image: bitmap!));
       await tester.pump();
 
+      expect(find.text('Preparing the board…'), findsNothing);
       expect(tester.widget<Visibility>(visibleOverlay).visible, isTrue);
       expect(find.byKey(pawn).hitTestable(), findsOneWidget);
       await tester.tap(find.byKey(pawn));
