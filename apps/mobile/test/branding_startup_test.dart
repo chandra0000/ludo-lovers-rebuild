@@ -26,7 +26,7 @@ void main() {
       }
     }
   });
-  testWidgets('fresh startup opens Play Now without a fixed delay', (tester) async {
+  testWidgets('fresh startup opens Play Now', (tester) async {
     await tester.pumpWidget(const LudoLoversApp());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
