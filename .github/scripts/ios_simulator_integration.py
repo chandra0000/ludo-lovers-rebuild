@@ -31,6 +31,7 @@ def vm_ready(uri):
 def main():
     DIAGNOSTICS.mkdir(parents=True, exist_ok=True)
     device_id = None
+    created_device = False
     unified = None
     unified_log = None
     try:
@@ -46,9 +47,18 @@ def main():
         # Keep Xcode/Flutter compilation out of the running simulator's resource budget.
         run('build integration app', ['flutter', 'build', 'ios', '--simulator', '--debug', '--no-codesign', '--no-pub',
             '--target=integration_test/app_navigation_test.dart', '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true'], 300)
-        device_id = run('create isolated simulator', ['xcrun', 'simctl', 'create',
-                        'Ludo CI ' + os.environ.get('GITHUB_RUN_ID', 'local'),
-                        type_ids[template['name']], runtime], 30, True).strip()
+        if os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted':
+            # GitHub provides this shutdown iPhone in a disposable runner VM.
+            # Prefer a compact simulator to reduce graphics memory during boot.
+            runtime, template = min(
+                ((r, d) for r, d in choices if d.get('state') == 'Shutdown'),
+                key=lambda item: (item[1]['name'] != 'iPhone SE (3rd generation)', item[0]))
+            device_id = template['udid']
+        else:
+            device_id = run('create isolated simulator', ['xcrun', 'simctl', 'create',
+                            'Ludo CI ' + os.environ.get('GITHUB_RUN_ID', 'local'),
+                            type_ids[template['name']], runtime], 30, True).strip()
+            created_device = True
         (DIAGNOSTICS / 'selected-simulator.json').write_text(json.dumps(
             dict(id=device_id, name=template['name'], runtime=runtime), indent=2))
         print(f'Selected {template["name"]}, {runtime}, {device_id}', flush=True)
@@ -135,7 +145,7 @@ def main():
                             (DIAGNOSTICS/label).write_text(captured)
                     except (subprocess.SubprocessError, OSError) as error:
                         print('Failure diagnostic unavailable: '+str(error), flush=True)
-            for action in ['shutdown', 'delete']:
+            for action in (['shutdown', 'delete'] if created_device else ['shutdown']):
                 try:
                     run('cleanup ' + action, ['xcrun', 'simctl', action, device_id], 20)
                 except (subprocess.SubprocessError, OSError) as error:
