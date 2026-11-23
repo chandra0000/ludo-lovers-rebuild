@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../game/domain/persistence/saved_match.dart';
 import '../../game/domain/mode_registry.dart';
 import '../../game/domain/match_configuration.dart';
+import '../../game/domain/player_color.dart';
+import '../../game/infrastructure/persistence/player_name_preferences.dart';
 import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
@@ -24,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
+  String? _playerName;
   bool get _canResumeSaved =>
       _savedMatch != null &&
       ModeRegistry.canPlay(
@@ -35,11 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadSavedMatch();
+    _loadPlayerName();
   }
 
   Future<void> _loadSavedMatch() async {
     final saved = await _savedMatchStore.load();
     if (mounted) setState(() => _savedMatch = saved);
+  }
+
+  Future<void> _loadPlayerName() async {
+    final names = await const PlayerNamePreferences().load();
+    if (mounted) setState(() => _playerName = names[PlayerColor.orange]);
   }
 
   Future<void> _discardSavedMatch() async {
@@ -70,7 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Padding(
@@ -82,12 +92,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'LUDO LOVERS',
-                          style: AppTypography.heading,
-                        ),
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 26,
+                            backgroundColor: _gold,
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundImage: AssetImage(
+                                'assets/images/board/extracted/avatar_aldo.webp',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _playerName ?? 'Player',
+                                  style: AppTypography.playerName,
+                                ),
+                                const Text(
+                                  'LUDO LOVERS',
+                                  style: AppTypography.heading,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: logoSize + 20,
@@ -95,10 +128,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: DecoratedBox(
                           decoration: const BoxDecoration(
                             gradient: RadialGradient(
-                              radius: .46,
+                              radius: .54,
                               colors: [
-                                Color(0xAA7B358D),
-                                Color(0x557A390C),
+                                Color(0xCC7B358D),
+                                Color(0x887A390C),
                                 Colors.transparent,
                               ],
                             ),
@@ -162,18 +195,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      SizedBox(
-                        width: double.infinity,
+                      DecoratedBox(
+                        decoration: const ShapeDecoration(
+                          shape: StadiumBorder(),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFFFFE48A), Color(0xFFF7A218)],
+                          ),
+                        ),
                         child: FilledButton(
                           key: const Key('open_game_setup'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: _gold,
+                            backgroundColor: Colors.transparent,
                             foregroundColor: const Color(0xFF17110A),
-                            minimumSize: const Size.fromHeight(56),
+                            minimumSize: const Size(double.infinity, 56),
                             shape: const StadiumBorder(
                               side: BorderSide(color: Color(0xFFFFEA9A)),
                             ),
-                            elevation: 4,
+                            elevation: 0,
                           ),
                           onPressed: () => _openSetup(),
                           child: const Text(
@@ -193,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: _modeTile(
                               'Classic',
-                              Icons.emoji_events_outlined,
+                              Icons.public_rounded,
                               const Color(0xFFA5E651),
                               mode: MatchMode.classic,
                             ),
@@ -225,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: _modeTile(
                               'VS Computer',
-                              Icons.smart_toy_outlined,
+                              Icons.smart_toy_rounded,
                               const Color(0xFF72D9FC),
                               computer: true,
                             ),
@@ -234,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: _modeTile(
                               'Local',
-                              Icons.people_alt_outlined,
+                              Icons.devices_rounded,
                               const Color(0xFFFFD36B),
                             ),
                           ),
@@ -279,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-    await _loadSavedMatch();
+    await Future.wait([_loadSavedMatch(), _loadPlayerName()]);
   }
 
   Widget _modeTile(
@@ -310,7 +350,18 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 30),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [accent.withValues(alpha: .28), Colors.transparent],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Icon(icon, size: computer ? 40 : 32),
+            ),
+          ),
           const SizedBox(height: 6),
           Text(title, textAlign: TextAlign.center),
           if (!available)
