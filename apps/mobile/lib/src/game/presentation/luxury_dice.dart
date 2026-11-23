@@ -186,6 +186,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     }
 
     _requestPending = true;
+    Feedback.forTap(context);
     widget.onRollRequested();
   }
 
