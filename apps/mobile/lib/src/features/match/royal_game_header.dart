@@ -6,31 +6,24 @@ class RoyalGameHeader extends StatelessWidget {
     super.key,
     required this.onExit,
     required this.trailing,
+    required this.status,
   });
   final VoidCallback onExit;
   final Widget trailing;
+  final Widget status;
   @override
-  Widget build(BuildContext context) => Stack(
+  Widget build(BuildContext context) => Row(
         key: const Key('match_top_rail'),
-        alignment: Alignment.center,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              key: const Key('exit_match'),
-              tooltip: 'Exit match',
-              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-              onPressed: onExit,
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Color(0xFFFFE3A0),
-              ),
-            ),
+          IconButton(
+            key: const Key('exit_match'),
+            tooltip: 'Exit match',
+            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            onPressed: onExit,
+            icon: const Icon(Icons.arrow_back, color: Color(0xFFFFE3A0)),
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: SizedBox(width: 48, height: 48, child: trailing),
-          ),
+          Expanded(child: status),
+          SizedBox(width: 48, height: 48, child: trailing),
         ],
       );
 }
