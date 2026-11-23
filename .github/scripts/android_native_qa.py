@@ -185,14 +185,28 @@ def branding_prelude():
     adb('uninstall', package)
     adb('install', '-r', 'build/app/outputs/flutter-apk/app-branding-debug.apk', timeout=60)
     adb('shell', 'am', 'force-stop', package)
-    adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
-    time.sleep(1)
-    adb('shell', 'input', 'swipe', '150', '570', '150', '160', '400')
-    time.sleep(1)
-    nodes = ui_nodes()
-    screenshot('native-installed-launcher')
-    if not any('Ludo Lovers' in n.get('text', '') for n in nodes):
+    # Launcher3 indexes newly installed packages asynchronously. Reopen the
+    # drawer from Home and inspect its accessibility tree after each gesture.
+    sizes = re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size'))
+    width, height = map(int, sizes[-1])
+    for attempt in range(4):
+        adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+        time.sleep(1)
+        for _ in range(2):
+            adb('shell', 'input', 'swipe', str(width // 2), str(height * 9 // 10),
+                str(width // 2), str(height // 4), '350')
+            time.sleep(.5)
+            nodes = ui_nodes()
+            if any('Ludo Lovers' in (n.get('text', '') + n.get('content-desc', ''))
+                   for n in nodes):
+                break
+        else:
+            continue
+        break
+    else:
+        screenshot('native-launcher-failure')
         raise RuntimeError('Installed launcher label Ludo Lovers was not visible in app drawer')
+    screenshot('native-installed-launcher')
     (VIDEO / 'launcher-ui.xml').write_text(adb('shell', 'cat', '/sdcard/ludo-window.xml'))
     (VIDEO / 'launcher-nodes.json').write_text(json.dumps([n.attrib for n in nodes], indent=2))
     # Same Activity/renderer flags used by Flutter CLI; normal production entry.
