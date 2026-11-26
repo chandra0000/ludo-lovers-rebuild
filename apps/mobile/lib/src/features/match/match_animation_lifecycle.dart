@@ -30,6 +30,15 @@ class MatchAnimationLifecycle {
   final MatchMovementPresentation pawn = MatchMovementPresentation();
   final MatchAnimationTiming _timing = const MatchAnimationTiming();
 
+  static const impactMs = 70;
+  static const retreatStepMs = 48;
+
+  double retreatFraction(int startProgress) =>
+      ((elapsedMs - approachMs - impactMs) /
+              (retreatStepMs * (startProgress + 1)))
+          .clamp(0.0, 1.0)
+          .toDouble();
+
   Map<(PlayerColor, int), int> captures = const {};
   int approachMs = 0;
   double get elapsedMs => movement.value * movement.duration!.inMilliseconds;
@@ -89,7 +98,7 @@ class MatchAnimationLifecycle {
     movement.duration = Duration(
       milliseconds: reduceMotion || longest == 0
           ? approachMs
-          : approachMs + 70 + longest * 48,
+          : approachMs + impactMs + longest * retreatStepMs,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
@@ -46,7 +47,7 @@ class MatchPawnLayer extends StatelessWidget {
   final ValueChanged<int> onInvalidMove;
 
   @override
-  Widget build(BuildContext context) => Stack(
+  Widget build(BuildContext context) => _PawnTargets(
         children: _buildPawnsWithClusters(canvasScale),
       );
 
@@ -57,9 +58,6 @@ class MatchPawnLayer extends StatelessWidget {
     final player = game.players.firstWhere((item) => item.color == color);
     final captured = animations.captures[(color, pawnIndex)];
     if (captured != null) {
-      final steps = captured + 1;
-      final elapsed = animations.elapsedMs - animations.approachMs - 70;
-      final reverse = (elapsed / (48 * steps)).clamp(0.0, 1.0).toDouble();
       return PawnAnimator.position(
         color: color,
         pawnIndex: pawnIndex,
@@ -67,7 +65,7 @@ class MatchPawnLayer extends StatelessWidget {
         isMoving: true,
         startProgress: -1,
         endProgress: captured,
-        animationValue: 1 - reverse,
+        animationValue: 1 - animations.retreatFraction(captured),
       );
     }
     return PawnAnimator.position(
@@ -255,11 +253,13 @@ class MatchPawnLayer extends StatelessWidget {
                           : 0,
                       child: TweenAnimationBuilder<double>(
                         key: ValueKey(
-                          'landing-${color.name}-$pawnIndex-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
+                          'landing-${color.name}-$pawnIndex-$canMove-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
                         ),
                         tween: Tween(
-                          begin: lastLandingPlan?.player == color &&
-                                  lastLandingPlan?.pawnIndex == pawnIndex &&
+                          begin: (canMove && legalIndices.length > 1 ||
+                                      lastLandingPlan?.player == color &&
+                                          lastLandingPlan?.pawnIndex ==
+                                              pawnIndex) &&
                                   !reduceMotion
                               ? 1.12
                               : 1.0,
@@ -287,5 +287,45 @@ class MatchPawnLayer extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Overlapping accessible targets resolve to the nearest interactive pawn.
+class _PawnTargets extends Stack {
+  const _PawnTargets({required super.children});
+
+  @override
+  RenderStack createRenderObject(BuildContext context) => _PawnTargetStack(
+        textDirection: Directionality.of(context),
+      );
+}
+
+class _PawnTargetStack extends RenderStack {
+  _PawnTargetStack({required super.textDirection});
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final candidates = <({RenderBox child, Offset origin, double distance})>[];
+    for (var child = lastChild; child != null; child = childBefore(child)) {
+      final origin = (child.parentData! as StackParentData).offset;
+      final local = position - origin;
+      if (child.size.contains(local)) {
+        final distance =
+            (local - child.size.center(Offset.zero)).distanceSquared;
+        candidates.add((child: child, origin: origin, distance: distance));
+      }
+    }
+    candidates.sort((a, b) => a.distance.compareTo(b.distance));
+    for (final target in candidates) {
+      if (result.addWithPaintOffset(
+        offset: target.origin,
+        position: position,
+        hitTest: (result, local) =>
+            target.child.hitTest(result, position: local),
+      )) {
+        return true;
+      }
+    }
+    return false;
   }
 }

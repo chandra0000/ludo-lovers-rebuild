@@ -38,14 +38,14 @@ class ModeRegistry {
       name: 'Classic',
       description: 'Exact finish · protected stacks · third-six penalty',
       playerCounts: [2, 3, 4],
-      availability: ModeAvailability.internalPreview,
+      availability: ModeAvailability.available,
     ),
     ModeDefinition(
       mode: MatchMode.quick,
       name: 'Quick',
       description: 'First to finish any two pawns · Classic movement rules',
       playerCounts: [2, 3, 4],
-      availability: ModeAvailability.internalPreview,
+      availability: ModeAvailability.available,
     ),
     ModeDefinition(
       mode: MatchMode.teamUp,

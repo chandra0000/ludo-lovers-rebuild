@@ -293,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Local',
                               Icons.devices_rounded,
                               const Color(0xFFFFD36B),
+                              mode: MatchMode.classic,
                             ),
                           ),
                         ],
@@ -385,11 +386,17 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 6),
           Text(title, textAlign: TextAlign.center),
           if (!available)
-            const Text(
-              'COMING SOON',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11),
-            ),
+            mode == MatchMode.teamUp
+                ? const Text(
+                    '🔒 COMING SOON',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11),
+                  )
+                : const Icon(
+                    Icons.lock_outline,
+                    size: 15,
+                    semanticLabel: 'Currently unavailable',
+                  ),
         ],
       ),
     );

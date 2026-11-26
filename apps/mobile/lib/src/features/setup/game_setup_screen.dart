@@ -297,14 +297,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 title: widget.mode == MatchMode.compatibility
                     ? 'LOCAL FOUR-PLAYER'
                     : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} · $_playerCount PLAYERS',
-                subtitle: ModeRegistry.definition(widget.mode).description,
+                subtitle: widget.mode == MatchMode.compatibility
+                    ? 'Take turns rolling and moving on one device.'
+                    : ModeRegistry.definition(widget.mode).description,
                 enabled: ModeRegistry.canPlay(
                   widget.mode,
                   allowInternal: widget.allowInternalModes,
                 ),
-                label: widget.mode == MatchMode.compatibility
-                    ? 'AVAILABLE'
-                    : 'INTERNAL PREVIEW',
+                label: 'PASS & PLAY',
                 onTap: () => _startMatch(withAi: false),
                 buttonKey: const Key('start_local_match'),
               ),

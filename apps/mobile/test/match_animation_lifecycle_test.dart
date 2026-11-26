@@ -57,7 +57,13 @@ void main() {
     );
     expect(timeline.approachMs, 180);
     expect(timeline.movement.duration!.inMilliseconds, 180 + 70 + 45 * 48);
+    final duration = timeline.movement.duration!.inMilliseconds;
+    timeline.movement.value = 249 / duration;
+    expect(timeline.retreatFraction(44), 0);
+    timeline.movement.value = (250 + 48) / duration;
+    expect(timeline.retreatFraction(44), closeTo(1 / 45, .00001));
     timeline.movement.value = 0.5;
+    expect(timeline.retreatFraction(18), 1);
     expect(timeline.approach, 1);
     expect(timeline.captures.length, 2);
     timeline.resetForNewMatch();

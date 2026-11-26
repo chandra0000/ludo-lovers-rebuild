@@ -231,7 +231,8 @@ class _MatchScreenState extends State<MatchScreen>
 
   double get _captureShake {
     if (_reduceMotion || _animations.captures.isEmpty) return 0;
-    final t = (_animations.elapsedMs - _animations.approachMs) / 70;
+    final t = (_animations.elapsedMs - _animations.approachMs) /
+        MatchAnimationLifecycle.impactMs;
     return t <= 0 || t >= 1 ? 0 : math.sin(t * 4 * math.pi) * (1 - t) * 2;
   }
 
@@ -249,17 +250,21 @@ class _MatchScreenState extends State<MatchScreen>
           !_reduceMotion &&
           _animations.elapsedMs >= _animations.approachMs) {
         final sinceImpact = _animations.elapsedMs - _animations.approachMs;
-        final beat = sinceImpact < 70 ? 0 : 1 + ((sinceImpact - 70) ~/ 48);
+        final beat = sinceImpact < MatchAnimationLifecycle.impactMs
+            ? 0
+            : 1 +
+                ((sinceImpact - MatchAnimationLifecycle.impactMs) ~/
+                    MatchAnimationLifecycle.retreatStepMs);
         if (beat != _retreatBeat) {
           if (_retreatBeat < 0) {
             _playFeedback(MatchFeedbackCue.capture);
             _lastLandingPlan = _landingPlan;
             _landingSequence++;
           } else if (_movementController.value < 1) {
-            final progress = (sinceImpact - 70) /
+            final progress = (sinceImpact - MatchAnimationLifecycle.impactMs) /
                 (_movementController.duration!.inMilliseconds -
                     _animations.approachMs -
-                    70);
+                    MatchAnimationLifecycle.impactMs);
             _playFeedback(
               MatchFeedbackCue.retreatStep,
               pitchBand: (5 * progress).floor(),
@@ -532,7 +537,11 @@ class _MatchScreenState extends State<MatchScreen>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Align(
+                        AnimatedAlign(
+                          duration: _reduceMotion
+                              ? Duration.zero
+                              : const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
                           alignment: switch (
                               _landingPlan?.player ?? _game.activePlayer) {
                             PlayerColor.orange => Alignment.topLeft,

@@ -240,7 +240,8 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(
       tester
           .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))

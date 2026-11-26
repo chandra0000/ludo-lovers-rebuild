@@ -54,7 +54,7 @@ void main() {
       tester
           .widget<OutlinedButton>(find.byKey(const Key('launch_duel')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
     expect(
       tester
