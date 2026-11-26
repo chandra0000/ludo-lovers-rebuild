@@ -262,7 +262,7 @@ void main() {
   });
 
   testWidgets(
-      'offers a chooser when multiple legal pawns share a cell on compact phones',
+      'moves a shared-cell pawn directly on compact phones',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -297,13 +297,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Choose a pawn'), findsOneWidget);
-    expect(find.text('Pawn 1'), findsOneWidget);
-    expect(find.text('Pawn 2'), findsOneWidget);
-
-    await tester.tap(find.text('Pawn 2'));
-    await tester.pumpAndSettle();
-    // Choosing from a shared-cell sheet is the single move selection.
+    expect(find.text('Pawn 1'), findsNothing);
+    expect(find.text('Pawn 2'), findsNothing);
     expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
