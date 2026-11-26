@@ -29,7 +29,6 @@ class MatchPawnLayer extends StatelessWidget {
     required this.lastLandingPlan,
     required this.landingSequence,
     required this.onMove,
-    required this.onStackTap,
     required this.onInvalidMove,
   });
 
@@ -43,7 +42,6 @@ class MatchPawnLayer extends StatelessWidget {
   final MatchMovePresentationPlan? lastLandingPlan;
   final int landingSequence;
   final ValueChanged<int> onMove;
-  final ValueChanged<List<int>> onStackTap;
   final ValueChanged<int> onInvalidMove;
 
   @override
@@ -145,7 +143,7 @@ class MatchPawnLayer extends StatelessWidget {
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
     final visualOffset = Offset(slot.x, slot.y);
     final size = stacked
-        ? (occupants.length <= 4 ? 27.0 * .78 : 16.0)
+        ? (occupants.length <= 4 ? 27.0 * .75 : 16.0)
         : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !aiPlayers.contains(color) && color == game.activePlayer;
@@ -160,24 +158,8 @@ class MatchPawnLayer extends StatelessWidget {
         isHumanTurn &&
         game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
-    final movableStackIndices = occupants
-        .where(
-          (item) =>
-              item.color == game.activePlayer &&
-              legalIndices.contains(item.pawnIndex),
-        )
-        .map((item) => item.pawnIndex)
-        .toList(growable: false);
-    final stackTapIndex = occupants.indexWhere(
-      (item) =>
-          item.color == game.activePlayer &&
-          legalIndices.contains(item.pawnIndex),
-    );
-    final isStackTapTarget = stacked && stackIndex == stackTapIndex;
     final isCurrentPlayer = color == game.activePlayer;
-    final tapPosition = stacked
-        ? Offset(canvasPoint.x, canvasPoint.y)
-        : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
+    final tapPosition = Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 48×48 dp.
@@ -196,43 +178,29 @@ class MatchPawnLayer extends StatelessWidget {
       child: IgnorePointer(
         // Inactive/non-legal pawns must not cover a legal pawn's enlarged
         // touch target when adjacent cells overlap on compact screens.
-        ignoring:
-            stacked ? !isStackTapTarget : !canMove && !canExplainInvalidMove,
+        ignoring: !canMove && !canExplainInvalidMove,
         child: Semantics(
-          button: stacked ? isStackTapTarget : canMove || canExplainInvalidMove,
-          label: stacked
-              ? 'Choose a movable pawn from this shared cell'
-              : '${color.name} pawn ${pawnIndex + 1}',
+          button: canMove || canExplainInvalidMove,
+          label: '${color.name} pawn ${pawnIndex + 1}',
           value: progress == -1
               ? 'In yard'
               : progress == 56
                   ? 'Home'
                   : 'Progress $progress of 56',
-          hint: stacked
-              ? 'Double tap to choose which movable pawn to move.'
-              : canMove
-                  ? 'Double tap to move this pawn.'
-                  : canExplainInvalidMove
-                      ? 'Double tap to hear why this pawn cannot move.'
-                      : aiPlayers.contains(color)
-                          ? 'Controlled by the AI opponent.'
-                          : 'Not movable on this turn.',
+          hint: canMove
+              ? 'Double tap to move this pawn.'
+              : 'Pawn unavailable.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,
-            onTap: stacked
-                ? (isStackTapTarget
-                    ? () => onStackTap(movableStackIndices)
-                    : null)
-                : canMove
-                    ? () => onMove(pawnIndex)
-                    : canExplainInvalidMove
-                        ? () => onInvalidMove(pawnIndex)
-                        : null,
+            onTap: canMove
+                ? () => onMove(pawnIndex)
+                : canExplainInvalidMove
+                    ? () => onInvalidMove(pawnIndex)
+                    : null,
             child: Center(
               child: Transform.translate(
-                offset: visualOffset +
-                    Offset(
+                offset: Offset(
                       0,
                       canMove && legalIndices.length > 1 && !reduceMotion
                           ? -3
