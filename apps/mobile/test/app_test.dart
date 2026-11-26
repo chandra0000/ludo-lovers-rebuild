@@ -241,7 +241,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(); // Establish the tumble ticker at time zero.
+    await tester.pump(const Duration(milliseconds: 501));
+    expect(find.bySemanticsLabel('Dice rolling'), findsNothing);
     expect(
       tester
           .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))
