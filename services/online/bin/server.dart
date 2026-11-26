@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -42,6 +43,10 @@ Future<Object> turn(HttpRequest req) async {
     bytes.addAll(chunk);
   }
   final input = jsonDecode(utf8.decode(bytes)) as Map<String,dynamic>;
+  return applyIntent(input, action, uid, auth);
+}
+
+Future<Object> applyIntent(Map<String, dynamic> input, String action, String uid, String? auth) async {
   final id = input['match_id'] as String;
   final cmd = input['command_id'] as String;
   final seq = input['expected_sequence'] as int;
@@ -111,6 +116,7 @@ Future<void> main() async {
   for(final key in ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY']) {
     if(Platform.environment[key]?.isNotEmpty!=true) throw StateError('Missing $key');
   }
+  runTimeoutWorker();
   final server=await HttpServer.bind(InternetAddress.anyIPv4,int.parse(Platform.environment['PORT']??'8080'));
   server.listen((request) async {
     request.response.headers.contentType=ContentType.json;
@@ -121,6 +127,46 @@ Future<void> main() async {
       request.response.write('{"error":"Command unavailable; refresh match"}');
     } finally {
       await request.response.close();
+    }
+  });
+}
+
+String commandId() {
+  final bytes = List<int>.generate(16, (_) => entropy.nextInt(256));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  final hex = bytes.map((value) => value.toRadixString(16).padLeft(2, '0')).join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+}
+
+void runTimeoutWorker() {
+  var sweeping = false;
+  Timer.periodic(const Duration(seconds: 1), (_) async {
+    if (sweeping) return;
+    sweeping = true;
+    try {
+      final rooms = await api('rest/v1/matches', query: {
+        'status': 'eq.playing',
+        'deadline': 'lte.${DateTime.now().toUtc().toIso8601String()}',
+        'select': 'id,sequence_number',
+        'order': 'deadline.asc',
+        'limit': '32',
+      }) as List;
+      await Future.wait(rooms.map((room) async {
+        try {
+          await applyIntent({
+            'match_id': room['id'],
+            'expected_sequence': room['sequence_number'],
+            'command_id': commandId(),
+          }, 'handle_turn_timeout', 'timeout-worker', null);
+        } on StateError {
+          // A concurrent worker or a player may already have committed.
+        }
+      }));
+    } catch (_) {
+      stderr.writeln('Online timeout sweep failed');
+    } finally {
+      sweeping = false;
     }
   });
 }
