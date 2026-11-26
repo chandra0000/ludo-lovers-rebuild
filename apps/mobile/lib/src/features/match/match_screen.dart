@@ -1,4 +1,3 @@
-import 'pawn_chooser.dart';
 import '../../theme/app_typography.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -647,7 +646,6 @@ class _MatchScreenState extends State<MatchScreen>
                             lastLandingPlan: _lastLandingPlan,
                             landingSequence: _landingSequence,
                             onMove: _selectOrMovePawn,
-                            onStackTap: _handleStackTap,
                             onInvalidMove: _showInvalidMoveFeedback,
                           ),
                         ),
