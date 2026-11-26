@@ -89,6 +89,7 @@ class MatchPawnLayer extends StatelessWidget {
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
+        if (_isRestingHome(player, pawnIndex)) continue;
         final point = _pawnPosition(color, pawnIndex);
         final key = PawnLayoutSolver.clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
@@ -110,15 +111,61 @@ class MatchPawnLayer extends StatelessWidget {
     return [
       for (final color in game.configuration.activePlayers)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(
-            color,
-            pawnIndex,
-            playersByColor[color]!,
-            clusters,
-            legalIndices,
-            canvasScale,
-          ),
+          if (!_isRestingHome(playersByColor[color]!, pawnIndex))
+            _buildPawn(
+              color,
+              pawnIndex,
+              playersByColor[color]!,
+              clusters,
+              legalIndices,
+              canvasScale,
+            ),
+      for (final player in game.players) ..._homeTokens(player),
     ];
+  }
+
+  bool _isRestingHome(LudoPlayer player, int pawn) =>
+      player.pawnProgress[pawn] == finishProgress &&
+      !animations.pawn.matches(player.color, pawn);
+
+  Iterable<Widget> _homeTokens(LudoPlayer player) sync* {
+    final finished = [
+      for (var pawn = 0; pawn < player.pawnProgress.length; pawn++)
+        if (_isRestingHome(player, pawn)) pawn,
+    ];
+    if (finished.isEmpty) return;
+    final center = BoardGeometry.canvasPosition(BoardGeometry.finishPosition);
+    final lane = BoardGeometry.canvasPosition(
+      BoardGeometry.normalizedPosition(player.color, finishProgress - 1, 0),
+    );
+    final direction = Offset(lane.x - center.x, lane.y - center.y);
+    final axis = direction / direction.distance;
+    final across = Offset(-axis.dy, axis.dx);
+    for (var index = 0; index < finished.length; index++) {
+      final offset =
+          axis * (index < 2 ? 18 : 28) + across * (index.isEven ? -4.5 : 4.5);
+      yield Positioned(
+        key: Key('home_token_${player.color.name}_${finished[index]}'),
+        left: center.x + offset.dx - 4,
+        top: center.y + offset.dy - 4,
+        width: 8,
+        height: 8,
+        child: IgnorePointer(
+          child: Semantics(
+            label:
+                '${player.color.name} · ${finished.length}/${game.configuration.finishTarget} home',
+            hidden: index != 0,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: player.color.color,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFFE3A0)),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildPawn(
@@ -187,9 +234,7 @@ class MatchPawnLayer extends StatelessWidget {
               : progress == 56
                   ? 'Home'
                   : 'Progress $progress of 56',
-          hint: canMove
-              ? 'Double tap to move this pawn.'
-              : 'Pawn unavailable.',
+          hint: canMove ? 'Double tap to move this pawn.' : 'Pawn unavailable.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,
@@ -201,11 +246,9 @@ class MatchPawnLayer extends StatelessWidget {
             child: Center(
               child: Transform.translate(
                 offset: Offset(
-                      0,
-                      canMove && legalIndices.length > 1 && !reduceMotion
-                          ? -3
-                          : 0,
-                    ),
+                  0,
+                  canMove && legalIndices.length > 1 && !reduceMotion ? -3 : 0,
+                ),
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(
