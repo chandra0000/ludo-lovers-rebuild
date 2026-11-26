@@ -1,3 +1,4 @@
+import 'package:ludo_lovers/src/features/board_preview/board_preview_screen.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -569,11 +570,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('open_board_preview')),
-      300,
-    );
-    await tester.tap(find.byKey(const Key('open_board_preview')));
+    expect(find.byKey(const Key('open_board_preview')), findsNothing);
+    await tester.pumpWidget(const MaterialApp(home: BoardPreviewScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('BOARD PREVIEW'), findsOneWidget);

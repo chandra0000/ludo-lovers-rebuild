@@ -55,6 +55,21 @@ class MatchPawnLayer extends StatelessWidget {
     int pawnIndex,
   ) {
     final player = game.players.firstWhere((item) => item.color == color);
+    final captured = animations.captures[(color, pawnIndex)];
+    if (captured != null) {
+      final steps = captured + 1;
+      final elapsed = animations.elapsedMs - animations.approachMs - 70;
+      final reverse = (elapsed / (48 * steps)).clamp(0.0, 1.0).toDouble();
+      return PawnAnimator.position(
+        color: color,
+        pawnIndex: pawnIndex,
+        progress: -1,
+        isMoving: true,
+        startProgress: -1,
+        endProgress: captured,
+        animationValue: 1 - reverse,
+      );
+    }
     return PawnAnimator.position(
       color: color,
       pawnIndex: pawnIndex,
@@ -63,7 +78,7 @@ class MatchPawnLayer extends StatelessWidget {
           animations.pawn.pawnIndex == pawnIndex,
       startProgress: animations.pawn.startProgress,
       endProgress: animations.pawn.endProgress,
-      animationValue: animations.movement.value,
+      animationValue: animations.approach,
     );
   }
 
@@ -131,7 +146,9 @@ class MatchPawnLayer extends StatelessWidget {
     final stacked = occupants.length > 1;
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
     final visualOffset = Offset(slot.x, slot.y);
-    final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
+    final size = stacked
+        ? (occupants.length <= 4 ? 27.0 * .78 : 16.0)
+        : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !aiPlayers.contains(color) && color == game.activePlayer;
     final canMove = !animations.isDiceAnimating &&
@@ -166,8 +183,9 @@ class MatchPawnLayer extends StatelessWidget {
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 48×48 dp.
-    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
-    final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
+    final target = canMove && legalIndices.length > 1 ? 57.6 : 48.0;
+    final hitTargetWidth = math.max(target, target / canvasScale);
+    final hitTargetHeight = hitTargetWidth;
     final shakeKey = shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
       GlobalKey<ShakeFeedbackWrapperState>.new,
@@ -215,7 +233,12 @@ class MatchPawnLayer extends StatelessWidget {
                         : null,
             child: Center(
               child: Transform.translate(
-                offset: visualOffset,
+                offset: visualOffset +
+                    Offset(
+                        0,
+                        canMove && legalIndices.length > 1 && !reduceMotion
+                            ? -3
+                            : 0),
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(

@@ -40,7 +40,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 600),
+    duration: const Duration(milliseconds: 500),
   )..addStatusListener(_handleAnimationStatus);
 
   bool _isAnimating = false;
@@ -243,7 +243,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                     scale: 1 - arc * .22,
                     child: _DiceCube(
                       key: const Key('six_face_dice_cube'),
-                      size: widget.size,
+                      size: widget.size * .74,
                       value: target,
                       isInteractive: interactive,
                       xAngle: angles.$1 + spin * 2 + .12,

@@ -94,12 +94,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Row(
                         children: [
-                          const CircleAvatar(
-                            radius: 26,
-                            backgroundColor: _gold,
-                            child: CircleAvatar(
-                              radius: 24,
-                              backgroundImage: AssetImage(_avatar),
+                          IconButton(
+                            tooltip: 'Edit player names',
+                            onPressed: () => _openSetup(),
+                            icon: const Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: _gold,
+                                  child: CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: AssetImage(_avatar),
+                                  ),
+                                ),
+                                CircleAvatar(
+                                  radius: 9,
+                                  backgroundColor: _gold,
+                                  child: Icon(Icons.edit,
+                                      size: 12, color: Colors.black),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -142,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: logoSize,
                                 height: logoSize,
                                 fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
                                 semanticLabel: 'Ludo Lovers',
                               ),
                             ),
@@ -367,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(title, textAlign: TextAlign.center),
           if (!available)
             const Text(
-              'Preview',
+              'COMING SOON',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11),
             ),

@@ -133,7 +133,17 @@ class PlayerProfileCard extends StatelessWidget {
                                                 alignment: Alignment.center,
                                                 children: [
                                                   Icon(
-                                                    Icons.smart_toy_outlined,
+                                                    switch (color) {
+                                                      PlayerColor.orange =>
+                                                        Icons
+                                                            .smart_toy_outlined,
+                                                      PlayerColor.green =>
+                                                        Icons.android,
+                                                      PlayerColor.magenta => Icons
+                                                          .precision_manufacturing,
+                                                      PlayerColor.blue =>
+                                                        Icons.rocket_launch,
+                                                    },
                                                     key: Key(
                                                       'robot_${color.name}',
                                                     ),

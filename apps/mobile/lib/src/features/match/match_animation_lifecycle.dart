@@ -30,6 +30,12 @@ class MatchAnimationLifecycle {
   final MatchMovementPresentation pawn = MatchMovementPresentation();
   final MatchAnimationTiming _timing = const MatchAnimationTiming();
 
+  Map<(PlayerColor, int), int> captures = const {};
+  int approachMs = 0;
+  double get elapsedMs => movement.value * movement.duration!.inMilliseconds;
+  double get approach =>
+      approachMs == 0 ? 1 : (elapsedMs / approachMs).clamp(0.0, 1.0).toDouble();
+
   bool isDiceAnimating = false;
   int diceRollId = 0;
 
@@ -59,6 +65,7 @@ class MatchAnimationLifecycle {
     required int endProgress,
     required int stepCount,
     required bool reduceMotion,
+    Map<(PlayerColor, int), int> retreats = const {},
     String? feedback,
   }) {
     pawn.begin(
@@ -68,9 +75,21 @@ class MatchAnimationLifecycle {
       end: endProgress,
       moveFeedback: feedback,
     );
-    movement.duration = _timing.pawnMovement(
-      stepCount: stepCount,
-      reduceMotion: reduceMotion,
+    captures = retreats;
+    approachMs = _timing
+        .pawnMovement(
+          stepCount: stepCount,
+          reduceMotion: reduceMotion,
+        )
+        .inMilliseconds;
+    var longest = 0;
+    for (final progress in retreats.values) {
+      if (progress + 1 > longest) longest = progress + 1;
+    }
+    movement.duration = Duration(
+      milliseconds: reduceMotion || longest == 0
+          ? approachMs
+          : approachMs + 70 + longest * 48,
     );
   }
 
@@ -79,7 +98,10 @@ class MatchAnimationLifecycle {
     movement.forward(from: 0);
   }
 
-  String? completePawnMovement() => pawn.complete();
+  String? completePawnMovement() {
+    captures = const {};
+    return pawn.complete();
+  }
 
   void stopPreview() {
     preview.stop();
@@ -91,6 +113,7 @@ class MatchAnimationLifecycle {
     movement.value = 0;
     preview.stop();
     preview.value = 0;
+    captures = const {};
     pawn.clear();
     isDiceAnimating = false;
     diceRollId = 0;
