@@ -37,14 +37,12 @@ void main() {
         teamCapturePriority: priority,
         configuration: MatchConfiguration.local(MatchMode.teamUp),
       );
-  testWidgets('internal Team Up setup reaches the live team HUD',
-      (tester) async {
-    expect(() => ModeRegistry.create(MatchMode.teamUp), throwsStateError);
+  testWidgets('public Team Up setup reaches the live team HUD', (tester) async {
     await frame(
       tester,
       const GameSetupScreen(
         mode: MatchMode.teamUp,
-        allowInternalModes: true,
+        allowInternalModes: false,
       ),
     );
     final start = find.byKey(const Key('start_local_match'));
@@ -83,16 +81,18 @@ void main() {
     expect(find.text('TEAM B · 0/8'), findsOneWidget);
     expect((await const SavedMatchStore().load())!.game.stateVersion, 0);
   });
-  testWidgets('public build cannot resume an internal saved mode',
-      (tester) async {
+  testWidgets('public build resumes an existing Team Up save', (tester) async {
     await const SavedMatchStore()
         .save(SavedMatch(game: team(), aiPlayers: const {}, aiSeed: 3));
     await frame(tester, const HomeScreen());
     final button = tester
         .widget<OutlinedButton>(find.byKey(const Key('resume_saved_match')));
-    expect(button.onPressed, isNull);
-    expect(find.textContaining('not enabled in this build'), findsOneWidget);
-    expect(await const SavedMatchStore().load(), isNotNull);
+    expect(button.onPressed, isNotNull);
+    await tester.tap(find.byKey(const Key('resume_saved_match')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('team_progress_a')), findsOneWidget);
+    expect((await const SavedMatchStore().load())!.game.ruleProfile,
+        LudoRuleProfile.teamUpV1);
   });
   test('friendly loss is not projected as a capture celebration', () {
     final moved = team(

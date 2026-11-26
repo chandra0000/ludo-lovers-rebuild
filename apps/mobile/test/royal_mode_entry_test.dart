@@ -47,7 +47,7 @@ void main() {
       await tester.pump();
     });
   }
-  testWidgets('public presets do not bypass preview release gates',
+  testWidgets('public local presets can start each supported mode',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ModeSelectionScreen()));
     expect(
@@ -60,7 +60,7 @@ void main() {
       tester
           .widget<OutlinedButton>(find.byKey(const Key('launch_team')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
     expect(
       tester

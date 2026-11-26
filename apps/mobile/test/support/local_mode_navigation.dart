@@ -36,7 +36,7 @@ Future<void> verifyLocalModeNavigation(
         return MaterialApp(
           theme: app.theme,
           debugShowCheckedModeBanner: false,
-          home: const HomeScreen(allowInternalModes: true),
+          home: const HomeScreen(allowInternalModes: false),
         );
       },
     ),

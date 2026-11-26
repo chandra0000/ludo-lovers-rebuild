@@ -19,4 +19,4 @@ For release, record a long and a short retreat, a multi-victim Team move, reduce
 
 ## Start a local game
 
-Local and Classic open Classic setup with a choice of two, three or four players. Quick uses the same rosters and its existing two-finish victory target. Play Now retains the four-seat compatibility profile. Two players use Orange and Magenta. Three use Orange, Green and Magenta. In the internal Team Up build, four seats form Orange/Magenta and Green/Blue and play toward eight team finishes. Public Team Up shows Coming Soon. Saved matches retain their original profile.
+Local and Classic open Classic setup with a choice of two, three or four players. Quick uses the same rosters and its existing two-finish victory target. Play Now retains the four-seat compatibility profile. Two players use Orange and Magenta. Three use Orange, Green and Magenta. In public local Team Up, four seats form Orange/Magenta and Green/Blue and play toward eight team finishes. Saved matches retain their original profile.

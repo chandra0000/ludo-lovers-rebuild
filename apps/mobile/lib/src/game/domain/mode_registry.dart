@@ -56,7 +56,7 @@ class ModeRegistry {
           'Protected departure loses remaining friends; equal arrival captures opponents. '
           'Six/capture/finish bonuses and the third-six penalty apply.',
       playerCounts: [4],
-      availability: ModeAvailability.internalPreview,
+      availability: ModeAvailability.available,
     ),
   ];
 
