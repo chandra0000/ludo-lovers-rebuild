@@ -75,7 +75,7 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           emulator-boot-timeout: 420
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
           # Vulkan software emulation repeatedly terminated QEMU. Keep this
           # headless UI checkpoint on software OpenGL; device Vulkan is separate.
           disable-animations: true
