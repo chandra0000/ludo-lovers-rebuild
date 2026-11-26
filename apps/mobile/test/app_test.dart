@@ -261,8 +261,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets(
-      'moves a shared-cell pawn directly on compact phones',
+  testWidgets('moves a shared-cell pawn directly on compact phones',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -511,6 +510,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PAWN HOME!'), findsOneWidget);
+    expect(find.byKey(const Key('home_token_orange_0')), findsOneWidget);
   });
 
   testWidgets(
