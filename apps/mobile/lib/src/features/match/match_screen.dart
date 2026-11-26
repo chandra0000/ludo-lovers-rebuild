@@ -155,6 +155,7 @@ class _MatchScreenState extends State<MatchScreen>
       final value = await _feedbackStore.load();
       if (mounted && !_feedbackChanged) {
         setState(() => _feedbackPreferences = value);
+        if (value.sound) unawaited(_feedback.prepare());
       }
     } catch (error) {
       debugPrint('Could not load game feedback settings: $error');
@@ -164,6 +165,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _changeFeedbackPreferences(FeedbackPreferences value) {
     _feedbackChanged = true;
     setState(() => _feedbackPreferences = value);
+    if (value.sound) unawaited(_feedback.prepare());
     if (_reduceMotion && _movementController.isAnimating) {
       _movementController.value = 1;
     }
@@ -182,8 +184,10 @@ class _MatchScreenState extends State<MatchScreen>
     });
   }
 
-  void _playFeedback(MatchFeedbackCue cue) {
-    if (_isAppResumed) unawaited(_feedback.play(cue, _feedbackPreferences));
+  void _playFeedback(MatchFeedbackCue cue, {int pitchBand = 0}) {
+    if (_isAppResumed)
+      unawaited(
+          _feedback.play(cue, _feedbackPreferences, pitchBand: pitchBand));
   }
 
   MatchMovePresentationPlan? _landingPlan;
@@ -250,7 +254,12 @@ class _MatchScreenState extends State<MatchScreen>
             _lastLandingPlan = _landingPlan;
             _landingSequence++;
           } else if (_movementController.value < 1) {
-            _playFeedback(MatchFeedbackCue.retreatStep);
+            final progress = (sinceImpact - 70) /
+                (_movementController.duration!.inMilliseconds -
+                    _animations.approachMs -
+                    70);
+            _playFeedback(MatchFeedbackCue.retreatStep,
+                pitchBand: (5 * progress).floor());
           }
           _retreatBeat = beat;
         }
@@ -267,7 +276,9 @@ class _MatchScreenState extends State<MatchScreen>
         _playFeedback(
           completedPlan.gameCompleted
               ? MatchFeedbackCue.finish
-              : MatchFeedbackCue.land,
+              : completedPlan.hasCapture
+                  ? MatchFeedbackCue.yard
+                  : MatchFeedbackCue.land,
         );
       }
       setState(() {
@@ -339,6 +350,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   void dispose() {
+    unawaited(_feedback.dispose());
     _social.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _turns.dispose();
@@ -544,11 +556,12 @@ class _MatchScreenState extends State<MatchScreen>
                           duration: const Duration(milliseconds: 550),
                           builder: (context, t, child) => Transform.translate(
                             offset: Offset(
-                                !_reduceMotion &&
-                                        _actionInstruction == 'No legal move'
-                                    ? 3 * math.sin(t * math.pi * 6) * (1 - t)
-                                    : 0,
-                                0),
+                              !_reduceMotion &&
+                                      _actionInstruction == 'No legal move'
+                                  ? 3 * math.sin(t * math.pi * 6) * (1 - t)
+                                  : 0,
+                              0,
+                            ),
                             child: child,
                           ),
                           child: LuxuryDiceButton(

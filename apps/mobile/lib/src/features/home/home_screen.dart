@@ -111,8 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 CircleAvatar(
                                   radius: 9,
                                   backgroundColor: _gold,
-                                  child: Icon(Icons.edit,
-                                      size: 12, color: Colors.black),
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 12,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ],
                             ),

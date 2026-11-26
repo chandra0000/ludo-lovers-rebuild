@@ -235,10 +235,11 @@ class MatchPawnLayer extends StatelessWidget {
               child: Transform.translate(
                 offset: visualOffset +
                     Offset(
-                        0,
-                        canMove && legalIndices.length > 1 && !reduceMotion
-                            ? -3
-                            : 0),
+                      0,
+                      canMove && legalIndices.length > 1 && !reduceMotion
+                          ? -3
+                          : 0,
+                    ),
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(
