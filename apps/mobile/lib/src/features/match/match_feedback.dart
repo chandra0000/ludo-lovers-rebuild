@@ -43,7 +43,7 @@ class MatchFeedback {
       'impact',
       'rattle',
       'yard',
-      for (var i = 0; i < 5; i++) 'hop$i'
+      for (var i = 0; i < 5; i++) 'hop$i',
     ]) {
       if (_disposed) return;
       try {

@@ -185,9 +185,11 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _playFeedback(MatchFeedbackCue cue, {int pitchBand = 0}) {
-    if (_isAppResumed)
+    if (_isAppResumed) {
       unawaited(
-          _feedback.play(cue, _feedbackPreferences, pitchBand: pitchBand));
+        _feedback.play(cue, _feedbackPreferences, pitchBand: pitchBand),
+      );
+    }
   }
 
   MatchMovePresentationPlan? _landingPlan;
@@ -258,8 +260,10 @@ class _MatchScreenState extends State<MatchScreen>
                 (_movementController.duration!.inMilliseconds -
                     _animations.approachMs -
                     70);
-            _playFeedback(MatchFeedbackCue.retreatStep,
-                pitchBand: (5 * progress).floor());
+            _playFeedback(
+              MatchFeedbackCue.retreatStep,
+              pitchBand: (5 * progress).floor(),
+            );
           }
           _retreatBeat = beat;
         }
