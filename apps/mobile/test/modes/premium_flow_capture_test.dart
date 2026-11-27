@@ -127,8 +127,10 @@ void main() {
     ).roll(1);
     await mount(tester, MatchScreen(initialGame: game));
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    // The sole legal pawn is automatically moved by the turn coordinator.
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home_token_orange_0')), findsOneWidget);
+    expect(find.text('PLAY AGAIN'), findsOneWidget);
     await capture(tester, 'flow-winning');
     await tester.tap(find.text('PLAY AGAIN'));
     await tester.pumpAndSettle();
