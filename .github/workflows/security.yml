@@ -1,0 +1,64 @@
+name: Dependency security
+
+on:
+  pull_request:
+    paths:
+      - apps/mobile/pubspec.yaml
+      - apps/mobile/pubspec.lock
+      - .github/scripts/audit_pub_dependencies.py
+      - .github/scripts/test_audit_pub_dependencies.py
+      - .github/workflows/**
+      - .github/scripts/verify_workflow_security.py
+      - .github/scripts/test_verify_workflow_security.py
+  push:
+    branches: [main]
+    paths:
+      - apps/mobile/pubspec.lock
+      - .github/workflows/**
+      - .github/scripts/audit_pub_dependencies.py
+      - .github/scripts/verify_workflow_security.py
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-security-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pub-advisories:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test fail-closed advisory handling
+        run: |
+          python3 .github/scripts/test_audit_pub_dependencies.py
+          python3 .github/scripts/test_verify_workflow_security.py
+      - name: Reject mutable workflow dependencies
+        run: python3 .github/scripts/verify_workflow_security.py
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.35.7'
+          cache: true
+      - name: Resolve committed dependency versions
+        working-directory: apps/mobile
+        run: |
+          flutter pub get --enforce-lockfile
+          dart pub deps --json > ../../dependency-graph.json
+      - name: Query OSV advisories for the resolved graph
+        run: python3 .github/scripts/audit_pub_dependencies.py dependency-graph.json --output security-artifacts/pub-advisories.json
+      - name: Preserve advisory report even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pub-security-report
+          path: security-artifacts/*.json
+          if-no-files-found: error
+          retention-days: 30

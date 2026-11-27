@@ -1,0 +1,41 @@
+{
+  "status": "no-known-advisories",
+  "checkedHostedPackages": 44,
+  "findings": [],
+  "excludedSdkAndRoot": [
+    {
+      "name": "ludo_lovers",
+      "source": "root"
+    },
+    {
+      "name": "flutter_test",
+      "source": "sdk"
+    },
+    {
+      "name": "flutter",
+      "source": "sdk"
+    },
+    {
+      "name": "sky_engine",
+      "source": "sdk"
+    },
+    {
+      "name": "integration_test",
+      "source": "sdk"
+    },
+    {
+      "name": "flutter_driver",
+      "source": "sdk"
+    },
+    {
+      "name": "fuchsia_remote_debug_protocol",
+      "source": "sdk"
+    },
+    {
+      "name": "flutter_web_plugins",
+      "source": "sdk"
+    }
+  ],
+  "scope": "Public OSV Pub advisories only; not SDK/native code, secrets or runtime security",
+  "checkedAtUtc": "2026-11-27T02:00:19.267705+00:00"
+}
