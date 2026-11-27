@@ -157,7 +157,8 @@ void main() {
       throwsFormatException,
     );
     for (final count in [2, 3, 4]) {
-      final classic = ModeRegistry.create(MatchMode.classic, playerCount: count);
+      final classic =
+          ModeRegistry.create(MatchMode.classic, playerCount: count);
       final quick = ModeRegistry.create(MatchMode.quick, playerCount: count);
       expect(classic.ruleProfile, LudoRuleProfile.classicV1);
       expect(quick.ruleProfile, LudoRuleProfile.quickV1);
