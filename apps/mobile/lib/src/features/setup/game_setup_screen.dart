@@ -186,7 +186,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   'Matching names are distinguished by seat numbers.',
                   style: TextStyle(color: Colors.white70),
                 ),
-                for (final color in PlayerColor.turnOrder)
+                for (final color in _activeColors)
                   Padding(
                     key: _fieldKeys[color],
                     padding: const EdgeInsets.only(top: 12),
@@ -259,13 +259,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Play locally with friends or fill the remaining seats with '
-              'seeded AI opponents. All moves are accepted by the same '
-              'authoritative game engine.',
+              'Play on this device with friends, or add computer opponents. '
+              'Two-player matches use opposite orange and magenta seats.',
               style: TextStyle(color: Colors.white70, height: 1.45),
             ),
             const SizedBox(height: 12),
-            if (widget.mode != MatchMode.compatibility)
+            if (ModeRegistry.definition(widget.mode).playerCounts.length > 1)
               DropdownButtonFormField<int>(
                 key: const Key('mode_player_count'),
                 initialValue: _playerCount,
@@ -302,7 +301,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             if (!widget.preferComputer)
               _ModeCard(
                 title: widget.mode == MatchMode.compatibility
-                    ? 'LOCAL FOUR-PLAYER'
+                    ? 'LOCAL · $_playerCount PLAYERS'
                     : '${ModeRegistry.definition(widget.mode).name.toUpperCase()} · $_playerCount PLAYERS',
                 subtitle: ModeRegistry.definition(widget.mode).description,
                 enabled: ModeRegistry.canPlay(
@@ -374,7 +373,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     ),
                     Text(
                       '${_playerCount - _humanPlayers} AI opponent(s) · '
-                      'Orange → Green → Magenta → Blue',
+                      '${_activeColors.map((color) => color.name.toUpperCase()).join(' → ')}',
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 11,

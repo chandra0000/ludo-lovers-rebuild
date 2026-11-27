@@ -15,8 +15,7 @@ class MatchConfiguration {
   factory MatchConfiguration.local(MatchMode mode, {int playerCount = 4}) {
     if (playerCount < 2 ||
         playerCount > 4 ||
-        ((mode == MatchMode.compatibility || mode == MatchMode.teamUp) &&
-            playerCount != 4)) {
+        (mode == MatchMode.teamUp && playerCount != 4)) {
       throw ArgumentError.value(
         playerCount,
         'playerCount',
@@ -25,7 +24,9 @@ class MatchConfiguration {
     }
     return MatchConfiguration._(
       mode,
-      1,
+      // Preserve all existing v1 configurations. Owner-approved smaller local
+      // matches extend seating only, without changing current@1 game rules.
+      mode == MatchMode.compatibility && playerCount != 4 ? 2 : 1,
       List.unmodifiable(
         switch (playerCount) {
           2 => [PlayerColor.orange, PlayerColor.magenta],
@@ -56,7 +57,8 @@ class MatchConfiguration {
 
   factory MatchConfiguration.fromJson(Object? value) {
     if (value is! Map ||
-        value['version'] != 1 ||
+        value['version'] is! int ||
+        (value['version'] != 1 && value['version'] != 2) ||
         value['activePlayers'] is! List) {
       throw const FormatException('Unsupported match configuration');
     }
@@ -71,8 +73,9 @@ class MatchConfiguration {
     try {
       final configuration =
           MatchConfiguration.local(mode, playerCount: seats.length);
-      if (seats.join(',') !=
-          configuration.activePlayers.map((c) => c.name).join(',')) {
+      if (value['version'] != configuration.version ||
+          seats.join(',') !=
+              configuration.activePlayers.map((c) => c.name).join(',')) {
         throw const FormatException('Noncanonical active seats');
       }
       return configuration;

@@ -1,3 +1,17 @@
+## 2026-11-27 — Public local player counts and smaller dice
+
+**Authority:** Owner explicitly requests local2-/3-player games, opposite colors
+for two players, and a12% dice reduction while targeting production quality.
+
+**Decision:** Public Local game uses existing current rules with canonical
+Orange/Magenta two-seat and Orange/Green/Magenta three-seat configurations. New
+smaller local seating is configuration version2; old four-seat version1 and all
+rule profiles remain unchanged. Classic/Quick/Team-Up previews remain gated.
+Dice paint scales0.88 with its64dp gesture region preserved.
+
+**Acceptance:** [Source, tests and limits](quality/local-seats-and-dice-2026-11-27.md).
+Scores/physical/default-GPU acceptance are not inferred from implementation.
+
 ## 2026-11-19 — Responsive profiles flank the approved logo
 
 **Authority:** Owner feedback explicitly requests the application logo between the
