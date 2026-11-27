@@ -20,5 +20,5 @@ trap cleanup_diagnostics EXIT
 # The workflow compiles this exact target before booting QEMU. Do not overlap
 # Gradle/Kotlin compilation with the emulator's guest/graphics memory budget.
 test -s build/app/outputs/flutter-apk/app-debug.apk
-flutter drive --no-pub --use-application-binary=build/app/outputs/flutter-apk/app-debug.apk --driver=test_driver/native_capture_driver.dart --target=integration_test/app_navigation_test.dart --dart-define=LUDO_ENABLE_UNRELEASED_MODES=true -d emulator-5554
+python3 ../../.github/scripts/android_native_qa.py
 python3 tool/verify_responsive_screenshots.py --native-directory test-artifacts/native
