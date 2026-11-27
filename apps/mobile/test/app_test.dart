@@ -286,13 +286,13 @@ void main() {
         tester.getRect(find.byKey(const Key('pawn_orange_0')));
     final secondHitTarget =
         tester.getRect(find.byKey(const Key('pawn_orange_1')));
-    expect(firstHitTarget.width, greaterThanOrEqualTo(44));
-    expect(firstHitTarget.height, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.width, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.height, greaterThanOrEqualTo(44));
+    expect(firstHitTarget.width, greaterThanOrEqualTo(48));
+    expect(firstHitTarget.height, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.width, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.height, greaterThanOrEqualTo(48));
 
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.tap(find.byKey(const Key('pawn_orange_1')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

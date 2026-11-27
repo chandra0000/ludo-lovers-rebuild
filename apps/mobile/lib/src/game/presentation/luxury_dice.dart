@@ -17,7 +17,9 @@ class LuxuryDiceButton extends StatefulWidget {
     required this.onRollRequested,
     this.onAnimationComplete,
     this.size = 72,
-  }) : assert(targetValue == null || (targetValue >= 1 && targetValue <= 6));
+    this.visualScale = 1,
+  })  : assert(targetValue == null || (targetValue >= 1 && targetValue <= 6)),
+        assert(visualScale > 0 && visualScale <= 1);
 
   /// Authoritative engine result, or null while no result is active.
   final int? targetValue;
@@ -31,6 +33,9 @@ class LuxuryDiceButton extends StatefulWidget {
   final VoidCallback onRollRequested;
   final VoidCallback? onAnimationComplete;
   final double size;
+
+  /// Scales only the painted cube; the semantic and gesture region stays [size].
+  final double visualScale;
 
   @override
   State<LuxuryDiceButton> createState() => _LuxuryDiceButtonState();
@@ -244,24 +249,34 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                   builder: (context, child) {
                     final t = _controller.value;
                     final landing = Curves.easeOutCubic.transform(t);
+                    final turns = widget.rollId.isEven ? 2.0 : 3.0;
                     final target = _settledValue ?? widget.targetValue ?? 1;
                     final angles = _DiceCube.orientationFor(target);
-                    // Each axis completes whole revolutions before the face settles.
-                    final spin =
-                        _isAnimating ? (1 - landing) * 2 * math.pi : 0.0;
-                    final arc = _isAnimating ? math.sin(math.pi * t) : 0.0;
-                    final lift = arc * widget.size * .12;
+                    final spin = _isAnimating
+                        ? (1 - landing) * turns * 2 * math.pi
+                        : 0.0;
+                    final lift = _isAnimating
+                        ? math.sin(math.pi * t) * widget.size * .22
+                        : 0.0;
+                    final anticipation = _isAnimating && t < .12
+                        ? 1 - .07 * (t / .12)
+                        : _isAnimating
+                            ? .93 + .07 * ((t - .12) / .88)
+                            : 1.0;
+                    final settle = _isAnimating && t > .82
+                        ? 1 + .035 * math.sin(math.pi * (t - .82) / .18)
+                        : 1.0;
                     return Transform.translate(
                       offset: Offset(0, -lift),
                       child: Transform.scale(
-                        scale: 1 - arc * .22,
+                        scale: anticipation * settle,
                         child: _DiceCube(
                           key: const Key('six_face_dice_cube'),
-                          size: widget.size * .74,
+                          size: widget.size * widget.visualScale,
                           value: target,
                           isInteractive: interactive,
-                          xAngle: angles.$1 + spin * 2 + .12,
-                          yAngle: angles.$2 + spin - .15,
+                          xAngle: angles.$1 + spin + .16,
+                          yAngle: angles.$2 + spin * .83 - .20,
                         ),
                       ),
                     );
@@ -435,7 +450,7 @@ class _DiceFace extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.025),
+        borderRadius: BorderRadius.circular(size * 0.06),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -461,7 +476,7 @@ class _DiceFace extends StatelessWidget {
         border: Border.all(
           color:
               isInteractive ? const Color(0xFFFFEBA3) : const Color(0xFFD39F35),
-          width: isInteractive ? 3.2 : 2.2,
+          width: 2.2,
         ),
         boxShadow: [
           const BoxShadow(
@@ -471,7 +486,7 @@ class _DiceFace extends StatelessWidget {
           ),
           if (isInteractive)
             const BoxShadow(
-              color: Color(0x88FFB300),
+              color: Color(0x66FFB300),
               blurRadius: 14,
               spreadRadius: 2,
             ),
@@ -506,7 +521,7 @@ class _DicePips extends StatelessWidget {
     final active = _positions[value]!;
     return LayoutBuilder(
       builder: (context, bounds) {
-        final pipSize = math.min(bounds.maxWidth, bounds.maxHeight) * .29;
+        final pipSize = math.min(bounds.maxWidth, bounds.maxHeight) * .25;
         return Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

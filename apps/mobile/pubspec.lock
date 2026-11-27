@@ -5,7 +5,7 @@ packages:
     dependency: transitive
     description:
       name: args
-      sha256: "d0481093c50b1da8910eb0bb301626d4d8eb7284aa739614d2b394ee09e3ea04"
+      sha256: d0481093c50b1da8910eb0bb301626d4d8eb7284aa739614d2b394ee09e3ea04
       url: "https://pub.dev"
     source: hosted
     version: "2.7.0"
@@ -21,7 +21,7 @@ packages:
     dependency: "direct main"
     description:
       name: audioplayers
-      sha256: "f16640453cc47487b7de72a2b28d37c7df1ac97999849f4a46d92b1d2b0f093d"
+      sha256: f16640453cc47487b7de72a2b28d37c7df1ac97999849f4a46d92b1d2b0f093d
       url: "https://pub.dev"
     source: hosted
     version: "6.7.1"
@@ -37,7 +37,7 @@ packages:
     dependency: transitive
     description:
       name: audioplayers_darwin
-      sha256: "c994b3bb3a921e4904ac40e013fbc94488e824fd7c1de6326f549943b0b44a91"
+      sha256: c994b3bb3a921e4904ac40e013fbc94488e824fd7c1de6326f549943b0b44a91
       url: "https://pub.dev"
     source: hosted
     version: "6.4.0"
@@ -45,7 +45,7 @@ packages:
     dependency: transitive
     description:
       name: audioplayers_linux
-      sha256: "f75bce1ce864170ef5e6a2c6a61cd3339e1a17ce11e99a25bae4474ea491d001"
+      sha256: f75bce1ce864170ef5e6a2c6a61cd3339e1a17ce11e99a25bae4474ea491d001
       url: "https://pub.dev"
     source: hosted
     version: "4.2.1"
@@ -109,7 +109,7 @@ packages:
     dependency: transitive
     description:
       name: crypto
-      sha256: "e3626ae6270383c9e3a549f34c9e4cd26c09ae6a9adaab2bf4737a00340efdc4"
+      sha256: e3626ae6270383c9e3a549f34c9e4cd26c09ae6a9adaab2bf4737a00340efdc4
       url: "https://pub.dev"
     source: hosted
     version: "3.0.8"
@@ -141,7 +141,7 @@ packages:
     dependency: transitive
     description:
       name: fixnum
-      sha256: "b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be"
+      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
@@ -167,10 +167,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: "3f41d009ba7172d5ff9be5f6e6e6abb4300e263aab8866d2a0842ed2a70f8f0c"
+      sha256: "3105dc8492f6183fb076ccf1f351ac3d60564bff92e20bfc4af9cc1651f4e7e1"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "6.0.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -259,10 +259,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: "976c774dd944a42e83e2467f4cc670daef7eed6295b10b36ae8c85bcbf828235"
+      sha256: "12f842a479589fea194fe5c5a3095abc7be0c1f2ddfa9a0e76aed1dbd26a87df"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "6.1.0"
   matcher:
     dependency: transitive
     description:
@@ -299,7 +299,7 @@ packages:
     dependency: transitive
     description:
       name: package_config
-      sha256: "f096c55ebb7deb7e384101542bfba8c52696c1b56fca2eb62827989ef2353bbc"
+      sha256: f096c55ebb7deb7e384101542bfba8c52696c1b56fca2eb62827989ef2353bbc
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
@@ -488,7 +488,7 @@ packages:
     dependency: transitive
     description:
       name: synchronized
-      sha256: "c254ade258ec8282947a0acbbc90b9575b4f19673533ee46f2f6e9b3aeefd7c0"
+      sha256: c254ade258ec8282947a0acbbc90b9575b4f19673533ee46f2f6e9b3aeefd7c0
       url: "https://pub.dev"
     source: hosted
     version: "3.4.0"
@@ -512,7 +512,7 @@ packages:
     dependency: transitive
     description:
       name: typed_data
-      sha256: "f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006"
+      sha256: f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
@@ -566,4 +566,4 @@ packages:
     version: "1.1.0"
 sdks:
   dart: ">=3.9.0 <4.0.0"
-  flutter: ">=3.35.0"
+  flutter: ">=3.35.6"

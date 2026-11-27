@@ -33,8 +33,15 @@ class ModeSelectionScreen extends StatelessWidget {
                     (
                       id: 'duel',
                       label: 'Two-player 1v1',
-                      mode: MatchMode.classic,
+                      mode: MatchMode.compatibility,
                       count: 2,
+                      computer: false
+                    ),
+                    (
+                      id: 'three',
+                      label: 'Three-player local',
+                      mode: MatchMode.compatibility,
+                      count: 3,
                       computer: false
                     ),
                     (

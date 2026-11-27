@@ -34,10 +34,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: subosito/flutter-action@v2
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: '3.35.7'
@@ -56,7 +57,7 @@ jobs:
         working-directory: apps/mobile
         run: python3 tool/generate_branding.py --apply
       - name: Cache pinned Android Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: |
             ~/.gradle/caches
@@ -87,14 +88,14 @@ jobs:
           (cd android && ./gradlew --stop)
           free -m
       - name: Download exact historical normal APK for before screenshots
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ludo-android-acceptance-apk
           run-id: ${{ inputs.baseline_run_id || '44875002916' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: apps/mobile/test-artifacts/baseline-apk
       - name: Upload updated normal installed-app APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-branded-normal-debug-apk-${{ matrix.viewport }}
           path: apps/mobile/build/app/outputs/flutter-apk/app-branding-debug.apk
@@ -108,7 +109,7 @@ jobs:
           ls -l /dev/kvm
       - name: Android emulator integration smoke test
         timeout-minutes: 20
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 33
           target: google_apis
@@ -117,7 +118,7 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           emulator-boot-timeout: 420
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -gpu swangle -feature -Vulkan -noaudio -no-boot-anim -camera-back none
           # Software OpenGL is the checkpoint configuration, not a physical GPU
           # acceptance result or a proven fix for historical emulator loss.
           disable-animations: false
@@ -137,7 +138,7 @@ jobs:
           timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties-after-exit.txt 2>&1 || true
       - name: Upload recording, assertions and live diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-gameplay-android-seeded-${{ matrix.viewport }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
@@ -145,7 +146,7 @@ jobs:
           if-no-files-found: error
       - name: Upload installed Android emulator screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-recording-native-screenshots-${{ matrix.viewport }}
           path: apps/mobile/test-artifacts/native/*.png
@@ -168,7 +169,7 @@ jobs:
           timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
       - name: Upload emulator diagnostics
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-recording-failure-diagnostics-${{ matrix.viewport }}
           path: emulator-diagnostics/

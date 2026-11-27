@@ -578,7 +578,8 @@ class _MatchScreenState extends State<MatchScreen>
                           ),
                           child: LuxuryDiceButton(
                             key: const Key('animated_dice'),
-                            size: 72,
+                            size: 64,
+                            visualScale: .88,
                             targetValue: _game.diceValue,
                             rollId: _diceRollId,
                             canRoll: _canAct &&
@@ -864,20 +865,4 @@ class _MatchScreenState extends State<MatchScreen>
     _move(pawnIndex);
   }
 
-  void _handleStackTap(List<int> movablePawnIndices) {
-    if (_selectedPawnIndex != null &&
-        movablePawnIndices.contains(_selectedPawnIndex)) {
-      _selectOrMovePawn(_selectedPawnIndex!);
-      return;
-    }
-    if (movablePawnIndices.isEmpty) {
-      return;
-    }
-    if (movablePawnIndices.length == 1) {
-      _selectOrMovePawn(movablePawnIndices.single);
-      return;
-    }
-
-    unawaited(showPawnChooser(context, movablePawnIndices, _selectOrMovePawn));
-  }
 }

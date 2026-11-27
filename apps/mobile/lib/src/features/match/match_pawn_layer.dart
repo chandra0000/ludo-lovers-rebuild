@@ -206,7 +206,9 @@ class MatchPawnLayer extends StatelessWidget {
         game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
     final isCurrentPlayer = color == game.activePlayer;
-    final tapPosition = Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
+    final tapPosition = Offset(canvasPoint.x, canvasPoint.y) +
+        visualOffset +
+        Offset(0, canMove && legalIndices.length > 1 && !reduceMotion ? -3 : 0);
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 48×48 dp.
@@ -234,7 +236,11 @@ class MatchPawnLayer extends StatelessWidget {
               : progress == 56
                   ? 'Home'
                   : 'Progress $progress of 56',
-          hint: canMove ? 'Double tap to move this pawn.' : 'Pawn unavailable.',
+          hint: canMove
+              ? 'Double tap to move this pawn.'
+              : canExplainInvalidMove
+                  ? 'Double tap to hear why this pawn cannot move.'
+                  : 'Pawn unavailable.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,
@@ -245,10 +251,7 @@ class MatchPawnLayer extends StatelessWidget {
                     : null,
             child: Center(
               child: Transform.translate(
-                offset: Offset(
-                  0,
-                  canMove && legalIndices.length > 1 && !reduceMotion ? -3 : 0,
-                ),
+                offset: Offset.zero,
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(
