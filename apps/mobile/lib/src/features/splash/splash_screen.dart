@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_typography.dart';
 import '../home/home_screen.dart';
-import '../onboarding/onboarding_screen.dart';
 
 /// No branding timer: leave once preferences are ready and the app is resumed.
 class SplashScreen extends StatefulWidget {
@@ -16,7 +15,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with WidgetsBindingObserver {
-  bool? _completed;
+  bool _ready = false;
   bool _failed = false;
   bool _navigated = false;
   bool _firstViewReported = false;
@@ -32,13 +31,11 @@ class _SplashScreenState extends State<SplashScreen>
     final attempt = ++_attempt;
     setState(() => _failed = false);
     try {
-      final completed = await (widget.loadOnboarding?.call() ??
-              SharedPreferences.getInstance().then(
-                (prefs) => prefs.getBool('onboarding_completed_v1') ?? false,
-              ))
-          .timeout(const Duration(seconds: 8));
+      final initialization =
+          widget.loadOnboarding?.call() ?? SharedPreferences.getInstance();
+      await initialization.timeout(const Duration(seconds: 8));
       if (!mounted || attempt != _attempt) return;
-      _completed = completed;
+      _ready = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _navigate());
       WidgetsBinding.instance.scheduleFrame();
     } catch (_) {
@@ -52,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigate() {
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     if (!mounted ||
-        _completed == null ||
+        !_ready ||
         _navigated ||
         (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
       return;
@@ -63,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _completed! ? const HomeScreen() : const OnboardingScreen(),
+            const HomeScreen(),
       ),
     );
     _reportFirstViewReady();

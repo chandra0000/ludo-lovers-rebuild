@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../game/domain/persistence/saved_match.dart';
 import '../../game/domain/mode_registry.dart';
+import '../../game/domain/match_configuration.dart';
+import '../../game/domain/player_color.dart';
+import '../../game/infrastructure/persistence/player_name_preferences.dart';
 import '../../game/infrastructure/persistence/saved_match_store.dart';
 import '../match/match_screen.dart';
 import '../setup/game_setup_screen.dart';
@@ -20,9 +23,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _avatar = 'assets/images/board/extracted/avatar_aldo.webp';
   static const _gold = Color(0xFFFFC857);
   final SavedMatchStore _savedMatchStore = const SavedMatchStore();
   SavedMatch? _savedMatch;
+  String? _playerName;
   bool get _canResumeSaved =>
       _savedMatch != null &&
       ModeRegistry.canPlay(
@@ -34,11 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadSavedMatch();
+    _loadPlayerName();
   }
 
   Future<void> _loadSavedMatch() async {
     final saved = await _savedMatchStore.load();
     if (mounted) setState(() => _savedMatch = saved);
+  }
+
+  Future<void> _loadPlayerName() async {
+    final names = await const PlayerNamePreferences().load();
+    if (mounted) setState(() => _playerName = names[PlayerColor.orange]);
   }
 
   Future<void> _discardSavedMatch() async {
@@ -50,10 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final logoSize = (screenSize.width * 0.48)
-        .clamp(144.0, screenSize.height < 700 ? 164.0 : 200.0)
-        .toDouble();
+    final width = MediaQuery.sizeOf(context).width;
+    final logoSize = (width * .29).clamp(88.0, 132.0).toDouble();
 
     return Scaffold(
       backgroundColor: _background,
@@ -70,7 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Padding(
@@ -82,85 +92,62 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: logoSize,
-                        height: logoSize,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(
-                            color: _gold.withValues(alpha: 0.65),
-                            width: 1.5,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x55FFC857),
-                              blurRadius: 30,
-                              spreadRadius: 2,
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 26,
+                            backgroundColor: _gold,
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundImage: AssetImage(_avatar),
                             ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            'assets/images/branding/ludo_lovers_icon.webp',
-                            key: const Key('brand_logo'),
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const ColoredBox(
-                              color: Color(0xFF141722),
-                              child: Center(
-                                child: Icon(
-                                  Icons.casino,
-                                  color: _gold,
-                                  size: 64,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _playerName ?? 'Player',
+                                  style: AppTypography.playerName,
                                 ),
+                                const Text(
+                                  'LUDO LOVERS',
+                                  style: AppTypography.heading,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: logoSize + 20,
+                        width: double.infinity,
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            gradient: RadialGradient(
+                              radius: .54,
+                              colors: [
+                                Color(0xCC7B358D),
+                                Color(0x887A390C),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/branding/ludo_lovers_icon.webp',
+                                key: const Key('brand_logo'),
+                                width: logoSize,
+                                height: logoSize,
+                                fit: BoxFit.cover,
+                                semanticLabel: 'Ludo Lovers',
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'LUDO LOVERS',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.heading,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'PLAY • CONNECT • LOVE',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          letterSpacing: 2.2,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'Bring everyone to one board.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Roll the dice, move your glass pawns and race all four '
-                        'colours home. More modes are being added after their '
-                        'rules are verified.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
                       if (_savedMatch != null) ...[
                         SizedBox(
                           width: double.infinity,
@@ -206,57 +193,97 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      SizedBox(
-                        width: double.infinity,
+                      DecoratedBox(
+                        decoration: const ShapeDecoration(
+                          shape: StadiumBorder(),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFFFFE48A), Color(0xFFF7A218)],
+                          ),
+                        ),
                         child: FilledButton(
                           key: const Key('open_game_setup'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: _gold,
+                            backgroundColor: Colors.transparent,
                             foregroundColor: const Color(0xFF17110A),
-                            minimumSize: const Size.fromHeight(56),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: const StadiumBorder(
+                              side: BorderSide(color: Color(0xFFFFEA9A)),
                             ),
-                            elevation: 4,
+                            elevation: 0,
                           ),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const GameSetupScreen(),
-                            ),
-                          ),
+                          onPressed: () => _openSetup(),
                           child: const Text(
                             'PLAY NOW',
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.1,
-                              fontSize: 16,
+                              fontSize: 24,
                             ),
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _modeTile(
+                              'Classic',
+                              Icons.public_rounded,
+                              const Color(0xFFA5E651),
+                              mode: MatchMode.classic,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _modeTile(
+                              'Quick',
+                              Icons.bolt_rounded,
+                              const Color(0xFFFF72B8),
+                              mode: MatchMode.quick,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _modeTile(
+                              'Team Up',
+                              Icons.groups_rounded,
+                              const Color(0xFFC0B6FF),
+                              mode: MatchMode.teamUp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _modeTile(
+                              'VS Computer',
+                              Icons.smart_toy_rounded,
+                              const Color(0xFF72D9FC),
+                              computer: true,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _modeTile(
+                              'Local',
+                              Icons.devices_rounded,
+                              const Color(0xFFFFD36B),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         key: const Key('open_mode_selection'),
-                        onPressed: () => Navigator.of(context)
-                            .push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ModeSelectionScreen(
-                                  allowInternalModes: widget.allowInternalModes,
-                                ),
-                              ),
-                            )
-                            .then((_) => _loadSavedMatch()),
+                        onPressed: _openModeSelection,
                         icon: const Icon(Icons.dashboard_customize_outlined),
                         label: const Text('EXPLORE GAME MODES'),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Four colours · Four pawns each · One shared board',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
                       ),
                     ],
                   ),
@@ -265,6 +292,86 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openModeSelection() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ModeSelectionScreen(
+          allowInternalModes: widget.allowInternalModes,
+        ),
+      ),
+    );
+    await Future.wait([_loadSavedMatch(), _loadPlayerName()]);
+  }
+
+  Future<void> _openSetup({
+    MatchMode mode = MatchMode.compatibility,
+    bool computer = false,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GameSetupScreen(
+          mode: mode,
+          preferComputer: computer,
+          allowInternalModes: widget.allowInternalModes,
+        ),
+      ),
+    );
+    await Future.wait([_loadSavedMatch(), _loadPlayerName()]);
+  }
+
+  Widget _modeTile(
+    String title,
+    IconData icon,
+    Color accent, {
+    MatchMode mode = MatchMode.compatibility,
+    bool computer = false,
+  }) {
+    final available = ModeRegistry.canPlay(
+      mode,
+      allowInternal: widget.allowInternalModes,
+    );
+    final border = accent.withValues(alpha: available ? .85 : .4);
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 92),
+        foregroundColor: accent,
+        disabledForegroundColor: accent.withValues(alpha: .65),
+        backgroundColor: accent.withValues(alpha: .10),
+        disabledBackgroundColor: accent.withValues(alpha: .06),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        side: BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      onPressed:
+          available ? () => _openSetup(mode: mode, computer: computer) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [accent.withValues(alpha: .28), Colors.transparent],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Icon(icon, size: computer ? 40 : 32),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(title, textAlign: TextAlign.center),
+          if (!available)
+            const Text(
+              'Preview',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11),
+            ),
+        ],
       ),
     );
   }
