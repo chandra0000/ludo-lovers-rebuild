@@ -44,9 +44,8 @@ void main() {
       );
       final direction = Offset(lane.x - point.x, lane.y - point.y);
       final axis = direction / direction.distance;
-      final offset = isHome
-          ? axis * 18 + Offset(-axis.dy, axis.dx) * -4.5
-          : Offset.zero;
+      final offset =
+          isHome ? axis * 18 + Offset(-axis.dy, axis.dx) * -4.5 : Offset.zero;
       final expected = Offset(
         canvasRect.left + (point.x + offset.dx) * scale,
         canvasRect.top + (point.y + offset.dy) * scale,
