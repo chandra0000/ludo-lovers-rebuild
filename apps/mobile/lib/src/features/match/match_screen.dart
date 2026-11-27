@@ -495,7 +495,8 @@ class _MatchScreenState extends State<MatchScreen>
                     child: Center(
                       child: LuxuryDiceButton(
                         key: const Key('animated_dice'),
-                        size: 72,
+                        size: 64,
+                        visualScale: .88,
                         targetValue: _game.diceValue,
                         rollId: _diceRollId,
                         canRoll: _canAct &&
