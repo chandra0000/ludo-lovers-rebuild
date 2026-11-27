@@ -437,11 +437,17 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             ),
             const SizedBox(height: 20),
             if (widget.mode == MatchMode.compatibility)
-              const _ModeCard(
+              _ModeCard(
                 title: 'TEAM UP · 2 VS 2',
                 subtitle: 'Pair up with a teammate for a two-versus-two match.',
-                enabled: false,
-                label: 'COMING SOON',
+                enabled: true,
+                label: '2 VS 2',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        const GameSetupScreen(mode: MatchMode.teamUp),
+                  ),
+                ),
               ),
           ],
         ),

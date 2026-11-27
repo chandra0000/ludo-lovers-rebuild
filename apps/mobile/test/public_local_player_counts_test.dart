@@ -165,7 +165,9 @@ void main() {
       expect(classic.configuration.activePlayers, hasLength(count));
       expect(quick.configuration.activePlayers, hasLength(count));
     }
-    expect(() => ModeRegistry.create(MatchMode.teamUp), throwsStateError);
+    final team = ModeRegistry.create(MatchMode.teamUp);
+    expect(team.ruleProfile, LudoRuleProfile.teamUpV1);
+    expect(team.configuration.activePlayers, PlayerColor.turnOrder);
     expect(
       () => MatchConfiguration.fromJson({
         'id': 'local-current',

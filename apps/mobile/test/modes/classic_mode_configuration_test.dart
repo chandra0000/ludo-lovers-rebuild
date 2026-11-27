@@ -15,7 +15,7 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  test('compatibility stays default and Team Up stays in preview', () {
+  test('compatibility stays default and Team Up uses its own rules', () {
     expect(
       ModeRegistry.create(MatchMode.compatibility).ruleProfile,
       LudoRuleProfile.currentV1,
@@ -26,8 +26,8 @@ void main() {
       MatchMode.quick,
     );
     expect(
-      () => ModeRegistry.create(MatchMode.teamUp),
-      throwsStateError,
+      ModeRegistry.create(MatchMode.teamUp).ruleProfile,
+      LudoRuleProfile.teamUpV1,
     );
   });
   for (final count in [2, 3, 4]) {
