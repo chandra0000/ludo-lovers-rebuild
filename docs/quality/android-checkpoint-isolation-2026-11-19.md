@@ -95,3 +95,30 @@ that conservative rendering candidate; native validation is still required.
 Separately, cross-platform debug job135545241936 failed before app compilation
 because Maven Central explicitly returned HTTP429 for Kotlin dependencies. This
 is recorded as dependency-service throttling, not an application assertion.
+
+## 2026-11-27 integration and controlled GPU-backend comparison
+
+#74 now incorporates main5d4ca3f without force, preserving merged #96/#97/#103,
+public local2/3, opposite Orange/Magenta,12% smaller dice and security action pins.
+The app tree is identical to that main; only CI/diagnostics change here.
+
+Current main's default Android run45932953002 still fails installed acceptance.
+Android's current emulator acceleration documentation marks swiftshader_indirect
+deprecated since36.4.9 and lists swiftshader as its supported GLES/Vulkan software
+driver backend. This is a concrete configuration gap, not proof of the crash cause.
+Reference: https://developer.android.com/studio/run/emulator-acceleration
+
+The compare-emulator-gpu label runs two non-fail-fast cases on the same source,
+SDK, target, emulator API/profile and scenario/harness configuration, changing
+only the emulator GPU mode (legacy indirect versus supported swiftshader). Each
+case compiles the same target independently; debug signatures/build metadata may
+differ, so APK hashes are retained rather than claiming byte-identical APKs.
+Flutter renderer flags are unchanged: no --enable-software-rendering or Impeller
+override is added. Successful emulator GPU-path testing is not physical-GPU proof.
+
+Normal checkpoints use the supported swiftshader backend. The legacy case remains
+explicitly reproducible with the comparison label. Screenshots/scenarios/timeouts
+are unchanged; all required native files must pass. Backend-specific artifact
+names prevent one comparison case overwriting another. Source/SDK/emulator/help/
+APK identity artifacts are saved on success and failure. Do not describe the
+change as a verified fix until the controlled outcomes are inspected.

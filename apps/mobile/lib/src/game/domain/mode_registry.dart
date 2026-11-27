@@ -18,6 +18,8 @@ class ModeDefinition {
   final ModeAvailability availability;
   bool get supportsOffline => true;
   bool get supportsOnline => false;
+
+  /// Rule-policy metadata; seating schemas version independently.
   int get version => 1;
 }
 
@@ -29,8 +31,8 @@ class ModeRegistry {
     ModeDefinition(
       mode: MatchMode.compatibility,
       name: 'Local game',
-      description: 'Four seats · current compatibility rules',
-      playerCounts: [4],
+      description: '2–4 local players · opposite colours for two players',
+      playerCounts: [2, 3, 4],
       availability: ModeAvailability.available,
     ),
     ModeDefinition(

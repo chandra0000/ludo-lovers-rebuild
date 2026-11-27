@@ -17,7 +17,9 @@ class LuxuryDiceButton extends StatefulWidget {
     required this.onRollRequested,
     this.onAnimationComplete,
     this.size = 72,
-  }) : assert(targetValue == null || (targetValue >= 1 && targetValue <= 6));
+    this.visualScale = 1,
+  })  : assert(targetValue == null || (targetValue >= 1 && targetValue <= 6)),
+        assert(visualScale > 0 && visualScale <= 1);
 
   /// Authoritative engine result, or null while no result is active.
   final int? targetValue;
@@ -31,6 +33,9 @@ class LuxuryDiceButton extends StatefulWidget {
   final VoidCallback onRollRequested;
   final VoidCallback? onAnimationComplete;
   final double size;
+
+  /// Scales only the painted cube; the semantic and gesture region stays [size].
+  final double visualScale;
 
   @override
   State<LuxuryDiceButton> createState() => _LuxuryDiceButtonState();
@@ -253,7 +258,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
                     scale: anticipation * settle,
                     child: _DiceCube(
                       key: const Key('six_face_dice_cube'),
-                      size: widget.size,
+                      size: widget.size * widget.visualScale,
                       value: target,
                       isInteractive: interactive,
                       xAngle: angles.$1 + spin + .16,
