@@ -94,9 +94,12 @@ def main():
             raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
         # Attach directly to the ready local service instead of Flutter's
         # implicit install/launch/log-discovery path that stalled in the failed run.
+        # The simulator is owned by this script. Let flutter drive return after
+        # reporting test results instead of waiting for its own app-stop path;
+        # the finally block shuts down and deletes the isolated simulator.
         run('attach integration driver', ['flutter', 'drive', '--no-pub',
             '--driver=test_driver/native_capture_driver.dart', '--use-existing-app=' + uri,
-            '--no-keep-app-running', '-d', device_id], 180)
+            '--keep-app-running', '-d', device_id], 180)
         run('verify native PNGs', ['python3', 'tool/verify_responsive_screenshots.py',
             '--native-directory', 'test-artifacts/native'], 30)
     finally:
