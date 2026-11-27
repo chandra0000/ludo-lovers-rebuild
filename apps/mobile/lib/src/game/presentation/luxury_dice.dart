@@ -447,7 +447,7 @@ class _DiceFace extends StatelessWidget {
       child: Center(
         child: Padding(
           padding: EdgeInsets.all(size * 0.16),
-          child: _DicePips(value: value, size: size),
+          child: _DicePips(value: value),
         ),
       ),
     );
@@ -455,10 +455,9 @@ class _DiceFace extends StatelessWidget {
 }
 
 class _DicePips extends StatelessWidget {
-  const _DicePips({required this.value, required this.size});
+  const _DicePips({required this.value});
 
   final int value;
-  final double size;
 
   static const _positions = <int, Set<int>>{
     1: {4},
@@ -472,23 +471,26 @@ class _DicePips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = _positions[value]!;
-    final pipSize = size * 0.17;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        for (var row = 0; row < 3; row++)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (var column = 0; column < 3; column++)
-                _Pip(
-                  active: active.contains(row * 3 + column),
-                  size: pipSize,
-                ),
-            ],
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final pipSize = math.min(bounds.maxWidth, bounds.maxHeight) * .25;
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (var row = 0; row < 3; row++)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (var column = 0; column < 3; column++)
+                    _Pip(
+                      active: active.contains(row * 3 + column),
+                      size: pipSize,
+                    ),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 }

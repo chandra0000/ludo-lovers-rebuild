@@ -113,12 +113,10 @@ class GameBoardScaffold extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Column(
               children: [
-                SizedBox(
-                  height: 48,
-                  child: RoyalGameHeader(
-                    onExit: onExit,
-                    trailing: reaction,
-                  ),
+                RoyalGameHeader(
+                  onExit: onExit,
+                  status: status,
+                  trailing: reaction,
                 ),
                 if (teamProgress != null)
                   SizedBox(height: teamProgressHeight, child: teamProgress),
@@ -203,10 +201,6 @@ class GameBoardScaffold extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: status,
                 ),
                 ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),

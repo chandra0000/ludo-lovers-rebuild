@@ -12,6 +12,8 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import '../support/capture_artifact.dart';
 import '../support/load_sdk_fonts.dart';
 
+import '../support/wait_for_board_artwork.dart';
+
 void main() {
   setUpAll(loadSdkFonts);
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -93,6 +95,7 @@ void main() {
     await capture(tester, 'flow-dice-rolling');
     await tester.pump(const Duration(seconds: 2));
     await capture(tester, 'flow-pawn-selection');
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pump(const Duration(milliseconds: 40));
     await capture(tester, 'flow-capture');
@@ -108,6 +111,7 @@ void main() {
       },
     ).roll(4);
     await mount(tester, MatchScreen(initialGame: game));
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pump(const Duration(milliseconds: 20));
     await capture(tester, 'flow-pawn-moving');
@@ -122,6 +126,7 @@ void main() {
       },
     ).roll(1);
     await mount(tester, MatchScreen(initialGame: game));
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     await capture(tester, 'flow-winning');
