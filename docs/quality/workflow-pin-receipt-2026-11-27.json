@@ -1,0 +1,22 @@
+{
+  "actions/checkout@v4": {
+    "sha": "11d5960a326750d5838078e36cf38b85af677262",
+    "url": "https://github.com/actions/checkout/commit/11d5960a326750d5838078e36cf38b85af677262"
+  },
+  "actions/upload-artifact@v4": {
+    "sha": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "url": "https://github.com/actions/upload-artifact/commit/ea165f8d65b6e75b540449e92b4886f43607fa02"
+  },
+  "actions/cache@v4": {
+    "sha": "0057852bfaa89a56745cba8c7296529d2fc39830",
+    "url": "https://github.com/actions/cache/commit/0057852bfaa89a56745cba8c7296529d2fc39830"
+  },
+  "subosito/flutter-action@v2": {
+    "sha": "1a449444c387b1966244ae4d4f8c696479add0b2",
+    "url": "https://github.com/subosito/flutter-action/commit/1a449444c387b1966244ae4d4f8c696479add0b2"
+  },
+  "reactivecircus/android-emulator-runner@v2": {
+    "sha": "a421e43855164a8197daf9d8d40fe71c6996bb0d",
+    "url": "https://github.com/ReactiveCircus/android-emulator-runner/commit/a421e43855164a8197daf9d8d40fe71c6996bb0d"
+  }
+}
