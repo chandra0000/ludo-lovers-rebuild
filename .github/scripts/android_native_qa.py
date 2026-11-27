@@ -189,22 +189,43 @@ def branding_prelude():
     # drawer from Home and inspect its accessibility tree after each gesture.
     sizes = re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size'))
     width, height = map(int, sizes[-1])
-    for attempt in range(4):
+    # Confirm the installed package exposes a launcher activity before UI polling.
+    resolved = adb('shell', 'cmd', 'package', 'resolve-activity', '--brief',
+                   '-a', 'android.intent.action.MAIN',
+                   '-c', 'android.intent.category.LAUNCHER', package)
+    (VIDEO / 'launcher-resolved-activity.txt').write_text(resolved)
+    if package + '/' not in resolved:
+        raise RuntimeError('Installed package has no resolvable launcher activity')
+    deadline = time.monotonic() + 60
+    nodes = []
+    while time.monotonic() < deadline:
         adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
         time.sleep(1)
-        for _ in range(2):
-            adb('shell', 'input', 'swipe', str(width // 2), str(height * 9 // 10),
-                str(width // 2), str(height // 4), '350')
-            time.sleep(.5)
-            nodes = ui_nodes()
+        adb('shell', 'input', 'swipe', str(width // 2), str(height * 9 // 10),
+            str(width // 2), str(height // 4), '450')
+        time.sleep(1)
+        # Smaller viewports may put the app below the first visible drawer row.
+        for page in range(5):
+            try:
+                nodes = ui_nodes()
+            except (subprocess.SubprocessError, ET.ParseError):
+                time.sleep(1)
+                continue
             if any('Ludo Lovers' in (n.get('text', '') + n.get('content-desc', ''))
                    for n in nodes):
                 break
-        else:
-            continue
-        break
+            adb('shell', 'input', 'swipe', str(width // 2), str(height * 4 // 5),
+                str(width // 2), str(height // 3), '400')
+            time.sleep(.5)
+            if time.monotonic() >= deadline:
+                break
+        if any('Ludo Lovers' in (n.get('text', '') + n.get('content-desc', ''))
+               for n in nodes):
+            break
     else:
         screenshot('native-launcher-failure')
+        (VIDEO / 'launcher-failure-nodes.json').write_text(
+            json.dumps([n.attrib for n in nodes], indent=2))
         raise RuntimeError('Installed launcher label Ludo Lovers was not visible in app drawer')
     screenshot('native-installed-launcher')
     (VIDEO / 'launcher-ui.xml').write_text(adb('shell', 'cat', '/sdcard/ludo-window.xml'))
