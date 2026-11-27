@@ -257,3 +257,26 @@ failed before pull. The completion path now closes only that dedicated client
 after native MOOV/fsync/size proof and remote cleanup; the application/driver and
 ADB server remain untouched. The regression checks this lingering-client case and
 rejects a remote file-size mismatch. No wait bound or gameplay changes.
+
+## Current-main integration preparation —2026-11-27
+
+PR #75 is being refreshed against #74 head00ccda6d345cb0653372b877b4828595fe23be62,
+which includes main5d4ca3fb79d29e6ae8365f119ba31c13bb7e4348. The workflow conflict
+is resolved by preserving #74's prebuild/default-renderer comparison and #75's
+native recorder protocol. All new workflow action references are immutable and
+checkout credentials are not persisted. Public local2/3, opposite-color2-player
+seats,12%-smaller dice and save-write failure propagation are preserved.
+
+Local verification of the integrated application:195 Dart files formatted without
+changes, fatal-info analysis PASS,466 Flutter tests PASS, responsive PNG-file
+verification PASS,11 recorder protocol tests PASS,10 security-tool tests PASS.
+The initial sandbox test attempt did not execute tests because localhost sockets
+were denied; the unrestricted harness rerun completed successfully. Redundant
+historical downloaded archives were removed to free workspace space; repository
+sources and extracted evidence were preserved.
+
+These are local checks, not fresh installed Android/video acceptance. No new MP4
+has been produced for this integrated revision. Historical recordings above
+remain labeled with their original sources. #74's default-renderer gate remains
+open; do not merge #75 or clear release/physical/GPU/visual gates until its
+predecessor and this revision's applicable installed checks pass.

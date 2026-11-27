@@ -10,7 +10,8 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final entry in [
     (id: 'ffa', mode: MatchMode.compatibility, seats: 4, bots: 0),
-    (id: 'duel', mode: MatchMode.classic, seats: 2, bots: 0),
+    (id: 'duel', mode: MatchMode.compatibility, seats: 2, bots: 0),
+    (id: 'three', mode: MatchMode.compatibility, seats: 3, bots: 0),
     (id: 'computer', mode: MatchMode.compatibility, seats: 4, bots: 3),
     (id: 'team', mode: MatchMode.teamUp, seats: 4, bots: 0),
   ]) {
@@ -54,7 +55,7 @@ void main() {
       tester
           .widget<OutlinedButton>(find.byKey(const Key('launch_duel')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
     expect(
       tester
