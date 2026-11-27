@@ -18,6 +18,7 @@ class ModeDefinition {
   final ModeAvailability availability;
   bool get supportsOffline => true;
   bool get supportsOnline => false;
+
   /// Rule-policy metadata; seating schemas version independently.
   int get version => 1;
 }
