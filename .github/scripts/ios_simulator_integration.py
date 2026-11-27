@@ -6,7 +6,6 @@ from pathlib import Path
 import plistlib
 import socket
 import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -31,6 +30,8 @@ def vm_ready(uri):
 def main():
     DIAGNOSTICS.mkdir(parents=True, exist_ok=True)
     device_id = None
+    console = None
+    log = None
     unified = None
     unified_log = None
     try:
@@ -43,9 +44,6 @@ def main():
         if not choices:
             raise RuntimeError('No compatible available iPhone simulator runtime')
         runtime, template = choices[0]
-        # Keep Xcode/Flutter compilation out of the running simulator's resource budget.
-        run('build integration app', ['flutter', 'build', 'ios', '--simulator', '--debug', '--no-codesign', '--no-pub',
-            '--target=integration_test/app_navigation_test.dart', '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true'], 300)
         device_id = run('create isolated simulator', ['xcrun', 'simctl', 'create',
                         'Ludo CI ' + os.environ.get('GITHUB_RUN_ID', 'local'),
                         type_ids[template['name']], runtime], 30, True).strip()
@@ -54,6 +52,8 @@ def main():
         print(f'Selected {template["name"]}, {runtime}, {device_id}', flush=True)
         run('boot', ['xcrun', 'simctl', 'boot', device_id], 30)
         run('boot readiness', ['xcrun', 'simctl', 'bootstatus', device_id, '-b'], 180)
+        run('build integration app', ['flutter', 'build', 'ios', '--simulator', '--debug', '--no-codesign', '--no-pub',
+            '--target=integration_test/app_navigation_test.dart', '--dart-define=LUDO_ENABLE_UNRELEASED_MODES=true'], 300)
         app = Path('build/ios/iphonesimulator/Runner.app').resolve()
         with (app / 'Info.plist').open('rb') as stream:
             bundle_id = plistlib.load(stream)['CFBundleIdentifier']
@@ -74,39 +74,27 @@ def main():
             reservation.bind(('127.0.0.1', 0))
             port = reservation.getsockname()[1]
         uri = f'http://127.0.0.1:{port}/'
-        # A console-attached simctl launch stalled without acknowledging a PID
-        # in run45011448495. Separate launch acknowledgement from VM readiness;
-        # retain unified logs rather than blocking launch on console attachment.
-        launch_args = ['xcrun', 'simctl', 'launch',
-            device_id, bundle_id, '--enable-dart-profiling',
-            f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication']
-        (DIAGNOSTICS / 'launch-configuration.json').write_text(json.dumps(launch_args, indent=2))
-        # The fresh simulator has no previous Runner. Wait for the service
-        # directly so a delayed simctl acknowledgement cannot mask a ready VM.
-        with (DIAGNOSTICS / 'integration-console.txt').open('w') as console:
-            launch = subprocess.Popen(launch_args, stdout=console, stderr=subprocess.STDOUT)
-            try:
-                deadline = time.monotonic() + 60
-                while not vm_ready(uri):
-                    status = launch.poll()
-                    if status not in (None, 0):
-                        raise subprocess.CalledProcessError(status, launch_args)
-                    if time.monotonic() >= deadline:
-                        raise TimeoutError('Simulator VM service did not become ready within 60s')
-                    time.sleep(.25)
-            finally:
-                if launch.poll() is None:
-                    launch.terminate()
-                    try:
-                        launch.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        launch.kill()
-                        launch.wait(timeout=5)
-        # Run the same Dart host driver used by Flutter's startTest directly.
-        # run45016648518 completed all four on-device tests, but flutter drive
-        # spent ~172s in attach/tool setup before its host connected, exhausting
-        # the existing 180s result window. The app and VM are already ready here;
-        # do not repeat device discovery/DDS setup or enlarge the timeout.
+        print('IOS STAGE: launch with captured console', flush=True)
+        log_path = DIAGNOSTICS / 'integration-console.txt'
+        log = log_path.open('w')
+        console = subprocess.Popen(['xcrun', 'simctl', 'launch', '--console', '--terminate-running-process',
+            device_id, bundle_id, '--enable-dart-profiling', '--enable-checked-mode', '--verify-entry-points',
+            f'--vm-service-port={port}', '--disable-service-auth-codes', '--disable-vm-service-publication'],
+            stdout=log, stderr=subprocess.STDOUT, text=True)
+        deadline = time.monotonic() + 60
+        ready = False
+        while time.monotonic() < deadline:
+            ready = vm_ready(uri)
+            if ready:
+                break
+            if console.poll() is not None:
+                raise RuntimeError('Simulator launch exited before VM service; see integration-console.txt')
+            time.sleep(.1)
+        if not ready:
+            raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
+        # VM readiness is already proven. Invoke the existing integration host
+        # directly, avoiding redundant Flutter device discovery and DDS startup.
+        # Keep the original deadline, screenshot checks and simulator cleanup.
         run('attach integration driver', ['dart',
             'test_driver/native_capture_driver.dart'], 180,
             env={**os.environ, 'VM_SERVICE_URL': uri})
@@ -122,19 +110,16 @@ def main():
                 unified.wait(timeout=5)
         if unified_log is not None:
             unified_log.close()
+        if console is not None and console.poll() is None:
+            console.terminate()
+            try:
+                console.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                console.kill()
+                console.wait(timeout=5)
+        if log is not None:
+            log.close()
         if device_id:
-            if sys.exc_info()[0] is not None:
-                for label, command in [
-                    ('failure-state.png', ['xcrun','simctl','io',device_id,'screenshot',str(DIAGNOSTICS/'failure-state.png')]),
-                    ('failure-services.txt', ['xcrun','simctl','spawn',device_id,'log','show','--last','2m','--style','compact',
-                        '--predicate','process == "Runner" OR process == "SpringBoard" OR process == "launchd_sim"']),
-                ]:
-                    try:
-                        captured = run('failure diagnostic '+label, command, 10, True)
-                        if label.endswith('.txt'):
-                            (DIAGNOSTICS/label).write_text(captured)
-                    except (subprocess.SubprocessError, OSError) as error:
-                        print('Failure diagnostic unavailable: '+str(error), flush=True)
             for action in ['shutdown', 'delete']:
                 try:
                     run('cleanup ' + action, ['xcrun', 'simctl', action, device_id], 20)
