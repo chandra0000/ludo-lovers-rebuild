@@ -38,13 +38,22 @@ void main() {
       final point = BoardGeometry.canvasPosition(
         BoardGeometry.normalizedPosition(entry.key, entry.value, 0),
       );
+      final isHome = entry.value == 56;
+      final lane = BoardGeometry.canvasPosition(
+        BoardGeometry.normalizedPosition(entry.key, 55, 0),
+      );
+      final direction = Offset(lane.x - point.x, lane.y - point.y);
+      final axis = direction / direction.distance;
+      final offset =
+          isHome ? axis * 18 + Offset(-axis.dy, axis.dx) * -4.5 : Offset.zero;
       final expected = Offset(
-        canvasRect.left + point.x * scale,
-        canvasRect.top + point.y * scale,
+        canvasRect.left + (point.x + offset.dx) * scale,
+        canvasRect.top + (point.y + offset.dy) * scale,
       );
-      final actual = tester.getCenter(
-        find.byKey(Key('pawn_${entry.key.name}_0')),
-      );
+      final key = isHome
+          ? 'home_token_${entry.key.name}_0'
+          : 'pawn_${entry.key.name}_0';
+      final actual = tester.getCenter(find.byKey(Key(key)));
       expect(
         actual.dx,
         closeTo(expected.dx, 0.5),

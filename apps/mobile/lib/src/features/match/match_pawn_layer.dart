@@ -29,7 +29,6 @@ class MatchPawnLayer extends StatelessWidget {
     required this.lastLandingPlan,
     required this.landingSequence,
     required this.onMove,
-    required this.onStackTap,
     required this.onInvalidMove,
   });
 
@@ -43,7 +42,6 @@ class MatchPawnLayer extends StatelessWidget {
   final MatchMovePresentationPlan? lastLandingPlan;
   final int landingSequence;
   final ValueChanged<int> onMove;
-  final ValueChanged<List<int>> onStackTap;
   final ValueChanged<int> onInvalidMove;
 
   @override
@@ -91,6 +89,7 @@ class MatchPawnLayer extends StatelessWidget {
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
+        if (_isRestingHome(player, pawnIndex)) continue;
         final point = _pawnPosition(color, pawnIndex);
         final key = PawnLayoutSolver.clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
@@ -112,15 +111,61 @@ class MatchPawnLayer extends StatelessWidget {
     return [
       for (final color in game.configuration.activePlayers)
         for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
-          _buildPawn(
-            color,
-            pawnIndex,
-            playersByColor[color]!,
-            clusters,
-            legalIndices,
-            canvasScale,
-          ),
+          if (!_isRestingHome(playersByColor[color]!, pawnIndex))
+            _buildPawn(
+              color,
+              pawnIndex,
+              playersByColor[color]!,
+              clusters,
+              legalIndices,
+              canvasScale,
+            ),
+      for (final player in game.players) ..._homeTokens(player),
     ];
+  }
+
+  bool _isRestingHome(LudoPlayer player, int pawn) =>
+      player.pawnProgress[pawn] == finishProgress &&
+      !animations.pawn.matches(player.color, pawn);
+
+  Iterable<Widget> _homeTokens(LudoPlayer player) sync* {
+    final finished = [
+      for (var pawn = 0; pawn < player.pawnProgress.length; pawn++)
+        if (_isRestingHome(player, pawn)) pawn,
+    ];
+    if (finished.isEmpty) return;
+    final center = BoardGeometry.canvasPosition(BoardGeometry.finishPosition);
+    final lane = BoardGeometry.canvasPosition(
+      BoardGeometry.normalizedPosition(player.color, finishProgress - 1, 0),
+    );
+    final direction = Offset(lane.x - center.x, lane.y - center.y);
+    final axis = direction / direction.distance;
+    final across = Offset(-axis.dy, axis.dx);
+    for (var index = 0; index < finished.length; index++) {
+      final offset =
+          axis * (index < 2 ? 18 : 28) + across * (index.isEven ? -4.5 : 4.5);
+      yield Positioned(
+        key: Key('home_token_${player.color.name}_${finished[index]}'),
+        left: center.x + offset.dx - 4,
+        top: center.y + offset.dy - 4,
+        width: 8,
+        height: 8,
+        child: IgnorePointer(
+          child: Semantics(
+            label:
+                '${player.color.name} · ${finished.length}/${game.configuration.finishTarget} home',
+            hidden: index != 0,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: player.color.color,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFFE3A0)),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildPawn(
@@ -145,7 +190,7 @@ class MatchPawnLayer extends StatelessWidget {
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
     final visualOffset = Offset(slot.x, slot.y);
     final size = stacked
-        ? (occupants.length <= 4 ? 27.0 * .78 : 16.0)
+        ? (occupants.length <= 4 ? 27.0 * .75 : 16.0)
         : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !aiPlayers.contains(color) && color == game.activePlayer;
@@ -160,24 +205,10 @@ class MatchPawnLayer extends StatelessWidget {
         isHumanTurn &&
         game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
-    final movableStackIndices = occupants
-        .where(
-          (item) =>
-              item.color == game.activePlayer &&
-              legalIndices.contains(item.pawnIndex),
-        )
-        .map((item) => item.pawnIndex)
-        .toList(growable: false);
-    final stackTapIndex = occupants.indexWhere(
-      (item) =>
-          item.color == game.activePlayer &&
-          legalIndices.contains(item.pawnIndex),
-    );
-    final isStackTapTarget = stacked && stackIndex == stackTapIndex;
     final isCurrentPlayer = color == game.activePlayer;
-    final tapPosition = stacked
-        ? Offset(canvasPoint.x, canvasPoint.y)
-        : Offset(canvasPoint.x, canvasPoint.y) + visualOffset;
+    final tapPosition = Offset(canvasPoint.x, canvasPoint.y) +
+        visualOffset +
+        Offset(0, canMove && legalIndices.length > 1 && !reduceMotion ? -3 : 0);
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 48×48 dp.
@@ -196,48 +227,31 @@ class MatchPawnLayer extends StatelessWidget {
       child: IgnorePointer(
         // Inactive/non-legal pawns must not cover a legal pawn's enlarged
         // touch target when adjacent cells overlap on compact screens.
-        ignoring:
-            stacked ? !isStackTapTarget : !canMove && !canExplainInvalidMove,
+        ignoring: !canMove && !canExplainInvalidMove,
         child: Semantics(
-          button: stacked ? isStackTapTarget : canMove || canExplainInvalidMove,
-          label: stacked
-              ? 'Choose a movable pawn from this shared cell'
-              : '${color.name} pawn ${pawnIndex + 1}',
+          button: canMove || canExplainInvalidMove,
+          label: '${color.name} pawn ${pawnIndex + 1}',
           value: progress == -1
               ? 'In yard'
               : progress == 56
                   ? 'Home'
                   : 'Progress $progress of 56',
-          hint: stacked
-              ? 'Double tap to choose which movable pawn to move.'
-              : canMove
-                  ? 'Double tap to move this pawn.'
-                  : canExplainInvalidMove
-                      ? 'Double tap to hear why this pawn cannot move.'
-                      : aiPlayers.contains(color)
-                          ? 'Controlled by the AI opponent.'
-                          : 'Not movable on this turn.',
+          hint: canMove
+              ? 'Double tap to move this pawn.'
+              : canExplainInvalidMove
+                  ? 'Double tap to hear why this pawn cannot move.'
+                  : 'Pawn unavailable.',
           child: GestureDetector(
             key: Key('pawn_${color.name}_$pawnIndex'),
             behavior: HitTestBehavior.opaque,
-            onTap: stacked
-                ? (isStackTapTarget
-                    ? () => onStackTap(movableStackIndices)
-                    : null)
-                : canMove
-                    ? () => onMove(pawnIndex)
-                    : canExplainInvalidMove
-                        ? () => onInvalidMove(pawnIndex)
-                        : null,
+            onTap: canMove
+                ? () => onMove(pawnIndex)
+                : canExplainInvalidMove
+                    ? () => onInvalidMove(pawnIndex)
+                    : null,
             child: Center(
               child: Transform.translate(
-                offset: visualOffset +
-                    Offset(
-                      0,
-                      canMove && legalIndices.length > 1 && !reduceMotion
-                          ? -3
-                          : 0,
-                    ),
+                offset: Offset.zero,
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(

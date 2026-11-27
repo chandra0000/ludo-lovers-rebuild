@@ -1,4 +1,3 @@
-import 'pawn_chooser.dart';
 import '../../theme/app_typography.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -648,7 +647,6 @@ class _MatchScreenState extends State<MatchScreen>
                             lastLandingPlan: _lastLandingPlan,
                             landingSequence: _landingSequence,
                             onMove: _selectOrMovePawn,
-                            onStackTap: _handleStackTap,
                             onInvalidMove: _showInvalidMoveFeedback,
                           ),
                         ),
@@ -865,22 +863,5 @@ class _MatchScreenState extends State<MatchScreen>
     setState(() => _selectedPawnIndex = null);
     _previewController.stop();
     _move(pawnIndex);
-  }
-
-  void _handleStackTap(List<int> movablePawnIndices) {
-    if (_selectedPawnIndex != null &&
-        movablePawnIndices.contains(_selectedPawnIndex)) {
-      _selectOrMovePawn(_selectedPawnIndex!);
-      return;
-    }
-    if (movablePawnIndices.isEmpty) {
-      return;
-    }
-    if (movablePawnIndices.length == 1) {
-      _selectOrMovePawn(movablePawnIndices.single);
-      return;
-    }
-
-    unawaited(showPawnChooser(context, movablePawnIndices, _selectOrMovePawn));
   }
 }

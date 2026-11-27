@@ -261,8 +261,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets(
-      'offers a chooser when multiple legal pawns share a cell on compact phones',
+  testWidgets('moves a shared-cell pawn directly on compact phones',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -287,23 +286,18 @@ void main() {
         tester.getRect(find.byKey(const Key('pawn_orange_0')));
     final secondHitTarget =
         tester.getRect(find.byKey(const Key('pawn_orange_1')));
-    expect(firstHitTarget.width, greaterThanOrEqualTo(44));
-    expect(firstHitTarget.height, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.width, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.height, greaterThanOrEqualTo(44));
+    expect(firstHitTarget.width, greaterThanOrEqualTo(48));
+    expect(firstHitTarget.height, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.width, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.height, greaterThanOrEqualTo(48));
 
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.tap(find.byKey(const Key('pawn_orange_1')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Choose a pawn'), findsOneWidget);
-    expect(find.text('Pawn 1'), findsOneWidget);
-    expect(find.text('Pawn 2'), findsOneWidget);
-
-    await tester.tap(find.text('Pawn 2'));
-    await tester.pumpAndSettle();
-    // Choosing from a shared-cell sheet is the single move selection.
+    expect(find.text('Pawn 1'), findsNothing);
+    expect(find.text('Pawn 2'), findsNothing);
     expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
@@ -516,6 +510,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PAWN HOME!'), findsOneWidget);
+    expect(find.byKey(const Key('home_token_orange_0')), findsOneWidget);
   });
 
   testWidgets(
