@@ -1,0 +1,142 @@
+# Android checkpoint resource isolation
+
+The profile/logo UI in PR #73 passes all 446 tests, strict formatting/analysis,
+Android debug/profile/release/AAB builds and installed iOS scenarios/screenshots.
+Its opt-in Android emulator checkpoint failed twice on source
+`b674d2870de5a763ee9820de141d5a28b5672560` (run44508864048, jobs135507512125
+and135512265757). After launch/driver attachment, the VM service disappeared,
+ADB became offline and the emulator's5554 control port refused connections.
+The retry reached the second scenario. No widget assertion failure was reported.
+This proves loss of the emulator environment, not the underlying host kill reason;
+the old post-failure ADB diagnostics could not recover guest logs.
+
+Inspection found the generated Flutter3.35.7 Gradle template permits an8GB heap
+and4GB metaspace. The checkpoint compiles Gradle/Kotlin while a2GB emulator is
+already running and leaves Java daemons alive. This is a concrete budget/overlap
+risk on the standard hosted runner; an OOM kill is a hypothesis, not a proven cause.
+
+The focused follow-up changes CI only:
+
+- Cap Gradle heap4GB/metaspace1GB, use two workers, compile Kotlin in-process,
+  disable persistent Gradle daemons and explicitly stop them after compilation.
+- Build the identical x86_64 debug integration target/defines before booting the emulator.
+- Use the pinned SDK's supported `flutter drive --use-application-binary` path to
+  install/launch that APK, retaining the same screenshot driver and scenarios.
+- Add host memory/process/kernel diagnostics so a further failure distinguishes
+  host resource loss from a guest/app assertion or graphics failure.
+
+No UI, engine, fixture, timeout or required screenshot change. Job25m/emulator20m
+outer bounds remain; the new prebuild stage has a10m bound within that job.
+YAML/Bash parse checks pass. Three actual configuration-transform fixtures verify
+AndroidX preservation, removal of old/duplicate limits, expected caps and idempotency.
+The SDK's DriveService explicitly marks a supplied application binary prebuilt,
+skipping compilation during emulator execution. Native result is recorded in the PR.
+
+This is not evidence of phone performance or physical-device acceptance. Historical
+failed runs stay failed. No test is disabled and no PR is merged automatically.
+Review after #73, itself dependent on #72 and the preceding implementation stack.
+
+
+The first isolated run44512155537 failed before emulator boot because the initial
+2GB cap exhausted Java heap during JetifyTransform of the x86_64 debug engine.
+This is an explicit compiler-memory failure, distinct from the earlier emulator
+losses. Host telemetry reports15,701MB total RAM. The follow-up uses4GB heap/1GB
+metaspace and builds only android-x64, matching the emulator ABI and avoiding
+unnecessary ARM engine transforms. Compilation remains separated from QEMU;
+no test or timeout is relaxed. This build-cap adjustment is based on actual logs,
+not a claimed proof of the original emulator kill cause.
+
+
+Run44513158990 passed the4GB/x86 prebuild, then again lost QEMU during the first
+scenario. Downloaded host diagnostics14524093542 (ZIP SHA256
+`a38c105ec4297acf7ef21da931b60c4d702674e77f47e89a7e86ba6de27d2250`)
+show14,502MB available after failure and no kernel OOM/kill entry. A native crash
+reporter (`apport`) was present; this does not prove an exact graphics stack frame.
+Compilation overlap is not a sufficient explanation. The next checkpoint disables
+Vulkan software emulation while retaining SwiftShader OpenGL and the identical
+app/driver/scenarios/screenshots. Bounded, allowlisted native QEMU crash summaries are added; process environments
+and raw core/minidump contents are excluded.
+This is a headless-emulator backend configuration, not a change to the production
+Flutter renderer. Physical Vulkan acceptance remains unverified, and success on
+software OpenGL must not be reported as a physical GPU benchmark or Vulkan pass.
+
+OpenGL run44514945790 also lost QEMU (diagnostics14526285608, verified ZIP
+SHA25602fd9ee759f915e75b613a01b7e63d78d090c66bb5800c4d39699f2359782057).
+Host available RAM was14,885MB; no native summary/minidump filename was produced.
+Disabling Vulkan did not resolve the failure and must not be described as a fix.
+The next diagnostic matrix compares current UI with the previously verified mobile
+source22bb509ec95af8c816d7a6ec6275fcf356d0edf1. Both use identical current CI,
+Flutter/emulator configuration, prebuild, scenarios and screenshot requirements.
+Only the control's apps/mobile tree is restored in its isolated ephemeral checkout.
+Jobs and artifacts explicitly identify current versus known-baseline. Fail-fast
+is false so a failure cannot cancel the independent control. A baseline pass must
+never count as new-UI acceptance; this is a diagnostic comparison, not a renderer
+performance benchmark or a product-rule change.
+
+
+The paired control completed: known-baseline job135534696186 passed all scenarios
+and eight PNGs; current job135534695597 initially failed Kotlin POM resolution
+(exact URLs subsequently HTTP200). Its targeted retry135539921795 then reached
+runtime and lost QEMU while the baseline remained passed. This narrows the issue
+to presentation changes under this setup; infrastructure changes are not a proven
+resolution. UI follow-up1f4178e836c4b2acd1862f167ee1760f4d543a55 removes only the
+optional complex background lattice, retaining the requested profiles/logo/icons
+and royal lighting. The diagnostic old-version control is now removed after its
+purpose is fulfilled, avoiding duplicate routine builds; the entire current-app
+scenario/screenshot requirement remains. New runtime outcome is required before
+calling the rendering candidate a fix.
+
+The no-lattice checkpoint44520076712 also lost QEMU after its first scenario;
+removing that decoration alone is not a verified fix. Current UI follow-up
+50ae0cf14ac4e7a66cc56e9599cb6c90971aff2b retains the requested profile/logo/icon
+layout but restores the exact baseline RoyalBackdrop and bounded avatar/logo
+decode widths128/216. Source portraits are only145–168px. This branch incorporates
+that conservative rendering candidate; native validation is still required.
+Separately, cross-platform debug job135545241936 failed before app compilation
+because Maven Central explicitly returned HTTP429 for Kotlin dependencies. This
+is recorded as dependency-service throttling, not an application assertion.
+
+## 2026-11-27 integration and controlled GPU-backend comparison
+
+#74 now incorporates main5d4ca3f without force, preserving merged #96/#97/#103,
+public local2/3, opposite Orange/Magenta,12% smaller dice and security action pins.
+The app tree is identical to that main; only CI/diagnostics change here.
+
+Current main's default Android run45932953002 still fails installed acceptance.
+Android's current emulator acceleration documentation marks swiftshader_indirect
+deprecated since36.4.9 and lists swiftshader as its supported GLES/Vulkan software
+driver backend. This is a concrete configuration gap, not proof of the crash cause.
+Reference: https://developer.android.com/studio/run/emulator-acceleration
+
+The compare-emulator-gpu label runs two non-fail-fast cases on the same source,
+SDK, target, emulator API/profile and scenario/harness configuration, changing
+only the emulator GPU mode (legacy indirect versus supported swiftshader). Each
+case compiles the same target independently; debug signatures/build metadata may
+differ, so APK hashes are retained rather than claiming byte-identical APKs.
+Flutter renderer flags are unchanged: no --enable-software-rendering or Impeller
+override is added. Successful emulator GPU-path testing is not physical-GPU proof.
+
+Normal checkpoints use the supported swiftshader backend. The legacy case remains
+explicitly reproducible with the comparison label. Screenshots/scenarios/timeouts
+are unchanged; all required native files must pass. Backend-specific artifact
+names prevent one comparison case overwriting another. Source/SDK/emulator/help/
+APK identity artifacts are saved on success and failure. Do not describe the
+change as a verified fix until the controlled outcomes are inspected.
+
+### First controlled result and next bounded comparison
+
+Run [45933871515](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/45933871515)
+tested application tree from main5d4ca3 on QA commit
+`f16d85e3aba50246a1f49dc2127b178a357905a8`. The supported direct
+`swiftshader` case booted emulator37.3.10, installed the APK, attached the
+Flutter driver and began navigation, then lost the service and ADB. No
+native screenshots were produced. Host kernel diagnostics contain no OOM-kill
+record; the cause of emulator termination remains unproven. Deprecation alone
+is therefore not a demonstrated fix. Diagnostic artifact15169194841 is retained.
+
+The next comparison uses supported `swiftshader` versus `swangle` (ANGLE over
+SwiftShader), keeping Flutter renderer flags and application source unchanged.
+It also streams logcat before the failure, and moves emulator-version capture
+inside the emulator step, after the runner has installed that binary. Previous
+pre-step version capture found no binary and was not valid emulator metadata.
+Neither candidate is accepted until installed assertions and screenshots pass.
