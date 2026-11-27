@@ -10,9 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  characters: ^1.4.0
-  shared_preferences: ^2.5.3
-  flame: ^1.33.0
+  characters: ^1.4.1
+  shared_preferences: ^2.5.6
+  flame: ^1.38.2
 
 dev_dependencies:
   integration_test:
