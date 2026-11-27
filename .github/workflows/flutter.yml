@@ -58,7 +58,7 @@ jobs:
         run: python3 tool/verify_responsive_screenshots.py --premium-flows
       - name: Upload responsive screenshots
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-linux-responsive-screenshots
           path: apps/mobile/test-artifacts/acceptance/*.png
@@ -73,7 +73,7 @@ jobs:
           dart run tool/engine_benchmark.dart --warmup=200 --samples=20 --iterations-per-sample=100 > test-artifacts/engine-benchmark.json
       - name: Upload engine benchmark baseline
         if: success()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-engine-benchmark
           path: apps/mobile/test-artifacts/engine-benchmark.json
@@ -87,27 +87,27 @@ jobs:
           test -s test-artifacts/board-preview-calibration-393x873.png
       - name: Upload full-screen match screenshot
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-match-screen-393x873
           path: apps/mobile/test-artifacts/match-screen-393x873.png
           if-no-files-found: warn
       - name: Upload canonical board-canvas screenshot
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-match-canvas-393x699
           path: apps/mobile/test-artifacts/match-canvas-393x699.png
           if-no-files-found: warn
       - name: Upload board calibration preview
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-board-calibration-preview
           path: apps/mobile/test-artifacts/board-preview-calibration-393x873.png
           if-no-files-found: warn
       - name: Upload canonical board artwork for pixel calibration
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-canonical-board-artwork
           path: apps/mobile/assets/images/board/ludo_board_glass.webp
@@ -174,20 +174,20 @@ jobs:
         working-directory: apps/mobile
         run: test -s build/app/outputs/bundle/release/app-release.aab
       - name: Upload validation-only app bundle (not production signed)
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-validation-only-app-bundle-not-production-signed
           path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
       - name: Upload internal-mode profile APKs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-internal-modes-profile-apks
           path: apps/mobile/build/app/outputs/flutter-apk/*-profile.apk
 
       - name: Upload split release APKs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-lovers-release-apks
           path: apps/mobile/build/app/outputs/flutter-apk/*-release.apk
