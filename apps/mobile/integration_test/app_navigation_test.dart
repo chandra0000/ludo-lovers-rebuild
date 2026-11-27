@@ -152,6 +152,11 @@ void main() {
         expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
         expect(tester.takeException(), isNull);
       }
+      // Release text input, routes and render objects before end-of-test checks.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
-import 'package:ludo_lovers/src/game/domain/mode_registry.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/domain/team_up_policy.dart';
 import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
@@ -91,8 +90,10 @@ void main() {
     await tester.tap(find.byKey(const Key('resume_saved_match')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('team_progress_a')), findsOneWidget);
-    expect((await const SavedMatchStore().load())!.game.ruleProfile,
-        LudoRuleProfile.teamUpV1);
+    expect(
+      (await const SavedMatchStore().load())!.game.ruleProfile,
+      LudoRuleProfile.teamUpV1,
+    );
   });
   test('friendly loss is not projected as a capture celebration', () {
     final moved = team(

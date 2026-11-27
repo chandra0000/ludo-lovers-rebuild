@@ -85,7 +85,7 @@ class PlayerProfileCard extends StatelessWidget {
                           child: Text(
                             slot.participating
                                 ? profile.displayName
-                                : 'EMPTY / WAITING',
+                                : color.name.toUpperCase(),
                             key: Key('profile_name_${color.name}'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

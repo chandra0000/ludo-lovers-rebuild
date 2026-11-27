@@ -4,7 +4,7 @@ import '../support/local_mode_navigation.dart';
 
 void main() {
   testWidgets(
-      'Classic, Quick and Team Up start, roll, restart, exit and resume',
+      'Public local 2/3 and preview modes start, roll, restart, exit and resume',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     await verifyLocalModeNavigation(tester);

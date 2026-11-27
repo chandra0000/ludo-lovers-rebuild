@@ -9,7 +9,10 @@ class SavedMatchStore {
 
   Future<void> save(SavedMatch match) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(_storageKey, match.encode());
+    final persisted = await preferences.setString(_storageKey, match.encode());
+    if (!persisted) {
+      throw StateError('Local match storage rejected the write');
+    }
   }
 
   Future<SavedMatch?> load() async {

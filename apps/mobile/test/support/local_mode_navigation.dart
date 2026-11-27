@@ -43,6 +43,8 @@ Future<void> verifyLocalModeNavigation(
   );
   await settled();
   for (final fixture in [
+    (MatchMode.compatibility, 2),
+    (MatchMode.compatibility, 3),
     (MatchMode.classic, 2),
     (MatchMode.quick, 3),
     (MatchMode.teamUp, 4),
@@ -75,8 +77,16 @@ Future<void> verifyLocalModeNavigation(
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
     final initial = (await const SavedMatchStore().load())!;
     expect(initial.game.configuration.mode, fixture.$1);
-    await capture?.call('native-${initial.game.configuration.id}-match');
+    await capture?.call(
+      fixture.$1 == MatchMode.compatibility
+          ? 'native-local-${fixture.$2}-match'
+          : 'native-${initial.game.configuration.id}-match',
+    );
     expect(initial.game.configuration.activePlayers, hasLength(fixture.$2));
+    expect(
+      initial.game.configuration.version,
+      fixture.$1 == MatchMode.compatibility ? 2 : 1,
+    );
     await tap(const Key('roll_dice'));
     await tester.pump(const Duration(seconds: 2));
     expect(tester.takeException(), isNull);
@@ -97,6 +107,10 @@ Future<void> verifyLocalModeNavigation(
     expect(
       (await const SavedMatchStore().load())!.game.configuration.mode,
       fixture.$1,
+    );
+    expect(
+      (await const SavedMatchStore().load())!.game.configuration.activePlayers,
+      hasLength(fixture.$2),
     );
     await leave(); // resume -> Home
     expect(find.byKey(const Key('open_mode_selection')), findsOneWidget);

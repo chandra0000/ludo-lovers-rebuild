@@ -64,7 +64,8 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('EMPTY / WAITING'), findsNWidgets(2));
+    expect(find.text('GREEN'), findsOneWidget);
+    expect(find.text('BLUE'), findsOneWidget);
     expect(find.byKey(const Key('robot_magenta')), findsOneWidget);
     expect(find.textContaining('BOT · AI'), findsOneWidget);
     expect(find.text('TEAM-UP'), findsNothing);
