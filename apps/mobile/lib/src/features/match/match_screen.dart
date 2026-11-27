@@ -864,5 +864,4 @@ class _MatchScreenState extends State<MatchScreen>
     _previewController.stop();
     _move(pawnIndex);
   }
-
 }
