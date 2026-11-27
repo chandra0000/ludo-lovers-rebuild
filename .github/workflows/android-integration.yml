@@ -22,12 +22,18 @@ concurrency:
 jobs:
   android-integration:
     # PRs are opt-in via label; main and manual dispatch always run.
-    if: github.event_name != 'pull_request' || github.event.label.name == 'run-android-integration'
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-android-integration' || github.event.label.name == 'compare-emulator-gpu'
+    strategy:
+      fail-fast: false
+      matrix:
+        gpu: ${{ fromJSON(github.event.label.name == 'compare-emulator-gpu' && '["swiftshader","swangle"]' || '["swangle"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: '3.35.7'
@@ -64,9 +70,16 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm
+      - name: Record exact source and emulator implementation
+        run: |
+          mkdir -p emulator-diagnostics
+          git rev-parse HEAD > emulator-diagnostics/source.txt
+          flutter --version > emulator-diagnostics/flutter.txt
+          sha256sum apps/mobile/build/app/outputs/flutter-apk/app-debug.apk > emulator-diagnostics/apk-sha256.txt
+          echo '${{ matrix.gpu }}' > emulator-diagnostics/emulator-gpu-mode.txt
       - name: Android emulator integration smoke test
         timeout-minutes: 20
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 33
           target: google_apis
@@ -75,17 +88,18 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           emulator-boot-timeout: 420
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
-          # Software OpenGL is the checkpoint configuration, not a physical GPU
-          # acceptance result or a proven fix for historical emulator loss.
+          emulator-options: -no-snapshot -no-window -gpu ${{ matrix.gpu }} -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          # Compare supported direct SwiftShader and ANGLE-over-SwiftShader.
+          # Flutter retains its default GPU renderer in both comparison cases;
+          # this chooses the emulator GLES backend, not Flutter software mode.
           disable-animations: true
           working-directory: apps/mobile
           script: bash ../../.github/scripts/android_integration.sh
       - name: Upload installed Android emulator screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-installed-android-emulator-screenshots
+          name: ludo-installed-android-emulator-screenshots-${{ matrix.gpu }}
           path: apps/mobile/test-artifacts/native/*.png
           if-no-files-found: error
       - name: Collect emulator diagnostics on failure
@@ -105,9 +119,9 @@ jobs:
           timeout 15s adb -s emulator-5554 shell getprop > emulator-diagnostics/properties.txt 2>&1 || true
           timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
       - name: Upload emulator diagnostics
-        if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-lovers-emulator-diagnostics
+          name: ludo-lovers-emulator-diagnostics-${{ matrix.gpu }}
           path: emulator-diagnostics/
           if-no-files-found: warn

@@ -22,10 +22,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: subosito/flutter-action@v2
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: '3.35.7'
@@ -68,7 +69,7 @@ jobs:
           ls -l /dev/kvm
       - name: Android emulator integration smoke test
         timeout-minutes: 20
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 33
           target: google_apis
@@ -97,7 +98,7 @@ jobs:
           timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties-after-exit.txt 2>&1 || true
       - name: Upload recording, assertions and live diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-gameplay-android-seeded-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
@@ -105,7 +106,7 @@ jobs:
           if-no-files-found: error
       - name: Upload installed Android emulator screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-recording-native-screenshots
           path: apps/mobile/test-artifacts/native/*.png
@@ -128,7 +129,7 @@ jobs:
           timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
       - name: Upload emulator diagnostics
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ludo-recording-failure-diagnostics
           path: emulator-diagnostics/
