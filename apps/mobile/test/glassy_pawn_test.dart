@@ -75,8 +75,12 @@ void main() {
     );
 
     expect(find.byType(GlassyPawn), findsNWidgets(4));
-    for (final pawn in tester.widgetList<GlassyPawn>(find.byType(GlassyPawn))) {
-      expect(colors, contains(pawn.color));
+    final pawns = tester.widgetList<GlassyPawn>(find.byType(GlassyPawn));
+    expect(pawns.map((pawn) => pawn.color), orderedEquals(colors));
+    for (var index = 0; index < colors.length; index++) {
+      final size = tester.getSize(find.byType(GlassyPawn).at(index));
+      expect(size.width, 24);
+      expect(size.height, closeTo(24 * 1.18, 0.001));
     }
     expect(tester.takeException(), isNull);
   });
