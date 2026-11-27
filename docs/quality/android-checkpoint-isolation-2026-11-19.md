@@ -122,3 +122,21 @@ are unchanged; all required native files must pass. Backend-specific artifact
 names prevent one comparison case overwriting another. Source/SDK/emulator/help/
 APK identity artifacts are saved on success and failure. Do not describe the
 change as a verified fix until the controlled outcomes are inspected.
+
+### First controlled result and next bounded comparison
+
+Run [45933871515](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/45933871515)
+tested application tree from main5d4ca3 on QA commit
+`f16d85e3aba50246a1f49dc2127b178a357905a8`. The supported direct
+`swiftshader` case booted emulator37.3.10, installed the APK, attached the
+Flutter driver and began navigation, then lost the service and ADB. No
+native screenshots were produced. Host kernel diagnostics contain no OOM-kill
+record; the cause of emulator termination remains unproven. Deprecation alone
+is therefore not a demonstrated fix. Diagnostic artifact15169194841 is retained.
+
+The next comparison uses supported `swiftshader` versus `swangle` (ANGLE over
+SwiftShader), keeping Flutter renderer flags and application source unchanged.
+It also streams logcat before the failure, and moves emulator-version capture
+inside the emulator step, after the runner has installed that binary. Previous
+pre-step version capture found no binary and was not valid emulator metadata.
+Neither candidate is accepted until installed assertions and screenshots pass.

@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gpu: ${{ fromJSON(github.event.label.name == 'compare-emulator-gpu' && '["swiftshader_indirect","swiftshader"]' || '["swiftshader"]') }}
+        gpu: ${{ fromJSON(github.event.label.name == 'compare-emulator-gpu' && '["swiftshader","swangle"]' || '["swangle"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -75,8 +75,6 @@ jobs:
           mkdir -p emulator-diagnostics
           git rev-parse HEAD > emulator-diagnostics/source.txt
           flutter --version > emulator-diagnostics/flutter.txt
-          timeout 15s "$ANDROID_HOME/emulator/emulator" -version > emulator-diagnostics/emulator-version.txt 2>&1 || true
-          timeout 15s "$ANDROID_HOME/emulator/emulator" -help-gpu > emulator-diagnostics/emulator-gpu-help.txt 2>&1 || true
           sha256sum apps/mobile/build/app/outputs/flutter-apk/app-debug.apk > emulator-diagnostics/apk-sha256.txt
           echo '${{ matrix.gpu }}' > emulator-diagnostics/emulator-gpu-mode.txt
       - name: Android emulator integration smoke test
@@ -91,7 +89,7 @@ jobs:
           heap-size: 512M
           emulator-boot-timeout: 420
           emulator-options: -no-snapshot -no-window -gpu ${{ matrix.gpu }} -feature -Vulkan -noaudio -no-boot-anim -camera-back none
-          # Android deprecated swiftshader_indirect in emulator36.4.9.
+          # Compare supported direct SwiftShader and ANGLE-over-SwiftShader.
           # Flutter retains its default GPU renderer in both comparison cases;
           # this chooses the emulator GLES backend, not Flutter software mode.
           disable-animations: true
