@@ -1,3 +1,121 @@
+# Integration refresh — 2026-11-27
+
+**Merge decision: HOLD at #74. No merges performed.** This section supersedes the
+outdated queue/status statements in the preserved 2026-11-22 snapshot below.
+It is an integration review, not new visual/runtime acceptance.
+
+## Current baseline and first gate
+
+- Verified `main`: `1bc591318b4801949c2f616e8ce13549bf0ee012`, merge of #73.
+  Git history contains all20 merge commits for #54–#73. They are no longer an
+  unmerged stack. The #73 source tree and current main tree are identical.
+- Retargeted #74 from `feat/responsive-profile-logo-composition` to `main`.
+  Reviewed head: `f50838899a647c238319c9d3b31b9391a8e34702`.
+  Net diff: four files,158 additions/two deletions: Android workflow,
+  integration shell script, crash-summary helper and historical investigation note.
+  `apps/mobile` has no changes. Local merge-tree is clean; GitHub subsequently
+  reports mergeable. Mergeability does not imply passing checks or approval.
+- Head advanced since70f0bf2 by one commit: f508388 switches emulator
+  `-no-snapshot-save` to `-no-snapshot`. No other predecessor change was found.
+- [Exact-head checkpoint45861856889](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/45861856889),
+  job140054628226: prebuild/boot PASS; installed integration FAIL with RequestData
+  error, ADB offline and TCP5554 refused. Required screenshot upload FAIL.
+  No native trigger is established. This is not cleared by the local checks.
+- Local review checks PASS: Bash/YAML/Python parsing, three actual Gradle
+  transformation/idempotency cases, crash-field exclusion/output bounds and
+  `git diff --check`. Application tests were not rerun for a byte-identical app;
+  no current installed acceptance is claimed. No blind CI retry was requested.
+- #74's body now records current source, base, findings and failed run; the old
+  request to hold already-merged #73 is explicitly obsolete.
+
+## Paused implementation queue
+
+| PR | Reviewed head | Required predecessor / disposition |
+| --- | --- | --- |
+| #74 | f50838899a64 | current main; HOLD, failed Android acceptance |
+| #75 | e6a6fa785a24 | #74; HOLD, workflow conflict confirmed by merge-tree |
+| #76 | 1f6084ea2aa7 | #75; draft; fresh integrated branding/startup/platform evidence required |
+| #80 | 0e6478d2affe | #76; draft |
+| #85 | 8a25a9f8587b | #80; draft |
+| #86 | 4b483adb6661 | #85; draft; recorded-base discrepancy reconciled below |
+| #87 | 47c62c51483c | #86; draft |
+| #89 | ca937e981d5d | #87; draft |
+| #92 | 6f0479e3e261 | #89; draft |
+
+#75's actual intended base branch remains fix/android-checkpoint-build-isolation;
+its captured base SHA is70f0bf2, while that branch now points to f508388. A local
+merge preflight confirms a content conflict in `.github/workflows/android-integration.yml`.
+Do not resolve/revalidate against a hypothetical accepted main: first clear #74,
+merge it with a merge commit, verify main and update #75 one child at a time.
+Recording and installed checks must run on the resulting resolved revision.
+
+### #86 ancestry versus equivalent patch
+
+The Git merge base of #85 and #86 is `601588a68158e78ca182ea2a949ccc5b98ff8046`,
+not #85's current head. #85 adds `8a25a9f8587b08dbcab04284a2d6d99ade840170`
+(fit dice pips inside padded face). #86 already carries its cherry-pick
+`fa7e1cd94e5b783a11484bec0cfb5f2bc113cc3a`.
+Both stable patch IDs equal `2a1e3903ef03cf7deb3fdd96cb9ad3e33232fe4c`;
+both resulting luxury_dice.dart blobs equal
+`5d5f46f6367a77c36c185265728ac1e0ca44e9f3`.
+This is a history discrepancy, not a missing dice fix. Do not apply it twice.
+#86 additionally carries fbe6ad2 (four-size candidate QA) and4b483ad (launcher
+entry discovery). Once #85 is accepted, reconcile ancestry with a non-forced
+update, inspect the resulting delta and rerun the installed acceptance matrix.
+No such installed run or downstream branch mutation was performed here.
+
+## Independent and sidebar review
+
+- #77 is this independently refreshed documentation audit. Old observations and
+  evidence below remain historical, not statements about current main.
+- #78 head d23c43cda3b0 remains draft. Its [comparison45017046727](https://github.com/chandra0000/ludo-lovers-rebuild/actions/runs/45017046727)
+  reports default FAIL for both control e6a6fa7 and candidate85c10f5, software PASS
+  for both with a shared test harness. It tracks default-renderer failure separately;
+  it does not clear #74, establish a native crash cause, prove physical performance,
+  or constitute a Flutter-versus-Flame benchmark. Sources predate current integration.
+- #79 head8af323ddd0e6: defer final footage review until recording baseline settled.
+- Sidebars #81/cbf9e58 and #84/4f7860c follow #80; #88/ce6ab5b follows #87;
+  #91/50b9b46 follows #89. All are draft. Compare only their unique deltas against
+  the accepted parent/main-chain result before incorporating changes.
+- #82 head4e18738048fd is draft/conflicting against main. Its old MatchScreen
+  pawn-target widening44→48 is already represented by both48dp dimensions in
+  #76's extracted MatchPawnLayer. Do not reintroduce the old monolithic patch.
+  #82 also has other changes; this is not a claim that its entire eight-file
+  patch is redundant. Compare those individually after #76/#95 acceptance.
+- #93/c2eff479 and #95/d6699f85 follow #92 and remain draft. #95 changes direct
+  stack interaction/home-token presentation in MatchPawnLayer, removes the
+  onStackTap dispatch and changes app tests. It requires its own local-mode and
+  pawn-selection regressions, not automatic substitution for #76's chooser.
+- Hold online drafts #90/42ca889 and #94/71e7d36 for joint authority/security
+  architecture review and explicit choice. No online design was selected here.
+- Older #39/6473022 remains draft/conflicting, with unique experimental benchmark
+  files and obsolete workflow edits. Do not import its workflow or call measured
+  renderer superiority without device evidence.
+- #40/7799cce remains draft/conflicting. Its exterior halo implementation is
+  byte-identical to main; old MatchScreen/test edits need individual review.
+  In particular its quarter-resolution pixel test is not equivalent to main's
+  full-resolution interior check. Do not roll the current HUD/tests back.
+- #42/c99f263 remains draft. Its residual base-to-head test-file delta already
+  matches main. The pawn renderer on main has since evolved; it is not byte-
+  identical to that historical renderer. No unique current renderer change is
+  approved for carry-forward by this preflight.
+
+## Next executable gate
+
+Require #74's passing checks and review acceptance on its exact current base/head;
+the latest failed runtime remains failed. Resolve the default-renderer issue
+using #78's controlled evidence rather than silently switching the production
+renderer or counting software recording as default acceptance. Then use merge
+commits, verify main and retarget/reconcile only the immediate child. Draft,
+conflict, missing checks or unexpected predecessor changes stop that branch and
+its descendants while independent reviews continue. No PR was closed, approved,
+merged or force-pushed; no release/visual/physical-device gate was cleared.
+
+---
+
+## Preserved historical snapshot — 2026-11-22
+
+
 # Task 1 repository and integration audit
 
 **Decision: NO-GO for release.** Keep the review stack intact while Android default-renderer acceptance, iOS installed acceptance at the candidate head, and physical-device gates remain open.
