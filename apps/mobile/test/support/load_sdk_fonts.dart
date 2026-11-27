@@ -5,6 +5,16 @@ import 'package:flutter/services.dart';
 /// Use the pinned SDK's Android fonts rather than Ahem blocks in acceptance PNGs.
 /// This changes only test rendering; it does not add or replace app assets.
 Future<void> loadSdkFonts() async {
+  for (final entry in {
+    'Nunito': [400, 600, 700, 800],
+    'Cinzel': [700],
+  }.entries) {
+    final loader = FontLoader(entry.key);
+    for (final weight in entry.value) {
+      loader.addFont(rootBundle.load('assets/fonts/${entry.key}-$weight.ttf'));
+    }
+    await loader.load();
+  }
   final flutterRoot = Platform.environment['FLUTTER_ROOT'] ??
       File(Platform.resolvedExecutable)
           .parent

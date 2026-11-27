@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ludo_lovers/src/theme/app_typography.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -82,6 +83,7 @@ void responsiveTest(
       stage('initialize');
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData.dark().copyWith(textTheme: AppTypography.textTheme),
           home: MatchScreen(
             profiles: MatchPlayerProfile.local(
               names: {
@@ -223,7 +225,7 @@ void responsiveTest(
         );
       }
       expect(find.text('Roll dice'), findsNothing);
-      expect(find.text('Your turn'), findsOneWidget);
+      expect(find.textContaining('Roll dice'), findsOneWidget);
 
       // Engine/image callbacks and filesystem operations must run outside
       // the widget binding's fake-async zone. Keeping only writes in runAsync

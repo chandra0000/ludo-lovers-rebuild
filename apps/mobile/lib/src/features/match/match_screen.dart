@@ -1,3 +1,5 @@
+import 'pawn_chooser.dart';
+import '../../theme/app_typography.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -13,7 +15,6 @@ import '../../game/domain/mode_registry.dart';
 import '../../game/domain/feedback_preferences.dart';
 import '../../game/infrastructure/persistence/feedback_preferences_store.dart';
 import '../../game/domain/persistence/saved_match.dart';
-import '../../game/presentation/player_color_theme.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
 import 'local_match_chat_sheet.dart';
@@ -470,8 +471,16 @@ class _MatchScreenState extends State<MatchScreen>
                   teamProgress: _game.configuration.isTeamUp
                       ? TeamProgressPanel(game: _game, profiles: _profiles)
                       : null,
-                  teamProgressHeight:
-                      _game.scheduledPlayer == _game.activePlayer ? 40 : 58,
+                  teamProgressHeight: () {
+                    final scaled = MediaQuery.textScalerOf(context).scale(14);
+                    final badge = (scaled * 1.2 * (scaled > 18 ? 1 : 2) + 8)
+                        .clamp(40.0, double.infinity);
+                    return badge +
+                        (_game.scheduledPlayer == _game.activePlayer
+                            ? 0
+                            : MediaQuery.textScalerOf(context).scale(11) * 1.5 +
+                                2);
+                  }(),
                   reaction: const SizedBox.shrink(),
                   onPlayerChat: _showPlayerChat,
                   onPlayerEmoji: _showPlayerReactions,
@@ -504,37 +513,22 @@ class _MatchScreenState extends State<MatchScreen>
                       ),
                     ),
                   ),
+                  result: _game.winner == null
+                      ? null
+                      : MatchResultPresentation(onRematch: _restartMatch),
                   status: Semantics(
+                    key: const Key('turn_status'),
                     liveRegion: true,
                     label: '$_statusText. $_actionInstruction',
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _actionInstruction == 'Roll dice'
-                              ? 'Your turn'
-                              : _actionInstruction,
-                          key: const Key('match_action_instruction'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            height: 1,
-                          ),
-                        ),
-                        Text(
-                          _statusText,
-                          key: const Key('turn_status'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: _game.activePlayer.color,
-                            fontSize: 10,
-                            height: 1,
-                          ),
-                        ),
-                      ],
+                    child: Center(
+                      child: Text(
+                        _game.winner != null
+                            ? _statusText
+                            : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _game.activePlayer).displayName}',
+                        key: const Key('match_action_instruction'),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.status,
+                      ),
                     ),
                   ),
                   utilities: MatchUtilityBar(
@@ -581,8 +575,6 @@ class _MatchScreenState extends State<MatchScreen>
                           selectedPawnIndex: _selectedPawnIndex!,
                           animation: _previewController,
                         ),
-                      if (_game.winner != null)
-                        MatchResultPresentation(onRematch: _restartMatch),
                     ],
                   ),
                 ),
@@ -766,51 +758,6 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
 
-    showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: const Color(0xFF17120B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'CHOOSE A PAWN',
-                style: TextStyle(
-                  color: Color(0xFFFFC857),
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
-                ),
-              ),
-              const SizedBox(height: 12),
-              for (final index in movablePawnIndices)
-                ListTile(
-                  leading: Icon(
-                    Icons.circle,
-                    color: _game.activePlayer.color,
-                  ),
-                  title: Text(
-                    'Pawn ${index + 1}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Color(0xFFFFC857),
-                  ),
-                  onTap: () => Navigator.of(sheetContext).pop(index),
-                ),
-            ],
-          ),
-        ),
-      ),
-    ).then((selectedIndex) {
-      if (selectedIndex != null && mounted) {
-        _selectOrMovePawn(selectedIndex);
-      }
-    });
+    unawaited(showPawnChooser(context, movablePawnIndices, _selectOrMovePawn));
   }
 }

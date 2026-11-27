@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'theme/app_typography.dart';
+
 import 'features/splash/splash_screen.dart';
 
 class LudoLoversApp extends StatelessWidget {
-  const LudoLoversApp({super.key});
+  const LudoLoversApp({super.key, this.onFirstViewReady});
+  final VoidCallback? onFirstViewReady;
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +16,38 @@ class LudoLoversApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
+        fontFamily: 'Nunito',
+        fontFamilyFallback: AppTypography.fallback,
+        textTheme: AppTypography.textTheme,
+        appBarTheme: const AppBarTheme(titleTextStyle: AppTypography.heading),
+        dialogTheme: const DialogThemeData(
+          titleTextStyle: AppTypography.heading,
+          contentTextStyle: AppTypography.body,
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            textStyle: AppTypography.button,
+            minimumSize: const Size(48, 48),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            textStyle: AppTypography.button,
+            minimumSize: const Size(48, 48),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            textStyle: AppTypography.button,
+            minimumSize: const Size(48, 48),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            textStyle: AppTypography.button,
+            minimumSize: const Size(48, 48),
+          ),
+        ),
         scaffoldBackgroundColor: const Color(0xFF080808),
         colorScheme: const ColorScheme.dark(
           primary: gold,
@@ -23,11 +58,11 @@ class LudoLoversApp extends StatelessWidget {
         // snackbar text is dark, so define both colors as one readable pair.
         snackBarTheme: const SnackBarThemeData(
           backgroundColor: Color(0xFF211A0D),
-          contentTextStyle: TextStyle(color: Color(0xFFFFE3A0)),
+          contentTextStyle: AppTypography.body,
         ),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(onFirstViewReady: onFirstViewReady),
     );
   }
 }

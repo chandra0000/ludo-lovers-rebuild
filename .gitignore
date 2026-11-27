@@ -26,3 +26,6 @@ Thumbs.db
 # Generated Flutter verification evidence
 apps/mobile/test-artifacts/
 __pycache__/
+
+# Full-resolution iOS marketing icon is generated locally or by macOS sips.
+apps/mobile/native_branding/ios/Assets.xcassets/AppIcon.appiconset/icon-1024-1.png

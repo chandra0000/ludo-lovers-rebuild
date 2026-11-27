@@ -1,3 +1,4 @@
+import '../../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 
 /// Presentation-only result action. The engine supplies the outcome and the
@@ -8,15 +9,24 @@ class MatchResultPresentation extends StatelessWidget {
   final VoidCallback onRematch;
 
   @override
-  Widget build(BuildContext context) => Positioned(
-        left: 150,
-        top: 480,
-        width: 276,
-        height: 80,
-        child: Center(
-          child: FilledButton(
-            onPressed: onRematch,
-            child: const Text('PLAY AGAIN'),
+  Widget build(BuildContext context) => Material(
+        color: const Color(0xF2160B28),
+        borderRadius: BorderRadius.circular(20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                header: true,
+                child: const Text('Victory!', style: AppTypography.heading),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: onRematch,
+                child: const Text('PLAY AGAIN'),
+              ),
+            ],
           ),
         ),
       );

@@ -100,7 +100,7 @@ void main() {
     );
     await tester.pump();
     expect(find.byKey(const Key('ai_thinking_green')), findsOneWidget);
-    expect(find.text('AI thinking'), findsOneWidget);
+    expect(find.textContaining('AI thinking'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
     expect(tester.takeException(), isNull);

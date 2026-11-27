@@ -25,6 +25,7 @@ class GameBoardScaffold extends StatelessWidget {
     required this.reaction,
     required this.boardBuilder,
     this.teamProgress,
+    this.result,
     this.teamProgressHeight = 40,
     this.onPlayerChat,
     this.onPlayerEmoji,
@@ -40,22 +41,49 @@ class GameBoardScaffold extends StatelessWidget {
   final List<MatchPlayerProfile> profiles;
   final VoidCallback onExit;
   final Widget dice, utilities, status, reaction;
-  final Widget? teamProgress;
+  final Widget? teamProgress, result;
   final double teamProgressHeight;
   final Widget Function(BuildContext, double) boardBuilder;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, box) {
+          // Native runners are portrait-locked. Very short host windows get an
+          // intentional scroll fallback instead of a zero-sized board transform.
+          if (box.maxHeight < 480) {
+            return SingleChildScrollView(
+              child: SizedBox(
+                height: 640,
+                child: GameBoardScaffold(
+                  game: game,
+                  profiles: profiles,
+                  onExit: onExit,
+                  dice: dice,
+                  utilities: utilities,
+                  status: status,
+                  reaction: reaction,
+                  boardBuilder: boardBuilder,
+                  teamProgress: teamProgress,
+                  teamProgressHeight: teamProgressHeight,
+                  onPlayerChat: onPlayerChat,
+                  onPlayerEmoji: onPlayerEmoji,
+                  social: social,
+                  thinkingPlayer: thinkingPlayer,
+                  showProfiles: showProfiles,
+                  result: result,
+                ),
+              ),
+            );
+          }
           final spacious = box.maxHeight >= 760;
           final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
           final compact = box.maxHeight < 680;
           final profileHeight = (compact
-                  ? 108.0
+                  ? 124.0
                   : spacious
                       ? 140.0
                       : 124.0) +
-              (largeText ? 24 : 0);
+              (largeText ? (compact ? 16 : 24) : 0);
           final centerWidth = (box.maxWidth * .23).clamp(72.0, 112.0);
           final slots = PlayerSlotResolver.resolve(
             game,
@@ -150,6 +178,8 @@ class GameBoardScaffold extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              if (result != null)
+                                Positioned.fill(child: Center(child: result!)),
                             ],
                           ),
                         );
@@ -174,8 +204,14 @@ class GameBoardScaffold extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: largeText ? 40 : 24, child: status),
-                SizedBox(height: 48, child: utilities),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: status,
+                ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: utilities,
+                ),
               ],
             ),
           );

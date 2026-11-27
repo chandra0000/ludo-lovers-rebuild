@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 
 SERIAL = os.environ.get('ANDROID_SERIAL', 'emulator-5554')
 OUT = Path('test-artifacts/native')
@@ -138,6 +139,96 @@ class Recorder:
                 self.process.wait(timeout=3)
 
 
+def ui_nodes():
+    adb('shell', 'uiautomator', 'dump', '/sdcard/ludo-window.xml')
+    return list(ET.fromstring(adb('shell', 'cat', '/sdcard/ludo-window.xml')).iter('node'))
+
+
+def tap_label(label, nodes):
+    for node in nodes:
+        if label in (node.get('text', '') + node.get('content-desc', '')):
+            coords = [int(v) for v in re.findall(r'\d+', node.get('bounds', ''))]
+            if len(coords) == 4:
+                adb('shell', 'input', 'tap', str((coords[0]+coords[2])//2), str((coords[1]+coords[3])//2))
+                return True
+    return False
+
+
+def branding_prelude(recorder):
+    """Actual normal entrypoint, launcher and cold startup before seeded integration.
+    Native screenrecord remains continuous across the disclosed test APK switch.
+    """
+    package = 'com.ludolovers.ludo_lovers'
+    baseline = list(Path('test-artifacts/baseline-apk').rglob('*.apk'))
+    if len(baseline) != 1:
+        raise RuntimeError('Expected exact predecessor APK for before screenshots')
+    adb('install', '-r', str(baseline[0]), timeout=60)
+    adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+    time.sleep(1)
+    adb('shell', 'input', 'swipe', '180', '740', '180', '240', '400')
+    time.sleep(1)
+    screenshot('before-installed-launcher')
+    adb('shell', 'am', 'start', '-n', package + '/.MainActivity',
+        '--ez', 'enable-software-rendering', 'true', '--ez', 'enable-impeller', 'false')
+    time.sleep(.4)
+    screenshot('before-native-flutter-launch')
+    time.sleep(3)
+    screenshot('before-startup-ready')
+    # Different CI runs use different debug signing keys; cleanly replace only
+    # the dedicated emulator's app. These historical screenshots are NOT video.
+    adb('uninstall', package)
+    adb('install', '-r', 'build/app/outputs/flutter-apk/app-branding-debug.apk', timeout=60)
+    adb('shell', 'am', 'force-stop', package)
+    adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+    time.sleep(1)
+    adb('shell', 'input', 'swipe', '180', '740', '180', '240', '400')
+    time.sleep(1)
+    nodes = ui_nodes()
+    screenshot('native-installed-launcher')
+    if not any('Ludo Lovers' in n.get('text', '') for n in nodes):
+        raise RuntimeError('Installed launcher label Ludo Lovers was not visible in app drawer')
+    (VIDEO / 'launcher-ui.xml').write_text(adb('shell', 'cat', '/sdcard/ludo-window.xml'))
+    (VIDEO / 'launcher-nodes.json').write_text(json.dumps([n.attrib for n in nodes], indent=2))
+    recorder.start()
+    screenshot('native-installed-launcher')
+    time.sleep(2)
+    # Same Activity/renderer flags used by Flutter CLI; normal production entry.
+    args = ['shell', 'am', 'start', '-n', package + '/.MainActivity']
+    if os.environ.get('LUDO_SOFTWARE_RENDERING') == 'true':
+        args.extend(['--ez', 'enable-software-rendering', 'true', '--ez', 'enable-impeller', 'false'])
+    adb(*args)
+    for frame in range(5):
+        screenshot('native-cold-start-' + str(frame))
+        time.sleep(.15)
+    for _ in range(8):
+        nodes = ui_nodes()
+        if tap_label('SKIP', nodes):
+            time.sleep(.5)
+            continue
+        if any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
+            screenshot('native-branded-home')
+            time.sleep(2)
+            adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+            time.sleep(.5)
+            screenshot('native-normal-background')
+            adb(*args)
+            nodes = ui_nodes()
+            if not any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
+                raise RuntimeError('Warm foreground return did not retain home')
+            screenshot('native-warm-home')
+            if not tap_label('PLAY NOW', nodes):
+                raise RuntimeError('Home action disappeared during startup')
+            time.sleep(1)
+            screenshot('native-branded-setup')
+            time.sleep(2)
+            # Keep the actual launcher visible during the disclosed APK switch.
+            adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+            time.sleep(.5)
+            return
+        time.sleep(.5)
+    raise RuntimeError('Cold startup did not reach recoverable home/setup within bounded readiness checks')
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     VIDEO.mkdir(parents=True, exist_ok=True)
@@ -165,24 +256,28 @@ def main():
     }, indent=2))
     if os.environ.get('LUDO_GAMEPLAY_RECORDING') == 'true':
         command.append('--dart-define=LUDO_RECORD_GAMEPLAY=true')
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True, bufsize=1, start_new_session=True)
+    proc = None
     # Outer workflow is bounded too; this watchdog also protects local usage.
     import threading
     expired = threading.Event()
 
     def terminate():
         expired.set()
-        os.killpg(proc.pid, signal.SIGTERM)
+        if proc is not None:
+            os.killpg(proc.pid, signal.SIGTERM)
     watchdog = threading.Timer(360, terminate)
     watchdog.start()
     try:
+        if os.environ.get('LUDO_BRANDING_RECORDING') == 'true':
+            branding_prelude(recorder)
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, bufsize=1, start_new_session=True)
         with (VIDEO / 'integration.log').open('w') as transcript:
             for line in proc.stdout:
                 print(line, end='', flush=True)
                 transcript.write(line)
                 transcript.flush()
-                if 'LUDO_RECORD_START' in line:
+                if 'LUDO_RECORD_START' in line and recorder.pid is None:
                     recorder.start()
                 elif 'LUDO_RECORD_STOP' in line:
                     recorder.stop()
@@ -226,7 +321,7 @@ def main():
             logcat.terminate()
             logcat.wait(timeout=5)
             log_file.close()
-            if proc.poll() is None:
+            if proc is not None and proc.poll() is None:
                 os.killpg(proc.pid, signal.SIGTERM)
                 try:
                     proc.wait(timeout=5)

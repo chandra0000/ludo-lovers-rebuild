@@ -1,3 +1,4 @@
+import '../../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
@@ -22,7 +23,7 @@ class TeamProgressPanel extends StatelessWidget {
               children: [
                 for (final team in TeamUpTeam.values) ...[
                   if (team == TeamUpTeam.b) const SizedBox(width: 8),
-                  Expanded(child: _team(team)),
+                  Expanded(child: _team(context, team)),
                 ],
               ],
             ),
@@ -45,7 +46,8 @@ class TeamProgressPanel extends StatelessWidget {
         ],
       );
 
-  Widget _team(TeamUpTeam team) {
+  Widget _team(BuildContext context, TeamUpTeam team) {
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
     final members = PlayerColor.turnOrder
         .where((c) => TeamUpPolicy.teamFor(c) == team)
         .toList();
@@ -79,21 +81,21 @@ class TeamProgressPanel extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              label,
+              largeText
+                  ? '${team.name.toUpperCase()} · $finished/$capacity'
+                  : label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Color(0xFFFFD36B),
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.status
+                  .copyWith(fontSize: 14, color: AppTypography.gold),
+            ),
+            if (!largeText)
+              Text(
+                names,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.body.copyWith(fontSize: 14, height: 1.2),
               ),
-            ),
-            Text(
-              names,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 10),
-            ),
           ],
         ),
       ),

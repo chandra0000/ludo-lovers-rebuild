@@ -34,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
   });
 }

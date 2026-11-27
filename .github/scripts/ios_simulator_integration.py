@@ -13,9 +13,9 @@ import urllib.request
 DIAGNOSTICS = Path('../../simulator-diagnostics')
 
 
-def run(stage, args, seconds, capture=False):
+def run(stage, args, seconds, capture=False, env=None):
     print(f'IOS STAGE: {stage}', flush=True)
-    return subprocess.run(args, check=True, timeout=seconds, text=True,
+    return subprocess.run(args, check=True, timeout=seconds, text=True, env=env,
                           stdout=subprocess.PIPE if capture else None).stdout
 
 
@@ -92,14 +92,12 @@ def main():
             time.sleep(.1)
         if not ready:
             raise TimeoutError('No VM service within 60s; see integration-console.txt and integration-unified.txt')
-        # Attach directly to the ready local service instead of Flutter's
-        # implicit install/launch/log-discovery path that stalled in the failed run.
-        # The simulator is owned by this script. Let flutter drive return after
-        # reporting test results instead of waiting for its own app-stop path;
-        # the finally block shuts down and deletes the isolated simulator.
-        run('attach integration driver', ['flutter', 'drive', '--no-pub',
-            '--driver=test_driver/native_capture_driver.dart', '--use-existing-app=' + uri,
-            '--keep-app-running', '-d', device_id], 180)
+        # VM readiness is already proven. Invoke the existing integration host
+        # directly, avoiding redundant Flutter device discovery and DDS startup.
+        # Keep the original deadline, screenshot checks and simulator cleanup.
+        run('attach integration driver', ['dart',
+            'test_driver/native_capture_driver.dart'], 180,
+            env={**os.environ, 'VM_SERVICE_URL': uri})
         run('verify native PNGs', ['python3', 'tool/verify_responsive_screenshots.py',
             '--native-directory', 'test-artifacts/native'], 30)
     finally:

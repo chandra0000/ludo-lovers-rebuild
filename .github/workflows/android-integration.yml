@@ -44,6 +44,18 @@ jobs:
       - name: Generate Android project files
         working-directory: apps/mobile
         run: flutter create --platforms=android --project-name=ludo_lovers --org=com.ludolovers .
+      - name: Restore approved native branding after scaffolding
+        working-directory: apps/mobile
+        run: python3 tool/generate_branding.py --apply
+      - name: Cache pinned Android Gradle dependencies
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/pubspec.lock', 'apps/mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: Bound build memory and compile before booting emulator
         timeout-minutes: 10
         working-directory: apps/mobile

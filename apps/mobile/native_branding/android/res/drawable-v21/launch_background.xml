@@ -1,0 +1,1 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:drawable="@color/royal_background"/><item><bitmap android:gravity="center" android:src="@drawable/launch_logo"/></item></layer-list>

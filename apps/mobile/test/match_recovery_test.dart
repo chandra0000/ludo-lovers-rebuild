@@ -27,7 +27,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('THREE SIXES — TURN PASSED'), findsOneWidget);
-    expect(find.text('GREEN · AI TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · AI TURN')), findsOneWidget);
 
     // The penalized roll has no dice result to animate. The AI must still
     // receive its turn and begin a fresh authoritative roll.
@@ -58,7 +58,7 @@ void main() {
     // The restored roll has no legal move; allow its 600 ms presentation delay.
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('GREEN · YOUR TURN'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
