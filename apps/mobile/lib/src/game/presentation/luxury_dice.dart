@@ -317,7 +317,6 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
             ),
           ),
         ),
-        ),
       ),
     );
   }
