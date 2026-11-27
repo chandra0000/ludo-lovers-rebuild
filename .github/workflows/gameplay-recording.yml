@@ -78,7 +78,7 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           emulator-boot-timeout: 420
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -gpu swangle -feature -Vulkan -noaudio -no-boot-anim -camera-back none
           # Software OpenGL is the checkpoint configuration, not a physical GPU
           # acceptance result or a proven fix for historical emulator loss.
           disable-animations: false
