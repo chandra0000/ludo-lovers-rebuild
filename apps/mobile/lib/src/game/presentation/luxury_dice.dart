@@ -45,7 +45,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 600),
+    duration: const Duration(milliseconds: 500),
   )..addStatusListener(_handleAnimationStatus);
 
   bool _isAnimating = false;
@@ -211,6 +211,7 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
         ? 'not rolled'
         : widget.targetValue.toString();
 
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       key: const Key('luxury_dice_semantics'),
       label: _isAnimating ? 'Dice rolling' : 'Dice, value $valueLabel',
@@ -230,43 +231,90 @@ class _LuxuryDiceButtonState extends State<LuxuryDiceButton>
         child: SizedBox(
           width: math.max(widget.size, 48.0),
           height: math.max(widget.size, 48),
-          child: Center(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                final t = _controller.value;
-                final landing = Curves.easeOutCubic.transform(t);
-                final turns = widget.rollId.isEven ? 2.0 : 3.0;
-                final target = _settledValue ?? widget.targetValue ?? 1;
-                final angles = _DiceCube.orientationFor(target);
-                final spin =
-                    _isAnimating ? (1 - landing) * turns * 2 * math.pi : 0.0;
-                final lift = _isAnimating
-                    ? math.sin(math.pi * t) * widget.size * .22
-                    : 0.0;
-                final anticipation = _isAnimating && t < .12
-                    ? 1 - .07 * (t / .12)
-                    : _isAnimating
-                        ? .93 + .07 * ((t - .12) / .88)
+          child: TweenAnimationBuilder<double>(
+            key: ValueKey((interactive, widget.rollId, _isAnimating)),
+            tween: Tween(begin: 0, end: 1),
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 420),
+            builder: (context, t, child) {
+              final pulse = interactive ? .055 * math.sin(t * math.pi) : 0.0;
+              return Transform.scale(scale: 1 + pulse, child: child);
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final t = _controller.value;
+                    final landing = Curves.easeOutCubic.transform(t);
+                    final turns = widget.rollId.isEven ? 2.0 : 3.0;
+                    final target = _settledValue ?? widget.targetValue ?? 1;
+                    final angles = _DiceCube.orientationFor(target);
+                    final spin = _isAnimating
+                        ? (1 - landing) * turns * 2 * math.pi
+                        : 0.0;
+                    final lift = _isAnimating
+                        ? math.sin(math.pi * t) * widget.size * .22
+                        : 0.0;
+                    final anticipation = _isAnimating && t < .12
+                        ? 1 - .07 * (t / .12)
+                        : _isAnimating
+                            ? .93 + .07 * ((t - .12) / .88)
+                            : 1.0;
+                    final settle = _isAnimating && t > .82
+                        ? 1 + .035 * math.sin(math.pi * (t - .82) / .18)
                         : 1.0;
-                final settle = _isAnimating && t > .82
-                    ? 1 + .035 * math.sin(math.pi * (t - .82) / .18)
-                    : 1.0;
-                return Transform.translate(
-                  offset: Offset(0, -lift),
-                  child: Transform.scale(
-                    scale: anticipation * settle,
-                    child: _DiceCube(
-                      key: const Key('six_face_dice_cube'),
-                      size: widget.size * widget.visualScale,
-                      value: target,
-                      isInteractive: interactive,
-                      xAngle: angles.$1 + spin + .16,
-                      yAngle: angles.$2 + spin * .83 - .20,
+                    return Transform.translate(
+                      offset: Offset(0, -lift),
+                      child: Transform.scale(
+                        scale: anticipation * settle,
+                        child: _DiceCube(
+                          key: const Key('six_face_dice_cube'),
+                          size: widget.size * widget.visualScale,
+                          value: target,
+                          isInteractive: interactive,
+                          xAngle: angles.$1 + spin + .16,
+                          yAngle: angles.$2 + spin * .83 - .20,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                if (!_isAnimating && _settledValue != null)
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: ExcludeSemantics(
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey(widget.rollId),
+                        tween: Tween(begin: .85, end: 1),
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 160),
+                        curve: Curves.easeOutBack,
+                        builder: (context, t, child) =>
+                            Transform.scale(scale: t, child: child),
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF302109),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Text(
+                              '$_settledValue',
+                              style: const TextStyle(
+                                color: Color(0xFFFFE3A0),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                );
-              },
+              ],
             ),
           ),
         ),

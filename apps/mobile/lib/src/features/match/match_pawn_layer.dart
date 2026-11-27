@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../game/domain/board_geometry.dart';
 import '../../game/domain/ludo_game.dart';
@@ -46,7 +47,7 @@ class MatchPawnLayer extends StatelessWidget {
   final ValueChanged<int> onInvalidMove;
 
   @override
-  Widget build(BuildContext context) => Stack(
+  Widget build(BuildContext context) => _PawnTargets(
         children: _buildPawnsWithClusters(canvasScale),
       );
 
@@ -55,6 +56,18 @@ class MatchPawnLayer extends StatelessWidget {
     int pawnIndex,
   ) {
     final player = game.players.firstWhere((item) => item.color == color);
+    final captured = animations.captures[(color, pawnIndex)];
+    if (captured != null) {
+      return PawnAnimator.position(
+        color: color,
+        pawnIndex: pawnIndex,
+        progress: -1,
+        isMoving: true,
+        startProgress: -1,
+        endProgress: captured,
+        animationValue: 1 - animations.retreatFraction(captured),
+      );
+    }
     return PawnAnimator.position(
       color: color,
       pawnIndex: pawnIndex,
@@ -63,7 +76,7 @@ class MatchPawnLayer extends StatelessWidget {
           animations.pawn.pawnIndex == pawnIndex,
       startProgress: animations.pawn.startProgress,
       endProgress: animations.pawn.endProgress,
-      animationValue: animations.movement.value,
+      animationValue: animations.approach,
     );
   }
 
@@ -131,7 +144,9 @@ class MatchPawnLayer extends StatelessWidget {
     final stacked = occupants.length > 1;
     final slot = PawnLayoutSolver.stackOffset(stackIndex, occupants.length);
     final visualOffset = Offset(slot.x, slot.y);
-    final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
+    final size = stacked
+        ? (occupants.length <= 4 ? 27.0 * .78 : 16.0)
+        : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !aiPlayers.contains(color) && color == game.activePlayer;
     final canMove = !animations.isDiceAnimating &&
@@ -166,8 +181,9 @@ class MatchPawnLayer extends StatelessWidget {
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
     // inversely so its transformed physical bounds never fall below 48×48 dp.
-    final hitTargetWidth = math.max(48.0, 48.0 / canvasScale);
-    final hitTargetHeight = math.max(48.0, 48.0 / canvasScale);
+    final target = canMove && legalIndices.length > 1 ? 57.6 : 48.0;
+    final hitTargetWidth = math.max(target, target / canvasScale);
+    final hitTargetHeight = hitTargetWidth;
     final shakeKey = shakeKeys.putIfAbsent(
       '${color.name}-$pawnIndex',
       GlobalKey<ShakeFeedbackWrapperState>.new,
@@ -215,7 +231,13 @@ class MatchPawnLayer extends StatelessWidget {
                         : null,
             child: Center(
               child: Transform.translate(
-                offset: visualOffset,
+                offset: visualOffset +
+                    Offset(
+                      0,
+                      canMove && legalIndices.length > 1 && !reduceMotion
+                          ? -3
+                          : 0,
+                    ),
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(
@@ -231,11 +253,13 @@ class MatchPawnLayer extends StatelessWidget {
                           : 0,
                       child: TweenAnimationBuilder<double>(
                         key: ValueKey(
-                          'landing-${color.name}-$pawnIndex-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
+                          'landing-${color.name}-$pawnIndex-$canMove-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
                         ),
                         tween: Tween(
-                          begin: lastLandingPlan?.player == color &&
-                                  lastLandingPlan?.pawnIndex == pawnIndex &&
+                          begin: (canMove && legalIndices.length > 1 ||
+                                      lastLandingPlan?.player == color &&
+                                          lastLandingPlan?.pawnIndex ==
+                                              pawnIndex) &&
                                   !reduceMotion
                               ? 1.12
                               : 1.0,
@@ -263,5 +287,45 @@ class MatchPawnLayer extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Overlapping accessible targets resolve to the nearest interactive pawn.
+class _PawnTargets extends Stack {
+  const _PawnTargets({required super.children});
+
+  @override
+  RenderStack createRenderObject(BuildContext context) => _PawnTargetStack(
+        textDirection: Directionality.of(context),
+      );
+}
+
+class _PawnTargetStack extends RenderStack {
+  _PawnTargetStack({required super.textDirection});
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final candidates = <({RenderBox child, Offset origin, double distance})>[];
+    for (var child = lastChild; child != null; child = childBefore(child)) {
+      final origin = (child.parentData! as StackParentData).offset;
+      final local = position - origin;
+      if (child.size.contains(local)) {
+        final distance =
+            (local - child.size.center(Offset.zero)).distanceSquared;
+        candidates.add((child: child, origin: origin, distance: distance));
+      }
+    }
+    candidates.sort((a, b) => a.distance.compareTo(b.distance));
+    for (final target in candidates) {
+      if (result.addWithPaintOffset(
+        offset: target.origin,
+        position: position,
+        hitTest: (result, local) =>
+            target.child.hitTest(result, position: local),
+      )) {
+        return true;
+      }
+    }
+    return false;
   }
 }

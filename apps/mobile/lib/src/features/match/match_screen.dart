@@ -155,6 +155,7 @@ class _MatchScreenState extends State<MatchScreen>
       final value = await _feedbackStore.load();
       if (mounted && !_feedbackChanged) {
         setState(() => _feedbackPreferences = value);
+        if (value.sound) unawaited(_feedback.prepare());
       }
     } catch (error) {
       debugPrint('Could not load game feedback settings: $error');
@@ -164,6 +165,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _changeFeedbackPreferences(FeedbackPreferences value) {
     _feedbackChanged = true;
     setState(() => _feedbackPreferences = value);
+    if (value.sound) unawaited(_feedback.prepare());
     if (_reduceMotion && _movementController.isAnimating) {
       _movementController.value = 1;
     }
@@ -182,8 +184,12 @@ class _MatchScreenState extends State<MatchScreen>
     });
   }
 
-  void _playFeedback(MatchFeedbackCue cue) {
-    if (_isAppResumed) unawaited(_feedback.play(cue, _feedbackPreferences));
+  void _playFeedback(MatchFeedbackCue cue, {int pitchBand = 0}) {
+    if (_isAppResumed) {
+      unawaited(
+        _feedback.play(cue, _feedbackPreferences, pitchBand: pitchBand),
+      );
+    }
   }
 
   MatchMovePresentationPlan? _landingPlan;
@@ -223,6 +229,15 @@ class _MatchScreenState extends State<MatchScreen>
     if (mounted) setState(() {});
   }
 
+  double get _captureShake {
+    if (_reduceMotion || _animations.captures.isEmpty) return 0;
+    final t = (_animations.elapsedMs - _animations.approachMs) /
+        MatchAnimationLifecycle.impactMs;
+    return t <= 0 || t >= 1 ? 0 : math.sin(t * 4 * math.pi) * (1 - t) * 2;
+  }
+
+  int _retreatBeat = -1;
+
   void _handleMovementTick() {
     if (_reduceMotion &&
         _movementController.isAnimating &&
@@ -231,44 +246,58 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (mounted && _animations.pawn.pawnIndex != null) {
+      if (_animations.captures.isNotEmpty &&
+          !_reduceMotion &&
+          _animations.elapsedMs >= _animations.approachMs) {
+        final sinceImpact = _animations.elapsedMs - _animations.approachMs;
+        final beat = sinceImpact < MatchAnimationLifecycle.impactMs
+            ? 0
+            : 1 +
+                ((sinceImpact - MatchAnimationLifecycle.impactMs) ~/
+                    MatchAnimationLifecycle.retreatStepMs);
+        if (beat != _retreatBeat) {
+          if (_retreatBeat < 0) {
+            _playFeedback(MatchFeedbackCue.capture);
+            _lastLandingPlan = _landingPlan;
+            _landingSequence++;
+          } else if (_movementController.value < 1) {
+            final progress = (sinceImpact - MatchAnimationLifecycle.impactMs) /
+                (_movementController.duration!.inMilliseconds -
+                    _animations.approachMs -
+                    MatchAnimationLifecycle.impactMs);
+            _playFeedback(
+              MatchFeedbackCue.retreatStep,
+              pitchBand: (5 * progress).floor(),
+            );
+          }
+          _retreatBeat = beat;
+        }
+      }
       setState(() {});
     }
   }
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      final feedback = _animations.completePawnMovement();
+      _animations.completePawnMovement();
       final completedPlan = _landingPlan;
       if (completedPlan != null) {
         _playFeedback(
           completedPlan.gameCompleted
               ? MatchFeedbackCue.finish
               : completedPlan.hasCapture
-                  ? MatchFeedbackCue.capture
+                  ? MatchFeedbackCue.yard
                   : MatchFeedbackCue.land,
         );
       }
       setState(() {
         _landingPlan = null;
-        if (completedPlan != null) {
+        if (completedPlan != null && _retreatBeat < 0) {
           _lastLandingPlan = completedPlan;
           _landingSequence++;
         }
       });
       _scheduleAiTurn();
-      if (feedback != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            key: const Key('move_feedback'),
-            content: Text(
-              completedPlan?.gameCompleted == true ? '$_statusText!' : feedback,
-            ),
-            duration: const Duration(milliseconds: 1600),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF211A0D),
-          ),
-        );
-      }
     }
   }
 
@@ -330,6 +359,7 @@ class _MatchScreenState extends State<MatchScreen>
 
   @override
   void dispose() {
+    unawaited(_feedback.dispose());
     _social.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _turns.dispose();
@@ -388,7 +418,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _move(int pawnIndex) => _turns.move(pawnIndex);
 
   void _presentAcceptedMove(
-    PlayerColor movingColor,
+    LudoGame before,
     int pawnIndex,
     List<LudoGameEvent> events,
   ) {
@@ -398,18 +428,30 @@ class _MatchScreenState extends State<MatchScreen>
     final plan = MatchMovePresentationPlan.fromEvents(
       events: events,
       isTeamUp: _game.configuration.isTeamUp,
-      player: movingColor,
+      player: before.activePlayer,
       pawnIndex: pawnIndex,
     );
     setState(() {
       _selectedPawnIndex = null;
       _landingPlan = plan;
+      _retreatBeat = -1;
       _animations.configurePawnMovement(
         color: plan.player,
         pawnIndex: plan.pawnIndex,
         startProgress: plan.startProgress,
         endProgress: plan.endProgress,
         stepCount: plan.stepCount,
+        retreats: {
+          for (final event in events)
+            if (event is PawnCaptured)
+              (event.victim, event.pawnIndex): before.players
+                  .firstWhere((p) => p.color == event.victim)
+                  .pawnProgress[event.pawnIndex],
+          for (final event in events.whereType<TeamPawnCaptured>())
+            (event.victim, event.pawnIndex): before.players
+                .firstWhere((p) => p.color == event.victim)
+                .pawnProgress[event.pawnIndex],
+        },
         reduceMotion: reduceMotion,
         feedback: plan.feedback,
       );
@@ -492,25 +534,70 @@ class _MatchScreenState extends State<MatchScreen>
                     key: const Key('roll_dice'),
                     width: 88,
                     height: 96,
-                    child: Center(
-                      child: LuxuryDiceButton(
-                        key: const Key('animated_dice'),
-                        size: 64,
-                        visualScale: .88,
-                        targetValue: _game.diceValue,
-                        rollId: _diceRollId,
-                        canRoll: _canAct &&
-                            !widget.aiPlayers.contains(_game.activePlayer) &&
-                            _game.diceValue == null &&
-                            !_isDiceAnimating &&
-                            !_movementController.isAnimating &&
-                            _game.winner == null,
-                        isWaitingForRoll: _game.diceValue == null &&
-                            _game.winner == null &&
-                            !_movementController.isAnimating,
-                        onRollRequested: _roll,
-                        onAnimationComplete: _handleDiceAnimationComplete,
-                      ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedAlign(
+                          duration: _reduceMotion
+                              ? Duration.zero
+                              : const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          alignment: switch (
+                              _landingPlan?.player ?? _game.activePlayer) {
+                            PlayerColor.orange => Alignment.topLeft,
+                            PlayerColor.green => Alignment.topRight,
+                            PlayerColor.magenta => Alignment.bottomRight,
+                            PlayerColor.blue => Alignment.bottomLeft,
+                          },
+                          child: ExcludeSemantics(
+                            child: Icon(
+                              switch (
+                                  _landingPlan?.player ?? _game.activePlayer) {
+                                PlayerColor.orange => Icons.north_west,
+                                PlayerColor.green => Icons.north_east,
+                                PlayerColor.magenta => Icons.south_east,
+                                PlayerColor.blue => Icons.south_west,
+                              },
+                              size: 16,
+                              color: const Color(0xFFFFD36B),
+                            ),
+                          ),
+                        ),
+                        TweenAnimationBuilder<double>(
+                          key: ValueKey(_actionInstruction == 'No legal move'),
+                          tween: Tween(begin: 0, end: 1),
+                          duration: const Duration(milliseconds: 550),
+                          builder: (context, t, child) => Transform.translate(
+                            offset: Offset(
+                              !_reduceMotion &&
+                                      _actionInstruction == 'No legal move'
+                                  ? 3 * math.sin(t * math.pi * 6) * (1 - t)
+                                  : 0,
+                              0,
+                            ),
+                            child: child,
+                          ),
+                          child: LuxuryDiceButton(
+                            key: const Key('animated_dice'),
+                            size: 64,
+                            visualScale: .88,
+                            targetValue: _game.diceValue,
+                            rollId: _diceRollId,
+                            canRoll: _canAct &&
+                                !widget.aiPlayers
+                                    .contains(_game.activePlayer) &&
+                                _game.diceValue == null &&
+                                !_isDiceAnimating &&
+                                !_movementController.isAnimating &&
+                                _game.winner == null,
+                            isWaitingForRoll: _game.diceValue == null &&
+                                _game.winner == null &&
+                                !_movementController.isAnimating,
+                            onRollRequested: _roll,
+                            onAnimationComplete: _handleDiceAnimationComplete,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   result: _game.winner == null
@@ -543,38 +630,75 @@ class _MatchScreenState extends State<MatchScreen>
                         ? _game.legalPawnIndices()
                         : const [],
                   ),
-                  boardBuilder: (context, scale) => MatchBoardArtwork(
-                    overlays: [
-                      const MatchBoardFocusFrame(),
-                      const MatchSafeStarLayer(),
-                      Positioned.fill(
-                        child: MatchPawnLayer(
-                          game: _game,
-                          animations: _animations,
-                          canvasScale: scale,
-                          isTurnResolutionPending: _turnResolution.isPending,
-                          aiPlayers: widget.aiPlayers,
-                          shakeKeys: _shakeKeys,
-                          reduceMotion: _reduceMotion,
-                          lastLandingPlan: _lastLandingPlan,
-                          landingSequence: _landingSequence,
-                          onMove: _selectOrMovePawn,
-                          onStackTap: _handleStackTap,
-                          onInvalidMove: _showInvalidMoveFeedback,
+                  boardBuilder: (context, scale) => Transform.translate(
+                    offset: Offset(_captureShake, 0),
+                    child: MatchBoardArtwork(
+                      overlays: [
+                        const MatchBoardFocusFrame(),
+                        const MatchSafeStarLayer(),
+                        Positioned.fill(
+                          child: MatchPawnLayer(
+                            game: _game,
+                            animations: _animations,
+                            canvasScale: scale,
+                            isTurnResolutionPending: _turnResolution.isPending,
+                            aiPlayers: widget.aiPlayers,
+                            shakeKeys: _shakeKeys,
+                            reduceMotion: _reduceMotion,
+                            lastLandingPlan: _lastLandingPlan,
+                            landingSequence: _landingSequence,
+                            onMove: _selectOrMovePawn,
+                            onStackTap: _handleStackTap,
+                            onInvalidMove: _showInvalidMoveFeedback,
+                          ),
                         ),
-                      ),
-                      if (_landingSequence > 0 && _lastLandingPlan != null)
-                        MatchLandingCelebration(
-                          key: ValueKey(_landingSequence),
-                          plan: _lastLandingPlan!,
-                        ),
-                      if (_selectedPawnIndex != null)
-                        MatchDestinationPreview(
-                          game: _game,
-                          selectedPawnIndex: _selectedPawnIndex!,
-                          animation: _previewController,
-                        ),
-                    ],
+                        if (_landingSequence > 0 && _lastLandingPlan != null)
+                          MatchLandingCelebration(
+                            key: ValueKey(_landingSequence),
+                            plan: _lastLandingPlan!,
+                          ),
+                        if (_lastLandingPlan?.feedback
+                            case final String message)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Center(
+                                child: TweenAnimationBuilder<double>(
+                                  key: ValueKey('event-$_landingSequence'),
+                                  tween: Tween(begin: 0, end: 1),
+                                  duration: const Duration(milliseconds: 1500),
+                                  builder: (context, progress, child) =>
+                                      Opacity(
+                                    opacity: 1 -
+                                        ((progress - .8) * 5)
+                                            .clamp(0.0, 1.0)
+                                            .toDouble(),
+                                    child: child,
+                                  ),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xDD211A0D),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 16,
+                                      ),
+                                      child: Text(message),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (_selectedPawnIndex != null)
+                          MatchDestinationPreview(
+                            game: _game,
+                            selectedPawnIndex: _selectedPawnIndex!,
+                            animation: _previewController,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

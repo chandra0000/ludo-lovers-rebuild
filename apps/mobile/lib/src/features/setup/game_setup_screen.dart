@@ -9,7 +9,6 @@ import '../../game/domain/player_color.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_name.dart';
 import '../../game/infrastructure/persistence/player_name_preferences.dart';
-import '../board_preview/board_preview_screen.dart';
 import '../match/match_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
@@ -331,8 +330,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Choose how many human seats to use. Remaining colours '
-                      'are controlled by deterministic AI.',
+                      'Choose how many friends are playing. Bots take the remaining seats.',
                       style: TextStyle(color: Colors.white70),
                     ),
                     const SizedBox(height: 12),
@@ -441,29 +439,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             if (widget.mode == MatchMode.compatibility)
               const _ModeCard(
                 title: 'TEAM UP · 2 VS 2',
-                subtitle: 'Team rules, bonus turns and victory conditions '
-                    'are still being recovered.',
+                subtitle: 'Pair up with a teammate for a two-versus-two match.',
                 enabled: false,
-                label: 'IN DEVELOPMENT',
+                label: 'COMING SOON',
               ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              key: const Key('open_board_preview'),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const BoardPreviewScreen(),
-                ),
-              ),
-              icon: const Icon(Icons.grid_view_rounded),
-              label: const Text('PREVIEW BOARD & PAWN ANCHORS'),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Preview anchors are diagnostic only. Final visual approval '
-              'requires pixel measurement and real-device verification.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFFFFF4DF), fontSize: 14),
-            ),
           ],
         ),
       ),

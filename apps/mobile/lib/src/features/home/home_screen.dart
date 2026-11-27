@@ -94,12 +94,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Row(
                         children: [
-                          const CircleAvatar(
-                            radius: 26,
-                            backgroundColor: _gold,
-                            child: CircleAvatar(
-                              radius: 24,
-                              backgroundImage: AssetImage(_avatar),
+                          IconButton(
+                            tooltip: 'Edit player names',
+                            onPressed: () => _openSetup(),
+                            icon: const Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: _gold,
+                                  child: CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: AssetImage(_avatar),
+                                  ),
+                                ),
+                                CircleAvatar(
+                                  radius: 9,
+                                  backgroundColor: _gold,
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 12,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -142,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: logoSize,
                                 height: logoSize,
                                 fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
                                 semanticLabel: 'Ludo Lovers',
                               ),
                             ),
@@ -274,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Local',
                               Icons.devices_rounded,
                               const Color(0xFFFFD36B),
+                              mode: MatchMode.classic,
                             ),
                           ),
                         ],
@@ -366,11 +386,17 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 6),
           Text(title, textAlign: TextAlign.center),
           if (!available)
-            const Text(
-              'Preview',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11),
-            ),
+            mode == MatchMode.teamUp
+                ? const Text(
+                    '🔒 COMING SOON',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11),
+                  )
+                : const Icon(
+                    Icons.lock_outline,
+                    size: 15,
+                    semanticLabel: 'Currently unavailable',
+                  ),
         ],
       ),
     );

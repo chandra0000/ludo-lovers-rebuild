@@ -112,7 +112,7 @@ class ModeSelectionScreen extends StatelessWidget {
                             allowInternal: allowInternalModes,
                           )
                               ? '${mode.playerCounts.join(' / ')} players · Offline'
-                              : 'COMING SOON · Acceptance pending',
+                              : 'Team play is coming soon',
                           style: const TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 8),
