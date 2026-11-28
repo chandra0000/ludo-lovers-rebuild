@@ -124,6 +124,8 @@ class GameBoardScaffold extends StatelessWidget {
                   height: profileHeight,
                   child: ClipRect(
                     child: Row(
+                      // Seat identity follows the fixed board, not reading direction.
+                      textDirection: TextDirection.ltr,
                       children: [
                         card(0),
                         SizedBox(
@@ -191,6 +193,8 @@ class GameBoardScaffold extends StatelessWidget {
                   height: profileHeight,
                   child: ClipRect(
                     child: Row(
+                      // Seat identity follows the fixed board, not reading direction.
+                      textDirection: TextDirection.ltr,
                       children: [
                         card(2),
                         SizedBox(
