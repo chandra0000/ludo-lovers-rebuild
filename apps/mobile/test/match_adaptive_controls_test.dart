@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -29,7 +30,7 @@ void main() {
           home: const MatchScreen(),
         ),
       );
-      await tester.pump();
+      await waitForBoardArtwork(tester);
       expect(tester.takeException(), isNull);
       for (final color in const ['orange', 'green', 'magenta', 'blue']) {
         final avatar = tester.getRect(find.byKey(Key('profile_avatar_$color')));
@@ -63,6 +64,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('accessible_pawn_chooser')), findsNothing);

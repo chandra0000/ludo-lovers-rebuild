@@ -11,6 +11,7 @@ import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 import 'support/load_sdk_fonts.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -119,6 +120,7 @@ void responsiveTest(
         ).timeout(const Duration(seconds: 10));
       });
       expect(imageErrors, isEmpty);
+      await waitForBoardArtwork(tester);
       await tester.pump(const Duration(milliseconds: 250));
       stage('assertions');
       expect(find.byKey(const Key('match_canvas')), findsOneWidget);

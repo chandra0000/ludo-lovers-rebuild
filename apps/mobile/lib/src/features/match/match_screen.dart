@@ -20,6 +20,7 @@ import '../../game/presentation/shake_feedback_wrapper.dart';
 import 'local_match_chat_sheet.dart';
 import '../../../features/game/presentation/widgets/cached_ludo_board.dart';
 import 'match_board_focus_frame.dart';
+import 'match_board_artwork.dart';
 import 'match_safe_star_layer.dart';
 import 'match_command_controller.dart';
 import 'match_move_presentation_plan.dart';
@@ -55,6 +56,7 @@ class MatchScreen extends StatefulWidget {
     this.aiDifficulty = LudoAiDifficulty.medium,
     this.profiles,
     this.showDynamicProfiles = true,
+    this.boardImage = const AssetImage(MatchBoardArtwork.assetPath),
   });
 
   @visibleForTesting
@@ -65,6 +67,9 @@ class MatchScreen extends StatefulWidget {
 
   @visibleForTesting
   final LudoGame? initialGame;
+
+  @visibleForTesting
+  final ImageProvider boardImage;
 
   /// Optional identities supplied by a local lobby or future online session.
   final List<MatchPlayerProfile>? profiles;
@@ -130,7 +135,20 @@ class _MatchScreenState extends State<MatchScreen>
   bool _isAppResumed = true;
   bool _exitDialogOpen = false;
   bool _allowExit = false;
-  bool get _canAct => _isAppResumed && !_exitDialogOpen;
+  bool _boardReady = false;
+  bool get _canAct => _boardReady && _isAppResumed && !_exitDialogOpen;
+
+  void _onBoardReadinessChanged(bool ready) {
+    if (!mounted || _boardReady == ready) return;
+    setState(() => _boardReady = ready);
+    if (!ready) {
+      _turnResolution.cancel();
+      _aiScheduler.cancel();
+      return;
+    }
+    _resumeAcceptedTurn();
+  }
+
   late final MatchPersistenceController _persistence =
       MatchPersistenceController(save: widget.saveMatch);
   late final MatchAnimationLifecycle _animations = MatchAnimationLifecycle(
@@ -510,6 +528,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   String get _actionInstruction {
+    if (!_boardReady) return 'Preparing the board';
     if (_movementController.isAnimating) return 'Pawn moving';
     if (_game.winner != null) return 'Match finished';
     if (_isDiceAnimating) return 'Rolling dice';
@@ -627,7 +646,8 @@ class _MatchScreenState extends State<MatchScreen>
                                 !_isDiceAnimating &&
                                 !_movementController.isAnimating &&
                                 _game.winner == null,
-                            isWaitingForRoll: _game.diceValue == null &&
+                            isWaitingForRoll: _canAct &&
+                                _game.diceValue == null &&
                                 _game.winner == null &&
                                 !_movementController.isAnimating,
                             onRollRequested: _roll,
@@ -637,19 +657,25 @@ class _MatchScreenState extends State<MatchScreen>
                       ],
                     ),
                   ),
-                  result:
-                      _game.winner == null || _movementController.isAnimating
-                          ? null
-                          : MatchResultPresentation(onRematch: _restartMatch),
+                  result: !_boardReady ||
+                          _game.winner == null ||
+                          _movementController.isAnimating
+                      ? null
+                      : MatchResultPresentation(onRematch: _restartMatch),
                   status: Semantics(
                     key: const Key('turn_status'),
                     liveRegion: true,
-                    label: '$_statusText. $_actionInstruction',
+                    label: _boardReady
+                        ? '$_statusText. $_actionInstruction'
+                        : 'Preparing the board',
                     child: Center(
                       child: Text(
-                        _game.winner != null && !_movementController.isAnimating
-                            ? _statusText
-                            : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _presentedPlayer).displayName}',
+                        !_boardReady
+                            ? 'Preparing board'
+                            : _game.winner != null &&
+                                    !_movementController.isAnimating
+                                ? _statusText
+                                : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _presentedPlayer).displayName}',
                         key: const Key('match_action_instruction'),
                         textAlign: TextAlign.center,
                         style: AppTypography.status,
@@ -665,6 +691,8 @@ class _MatchScreenState extends State<MatchScreen>
                     builder: (_, __) => Transform.translate(
                       offset: Offset(_captureShake, 0),
                       child: CachedLudoBoard(
+                        image: widget.boardImage,
+                        onReadinessChanged: _onBoardReadinessChanged,
                         canvasScale: scale,
                         overlays: [
                           const MatchBoardFocusFrame(),

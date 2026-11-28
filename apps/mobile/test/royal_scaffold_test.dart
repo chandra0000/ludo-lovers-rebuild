@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'support/wait_for_board_artwork.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/features/match/player_slot_resolver.dart';
@@ -100,6 +101,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await waitForBoardArtwork(tester);
     expect(find.byKey(const Key('ai_thinking_green')), findsOneWidget);
     expect(find.textContaining('AI thinking'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());

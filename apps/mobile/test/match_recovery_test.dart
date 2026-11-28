@@ -1,3 +1,4 @@
+import 'support/wait_for_board_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
@@ -21,6 +22,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pump();
 
     await tester.tap(find.byKey(const Key('roll_dice')));
@@ -55,6 +57,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pump();
     await tester.pumpAndSettle();
     // The restored roll has no legal move; allow its 600 ms presentation delay.

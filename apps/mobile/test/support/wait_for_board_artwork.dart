@@ -18,4 +18,7 @@ Future<void> waitForBoardArtwork(WidgetTester tester) async {
   );
   expect(errors, isEmpty);
   await tester.pump();
+  // Decode/frame publication, post-paint readiness, then the enabled HUD.
+  await tester.pump();
+  await tester.pump();
 }

@@ -120,6 +120,7 @@ void main() {
     ]) {
       tester.view.physicalSize = viewport;
       await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+      await waitForBoardArtwork(tester);
       await tester.pump();
 
       final canvas = tester.getSize(find.byKey(const Key('match_canvas')));
@@ -149,6 +150,7 @@ void main() {
     tester.view.physicalSize = const Size(393, 873);
 
     await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+    await waitForBoardArtwork(tester);
     await tester.pump();
 
     final canvasRect = tester.getRect(find.byKey(const Key('match_canvas')));
@@ -179,6 +181,7 @@ void main() {
     tester.view.physicalSize = const Size(393, 873);
 
     await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+    await waitForBoardArtwork(tester);
     await tester.pump(const Duration(milliseconds: 250));
 
     await _capturePng(
@@ -215,6 +218,7 @@ void main() {
         home: MatchScreen(rollDice: () => rolls[rollIndex++]),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
@@ -279,6 +283,7 @@ void main() {
         home: MatchScreen(initialGame: game, rollDice: () => 2),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
@@ -311,6 +316,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.pump(const Duration(milliseconds: 460));
     await tester.pump();
@@ -352,6 +358,7 @@ void main() {
         home: MatchScreen(rollDice: () => 4),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump();
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
@@ -371,6 +378,7 @@ void main() {
           home: MatchScreen(rollDice: () => 6),
         ),
       );
+      await waitForBoardArtwork(tester);
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await waitForBoardArtwork(tester);
@@ -412,6 +420,7 @@ void main() {
           ),
         ),
       );
+      await waitForBoardArtwork(tester);
 
       await tester.tap(find.byKey(const Key('roll_dice')));
       await tester.pump();
@@ -451,6 +460,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     await waitForBoardArtwork(tester);
@@ -476,6 +486,7 @@ void main() {
         home: MatchScreen(initialGame: game, rollDice: () => 1),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
@@ -501,6 +512,7 @@ void main() {
         home: MatchScreen(initialGame: game, rollDice: () => 1),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();

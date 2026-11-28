@@ -1,3 +1,4 @@
+import 'support/wait_for_board_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +27,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 651));
     await tester.pump();
@@ -50,6 +52,7 @@ void main() {
     ).roll(3, commandId: 'accepted-roll');
     await tester
         .pumpWidget(MaterialApp(home: MatchScreen(initialGame: pending)));
+    await waitForBoardArtwork(tester);
     await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump(const Duration(seconds: 1));

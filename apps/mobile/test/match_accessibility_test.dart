@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   testWidgets('dice exposes a useful action hint to screen readers',
@@ -10,6 +11,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: MatchScreen()),
     );
+    await waitForBoardArtwork(tester);
 
     final dice = tester.widget<Semantics>(
       find.byKey(const Key('luxury_dice_semantics')),
@@ -31,6 +33,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: MatchScreen(initialGame: game)),
     );
+    await waitForBoardArtwork(tester);
     // Flush presentation resolution of the already-accepted restored roll.
     await tester.pump();
 

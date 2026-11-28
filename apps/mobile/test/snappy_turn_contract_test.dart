@@ -183,6 +183,7 @@ void main() {
         home: MatchScreen(key: const Key('same-match'), aiPlayers: roles),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pumpAndSettle();
     roles.clear();
     await tester.pumpWidget(
@@ -190,6 +191,7 @@ void main() {
         home: MatchScreen(key: const Key('same-match'), aiPlayers: roles),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('robot_green')), findsOneWidget);
     await tester.tap(find.byKey(const Key('roll_dice')));

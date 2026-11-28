@@ -21,6 +21,7 @@ void main() {
         home: MatchScreen(initialGame: game, rollDice: () => 3),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     // Establish the dice ticker's start frame before advancing its duration.
@@ -53,6 +54,7 @@ void main() {
         home: MatchScreen(initialGame: game, rollDice: () => 2),
       ),
     );
+    await waitForBoardArtwork(tester);
 
     await tester.tap(find.byKey(const Key('roll_dice')));
     // Start the ticker before advancing its animation duration.
