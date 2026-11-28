@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match, ready_nodes
+from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match, ready_nodes, find_action
 
 
 def snapshot(count=2, dice=6):
@@ -19,6 +19,14 @@ def snapshot(count=2, dice=6):
 
 
 class RecoveryContractTest(unittest.TestCase):
+    def test_match_readiness_does_not_open_an_overlay(self):
+        import xml.etree.ElementTree as ET
+        nodes = [ET.fromstring('<node text="Local Chat"/>')]
+        with patch('android_process_recovery.ready_nodes', return_value=nodes):
+            with patch('android_native_qa.tap_label') as tap:
+                find_action('Local Chat', activate=False)
+                tap.assert_not_called()
+
     def test_first_window_xml_unavailable_is_bounded_readiness_not_app_crash(self):
         nodes = ['ready window']
         with tempfile.TemporaryDirectory() as folder:

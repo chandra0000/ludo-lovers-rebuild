@@ -31,7 +31,7 @@ python3 ../../.github/scripts/android_process_recovery.py
 The dedicated workflow builds before booting, retains reports/screenshots/logcat
 and source/APK/toolchain diagnostics, uses pinned actions/toolchain, bounded
 readiness and the existing emulator cleanup. PR path triggers and manual dispatch
-are supported. Six host tests cover emulator guards, actual XML shape, exact
+are supported. Seven host tests cover emulator guards, actual XML shape, exact
 restoration, authorized single-pass and rejection of altered state. They passed
 locally; installed execution is pending until the exact-head workflow passes.
 
@@ -41,6 +41,16 @@ logcat showed the engine/VM starting, not a demonstrated app crash. Readiness no
 retains missing/malformed-window errors and retries within the existing30/45s
 caller deadlines. No timeout increase, application change or missing UI pass.
 The original failed run remains failed; fresh exact-head installed proof is required.
+
+Run46097709970 passed both installed cases on1de4a397: actual roll1 persisted at
+version1, force-stop killed the PID, then restored2-player advanced once to Magenta
+and3-player once to Green at version2, with one roll and one pass receipt. No pawn
+moved or duplicate roll occurred. Report/native screenshots were downloaded and
+inspected. Those screenshots caught the unnecessary chat-dismissal transition.
+The final harness now observes the match's Local Chat accessibility label without
+tapping it, so evidence captures an unobstructed board. A host regression ensures
+this readiness probe cannot open an overlay. Fresh native verification is required
+for this final capture correction; the prior pass is retained, not reused as its pass.
 
 This is debug emulator process termination evidence, not physical-device,
 release-build, reboot/power-loss durability, low-memory soak, atomic filesystem

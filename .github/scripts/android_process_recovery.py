@@ -60,11 +60,12 @@ def ready_nodes():
         return []
 
 
-def find_action(label, seconds=30, scroll=False):
+def find_action(label, seconds=30, scroll=False, activate=True):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         nodes = ready_nodes()
-        if native.tap_label(label, nodes):
+        present = any(label in (n.get('text', '') + n.get('content-desc', '')) for n in nodes)
+        if present and (not activate or native.tap_label(label, nodes)):
             return
         if scroll:
             native.adb('shell', 'input', 'swipe', '180', '650', '180', '290', '350')
@@ -154,8 +155,8 @@ def run_count(count):
     find_action('RESUME SAVED MATCH')
     # A pending non-six may legitimately auto-pass once after restoration.
     final = wait_snapshot(lambda s: s['game']['stateVersion'] >= stopped['game']['stateVersion'])
-    find_action('Local Chat')  # Prove the actual match UI is reachable, not only disk.
-    native.adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+    # Prove the match UI is reachable without opening an obstructing chat sheet.
+    find_action('Local Chat', activate=False)
     final = saved()
     outcome = unchanged_match(stopped, final, count)
     new_pid = native.adb('shell', 'pidof', PACKAGE).strip()
