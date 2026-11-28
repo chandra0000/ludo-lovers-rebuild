@@ -20,7 +20,7 @@ class ModeDefinition {
   bool get supportsOnline => false;
 
   /// Rule-policy metadata; seating schemas version independently.
-  int get version => 1;
+  int get version => mode == MatchMode.compatibility ? 2 : 1;
 }
 
 /// Public availability is not inferred from the presence of engine code.
@@ -31,7 +31,8 @@ class ModeRegistry {
     ModeDefinition(
       mode: MatchMode.compatibility,
       name: 'Local game',
-      description: '2–4 local players · opposite colours for two players',
+      description:
+          '2–4 players · six/capture/finish bonuses · third-six penalty',
       playerCounts: [2, 3, 4],
       availability: ModeAvailability.available,
     ),
@@ -82,7 +83,7 @@ class ModeRegistry {
         MatchMode.classic => LudoRuleProfile.classicV1,
         MatchMode.quick => LudoRuleProfile.quickV1,
         MatchMode.teamUp => LudoRuleProfile.teamUpV1,
-        _ => LudoRuleProfile.currentV1,
+        _ => LudoRuleProfile.currentV2,
       },
       configuration: MatchConfiguration.local(mode, playerCount: playerCount),
     );

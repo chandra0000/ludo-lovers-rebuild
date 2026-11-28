@@ -5,6 +5,10 @@ on:
   pull_request:
     paths:
       - apps/mobile/tool/production_gameplay_simulation.dart
+      - apps/mobile/lib/src/game/**
+      - apps/mobile/lib/features/game/domain/**
+      - apps/mobile/pubspec.yaml
+      - apps/mobile/pubspec.lock
       - .github/workflows/engine-simulation.yml
 
 permissions:

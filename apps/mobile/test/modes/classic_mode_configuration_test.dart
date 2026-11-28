@@ -18,7 +18,7 @@ void main() {
   test('compatibility stays default and Team Up uses its own rules', () {
     expect(
       ModeRegistry.create(MatchMode.compatibility).ruleProfile,
-      LudoRuleProfile.currentV1,
+      LudoRuleProfile.currentV2,
     );
     expect(ModeRegistry.create(MatchMode.classic).ruleProfile.id, 'classic');
     expect(

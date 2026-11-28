@@ -1,3 +1,4 @@
+import '../../../features/game/presentation/widgets/seat_avatar.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_typography.dart';
 import '../../game/presentation/player_color_theme.dart';
@@ -14,7 +15,9 @@ class PlayerProfileCard extends StatelessWidget {
     required this.slot,
     this.socialControls,
     this.feedback,
+    this.noMoves = false,
   });
+  final bool noMoves;
   final Widget? socialControls;
   final LocalSocialFeedback? feedback;
   final PlayerSlot slot;
@@ -24,12 +27,6 @@ class PlayerProfileCard extends StatelessWidget {
     final color = profile.color;
     final accent = color.color;
     final isActive = slot.active && slot.participating;
-    final image = switch (color.name) {
-      'orange' => 'avatar_aldo.webp',
-      'green' => 'avatar_you.webp',
-      'magenta' => 'avatar_emma.webp',
-      _ => 'avatar_bob.webp',
-    };
     return LayoutBuilder(
       builder: (context, constraints) {
         final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
@@ -167,16 +164,7 @@ class PlayerProfileCard extends StatelessWidget {
                                                     ),
                                                 ],
                                               )
-                                            : Image.asset(
-                                                'assets/images/board/extracted/$image',
-                                                fit: BoxFit.cover,
-                                                cacheWidth: 128,
-                                                errorBuilder: (_, __, ___) =>
-                                                    Icon(
-                                                  Icons.person,
-                                                  color: accent,
-                                                ),
-                                              ),
+                                            : SeatAvatar(player: color),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -220,6 +208,36 @@ class PlayerProfileCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (noMoves)
+                  Positioned(
+                    bottom: 0,
+                    left: 4,
+                    right: 4,
+                    child: IgnorePointer(
+                      child: Semantics(
+                        liveRegion: true,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF211626),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Text(
+                              'No moves',
+                              key: Key('no_moves_pill'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 12,
+                                color: Color(0xFFFFE3A0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (feedback != null)
                   Positioned(
                     left: 0,

@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - apps/mobile/lib/**
+      - apps/mobile/pubspec.yaml
+      - apps/mobile/pubspec.lock
       - .github/scripts/android_process_recovery.py
       - .github/scripts/test_android_process_recovery.py
       - .github/workflows/android-process-recovery.yml

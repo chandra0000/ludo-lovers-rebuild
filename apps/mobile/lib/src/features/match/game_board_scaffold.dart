@@ -31,11 +31,13 @@ class GameBoardScaffold extends StatelessWidget {
     this.onPlayerEmoji,
     this.social,
     this.thinkingPlayer,
+    this.presentedPlayer,
+    this.noMovesPlayer,
     this.showProfiles = true,
   });
   final ValueChanged<PlayerColor>? onPlayerChat, onPlayerEmoji;
   final SocialOverlayCoordinator? social;
-  final PlayerColor? thinkingPlayer;
+  final PlayerColor? thinkingPlayer, presentedPlayer, noMovesPlayer;
   final bool showProfiles;
   final LudoGame game;
   final List<MatchPlayerProfile> profiles;
@@ -69,6 +71,8 @@ class GameBoardScaffold extends StatelessWidget {
                   onPlayerEmoji: onPlayerEmoji,
                   social: social,
                   thinkingPlayer: thinkingPlayer,
+                  presentedPlayer: presentedPlayer,
+                  noMovesPlayer: noMovesPlayer,
                   showProfiles: showProfiles,
                   result: result,
                 ),
@@ -89,12 +93,14 @@ class GameBoardScaffold extends StatelessWidget {
             game,
             profiles,
             thinkingPlayer: thinkingPlayer,
+            presentedPlayer: presentedPlayer,
           );
           Widget card(int index) => Expanded(
                 child: !showProfiles
                     ? const SizedBox.shrink()
                     : PlayerProfileCard(
                         slot: slots[index],
+                        noMoves: noMovesPlayer == slots[index].profile.color,
                         feedback: social?.forPlayer(slots[index].profile.color),
                         socialControls: onPlayerChat == null ||
                                 onPlayerEmoji == null

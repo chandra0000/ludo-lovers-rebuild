@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'pawn_chooser.dart';
 
 class MatchUtilityBar extends StatelessWidget {
   const MatchUtilityBar({
     super.key,
     required this.onChat,
     required this.onMore,
-    required this.legal,
-    required this.onPawn,
   });
   final VoidCallback onChat, onMore;
-  final List<int> legal;
-  final ValueChanged<int> onPawn;
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.textScalerOf(context).scale(16) >= 28) {
@@ -25,14 +20,6 @@ class MatchUtilityBar extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             icon: const Icon(Icons.chat_bubble_outline),
           ),
-          if (legal.length > 1)
-            IconButton(
-              key: const Key('accessible_pawn_chooser'),
-              tooltip: 'Choose a legal pawn',
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              onPressed: () => showPawnChooser(context, legal, onPawn),
-              icon: const Icon(Icons.touch_app),
-            ),
           IconButton(
             key: const Key('more_button'),
             tooltip: 'Settings',
@@ -58,14 +45,6 @@ class MatchUtilityBar extends StatelessWidget {
             label: const Text('Local Chat'),
           ),
         ),
-        if (legal.length > 1)
-          IconButton(
-            key: const Key('accessible_pawn_chooser'),
-            tooltip: 'Choose a legal pawn',
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            onPressed: () => showPawnChooser(context, legal, onPawn),
-            icon: const Icon(Icons.touch_app),
-          ),
         const SizedBox(width: 8),
         Expanded(
           child: OutlinedButton.icon(

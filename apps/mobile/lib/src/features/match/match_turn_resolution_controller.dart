@@ -40,6 +40,7 @@ class MatchTurnResolutionController {
   }
 
   void schedulePawn({
+    Duration? delay,
     required String matchId,
     required int stateVersion,
     required String Function() currentMatchId,
@@ -48,7 +49,7 @@ class MatchTurnResolutionController {
     required void Function() onReady,
   }) {
     _schedule(
-      _timing.automaticPawn,
+      delay ?? _timing.automaticPawn,
       matchId: matchId,
       stateVersion: stateVersion,
       currentMatchId: currentMatchId,

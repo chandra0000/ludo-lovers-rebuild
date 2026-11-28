@@ -1,3 +1,4 @@
+import '../../../features/game/presentation/widgets/legal_pawn_emphasis.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -205,9 +206,30 @@ class MatchPawnLayer extends StatelessWidget {
         isHumanTurn &&
         game.diceValue != null &&
         !legalIndices.contains(pawnIndex);
+    final moving =
+        animations.pawn.matches(color, pawnIndex) && animations.approach < 1;
+    final steps = animations.pawn.endProgress - animations.pawn.startProgress;
+    final hop =
+        moving ? math.sin(math.pi * ((animations.approach * steps) % 1)) : 0.0;
+    final stretch = 1 + .08 * hop;
     final isCurrentPlayer = color == game.activePlayer;
-    final tapPosition = Offset(canvasPoint.x, canvasPoint.y) +
-        visualOffset +
+    final friendly = occupants
+        .where((p) => p.color == color && legalIndices.contains(p.pawnIndex))
+        .toList();
+    final fanIndex = friendly.indexWhere((p) => p.pawnIndex == pawnIndex);
+    final fan = canMove && progress >= 0 && friendly.length > 1;
+    final offset = fan
+        ? Offset((fanIndex - (friendly.length - 1) / 2) * 16 / canvasScale, 0)
+        : visualOffset;
+    final tapPosition = Offset(
+          fan
+              ? (canvasPoint.x + offset.dx).clamp(
+                  24 / canvasScale,
+                  BoardGeometry.canvasWidth - 24 / canvasScale,
+                )
+              : canvasPoint.x + offset.dx,
+          canvasPoint.y + offset.dy,
+        ) +
         Offset(0, canMove && legalIndices.length > 1 && !reduceMotion ? -3 : 0);
 
     // The canvas is scaled to fit the phone. Expand the design-space hitbox
@@ -255,7 +277,7 @@ class MatchPawnLayer extends StatelessWidget {
                 child: ShakeFeedbackWrapper(
                   key: shakeKey,
                   child: AnimatedScale(
-                    scale: canMove ? 1.12 : 1,
+                    scale: 1,
                     duration: reduceMotion
                         ? Duration.zero
                         : const Duration(milliseconds: 180),
@@ -267,13 +289,12 @@ class MatchPawnLayer extends StatelessWidget {
                           : 0,
                       child: TweenAnimationBuilder<double>(
                         key: ValueKey(
-                          'landing-${color.name}-$pawnIndex-$canMove-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
+                          'landing-${color.name}-$pawnIndex-${lastLandingPlan?.player == color && lastLandingPlan?.pawnIndex == pawnIndex ? landingSequence : 0}',
                         ),
                         tween: Tween(
-                          begin: (canMove && legalIndices.length > 1 ||
-                                      lastLandingPlan?.player == color &&
-                                          lastLandingPlan?.pawnIndex ==
-                                              pawnIndex) &&
+                          begin: (lastLandingPlan?.player == color &&
+                                      lastLandingPlan?.pawnIndex ==
+                                          pawnIndex) &&
                                   !reduceMotion
                               ? 1.12
                               : 1.0,
@@ -285,11 +306,22 @@ class MatchPawnLayer extends StatelessWidget {
                         curve: Curves.easeOutBack,
                         builder: (context, value, child) =>
                             Transform.scale(scale: value, child: child),
-                        child: GlassyPawn(
-                          color: color.color,
-                          size: size,
-                          isCurrentPlayer: isCurrentPlayer,
-                          isMovable: canMove,
+                        child: LegalPawnEmphasis(
+                          canvasScale: canvasScale,
+                          movable: canMove && legalIndices.length > 1,
+                          reducedMotion: reduceMotion,
+                          badge: stacked ? pawnIndex + 1 : null,
+                          child: Transform.scale(
+                            scaleX: 1 / math.sqrt(stretch),
+                            scaleY: stretch,
+                            alignment: Alignment.bottomCenter,
+                            child: GlassyPawn(
+                              color: color.color,
+                              size: size,
+                              isCurrentPlayer: isCurrentPlayer,
+                              isMovable: canMove,
+                            ),
+                          ),
                         ),
                       ),
                     ),

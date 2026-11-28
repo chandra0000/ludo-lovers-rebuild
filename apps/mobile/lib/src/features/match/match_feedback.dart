@@ -10,7 +10,9 @@ enum MatchFeedbackCue {
   retreatStep,
   yard,
   finish,
-  invalid
+  invalid,
+  hop,
+  safeArrival,
 }
 
 /// Best-effort device effects emitted after accepted commands/presentation events.
@@ -20,12 +22,9 @@ class MatchFeedback {
     Future<void> Function(SystemSoundType)? sound,
     Future<void> Function(bool important)? haptic,
   })  : _sound = sound,
-        _haptic = haptic ??
-            ((important) => important
-                ? HapticFeedback.mediumImpact()
-                : HapticFeedback.selectionClick());
+        _haptic = haptic;
   final Future<void> Function(SystemSoundType)? _sound;
-  final Future<void> Function(bool important) _haptic;
+  final Future<void> Function(bool important)? _haptic;
 
   final _pools = <String, Future<AudioPool>>{};
   bool _disposed = false;
@@ -40,8 +39,11 @@ class MatchFeedback {
 
   Future<void> prepare() async {
     for (final clip in [
-      'impact',
-      'rattle',
+      'capture',
+      'dice_roll',
+      'pawn_hop',
+      'safe_star',
+      'victory',
       'yard',
       for (var i = 0; i < 5; i++) 'hop$i',
     ]) {
@@ -71,16 +73,20 @@ class MatchFeedback {
     FeedbackPreferences preferences, {
     int pitchBand = 0,
   }) async {
+    if (_disposed) return;
     final important =
         cue == MatchFeedbackCue.capture || cue == MatchFeedbackCue.finish;
     if (preferences.sound) {
       try {
         final type = important ? SystemSoundType.alert : SystemSoundType.click;
         final clip = switch (cue) {
-          MatchFeedbackCue.roll => 'rattle',
-          MatchFeedbackCue.capture => 'impact',
+          MatchFeedbackCue.roll => 'dice_roll',
+          MatchFeedbackCue.capture => 'capture',
           MatchFeedbackCue.retreatStep => 'hop${pitchBand.clamp(0, 4)}',
           MatchFeedbackCue.yard => 'yard',
+          MatchFeedbackCue.hop => 'pawn_hop',
+          MatchFeedbackCue.safeArrival => 'safe_star',
+          MatchFeedbackCue.finish => 'victory',
           _ => null,
         };
         if (_sound != null || clip == null) {
@@ -93,9 +99,19 @@ class MatchFeedback {
         debugPrint('Game sound unavailable: $error');
       }
     }
-    if (preferences.haptics && cue != MatchFeedbackCue.retreatStep) {
+    if (!_disposed &&
+        preferences.haptics &&
+        cue != MatchFeedbackCue.retreatStep) {
       try {
-        await _haptic(important);
+        if (_haptic != null) {
+          await _haptic(important);
+        } else if (important) {
+          await HapticFeedback.heavyImpact();
+        } else if (cue == MatchFeedbackCue.roll) {
+          await HapticFeedback.lightImpact();
+        } else {
+          await HapticFeedback.selectionClick();
+        }
       } catch (error) {
         debugPrint('Game haptics unavailable: $error');
       }

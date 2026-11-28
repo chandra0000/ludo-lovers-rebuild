@@ -7,7 +7,7 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'support/wait_for_board_artwork.dart';
 
 void main() {
-  testWidgets('single legal pawn moves after a 350 ms anticipation delay',
+  testWidgets('single legal pawn moves after a 180 ms anticipation delay',
       (tester) async {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,
@@ -28,10 +28,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 610));
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 349));
+    await tester.pump(const Duration(milliseconds: 179));
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1));
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 286));
+    await tester.pump();
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

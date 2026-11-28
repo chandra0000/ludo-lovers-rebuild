@@ -9,6 +9,6 @@ class MatchAnimationTiming {
     required bool reduceMotion,
   }) {
     if (reduceMotion) return Duration.zero;
-    return Duration(milliseconds: math.max(180, stepCount * 125).toInt());
+    return Duration(milliseconds: math.max(1, stepCount) * 95);
   }
 }

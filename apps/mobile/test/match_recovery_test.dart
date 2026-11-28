@@ -26,7 +26,9 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pump();
 
-    expect(find.text('THREE SIXES — TURN PASSED'), findsOneWidget);
+    expect(find.bySemanticsLabel('Dice rolling'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 421));
+    expect(find.text('Three 6s! Turn passed'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('GREEN · AI TURN')), findsOneWidget);
 
     // The penalized roll has no dice result to animate. The AI must still

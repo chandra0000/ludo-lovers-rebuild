@@ -35,9 +35,9 @@ void main() {
       expect(find.text('Éléonore'), findsWidgets);
 
       // A pending accepted roll must not become a new roll on restoration.
-      await tester.tap(find.byKey(const Key('roll_dice')));
+      // The accepted legacy six auto-deploys an equivalent yard pawn; no reroll.
       await tester.pumpAndSettle();
-      expect((await const SavedMatchStore().load())!.game.stateVersion, 1);
+      expect((await const SavedMatchStore().load())!.game.stateVersion, 2);
       await waitForBoardArtwork(tester);
       await tester.tap(find.byKey(const Key('pawn_orange_0')));
       await tester.pump();

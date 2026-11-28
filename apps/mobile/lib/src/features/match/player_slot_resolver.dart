@@ -26,6 +26,7 @@ class PlayerSlotResolver {
     LudoGame game,
     List<MatchPlayerProfile> profiles, {
     PlayerColor? thinkingPlayer,
+    PlayerColor? presentedPlayer,
   }) =>
       List.unmodifiable(
         [...top, ...bottom].map(
@@ -33,7 +34,8 @@ class PlayerSlotResolver {
             profile: profiles.singleWhere((p) => p.color == color),
             participating: game.configuration.activePlayers.contains(color),
             thinking: thinkingPlayer == color,
-            active: game.winner == null && game.activePlayer == color,
+            active: game.winner == null &&
+                (presentedPlayer ?? game.activePlayer) == color,
             team: game.configuration.isTeamUp
                 ? TeamUpPolicy.teamFor(color)
                 : null,

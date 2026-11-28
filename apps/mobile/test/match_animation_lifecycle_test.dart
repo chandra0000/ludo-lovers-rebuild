@@ -55,12 +55,12 @@ void main() {
       retreats: const {(PlayerColor.green, 1): 44, (PlayerColor.blue, 2): 18},
       reduceMotion: false,
     );
-    expect(timeline.approachMs, 180);
-    expect(timeline.movement.duration!.inMilliseconds, 180 + 70 + 45 * 48);
+    expect(timeline.approachMs, 95);
+    expect(timeline.movement.duration!.inMilliseconds, 95 + 70 + 45 * 48);
     final duration = timeline.movement.duration!.inMilliseconds;
-    timeline.movement.value = 249 / duration;
+    timeline.movement.value = 164 / duration;
     expect(timeline.retreatFraction(44), 0);
-    timeline.movement.value = (250 + 48) / duration;
+    timeline.movement.value = (165 + 48) / duration;
     expect(timeline.retreatFraction(44), closeTo(1 / 45, .00001));
     timeline.movement.value = 0.5;
     expect(timeline.retreatFraction(18), 1);
@@ -90,7 +90,7 @@ void main() {
 
     expect(animations.pawn.isMoving, isTrue);
     expect(animations.pawn.matches(PlayerColor.orange, 2), isTrue);
-    expect(animations.movement.duration, const Duration(milliseconds: 180));
+    expect(animations.movement.duration, const Duration(milliseconds: 95));
     expect(animations.completePawnMovement(), 'PAWN HOME!');
     expect(animations.pawn.isMoving, isFalse);
     expect(animations.completePawnMovement(), isNull);

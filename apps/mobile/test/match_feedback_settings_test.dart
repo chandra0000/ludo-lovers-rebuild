@@ -88,7 +88,7 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(rolls, 1);
-    expect(find.byKey(const Key('accessible_pawn_chooser')), findsOneWidget);
+    expect(find.byKey(const Key('accessible_pawn_chooser')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

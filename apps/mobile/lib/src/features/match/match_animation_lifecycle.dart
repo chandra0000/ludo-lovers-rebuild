@@ -47,13 +47,15 @@ class MatchAnimationLifecycle {
 
   bool isDiceAnimating = false;
   int diceRollId = 0;
+  int? presentedDiceValue;
 
   void restorePendingDiceRoll() {
     isDiceAnimating = true;
     diceRollId = 1;
   }
 
-  void presentAcceptedRoll({required bool hasDiceResult}) {
+  void presentAcceptedRoll({required bool hasDiceResult, int? value}) {
+    presentedDiceValue = value;
     isDiceAnimating = hasDiceResult;
     if (hasDiceResult) diceRollId++;
   }
@@ -126,6 +128,7 @@ class MatchAnimationLifecycle {
     pawn.clear();
     isDiceAnimating = false;
     diceRollId = 0;
+    presentedDiceValue = null;
   }
 
   void dispose() {

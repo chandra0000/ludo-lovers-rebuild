@@ -27,7 +27,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 601));
+    await tester.pump(const Duration(milliseconds: 651));
     await tester.pump();
     final passed = await savedGame();
     expect(passed.activePlayer, PlayerColor.green);

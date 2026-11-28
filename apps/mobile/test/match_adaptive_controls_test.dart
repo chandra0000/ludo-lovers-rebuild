@@ -46,7 +46,7 @@ void main() {
     });
   }
 
-  testWidgets('48dp chooser exposes legal pawns and executes a selection once',
+  testWidgets('equivalent yard pawns deploy once without opening a sheet',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -65,22 +65,13 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
-    final chooser = find.byKey(const Key('accessible_pawn_chooser'));
-    final bounds = tester.getRect(chooser);
-    expect(bounds.width, greaterThanOrEqualTo(48));
-    expect(bounds.height, greaterThanOrEqualTo(48));
-    await tester.tap(chooser);
-    await tester.pumpAndSettle();
-    for (var index = 1; index <= 4; index++) {
-      expect(find.text('Pawn $index'), findsOneWidget);
-    }
-    await tester.tap(find.text('Pawn 1'));
-    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('accessible_pawn_chooser')), findsNothing);
+    expect(find.byType(BottomSheet), findsNothing);
     final game = (await const SavedMatchStore().load())!.game;
     expect(game.stateVersion, 2);
     expect(game.players.first.pawnProgress[0], 0);
     expect(rolls, 1);
-    expect(chooser, findsNothing);
+
     expect(tester.takeException(), isNull);
   });
 }

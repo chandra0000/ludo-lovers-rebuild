@@ -9,6 +9,7 @@ import '../../game/domain/ai/seeded_ludo_ai.dart';
 import '../../game/domain/ludo_game.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_color.dart';
+import '../../game/domain/board_geometry.dart';
 import '../../game/domain/team_up_policy.dart';
 import '../../game/domain/mode_registry.dart';
 import '../../game/domain/feedback_preferences.dart';
@@ -17,7 +18,7 @@ import '../../game/domain/persistence/saved_match.dart';
 import '../../game/presentation/shake_feedback_wrapper.dart';
 
 import 'local_match_chat_sheet.dart';
-import 'match_board_artwork.dart';
+import '../../../features/game/presentation/widgets/cached_ludo_board.dart';
 import 'match_board_focus_frame.dart';
 import 'match_safe_star_layer.dart';
 import 'match_command_controller.dart';
@@ -81,8 +82,14 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  late final Set<PlayerColor> _aiPlayers = Set.unmodifiable(widget.aiPlayers);
+  PlayerColor get _presentedPlayer =>
+      _matchController.turns.snapshot.presentedPlayer;
   late final MatchCommandController _matchController = MatchCommandController(
-    _newMatchSession(widget.initialGame ?? LudoGame.initial()),
+    _newMatchSession(
+      widget.initialGame ??
+          LudoGame.initial(ruleProfile: LudoRuleProfile.currentV2),
+    ),
   );
 
   MatchSession _newMatchSession(LudoGame game) {
@@ -92,8 +99,8 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   late final List<MatchPlayerProfile> _profiles = MatchPlayerProfile.roster(
-    widget.profiles ?? MatchPlayerProfile.local(aiPlayers: widget.aiPlayers),
-    aiPlayers: widget.aiPlayers,
+    widget.profiles ?? MatchPlayerProfile.local(aiPlayers: _aiPlayers),
+    aiPlayers: _aiPlayers,
   );
 
   MatchPlayerProfile _profileFor(PlayerColor color) =>
@@ -103,7 +110,7 @@ class _MatchScreenState extends State<MatchScreen>
   late final math.Random _random = math.Random(widget.aiSeed);
   late final MatchTurnCoordinator _turns = MatchTurnCoordinator(
     controller: _matchController,
-    aiPlayers: widget.aiPlayers,
+    aiPlayers: _aiPlayers,
     aiSeed: widget.aiSeed,
     difficulty: widget.aiDifficulty,
     isActive: () => mounted && _canAct,
@@ -131,6 +138,8 @@ class _MatchScreenState extends State<MatchScreen>
     onMovementTick: _handleMovementTick,
     onMovementStatus: _handleMovementStatus,
   );
+  late final Listenable _boardMotion =
+      Listenable.merge([_animations.movement, _animations.preview]);
   AnimationController get _movementController => _animations.movement;
   AnimationController get _previewController => _animations.preview;
   bool get _isDiceAnimating => _animations.isDiceAnimating;
@@ -141,7 +150,7 @@ class _MatchScreenState extends State<MatchScreen>
   final _social = SocialOverlayCoordinator();
   FeedbackPreferences _feedbackPreferences = const FeedbackPreferences();
   final _feedbackStore = const FeedbackPreferencesStore();
-  final _feedback = MatchFeedback();
+  var _feedback = MatchFeedback();
   Future<void> _feedbackWrites = Future<void>.value();
   bool get _reduceMotion =>
       _feedbackPreferences.reduceMotion ||
@@ -236,6 +245,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   int _retreatBeat = -1;
+  int _hopBeat = -1;
 
   void _handleMovementTick() {
     if (_reduceMotion &&
@@ -245,6 +255,15 @@ class _MatchScreenState extends State<MatchScreen>
       return;
     }
     if (mounted && _animations.pawn.pawnIndex != null) {
+      final steps =
+          _animations.pawn.endProgress - _animations.pawn.startProgress;
+      if (steps > 0 && _animations.approach < 1) {
+        final beat = (_animations.approach * steps).floor().clamp(0, steps - 1);
+        if (beat != _hopBeat) {
+          _hopBeat = beat;
+          _playFeedback(MatchFeedbackCue.hop);
+        }
+      }
       if (_animations.captures.isNotEmpty &&
           !_reduceMotion &&
           _animations.elapsedMs >= _animations.approachMs) {
@@ -272,13 +291,13 @@ class _MatchScreenState extends State<MatchScreen>
           _retreatBeat = beat;
         }
       }
-      setState(() {});
     }
   }
 
   void _handleMovementStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
       _animations.completePawnMovement();
+      _matchController.turns.completeMovement();
       final completedPlan = _landingPlan;
       if (completedPlan != null) {
         _playFeedback(
@@ -286,7 +305,16 @@ class _MatchScreenState extends State<MatchScreen>
               ? MatchFeedbackCue.finish
               : completedPlan.hasCapture
                   ? MatchFeedbackCue.yard
-                  : MatchFeedbackCue.land,
+                  : completedPlan.endProgress <=
+                              BoardGeometry.playerTrackLength &&
+                          BoardGeometry.safeTrackCells.contains(
+                            BoardGeometry.physicalTrackCell(
+                              completedPlan.player,
+                              completedPlan.endProgress,
+                            ),
+                          )
+                      ? MatchFeedbackCue.safeArrival
+                      : MatchFeedbackCue.land,
         );
       }
       setState(() {
@@ -348,7 +376,7 @@ class _MatchScreenState extends State<MatchScreen>
     // overwrite a newer accepted game state.
     final snapshot = SavedMatch(
       game: _game,
-      aiPlayers: widget.aiPlayers,
+      aiPlayers: _aiPlayers,
       aiSeed: widget.aiSeed,
       aiDifficulty: widget.aiDifficulty,
       profiles: _profiles,
@@ -364,6 +392,7 @@ class _MatchScreenState extends State<MatchScreen>
     _turns.dispose();
     unawaited(_persistMatch());
     _animations.dispose();
+    _matchController.dispose();
     super.dispose();
   }
 
@@ -375,7 +404,8 @@ class _MatchScreenState extends State<MatchScreen>
     _playFeedback(MatchFeedbackCue.roll);
     setState(
       () => _animations.presentAcceptedRoll(
-        hasDiceResult: rolled.diceValue != null,
+        hasDiceResult: true,
+        value: rolled.events.whereType<DiceRolled>().single.value,
       ),
     );
   }
@@ -385,7 +415,7 @@ class _MatchScreenState extends State<MatchScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         key: Key('consecutive_six_penalty'),
-        content: Text('THREE SIXES — TURN PASSED'),
+        content: Text('Three 6s! Turn passed'),
         duration: Duration(milliseconds: 1600),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Color(0xFF211A0D),
@@ -455,11 +485,12 @@ class _MatchScreenState extends State<MatchScreen>
         feedback: plan.feedback,
       );
     });
+    _hopBeat = -1;
     _animations.startPawnMovement();
   }
 
   String get _statusText {
-    if (_game.winner != null) {
+    if (_game.winner != null && !_movementController.isAnimating) {
       final winner = _profileFor(_game.winner!);
       final label = winner.displayName == winner.color.name.toUpperCase()
           ? winner.displayName
@@ -470,22 +501,22 @@ class _MatchScreenState extends State<MatchScreen>
       return '$label WINS';
     }
     if (_game.configuration.isTeamUp) {
-      final name = _profileFor(_game.activePlayer).displayName;
+      final name = _profileFor(_presentedPlayer).displayName;
       return '$name · TEAM ${TeamUpPolicy.teamFor(_game.activePlayer).name.toUpperCase()}';
     }
-    return widget.aiPlayers.contains(_game.activePlayer)
-        ? '${_game.activePlayer.name.toUpperCase()} · AI TURN'
-        : '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
+    return _aiPlayers.contains(_presentedPlayer)
+        ? '${_presentedPlayer.name.toUpperCase()} · AI TURN'
+        : '${_presentedPlayer.name.toUpperCase()} · YOUR TURN';
   }
 
   String get _actionInstruction {
-    if (_game.winner != null) return 'Match finished';
     if (_movementController.isAnimating) return 'Pawn moving';
+    if (_game.winner != null) return 'Match finished';
     if (_isDiceAnimating) return 'Rolling dice';
     if (_turnResolution.isPending) {
-      return _game.legalPawnIndices().isEmpty ? 'No legal move' : 'Pawn moving';
+      return _game.legalPawnIndices().isEmpty ? 'No moves' : 'Pawn moving';
     }
-    if (widget.aiPlayers.contains(_game.activePlayer)) return 'AI thinking';
+    if (_aiPlayers.contains(_game.activePlayer)) return 'AI thinking';
     return _game.diceValue == null ? 'Roll dice' : 'Choose a pawn';
   }
 
@@ -526,6 +557,11 @@ class _MatchScreenState extends State<MatchScreen>
                   onPlayerChat: _showPlayerChat,
                   onPlayerEmoji: _showPlayerReactions,
                   social: _social,
+                  presentedPlayer: _presentedPlayer,
+                  noMovesPlayer: _turnResolution.isPending &&
+                          _game.legalPawnIndices().isEmpty
+                      ? _game.activePlayer
+                      : null,
                   thinkingPlayer: _actionInstruction == 'AI thinking'
                       ? _game.activePlayer
                       : null,
@@ -580,11 +616,13 @@ class _MatchScreenState extends State<MatchScreen>
                             key: const Key('animated_dice'),
                             size: 64,
                             visualScale: .88,
-                            targetValue: _game.diceValue,
+                            targetValue: _isDiceAnimating
+                                ? _animations.presentedDiceValue ??
+                                    _game.diceValue
+                                : _game.diceValue,
                             rollId: _diceRollId,
                             canRoll: _canAct &&
-                                !widget.aiPlayers
-                                    .contains(_game.activePlayer) &&
+                                !_aiPlayers.contains(_game.activePlayer) &&
                                 _game.diceValue == null &&
                                 !_isDiceAnimating &&
                                 !_movementController.isAnimating &&
@@ -599,18 +637,19 @@ class _MatchScreenState extends State<MatchScreen>
                       ],
                     ),
                   ),
-                  result: _game.winner == null
-                      ? null
-                      : MatchResultPresentation(onRematch: _restartMatch),
+                  result:
+                      _game.winner == null || _movementController.isAnimating
+                          ? null
+                          : MatchResultPresentation(onRematch: _restartMatch),
                   status: Semantics(
                     key: const Key('turn_status'),
                     liveRegion: true,
                     label: '$_statusText. $_actionInstruction',
                     child: Center(
                       child: Text(
-                        _game.winner != null
+                        _game.winner != null && !_movementController.isAnimating
                             ? _statusText
-                            : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _game.activePlayer).displayName}',
+                            : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _presentedPlayer).displayName}',
                         key: const Key('match_action_instruction'),
                         textAlign: TextAlign.center,
                         style: AppTypography.status,
@@ -620,83 +659,83 @@ class _MatchScreenState extends State<MatchScreen>
                   utilities: MatchUtilityBar(
                     onChat: _showLocalChat,
                     onMore: _showMoreMenu,
-                    onPawn: _selectOrMovePawn,
-                    legal: _canAct &&
-                            !_isDiceAnimating &&
-                            !_movementController.isAnimating &&
-                            !_turnResolution.isPending &&
-                            !widget.aiPlayers.contains(_game.activePlayer)
-                        ? _game.legalPawnIndices()
-                        : const [],
                   ),
-                  boardBuilder: (context, scale) => Transform.translate(
-                    offset: Offset(_captureShake, 0),
-                    child: MatchBoardArtwork(
-                      canvasScale: scale,
-                      overlays: [
-                        const MatchBoardFocusFrame(),
-                        const MatchSafeStarLayer(),
-                        Positioned.fill(
-                          child: MatchPawnLayer(
-                            game: _game,
-                            animations: _animations,
-                            canvasScale: scale,
-                            isTurnResolutionPending: _turnResolution.isPending,
-                            aiPlayers: widget.aiPlayers,
-                            shakeKeys: _shakeKeys,
-                            reduceMotion: _reduceMotion,
-                            lastLandingPlan: _lastLandingPlan,
-                            landingSequence: _landingSequence,
-                            onMove: _selectOrMovePawn,
-                            onInvalidMove: _showInvalidMoveFeedback,
-                          ),
-                        ),
-                        if (_landingSequence > 0 && _lastLandingPlan != null)
-                          MatchLandingCelebration(
-                            key: ValueKey(_landingSequence),
-                            plan: _lastLandingPlan!,
-                          ),
-                        if (_lastLandingPlan?.feedback
-                            case final String message)
+                  boardBuilder: (context, scale) => AnimatedBuilder(
+                    animation: _boardMotion,
+                    builder: (_, __) => Transform.translate(
+                      offset: Offset(_captureShake, 0),
+                      child: CachedLudoBoard(
+                        canvasScale: scale,
+                        overlays: [
+                          const MatchBoardFocusFrame(),
+                          const MatchSafeStarLayer(),
                           Positioned.fill(
-                            child: IgnorePointer(
-                              child: Center(
-                                child: TweenAnimationBuilder<double>(
-                                  key: ValueKey('event-$_landingSequence'),
-                                  tween: Tween(begin: 0, end: 1),
-                                  duration: const Duration(milliseconds: 1500),
-                                  builder: (context, progress, child) =>
-                                      Opacity(
-                                    opacity: 1 -
-                                        ((progress - .8) * 5)
-                                            .clamp(0.0, 1.0)
-                                            .toDouble(),
-                                    child: child,
-                                  ),
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xDD211A0D),
-                                      borderRadius: BorderRadius.circular(12),
+                            child: MatchPawnLayer(
+                              game: _game,
+                              animations: _animations,
+                              canvasScale: scale,
+                              isTurnResolutionPending:
+                                  _turnResolution.isPending,
+                              aiPlayers: _aiPlayers,
+                              shakeKeys: _shakeKeys,
+                              reduceMotion: _reduceMotion,
+                              lastLandingPlan: _lastLandingPlan,
+                              landingSequence: _landingSequence,
+                              onMove: _selectOrMovePawn,
+                              onInvalidMove: _showInvalidMoveFeedback,
+                            ),
+                          ),
+                          if (_landingSequence > 0 && _lastLandingPlan != null)
+                            MatchLandingCelebration(
+                              key: ValueKey(_landingSequence),
+                              plan: _lastLandingPlan!,
+                            ),
+                          if (_lastLandingPlan?.feedback
+                              case final String message)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Center(
+                                  child: TweenAnimationBuilder<double>(
+                                    key: ValueKey(
+                                      'event-$_landingSequence',
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                        horizontal: 16,
+                                    tween: Tween(begin: 0, end: 1),
+                                    duration: const Duration(
+                                      milliseconds: 1500,
+                                    ),
+                                    builder: (context, progress, child) =>
+                                        Opacity(
+                                      opacity: 1 -
+                                          ((progress - .8) * 5)
+                                              .clamp(0.0, 1.0)
+                                              .toDouble(),
+                                      child: child,
+                                    ),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xDD211A0D),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(message),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(message),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        if (_selectedPawnIndex != null)
-                          MatchDestinationPreview(
-                            game: _game,
-                            selectedPawnIndex: _selectedPawnIndex!,
-                            animation: _previewController,
-                          ),
-                      ],
+                          if (_selectedPawnIndex != null)
+                            MatchDestinationPreview(
+                              game: _game,
+                              selectedPawnIndex: _selectedPawnIndex!,
+                              animation: _previewController,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -779,7 +818,7 @@ class _MatchScreenState extends State<MatchScreen>
       if (action == 'rules') {
         final profile = _game.ruleProfile;
         final summary =
-            '${ModeRegistry.definition(_game.configuration.mode).description}\n\n'
+            '${profile.id == 'ludo-lovers-current' && profile.version == 1 ? 'Legacy local rules retained for this saved match.' : ModeRegistry.definition(_game.configuration.mode).description}\n\n'
             'Profile: ${profile.id}@${profile.version}. Exact finish required.\n'
             'Bonus on six: ${profile.extraTurnOnSix ? 'yes' : 'no'}; '
             'capture: ${profile.extraTurnOnCapture ? 'yes' : 'no'}; '
@@ -828,6 +867,10 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   void _restartMatch() {
+    final previousFeedback = _feedback;
+    _feedback = MatchFeedback();
+    unawaited(previousFeedback.dispose());
+    if (_feedbackPreferences.sound) unawaited(_feedback.prepare());
     _social.clear();
     _aiScheduler.cancel();
     _turnResolution.cancel();
