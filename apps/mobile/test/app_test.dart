@@ -464,10 +464,10 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
-    await tester.pumpAndSettle();
     final saved = await const SavedMatchStore().load();
-    expect(saved!.game.players.first.pawnProgress[0], 0);
+    expect(saved!.game.stateVersion, 2);
+    expect(saved.game.appliedCommandIds, hasLength(2));
+    expect(saved.game.players.first.pawnProgress[0], 0);
     expect(saved.game.diceValue, isNull);
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     expect(find.byKey(const Key('pawn_orange_0')), findsOneWidget);

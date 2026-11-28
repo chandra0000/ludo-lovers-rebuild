@@ -21,6 +21,7 @@ import 'local_match_chat_sheet.dart';
 import '../../../features/game/presentation/widgets/cached_ludo_board.dart';
 import 'match_board_focus_frame.dart';
 import 'match_board_artwork.dart';
+import 'match_scene_preparation.dart';
 import 'match_safe_star_layer.dart';
 import 'match_command_controller.dart';
 import 'match_move_presentation_plan.dart';
@@ -136,7 +137,27 @@ class _MatchScreenState extends State<MatchScreen>
   bool _exitDialogOpen = false;
   bool _allowExit = false;
   bool _boardReady = false;
-  bool get _canAct => _boardReady && _isAppResumed && !_exitDialogOpen;
+  bool _assetsPrepared = false;
+  int _preparationGeneration = 0;
+  bool get _sceneReady => _boardReady && _assetsPrepared;
+  bool get _canAct => _sceneReady && _isAppResumed && !_exitDialogOpen;
+
+  void _onAssetsPrepared(bool ready) {
+    if (!mounted || _assetsPrepared == ready) return;
+    // Update the command guard immediately, including synchronous cache hits.
+    // Rebuild the ancestor only after this preparation frame has completed.
+    _assetsPrepared = ready;
+    final generation = ++_preparationGeneration;
+    if (!ready) {
+      _turnResolution.cancel();
+      _aiScheduler.cancel();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _preparationGeneration) return;
+      setState(() {});
+      if (ready) _resumeAcceptedTurn();
+    });
+  }
 
   void _onBoardReadinessChanged(bool ready) {
     if (!mounted || _boardReady == ready) return;
@@ -528,7 +549,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   String get _actionInstruction {
-    if (!_boardReady) return 'Preparing the board';
+    if (!_sceneReady) return 'Preparing the board';
     if (_movementController.isAnimating) return 'Pawn moving';
     if (_game.winner != null) return 'Match finished';
     if (_isDiceAnimating) return 'Rolling dice';
@@ -554,215 +575,224 @@ class _MatchScreenState extends State<MatchScreen>
             backgroundColor: const Color(0xFF080808),
             body: RoyalBackdrop(
               child: SafeArea(
-                child: GameBoardScaffold(
-                  game: _game,
-                  profiles: _profiles,
-                  showProfiles: widget.showDynamicProfiles,
-                  onExit: _requestExit,
-                  teamProgress: _game.configuration.isTeamUp
-                      ? TeamProgressPanel(game: _game, profiles: _profiles)
-                      : null,
-                  teamProgressHeight: () {
-                    final scaled = MediaQuery.textScalerOf(context).scale(14);
-                    final badge = (scaled * 1.2 * (scaled > 18 ? 1 : 2) + 8)
-                        .clamp(40.0, double.infinity);
-                    return badge +
-                        (_game.scheduledPlayer == _game.activePlayer
-                            ? 0
-                            : MediaQuery.textScalerOf(context).scale(11) * 1.5 +
-                                2);
-                  }(),
-                  reaction: const SizedBox.shrink(),
-                  onPlayerChat: _showPlayerChat,
-                  onPlayerEmoji: _showPlayerReactions,
-                  social: _social,
-                  presentedPlayer: _presentedPlayer,
-                  noMovesPlayer: _turnResolution.isPending &&
-                          _game.legalPawnIndices().isEmpty
-                      ? _game.activePlayer
-                      : null,
-                  thinkingPlayer: _actionInstruction == 'AI thinking'
-                      ? _game.activePlayer
-                      : null,
-                  dice: SizedBox(
-                    key: const Key('roll_dice'),
-                    width: 88,
-                    height: 96,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AnimatedAlign(
-                          duration: _reduceMotion
-                              ? Duration.zero
-                              : const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          alignment: switch (
-                              _landingPlan?.player ?? _game.activePlayer) {
-                            PlayerColor.orange => Alignment.topLeft,
-                            PlayerColor.green => Alignment.topRight,
-                            PlayerColor.magenta => Alignment.bottomRight,
-                            PlayerColor.blue => Alignment.bottomLeft,
-                          },
-                          child: ExcludeSemantics(
-                            child: Icon(
-                              switch (
-                                  _landingPlan?.player ?? _game.activePlayer) {
-                                PlayerColor.orange => Icons.north_west,
-                                PlayerColor.green => Icons.north_east,
-                                PlayerColor.magenta => Icons.south_east,
-                                PlayerColor.blue => Icons.south_west,
-                              },
-                              size: 16,
-                              color: const Color(0xFFFFD36B),
+                child: MatchScenePreparation(
+                  board: widget.boardImage,
+                  onReadinessChanged: _onAssetsPrepared,
+                  onExit: () => unawaited(_requestExit()),
+                  child: GameBoardScaffold(
+                    game: _game,
+                    profiles: _profiles,
+                    showProfiles: widget.showDynamicProfiles,
+                    onExit: _requestExit,
+                    teamProgress: _game.configuration.isTeamUp
+                        ? TeamProgressPanel(game: _game, profiles: _profiles)
+                        : null,
+                    teamProgressHeight: () {
+                      final scaled = MediaQuery.textScalerOf(context).scale(14);
+                      final badge = (scaled * 1.2 * (scaled > 18 ? 1 : 2) + 8)
+                          .clamp(40.0, double.infinity);
+                      return badge +
+                          (_game.scheduledPlayer == _game.activePlayer
+                              ? 0
+                              : MediaQuery.textScalerOf(context).scale(11) *
+                                      1.5 +
+                                  2);
+                    }(),
+                    reaction: const SizedBox.shrink(),
+                    onPlayerChat: _showPlayerChat,
+                    onPlayerEmoji: _showPlayerReactions,
+                    social: _social,
+                    presentedPlayer: _presentedPlayer,
+                    noMovesPlayer: _turnResolution.isPending &&
+                            _game.legalPawnIndices().isEmpty
+                        ? _game.activePlayer
+                        : null,
+                    thinkingPlayer: _actionInstruction == 'AI thinking'
+                        ? _game.activePlayer
+                        : null,
+                    dice: SizedBox(
+                      key: const Key('roll_dice'),
+                      width: 88,
+                      height: 96,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          AnimatedAlign(
+                            duration: _reduceMotion
+                                ? Duration.zero
+                                : const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            alignment: switch (
+                                _landingPlan?.player ?? _game.activePlayer) {
+                              PlayerColor.orange => Alignment.topLeft,
+                              PlayerColor.green => Alignment.topRight,
+                              PlayerColor.magenta => Alignment.bottomRight,
+                              PlayerColor.blue => Alignment.bottomLeft,
+                            },
+                            child: ExcludeSemantics(
+                              child: Icon(
+                                switch (_landingPlan?.player ??
+                                    _game.activePlayer) {
+                                  PlayerColor.orange => Icons.north_west,
+                                  PlayerColor.green => Icons.north_east,
+                                  PlayerColor.magenta => Icons.south_east,
+                                  PlayerColor.blue => Icons.south_west,
+                                },
+                                size: 16,
+                                color: const Color(0xFFFFD36B),
+                              ),
                             ),
                           ),
-                        ),
-                        TweenAnimationBuilder<double>(
-                          key: ValueKey(_actionInstruction == 'No legal move'),
-                          tween: Tween(begin: 0, end: 1),
-                          duration: const Duration(milliseconds: 550),
-                          builder: (context, t, child) => Transform.translate(
-                            offset: Offset(
-                              !_reduceMotion &&
-                                      _actionInstruction == 'No legal move'
-                                  ? 3 * math.sin(t * math.pi * 6) * (1 - t)
-                                  : 0,
-                              0,
+                          TweenAnimationBuilder<double>(
+                            key:
+                                ValueKey(_actionInstruction == 'No legal move'),
+                            tween: Tween(begin: 0, end: 1),
+                            duration: const Duration(milliseconds: 550),
+                            builder: (context, t, child) => Transform.translate(
+                              offset: Offset(
+                                !_reduceMotion &&
+                                        _actionInstruction == 'No legal move'
+                                    ? 3 * math.sin(t * math.pi * 6) * (1 - t)
+                                    : 0,
+                                0,
+                              ),
+                              child: child,
                             ),
-                            child: child,
+                            child: LuxuryDiceButton(
+                              key: const Key('animated_dice'),
+                              size: 64,
+                              visualScale: .88,
+                              targetValue: _isDiceAnimating
+                                  ? _animations.presentedDiceValue ??
+                                      _game.diceValue
+                                  : _game.diceValue,
+                              rollId: _diceRollId,
+                              canRoll: _canAct &&
+                                  !_aiPlayers.contains(_game.activePlayer) &&
+                                  _game.diceValue == null &&
+                                  !_isDiceAnimating &&
+                                  !_movementController.isAnimating &&
+                                  _game.winner == null,
+                              isWaitingForRoll: _canAct &&
+                                  _game.diceValue == null &&
+                                  _game.winner == null &&
+                                  !_movementController.isAnimating,
+                              onRollRequested: _roll,
+                              onAnimationComplete: _handleDiceAnimationComplete,
+                            ),
                           ),
-                          child: LuxuryDiceButton(
-                            key: const Key('animated_dice'),
-                            size: 64,
-                            visualScale: .88,
-                            targetValue: _isDiceAnimating
-                                ? _animations.presentedDiceValue ??
-                                    _game.diceValue
-                                : _game.diceValue,
-                            rollId: _diceRollId,
-                            canRoll: _canAct &&
-                                !_aiPlayers.contains(_game.activePlayer) &&
-                                _game.diceValue == null &&
-                                !_isDiceAnimating &&
-                                !_movementController.isAnimating &&
-                                _game.winner == null,
-                            isWaitingForRoll: _canAct &&
-                                _game.diceValue == null &&
-                                _game.winner == null &&
-                                !_movementController.isAnimating,
-                            onRollRequested: _roll,
-                            onAnimationComplete: _handleDiceAnimationComplete,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  result: !_boardReady ||
-                          _game.winner == null ||
-                          _movementController.isAnimating
-                      ? null
-                      : MatchResultPresentation(onRematch: _restartMatch),
-                  status: Semantics(
-                    key: const Key('turn_status'),
-                    liveRegion: true,
-                    label: _boardReady
-                        ? '$_statusText. $_actionInstruction'
-                        : 'Preparing the board',
-                    child: Center(
-                      child: Text(
-                        !_boardReady
-                            ? 'Preparing board'
-                            : _game.winner != null &&
-                                    !_movementController.isAnimating
-                                ? _statusText
-                                : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _presentedPlayer).displayName}',
-                        key: const Key('match_action_instruction'),
-                        textAlign: TextAlign.center,
-                        style: AppTypography.status,
+                        ],
                       ),
                     ),
-                  ),
-                  utilities: MatchUtilityBar(
-                    onChat: _showLocalChat,
-                    onMore: _showMoreMenu,
-                  ),
-                  boardBuilder: (context, scale) => AnimatedBuilder(
-                    animation: _boardMotion,
-                    builder: (_, __) => Transform.translate(
-                      offset: Offset(_captureShake, 0),
-                      child: CachedLudoBoard(
-                        image: widget.boardImage,
-                        onReadinessChanged: _onBoardReadinessChanged,
-                        canvasScale: scale,
-                        overlays: [
-                          const MatchBoardFocusFrame(),
-                          const MatchSafeStarLayer(),
-                          Positioned.fill(
-                            child: MatchPawnLayer(
-                              game: _game,
-                              animations: _animations,
-                              canvasScale: scale,
-                              isTurnResolutionPending:
-                                  _turnResolution.isPending,
-                              aiPlayers: _aiPlayers,
-                              shakeKeys: _shakeKeys,
-                              reduceMotion: _reduceMotion,
-                              lastLandingPlan: _lastLandingPlan,
-                              landingSequence: _landingSequence,
-                              onMove: _selectOrMovePawn,
-                              onInvalidMove: _showInvalidMoveFeedback,
-                            ),
-                          ),
-                          if (_landingSequence > 0 && _lastLandingPlan != null)
-                            MatchLandingCelebration(
-                              key: ValueKey(_landingSequence),
-                              plan: _lastLandingPlan!,
-                            ),
-                          if (_lastLandingPlan?.feedback
-                              case final String message)
+                    result: !_sceneReady ||
+                            _game.winner == null ||
+                            _movementController.isAnimating
+                        ? null
+                        : MatchResultPresentation(onRematch: _restartMatch),
+                    status: Semantics(
+                      key: const Key('turn_status'),
+                      liveRegion: true,
+                      label: _sceneReady
+                          ? '$_statusText. $_actionInstruction'
+                          : 'Preparing the board',
+                      child: Center(
+                        child: Text(
+                          !_sceneReady
+                              ? 'Preparing board'
+                              : _game.winner != null &&
+                                      !_movementController.isAnimating
+                                  ? _statusText
+                                  : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _presentedPlayer).displayName}',
+                          key: const Key('match_action_instruction'),
+                          textAlign: TextAlign.center,
+                          style: AppTypography.status,
+                        ),
+                      ),
+                    ),
+                    utilities: MatchUtilityBar(
+                      onChat: _showLocalChat,
+                      onMore: _showMoreMenu,
+                    ),
+                    boardBuilder: (context, scale) => AnimatedBuilder(
+                      animation: _boardMotion,
+                      builder: (_, __) => Transform.translate(
+                        offset: Offset(_captureShake, 0),
+                        child: CachedLudoBoard(
+                          image: widget.boardImage,
+                          onReadinessChanged: _onBoardReadinessChanged,
+                          canvasScale: scale,
+                          overlays: [
+                            const MatchBoardFocusFrame(),
+                            const MatchSafeStarLayer(),
                             Positioned.fill(
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: TweenAnimationBuilder<double>(
-                                    key: ValueKey(
-                                      'event-$_landingSequence',
-                                    ),
-                                    tween: Tween(begin: 0, end: 1),
-                                    duration: const Duration(
-                                      milliseconds: 1500,
-                                    ),
-                                    builder: (context, progress, child) =>
-                                        Opacity(
-                                      opacity: 1 -
-                                          ((progress - .8) * 5)
-                                              .clamp(0.0, 1.0)
-                                              .toDouble(),
-                                      child: child,
-                                    ),
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xDD211A0D),
-                                        borderRadius: BorderRadius.circular(12),
+                              child: MatchPawnLayer(
+                                game: _game,
+                                animations: _animations,
+                                canvasScale: scale,
+                                isTurnResolutionPending:
+                                    _turnResolution.isPending,
+                                aiPlayers: _aiPlayers,
+                                shakeKeys: _shakeKeys,
+                                reduceMotion: _reduceMotion,
+                                lastLandingPlan: _lastLandingPlan,
+                                landingSequence: _landingSequence,
+                                onMove: _selectOrMovePawn,
+                                onInvalidMove: _showInvalidMoveFeedback,
+                              ),
+                            ),
+                            if (_landingSequence > 0 &&
+                                _lastLandingPlan != null)
+                              MatchLandingCelebration(
+                                key: ValueKey(_landingSequence),
+                                plan: _lastLandingPlan!,
+                              ),
+                            if (_lastLandingPlan?.feedback
+                                case final String message)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: TweenAnimationBuilder<double>(
+                                      key: ValueKey(
+                                        'event-$_landingSequence',
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                          horizontal: 16,
+                                      tween: Tween(begin: 0, end: 1),
+                                      duration: const Duration(
+                                        milliseconds: 1500,
+                                      ),
+                                      builder: (context, progress, child) =>
+                                          Opacity(
+                                        opacity: 1 -
+                                            ((progress - .8) * 5)
+                                                .clamp(0.0, 1.0)
+                                                .toDouble(),
+                                        child: child,
+                                      ),
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xDD211A0D),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
-                                        child: Text(message),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                            horizontal: 16,
+                                          ),
+                                          child: Text(message),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          if (_selectedPawnIndex != null)
-                            MatchDestinationPreview(
-                              game: _game,
-                              selectedPawnIndex: _selectedPawnIndex!,
-                              animation: _previewController,
-                            ),
-                        ],
+                            if (_selectedPawnIndex != null)
+                              MatchDestinationPreview(
+                                game: _game,
+                                selectedPawnIndex: _selectedPawnIndex!,
+                                animation: _previewController,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

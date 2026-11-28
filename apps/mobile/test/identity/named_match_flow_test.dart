@@ -10,6 +10,7 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 
 import '../support/setup_navigation.dart';
+import '../support/wait_for_board_artwork.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -40,6 +41,7 @@ void main() {
     await tester.tap(start);
     await tester.pumpAndSettle();
     expect(find.text('Zoë 王'), findsOneWidget);
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('more_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Restart match'));
@@ -96,6 +98,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await waitForBoardArtwork(tester);
     expect(find.text('Zoë 王 (ORANGE) WINS'), findsOneWidget);
     expect(find.text('PLAY AGAIN'), findsOneWidget);
     expect(tester.takeException(), isNull);

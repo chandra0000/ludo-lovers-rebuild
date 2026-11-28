@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'royal_crown.dart';
+import 'match_assets.dart';
 
 class RoyalGameHeader extends StatelessWidget {
   const RoyalGameHeader({
@@ -48,11 +49,12 @@ class RoyalBrandMark extends StatelessWidget {
           children: [
             Positioned.fill(
               child: ClipOval(
-                child: Image.asset(
-                  'assets/images/branding/ludo_lovers_icon.webp',
+                child: Image(
+                  image: MatchAssets.logo,
                   key: const Key('match_brand_mark'),
-                  cacheWidth: 216,
                   semanticLabel: 'Ludo Lovers',
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: RoyalCrown(size: 48)),
                 ),
               ),
             ),
