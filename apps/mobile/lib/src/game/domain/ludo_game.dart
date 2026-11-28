@@ -29,6 +29,14 @@ class LudoRuleProfile {
     version: 1,
   );
 
+  /// Owner-approved brisk local rules. Existing saves retain currentV1.
+  static const currentV2 = LudoRuleProfile(
+    id: 'ludo-lovers-current',
+    version: 2,
+    extraTurnOnFinish: true,
+    threeConsecutiveSixesPenalty: true,
+  );
+
   /// Proposed Classic profile from the legacy rules specification.
   /// It remains opt-in until the product owner confirms this variant.
   static const classicV1 = LudoRuleProfile(

@@ -41,7 +41,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
 
       // The engine exposes only pawn 1 as legal; the UI auto-moves that pawn.
-      expect(find.bySemanticsLabel(RegExp('GREEN · AI TURN')), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')),
+        findsOneWidget,
+      );
       // Observe the in-flight pawn hop without advancing far enough to schedule
       // the AI's next delayed roll; AI legality is covered in the domain test.
       await tester.pump(const Duration(milliseconds: 100));
@@ -49,6 +52,11 @@ void main() {
       expect(find.textContaining('Pawn moving · ORANGE'), findsOneWidget);
       expect(tester.getCenter(blockedPawn), blockedPawnBefore);
       expect(tester.getCenter(onlyLegalPawn), isNot(legalPawnBefore));
+      expect(
+        find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(milliseconds: 200));
       expect(find.bySemanticsLabel(RegExp('GREEN · AI TURN')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

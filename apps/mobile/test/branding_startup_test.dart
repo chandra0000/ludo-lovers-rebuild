@@ -1,10 +1,10 @@
+import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:ludo_lovers/src/features/splash/splash_screen.dart';
-import 'package:ludo_lovers/src/features/match/pawn_chooser.dart';
 import 'package:ludo_lovers/src/theme/app_typography.dart';
 
 void main() {
@@ -90,44 +90,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-      'pawn sheet shows all identities and excludes illegal commands at 200%',
+  testWidgets('game utility controls never open a pawn selection sheet at 200%',
       (tester) async {
-    int? chosen;
     await tester.pumpWidget(
       MaterialApp(
-        home: Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: const TextScaler.linear(2)),
-            child: Builder(
-              builder: (context) => Scaffold(
-                body: TextButton(
-                  onPressed: () => showPawnChooser(
-                    context,
-                    [0, 2],
-                    (v) => chosen = v,
-                  ),
-                  child: const Text('Choose'),
-                ),
-              ),
-            ),
-          ),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
         ),
+        home: const MatchScreen(),
       ),
     );
-    await tester.tap(find.text('Choose'));
     await tester.pumpAndSettle();
-    expect(find.text('Pawn 1'), findsOneWidget);
-    expect(find.text('Pawn 2'), findsOneWidget);
-    expect(
-      tester.getSize(find.byKey(const Key('pawn_choice_0'))).height,
-      greaterThanOrEqualTo(48),
-    );
-    await tester.tap(find.text('Pawn 2'));
-    expect(chosen, isNull);
-    await tester.tap(find.text('Pawn 1'));
-    await tester.pumpAndSettle();
-    expect(chosen, 0);
+    expect(find.byKey(const Key('accessible_pawn_chooser')), findsNothing);
+    expect(find.byKey(const Key('chat_button')), findsOneWidget);
+    expect(find.byKey(const Key('more_button')), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

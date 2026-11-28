@@ -84,6 +84,7 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     expect(rolls, 1);
-    expect((await saved()).diceValue, 6);
+    expect((await saved()).diceValue, isNull);
+    expect((await saved()).stateVersion, 2);
   });
 }

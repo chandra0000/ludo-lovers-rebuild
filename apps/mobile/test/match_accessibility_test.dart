@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
+import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
   testWidgets('dice exposes a useful action hint to screen readers',
@@ -21,7 +22,12 @@ void main() {
 
   testWidgets('movable pawns announce their position and available action',
       (tester) async {
-    final game = LudoGame.initial().roll(6);
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [0, 10, -1, -1],
+      },
+    ).roll(2);
     await tester.pumpWidget(
       MaterialApp(home: MatchScreen(initialGame: game)),
     );
@@ -38,7 +44,7 @@ void main() {
 
     expect(semantics.properties.button, isTrue);
     expect(semantics.properties.label, 'orange pawn 1');
-    expect(semantics.properties.value, 'In yard');
+    expect(semantics.properties.value, 'Progress 0 of 56');
     expect(semantics.properties.hint, 'Double tap to move this pawn.');
   });
 }

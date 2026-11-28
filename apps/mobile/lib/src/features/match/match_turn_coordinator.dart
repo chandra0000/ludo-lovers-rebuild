@@ -75,15 +75,12 @@ class MatchTurnCoordinator {
       );
       if (!result.accepted) return;
       onRollAccepted(_game);
-      if (_game.diceValue == null) {
-        onPenalty();
-        scheduleAi();
-      }
     });
   }
 
   bool roll() {
     if (!_active ||
+        controller.turns.snapshot.isInputLocked ||
         aiPlayers.contains(_game.activePlayer) ||
         _game.diceValue != null ||
         _game.winner != null ||
@@ -96,18 +93,18 @@ class MatchTurnCoordinator {
     );
     if (!result.accepted) return false;
     onRollAccepted(_game);
-    if (_game.events.whereType<ConsecutiveSixPenalty>().isNotEmpty) {
-      onPenalty();
-      scheduleAi();
-    }
     return true;
   }
 
   void completeDice() {
     if (!_active || !diceBusy()) return;
     final legal = _game.legalPawnIndices();
+    final automatic = controller.turns.settleDice();
     onDiceSettled();
     if (_game.diceValue == null) {
+      if (_game.events.whereType<ConsecutiveSixPenalty>().isNotEmpty) {
+        onPenalty();
+      }
       scheduleAi();
       return;
     }
@@ -120,6 +117,7 @@ class MatchTurnCoordinator {
         canExecute: () => _active && _game.diceValue != null,
         onReady: () {
           final accepted = execute(controller.buildPass()).accepted;
+          if (accepted) controller.turns.completeMovement();
           onChanged();
           if (accepted) scheduleAi();
         },
@@ -133,11 +131,13 @@ class MatchTurnCoordinator {
             seed: aiSeed ^ _game.stateVersion,
             difficulty: difficulty,
           )
-        : legal.length == 1
-            ? legal.single
-            : null;
+        : automatic;
     if (selected != null) {
       resolution.schedulePawn(
+        delay: _game.diceValue == 6 &&
+                legal.every((i) => _game.currentPlayer.pawnProgress[i] == -1)
+            ? Duration.zero
+            : null,
         matchId: controller.session.matchId,
         stateVersion: _game.stateVersion,
         currentMatchId: () => controller.session.matchId,
@@ -154,6 +154,7 @@ class MatchTurnCoordinator {
 
   void move(int pawnIndex) {
     if (!_active ||
+        controller.turns.snapshot.isInputLocked ||
         diceBusy() ||
         resolution.isPending ||
         !_game.legalPawnIndices().contains(pawnIndex)) {

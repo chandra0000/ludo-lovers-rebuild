@@ -47,7 +47,7 @@ void main() {
           ? [PlayerColor.orange, PlayerColor.magenta]
           : [PlayerColor.orange, PlayerColor.green, PlayerColor.magenta];
       expect(game.configuration.version, 2);
-      expect(game.ruleProfile, LudoRuleProfile.currentV1);
+      expect(game.ruleProfile, LudoRuleProfile.currentV2);
       expect(game.players.map((p) => p.color), seats);
       if (count == 2) {
         expect((seats.last.entryIndex - seats.first.entryIndex) % 52, 26);

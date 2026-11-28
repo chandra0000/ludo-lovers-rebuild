@@ -80,23 +80,7 @@ class MatchHudOverlay extends StatelessWidget {
         ),
       ),
     );
-    final canChoose = legalPawnIndices.length > 1 && onPawnSelected != null;
-    final control = canChoose
-        ? PopupMenuButton<int>(
-            key: const Key('accessible_pawn_chooser'),
-            tooltip: 'Choose a legal pawn',
-            onSelected: onPawnSelected,
-            itemBuilder: (context) => [
-              for (final index in legalPawnIndices)
-                PopupMenuItem<int>(
-                  value: index,
-                  height: 48,
-                  child: Text('Pawn ${index + 1}'),
-                ),
-            ],
-            child: content,
-          )
-        : IgnorePointer(child: content);
+    final control = IgnorePointer(child: content);
     if (inline) return control;
     return Positioned(
       left: 120,

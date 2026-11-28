@@ -222,11 +222,10 @@ void main() {
       tester
           .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))
           .targetValue,
-      6,
+      isNull,
     );
 
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     // One tap now commits the legal pawn move; six grants another turn.
     expect(find.byKey(const Key('destination_preview')), findsNothing);
@@ -252,13 +251,14 @@ void main() {
     );
 
     // Only the pawn already on the track can use a non-six roll, so it moves
-    // automatically after the dice reveal and 350 ms anticipation window.
+    // automatically after the dice reveal and 180 ms anticipation window.
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 349));
+    await tester.pump(const Duration(milliseconds: 179));
     expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1));
-    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('ORANGE · YOUR TURN')), findsOneWidget);
     await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
 
   testWidgets('moves a shared-cell pawn directly on compact phones',
@@ -371,16 +371,18 @@ void main() {
           home: MatchScreen(rollDice: () => 6),
         ),
       );
-      await tester.tap(find.byKey(const Key('roll_dice')));
-      await tester.pumpAndSettle();
-
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
       await waitForBoardArtwork(tester);
-      await tester.tap(pawn);
+      await tester.tap(find.byKey(const Key('roll_dice')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 421));
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
       await tester.pump();
+      await tester
+          .pump(Duration.zero); // Flush the zero-delay deployment timer.
+      await tester.pump(); // Establish its movement ticker.
       await tester.pump(const Duration(milliseconds: 55));
       final inMotion = tester.getTopLeft(pawn);
       expect(inMotion, isNot(start));
@@ -412,12 +414,10 @@ void main() {
       );
 
       await tester.tap(find.byKey(const Key('roll_dice')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 421));
       expect(rollCount, 1);
 
-      final pawn = find.byKey(const Key('pawn_orange_0'));
-      await waitForBoardArtwork(tester);
-      await tester.tap(pawn);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
 
@@ -480,7 +480,7 @@ void main() {
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
     // Exactly one pawn can move, so the match screen moves it automatically
-    // after the 350 ms anticipation window.
+    // after the 180 ms anticipation window.
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
 

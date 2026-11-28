@@ -134,8 +134,10 @@ void main() {
         PlayerColor.orange: [0, -1, -1, -1],
       },
     ).roll(3, commandId: 'accepted');
-    await launch(tester, MatchScreen(initialGame: pending));
-    await openExit(tester);
+    await tester
+        .pumpWidget(MaterialApp(home: MatchScreen(initialGame: pending)));
+    tester.widget<IconButton>(find.byKey(const Key('exit_match'))).onPressed!();
+    await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 2));
     expect((await const SavedMatchStore().load())!.game.stateVersion, 1);
     await tester.tap(find.byKey(const Key('cancel_exit_match')));

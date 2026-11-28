@@ -152,7 +152,17 @@ void registerGameplayRecording({bool realTime = true}) {
         expect(rolled.diceValue, value);
         expect(rolled.events.whereType<DiceRolled>().single.value, value);
         expect(rolled.appliedCommandIds.length, version + 1);
-        if (duplicate) expect(getGame().stateVersion, version + 1);
+        if (duplicate) {
+          expect(
+            snapshots.where(
+              (s) =>
+                  s.game.stateVersion > version &&
+                  s.game.events.whereType<DiceRolled>().isNotEmpty,
+            ),
+            hasLength(1),
+          );
+          expect(getGame().stateVersion, lessThanOrEqualTo(version + 2));
+        }
         expect(
           tester
               .widget<LuxuryDiceButton>(find.byType(LuxuryDiceButton))
@@ -182,10 +192,7 @@ void registerGameplayRecording({bool realTime = true}) {
           [6, 3],
         );
         await roll(6, duplicate: true);
-        await tap('accessible_pawn_chooser');
         await wait(1000);
-        await tester.tap(find.text('Pawn 1'));
-        await tester.pump();
         // Repeated pawn input while movement is busy cannot duplicate a command.
         await tester.tap(
           find.byKey(const Key('pawn_orange_0')),

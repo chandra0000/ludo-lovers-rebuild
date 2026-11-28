@@ -85,11 +85,10 @@ void main() {
         if (size.width == 393 && scale == 1) {
           await tester.tap(find.byKey(const Key('roll_dice')));
           await tester.pumpAndSettle();
-          await tester.tap(find.byKey(const Key('accessible_pawn_chooser')));
           await tester.pumpAndSettle();
           await captureArtifact(
             tester,
-            'branding-pawn-chooser',
+            'branding-direct-pawn-selection',
             key: const Key('type_capture'),
           );
         }
