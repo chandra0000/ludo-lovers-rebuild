@@ -4,6 +4,8 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
+import 'support/wait_for_board_artwork.dart';
+
 void main() {
   testWidgets('tapping a blocked pawn explains the Classic blockade',
       (tester) async {
@@ -25,6 +27,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pump();
 

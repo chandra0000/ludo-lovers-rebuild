@@ -37,7 +37,7 @@ class MatchTurnCoordinator {
   final int Function() rollHuman;
   final MatchCommandResult Function(MatchCommand) execute;
   final void Function(LudoGame) onRollAccepted;
-  final void Function(PlayerColor, int, List<LudoGameEvent>) onMoveAccepted;
+  final void Function(LudoGame, int, List<LudoGameEvent>) onMoveAccepted;
   final void Function() onDiceSettled;
   final void Function() onChanged;
   final void Function() onPenalty;
@@ -159,9 +159,9 @@ class MatchTurnCoordinator {
         !_game.legalPawnIndices().contains(pawnIndex)) {
       return;
     }
-    final player = _game.activePlayer;
+    final before = _game;
     final result = execute(controller.buildMove(pawnIndex));
-    if (result.accepted) onMoveAccepted(player, pawnIndex, result.events);
+    if (result.accepted) onMoveAccepted(before, pawnIndex, result.events);
   }
 
   void cancelPending() {

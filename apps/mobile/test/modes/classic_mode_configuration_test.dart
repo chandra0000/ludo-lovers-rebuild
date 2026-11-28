@@ -15,20 +15,19 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  test('default remains compatibility and unfinished modes stay unavailable',
-      () {
+  test('compatibility stays default and Team Up uses its own rules', () {
     expect(
       ModeRegistry.create(MatchMode.compatibility).ruleProfile,
       LudoRuleProfile.currentV1,
     );
-    expect(() => ModeRegistry.create(MatchMode.classic), throwsStateError);
+    expect(ModeRegistry.create(MatchMode.classic).ruleProfile.id, 'classic');
     expect(
-      () => ModeRegistry.create(MatchMode.quick),
-      throwsStateError,
+      ModeRegistry.create(MatchMode.quick).configuration.mode,
+      MatchMode.quick,
     );
     expect(
-      () => ModeRegistry.create(MatchMode.teamUp),
-      throwsStateError,
+      ModeRegistry.create(MatchMode.teamUp).ruleProfile,
+      LudoRuleProfile.teamUpV1,
     );
   });
   for (final count in [2, 3, 4]) {
@@ -138,8 +137,7 @@ void main() {
     expect(restored.ruleProfile, LudoRuleProfile.currentV1);
     expect(restored.configuration.activePlayers, PlayerColor.turnOrder);
   });
-  testWidgets('public mode cards keep preview modes visibly locked',
-      (tester) async {
+  testWidgets('public mode cards allow local Classic setup', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ModeSelectionScreen()));
     expect(
       tester
@@ -156,9 +154,8 @@ void main() {
       tester
           .widget<FilledButton>(find.byKey(const Key('mode_classic')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
-    expect(find.textContaining('COMING SOON'), findsWidgets);
   });
   testWidgets(
       'internal Classic setup starts two real seats and restart retains them',

@@ -35,7 +35,7 @@ void main() {
       ),
       isTrue,
     );
-    expect(() => ModeRegistry.create(MatchMode.quick), throwsStateError);
+    expect(ModeRegistry.create(MatchMode.quick).ruleProfile.id, 'quick');
     expect(LudoGame.initial().ruleProfile, LudoRuleProfile.currentV1);
   });
   test('one finish continues; second finish wins immediately without bonus',

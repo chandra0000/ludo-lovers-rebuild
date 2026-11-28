@@ -113,6 +113,17 @@ void main() {
     expect(ai.choosePawn(game, seed: 12), 0);
   });
 
+  test('a rival entering its home lane cannot threaten later track cells', () {
+    final game = LudoGame.fromProgress(
+      activePlayer: PlayerColor.orange,
+      pawnProgress: {
+        PlayerColor.orange: [13, 9, -1, -1],
+        PlayerColor.green: [50, -1, -1, -1],
+      },
+    ).roll(1);
+    expect(ai.choosePawn(game, seed: 12), 0);
+  });
+
   test('prefers entering the protected home lane', () {
     final game = LudoGame.fromProgress(
       activePlayer: PlayerColor.orange,

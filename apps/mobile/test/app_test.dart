@@ -1,3 +1,4 @@
+import 'package:ludo_lovers/src/features/board_preview/board_preview_screen.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -14,6 +15,7 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
+import 'support/wait_for_board_artwork.dart';
 
 Future<void> _capturePng(WidgetTester tester, Key key, String path) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
@@ -54,7 +56,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.text('LUDO LOVERS'), findsOneWidget);
-      expect(find.text('PLAY • CONNECT • LOVE'), findsOneWidget);
+      expect(find.text('VS Computer'), findsOneWidget);
       expect(find.byKey(const Key('brand_logo')), findsOneWidget);
       expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
 
@@ -68,19 +70,16 @@ void main() {
     },
   );
 
-  testWidgets('first launch shows onboarding and skip reaches home',
+  testWidgets('first launch goes straight from splash to Play Now',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const LudoLoversApp());
     expect(find.byKey(const Key('splash_background')), findsOneWidget);
     expect(find.text('LUDO LOVERS'), findsNothing);
 
-    await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
 
-    expect(find.text('WELCOME TO LUDO LOVERS'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('skip_onboarding')));
-    await tester.pumpAndSettle();
+    expect(find.byType(OnboardingScreen), findsNothing);
     expect(find.text('LUDO LOVERS'), findsOneWidget);
     expect(find.byKey(const Key('brand_logo')), findsOneWidget);
     expect(find.byKey(const Key('open_game_setup')), findsOneWidget);
@@ -226,6 +225,7 @@ void main() {
       6,
     );
 
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     // One tap now commits the legal pawn move; six grants another turn.
@@ -240,7 +240,10 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('roll_dice')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(); // Establish the tumble ticker at time zero.
+    await tester.pump(const Duration(milliseconds: 501));
+    expect(find.bySemanticsLabel('Dice rolling'), findsNothing);
     expect(
       tester
           .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))
@@ -258,8 +261,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets(
-      'offers a chooser when multiple legal pawns share a cell on compact phones',
+  testWidgets('moves a shared-cell pawn directly on compact phones',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -284,22 +286,18 @@ void main() {
         tester.getRect(find.byKey(const Key('pawn_orange_0')));
     final secondHitTarget =
         tester.getRect(find.byKey(const Key('pawn_orange_1')));
-    expect(firstHitTarget.width, greaterThanOrEqualTo(44));
-    expect(firstHitTarget.height, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.width, greaterThanOrEqualTo(44));
-    expect(secondHitTarget.height, greaterThanOrEqualTo(44));
+    expect(firstHitTarget.width, greaterThanOrEqualTo(48));
+    expect(firstHitTarget.height, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.width, greaterThanOrEqualTo(48));
+    expect(secondHitTarget.height, greaterThanOrEqualTo(48));
 
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await waitForBoardArtwork(tester);
+    await tester.tap(find.byKey(const Key('pawn_orange_1')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Choose a pawn'), findsOneWidget);
-    expect(find.text('Pawn 1'), findsOneWidget);
-    expect(find.text('Pawn 2'), findsOneWidget);
-
-    await tester.tap(find.text('Pawn 2'));
-    await tester.pumpAndSettle();
-    // Choosing from a shared-cell sheet is the single move selection.
+    expect(find.text('Pawn 1'), findsNothing);
+    expect(find.text('Pawn 2'), findsNothing);
     expect(find.byKey(const Key('destination_preview')), findsNothing);
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);
   });
@@ -378,6 +376,7 @@ void main() {
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
       final start = tester.getTopLeft(pawn);
+      await waitForBoardArtwork(tester);
       await tester.tap(pawn);
       // The first frame establishes the ticker start time; advance it only
       // after that frame so this assertion samples actual interpolation.
@@ -417,6 +416,7 @@ void main() {
       expect(rollCount, 1);
 
       final pawn = find.byKey(const Key('pawn_orange_0'));
+      await waitForBoardArtwork(tester);
       await tester.tap(pawn);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
@@ -453,6 +453,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
+    await waitForBoardArtwork(tester);
     await tester.tap(find.byKey(const Key('pawn_orange_0')));
     await tester.pumpAndSettle();
     final saved = await const SavedMatchStore().load();
@@ -509,6 +510,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PAWN HOME!'), findsOneWidget);
+    expect(find.byKey(const Key('home_token_orange_0')), findsOneWidget);
   });
 
   testWidgets(
@@ -566,11 +568,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_game_setup')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('open_board_preview')),
-      300,
-    );
-    await tester.tap(find.byKey(const Key('open_board_preview')));
+    expect(find.byKey(const Key('open_board_preview')), findsNothing);
+    await tester.pumpWidget(const MaterialApp(home: BoardPreviewScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('BOARD PREVIEW'), findsOneWidget);

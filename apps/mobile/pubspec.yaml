@@ -13,6 +13,7 @@ dependencies:
   characters: ^1.4.0
   shared_preferences: ^2.5.3
   flame: ^1.33.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   integration_test:
@@ -24,6 +25,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/audio/
     - assets/images/board/ludo_board_glass.webp
     - assets/images/board/extracted/
     - assets/images/branding/ludo_lovers_icon.webp

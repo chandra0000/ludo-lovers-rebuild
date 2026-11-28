@@ -45,8 +45,13 @@ jobs:
       # Never mutate source in verification. Every PR and push must contain
       # already-formatted Dart code before analyzer, tests, or builds run.
       - name: Check Dart formatting (strict, non-mutating)
+        id: dart_format
         working-directory: apps/mobile
         run: dart format --output=none --set-exit-if-changed lib test tool integration_test test_driver
+      - name: Show required formatting changes
+        if: failure() && steps.dart_format.outcome == 'failure'
+        working-directory: apps/mobile
+        run: dart format lib test tool integration_test test_driver && git diff --
       - name: Static analysis
         working-directory: apps/mobile
         run: flutter analyze --fatal-infos
