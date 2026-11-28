@@ -5,10 +5,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Capture real Flutter paint with complete real-async I/O and explicit cleanup.
+/// Negative image fixtures may declare exact injected errors; ordinary captures
+/// still require an empty error list. No unexpected decode error is ignored.
 Future<void> captureArtifact(
   WidgetTester tester,
   String name, {
   Key key = const Key('match_screen_capture'),
+  List<Object> expectedImageErrors = const [],
 }) async {
   final errors = <Object>[];
   final context = tester.element(find.byType(MaterialApp));
@@ -25,7 +28,7 @@ Future<void> captureArtifact(
       ),
     ).timeout(const Duration(seconds: 10)),
   );
-  expect(errors, isEmpty);
+  expect(errors, orderedEquals(expectedImageErrors));
   await tester.pump(const Duration(milliseconds: 250));
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
   await tester.runAsync(() async {
