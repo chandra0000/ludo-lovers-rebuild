@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/game/domain/board_geometry.dart';
+import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 
 void main() {
@@ -10,6 +11,47 @@ void main() {
       expect(BoardGeometry.sharedTrack.every((cell) => cell.isInside), isTrue);
       expect(BoardGeometry.isStructurallyValid, isTrue);
     });
+
+    const entries = {
+      PlayerColor.orange: BoardCell(1, 6),
+      PlayerColor.green: BoardCell(8, 1),
+      PlayerColor.magenta: BoardCell(13, 8),
+      PlayerColor.blue: BoardCell(6, 13),
+    };
+    for (final color in PlayerColor.turnOrder) {
+      test('${color.name} releases on its arrow and traverses progress 0–56',
+          () {
+        final entry = BoardGeometry.seats[color]!.entryIndex;
+        expect(BoardGeometry.sharedTrack[entry], entries[color]);
+
+        for (var from = -1; from < finishProgress; from++) {
+          final game = LudoGame.fromProgress(
+            activePlayer: color,
+            pawnProgress: {
+              color: [from, -1, -1, -1],
+            },
+          ).roll(from == -1 ? 6 : 1);
+          final moved = game.movePawn(0);
+          final progress = from + 1;
+          expect(
+            moved.players
+                .firstWhere((p) => p.color == color)
+                .pawnProgress
+                .first,
+            progress,
+          );
+          final expected = switch (progress) {
+            <= 50 => BoardGeometry.trackPosition((entry + progress) % 52),
+            <= 55 => BoardGeometry.homeLanePosition(color, progress - 51),
+            _ => BoardGeometry.finishPosition,
+          };
+          expect(
+            BoardGeometry.normalizedPosition(color, progress, 0),
+            expected,
+          );
+        }
+      });
+    }
 
     test('retains only the four documented corner connectors', () {
       expect(

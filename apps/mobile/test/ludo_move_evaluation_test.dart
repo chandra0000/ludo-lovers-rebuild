@@ -119,6 +119,35 @@ void main() {
       expect((result as ValidMove).isCapture, isFalse);
     });
 
+    test('capture requires matching unsafe outer-track indices', () {
+      for (final (landing, victimProgress) in [
+        (5, -1), // Yard.
+        (5, 5), // Same relative progress, different physical tile.
+        (12, 51), // Green lane entry would alias here if wrapped.
+        (17, 56), // Green finish would alias here if wrapped.
+        (8, 47), // Shared safe star.
+        (13, 0), // Shared safe start.
+      ]) {
+        final game = LudoGame.fromProgress(
+          activePlayer: PlayerColor.orange,
+          ruleProfile: LudoRuleProfile.classicV1,
+          pawnProgress: {
+            PlayerColor.orange: [landing - 1, -1, -1, -1],
+            PlayerColor.green: [victimProgress, -1, -1, -1],
+          },
+        ).roll(1);
+        final moved = game.movePawn(0);
+        expect(moved.events.whereType<PawnCaptured>(), isEmpty);
+        expect(
+          moved.players
+              .firstWhere((p) => p.color == PlayerColor.green)
+              .pawnProgress
+              .first,
+          victimProgress,
+        );
+      }
+    });
+
     test('schema-v2 snapshots migrate with hard blockades disabled', () {
       final snapshot = LudoGame.initial(
         ruleProfile: LudoRuleProfile.classicV1,

@@ -86,15 +86,21 @@ class _MatchScreenState extends State<MatchScreen>
     _newMatchSession(widget.initialGame ?? LudoGame.initial()),
   );
 
+  static int _nextMatchSequence = 0;
+
   MatchSession _newMatchSession(LudoGame game) {
     final matchId =
-        'local-${widget.aiSeed}-${DateTime.now().microsecondsSinceEpoch}';
+        'local-${DateTime.now().microsecondsSinceEpoch}-${_nextMatchSequence++}';
     return MatchSession.local(matchId: matchId, game: game);
   }
 
+  // Seat control is selected in setup and remains fixed for this match route.
+  late final Set<PlayerColor> _matchAiPlayers =
+      Set.unmodifiable(widget.aiPlayers);
+
   late final List<MatchPlayerProfile> _profiles = MatchPlayerProfile.roster(
-    widget.profiles ?? MatchPlayerProfile.local(aiPlayers: widget.aiPlayers),
-    aiPlayers: widget.aiPlayers,
+    widget.profiles ?? MatchPlayerProfile.local(aiPlayers: _matchAiPlayers),
+    aiPlayers: _matchAiPlayers,
   );
 
   MatchPlayerProfile _profileFor(PlayerColor color) =>
@@ -104,7 +110,7 @@ class _MatchScreenState extends State<MatchScreen>
   late final math.Random _random = math.Random(widget.aiSeed);
   late final MatchTurnCoordinator _turns = MatchTurnCoordinator(
     controller: _matchController,
-    aiPlayers: widget.aiPlayers,
+    aiPlayers: _matchAiPlayers,
     aiSeed: widget.aiSeed,
     difficulty: widget.aiDifficulty,
     isActive: () => mounted && _canAct,
@@ -187,6 +193,7 @@ class _MatchScreenState extends State<MatchScreen>
   }
 
   MatchMovePresentationPlan? _landingPlan;
+  LudoGame? _gameBeforeLanding;
   MatchMovePresentationPlan? _lastLandingPlan;
   int _landingSequence = 0;
 
@@ -250,6 +257,7 @@ class _MatchScreenState extends State<MatchScreen>
       }
       setState(() {
         _landingPlan = null;
+        _gameBeforeLanding = null;
         if (completedPlan != null) {
           _lastLandingPlan = completedPlan;
           _landingSequence++;
@@ -320,7 +328,7 @@ class _MatchScreenState extends State<MatchScreen>
     // overwrite a newer accepted game state.
     final snapshot = SavedMatch(
       game: _game,
-      aiPlayers: widget.aiPlayers,
+      aiPlayers: _matchAiPlayers,
       aiSeed: widget.aiSeed,
       aiDifficulty: widget.aiDifficulty,
       profiles: _profiles,
@@ -388,7 +396,7 @@ class _MatchScreenState extends State<MatchScreen>
   void _move(int pawnIndex) => _turns.move(pawnIndex);
 
   void _presentAcceptedMove(
-    PlayerColor movingColor,
+    LudoGame beforeMove,
     int pawnIndex,
     List<LudoGameEvent> events,
   ) {
@@ -398,12 +406,13 @@ class _MatchScreenState extends State<MatchScreen>
     final plan = MatchMovePresentationPlan.fromEvents(
       events: events,
       isTeamUp: _game.configuration.isTeamUp,
-      player: movingColor,
+      player: beforeMove.activePlayer,
       pawnIndex: pawnIndex,
     );
     setState(() {
       _selectedPawnIndex = null;
       _landingPlan = plan;
+      _gameBeforeLanding = beforeMove;
       _animations.configurePawnMovement(
         color: plan.player,
         pawnIndex: plan.pawnIndex,
@@ -417,8 +426,10 @@ class _MatchScreenState extends State<MatchScreen>
     _animations.startPawnMovement();
   }
 
+  bool get _showMatchResult => _game.winner != null && _landingPlan == null;
+
   String get _statusText {
-    if (_game.winner != null) {
+    if (_showMatchResult) {
       final winner = _profileFor(_game.winner!);
       final label = winner.displayName == winner.color.name.toUpperCase()
           ? winner.displayName
@@ -432,19 +443,19 @@ class _MatchScreenState extends State<MatchScreen>
       final name = _profileFor(_game.activePlayer).displayName;
       return '$name · TEAM ${TeamUpPolicy.teamFor(_game.activePlayer).name.toUpperCase()}';
     }
-    return widget.aiPlayers.contains(_game.activePlayer)
+    return _matchAiPlayers.contains(_game.activePlayer)
         ? '${_game.activePlayer.name.toUpperCase()} · AI TURN'
         : '${_game.activePlayer.name.toUpperCase()} · YOUR TURN';
   }
 
   String get _actionInstruction {
-    if (_game.winner != null) return 'Match finished';
+    if (_showMatchResult) return 'Match finished';
     if (_movementController.isAnimating) return 'Pawn moving';
     if (_isDiceAnimating) return 'Rolling dice';
     if (_turnResolution.isPending) {
       return _game.legalPawnIndices().isEmpty ? 'No legal move' : 'Pawn moving';
     }
-    if (widget.aiPlayers.contains(_game.activePlayer)) return 'AI thinking';
+    if (_matchAiPlayers.contains(_game.activePlayer)) return 'AI thinking';
     return _game.diceValue == null ? 'Roll dice' : 'Choose a pawn';
   }
 
@@ -493,13 +504,14 @@ class _MatchScreenState extends State<MatchScreen>
                     width: 88,
                     height: 96,
                     child: Center(
+                      key: ValueKey(_matchController.session.matchId),
                       child: LuxuryDiceButton(
                         key: const Key('animated_dice'),
                         size: 64,
                         targetValue: _game.diceValue,
                         rollId: _diceRollId,
                         canRoll: _canAct &&
-                            !widget.aiPlayers.contains(_game.activePlayer) &&
+                            !_matchAiPlayers.contains(_game.activePlayer) &&
                             _game.diceValue == null &&
                             !_isDiceAnimating &&
                             !_movementController.isAnimating &&
@@ -512,16 +524,16 @@ class _MatchScreenState extends State<MatchScreen>
                       ),
                     ),
                   ),
-                  result: _game.winner == null
-                      ? null
-                      : MatchResultPresentation(onRematch: _restartMatch),
+                  result: _showMatchResult
+                      ? MatchResultPresentation(onRematch: _restartMatch)
+                      : null,
                   status: Semantics(
                     key: const Key('turn_status'),
                     liveRegion: true,
                     label: '$_statusText. $_actionInstruction',
                     child: Center(
                       child: Text(
-                        _game.winner != null
+                        _showMatchResult
                             ? _statusText
                             : '$_actionInstruction · ${_profileFor(_movementController.isAnimating && _landingPlan != null ? _landingPlan!.player : _game.activePlayer).displayName}',
                         key: const Key('match_action_instruction'),
@@ -538,7 +550,7 @@ class _MatchScreenState extends State<MatchScreen>
                             !_isDiceAnimating &&
                             !_movementController.isAnimating &&
                             !_turnResolution.isPending &&
-                            !widget.aiPlayers.contains(_game.activePlayer)
+                            !_matchAiPlayers.contains(_game.activePlayer)
                         ? _game.legalPawnIndices()
                         : const [],
                   ),
@@ -548,11 +560,13 @@ class _MatchScreenState extends State<MatchScreen>
                       const MatchSafeStarLayer(),
                       Positioned.fill(
                         child: MatchPawnLayer(
+                          key: ValueKey(_matchController.session.matchId),
                           game: _game,
+                          beforeLanding: _gameBeforeLanding,
                           animations: _animations,
                           canvasScale: scale,
                           isTurnResolutionPending: _turnResolution.isPending,
-                          aiPlayers: widget.aiPlayers,
+                          aiPlayers: _matchAiPlayers,
                           shakeKeys: _shakeKeys,
                           reduceMotion: _reduceMotion,
                           lastLandingPlan: _lastLandingPlan,
@@ -708,8 +722,11 @@ class _MatchScreenState extends State<MatchScreen>
     _aiScheduler.cancel();
     _turnResolution.cancel();
     _animations.resetForNewMatch();
+    ScaffoldMessenger.of(context).clearSnackBars();
     setState(() {
       _landingPlan = null;
+      _gameBeforeLanding = null;
+      _shakeKeys.clear();
       _lastLandingPlan = null;
       _landingSequence = 0;
       _matchController.reset(
