@@ -1,0 +1,58 @@
+name: Deterministic production match simulation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - apps/mobile/tool/production_gameplay_simulation.dart
+      - .github/workflows/engine-simulation.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-simulation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.35.7'
+          cache: true
+      - name: Resolve exactly the pinned dependencies
+        working-directory: apps/mobile
+        run: flutter pub get --enforce-lockfile
+      - name: Run all 3000 matches and 30 deterministic replays
+        working-directory: apps/mobile
+        run: dart run tool/production_gameplay_simulation.dart --samples=100
+      - name: Verify capped runs fail closed
+        working-directory: apps/mobile
+        run: |
+          if dart run tool/production_gameplay_simulation.dart --samples=1 --max-rolls=1 --output=test-artifacts/capped-simulation.json; then
+            echo 'ERROR: an unfinished match was accepted'
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('test-artifacts/capped-simulation.json').read_text())
+          assert r['status'] == 'failed'
+          assert r['completedMatches'] == 0
+          assert r['totalExecutedMatches'] == 1
+          PY
+      - name: Preserve simulation report including failed case
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: deterministic-match-simulation-${{ github.sha }}
+          path: apps/mobile/test-artifacts/*simulation*.json
+          if-no-files-found: error
+          retention-days: 90
