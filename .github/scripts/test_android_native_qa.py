@@ -77,6 +77,28 @@ class DisplayReadinessChecks(unittest.TestCase):
 
 
 class RecorderChecks(unittest.TestCase):
+    def test_capture_ack_follows_successful_png_and_never_masks_failure(self):
+        order = Mock()
+        with patch.object(qa, 'screenshot') as capture, patch.object(qa, 'adb') as adb:
+            order.attach_mock(capture, 'capture')
+            order.attach_mock(adb, 'adb')
+            qa.capture_and_ack('native-match')
+            self.assertEqual(order.mock_calls[0].args, ('native-match',))
+            self.assertEqual(order.mock_calls[1].args[-1], 'cache/ludo-native-capture-native-match')
+        with patch.object(qa, 'screenshot', side_effect=RuntimeError('Invalid PNG')), \
+                patch.object(qa, 'adb') as adb:
+            with self.assertRaises(RuntimeError):
+                qa.capture_and_ack('native-match')
+            adb.assert_not_called()
+
+    def test_framework_failure_cannot_be_cleared_by_driver_success_footer(self):
+        failed = False
+        for line in ['I/flutter: 03:51 +1 -1: installed modes [E]',
+                     'I/flutter: Some tests failed.', 'All tests passed.']:
+            failed = failed or qa.test_failure_reported(line)
+        self.assertTrue(failed)
+        self.assertFalse(qa.test_failure_reported('All tests passed.'))
+
     def test_finalized_recorder_exiting_before_kill_still_pulls(self):
         recorder = qa.Recorder()
         recorder.pid = 123

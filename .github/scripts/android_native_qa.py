@@ -76,6 +76,18 @@ def screenshot(name):
     (OUT / (name + '.png')).write_bytes(data)
 
 
+def capture_and_ack(name):
+    """Release the installed test only after a validated PNG has been written."""
+    screenshot(name)
+    adb('shell', 'run-as', 'com.ludolovers.ludo_lovers',
+        'touch', 'cache/ludo-native-capture-' + name)
+
+
+def test_failure_reported(line):
+    return ('Some tests failed.' in line or
+            re.search(r'\+\d+\s+-\d+:.*\[E\]', line) is not None)
+
+
 class StateChunks:
     """Reassemble sub-logcat-limit Unicode snapshots; reject missing/corrupt data."""
     def __init__(self):
@@ -321,6 +333,7 @@ def main():
     (VIDEO / 'display.txt').write_text(wait_for_display())
     recorder = Recorder()
     events = []
+    test_failed = False
     chunks = StateChunks()
     # Collect while the emulator is alive; post-mortem ADB may already be offline.
     log_file = (VIDEO / 'android-logcat.txt').open('w')
@@ -359,6 +372,7 @@ def main():
                                 text=True, bufsize=1, start_new_session=True)
         with (VIDEO / 'integration.log').open('w') as transcript:
             for line in proc.stdout:
+                test_failed = test_failed or test_failure_reported(line)
                 print(line, end='', flush=True)
                 transcript.write(line)
                 transcript.flush()
@@ -370,7 +384,7 @@ def main():
                         'touch', 'cache/ludo-recording-finalized')
                 match = re.search(r'LUDO_NATIVE_CAPTURE:(native-[a-z0-9-]+)', line)
                 if match:
-                    screenshot(match[1])
+                    capture_and_ack(match[1])
                 snapshot = chunks.accept(line)
                 if snapshot is not None:
                     snapshot['hostMonotonic'] = time.monotonic()
@@ -389,6 +403,8 @@ def main():
                 raise RuntimeError('Integration exceeded bounded 360s execution')
             if result:
                 raise subprocess.CalledProcessError(result, command)
+            if test_failed:
+                raise RuntimeError('Flutter reported failed tests despite driver exit zero')
             if os.environ.get('LUDO_GAMEPLAY_RECORDING') == 'true' and not recorder.stopped:
                 raise RuntimeError('Recording test never finalized a video')
     finally:

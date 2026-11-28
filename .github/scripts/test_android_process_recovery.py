@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match, ready_nodes, find_action
+from android_process_recovery import launch, reach_home, PACKAGE
 
 
 def snapshot(count=2, dice=6):
@@ -19,6 +20,27 @@ def snapshot(count=2, dice=6):
 
 
 class RecoveryContractTest(unittest.TestCase):
+    def test_home_readiness_is_scoped_to_app_and_never_taps_launcher(self):
+        import xml.etree.ElementTree as ET
+        launcher = ET.fromstring('<node package="com.android.launcher3" text="SKIP PLAY NOW"/>')
+        home = ET.fromstring(f'<node package="{PACKAGE}" text="PLAY NOW"/>')
+        with patch('android_process_recovery.ready_nodes', side_effect=[[launcher], [home]]), \
+                patch('android_process_recovery.time.sleep'), \
+                patch('android_native_qa.tap_label') as tap:
+            reach_home()
+            tap.assert_not_called()
+
+    def test_launch_output_is_retained_and_explicit_activity_error_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with patch('android_process_recovery.OUT', Path(folder)), \
+                    patch('android_native_qa.adb', side_effect=['Starting: Intent', 'Error type 3: Activity absent']):
+                launch()
+                with self.assertRaisesRegex(RuntimeError, 'rejected application launch'):
+                    launch()
+            entries = (Path(folder) / 'launches.jsonl').read_text()
+            self.assertIn('Starting: Intent', entries)
+            self.assertIn('Activity absent', entries)
+
     def test_match_readiness_does_not_open_an_overlay(self):
         import xml.etree.ElementTree as ET
         nodes = [ET.fromstring('<node text="Local Chat"/>')]

@@ -21,8 +21,17 @@ Future<void> waitForBoardArtwork(WidgetTester tester) async {
     ]).timeout(const Duration(seconds: 10)),
   );
   expect(errors, isEmpty);
-  await tester.pump();
-  // Decode/frame publication, post-paint readiness, then the enabled HUD.
-  await tester.pump();
-  await tester.pump();
+  // Advance only the frames actually needed to publish decode/readiness.
+  // Avoid three expensive live GPU frames on every already-warm route entry.
+  for (var frame = 0; frame < 3; frame++) {
+    if (find.byKey(const Key('match_preparation_view')).evaluate().isEmpty &&
+        find.text('Preparing board').evaluate().isEmpty &&
+        find.text('Preparing the board…').evaluate().isEmpty) {
+      break;
+    }
+    await tester.pump();
+  }
+  expect(find.byKey(const Key('match_preparation_view')), findsNothing);
+  expect(find.text('Preparing board'), findsNothing);
+  expect(find.text('Preparing the board…'), findsNothing);
 }
