@@ -56,9 +56,22 @@ jobs:
         run: python3 .github/scripts/audit_pub_dependencies.py dependency-graph.json --output security-artifacts/pub-advisories.json
       - name: Preserve advisory report even on failure
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pub-security-report
           path: security-artifacts/*.json
           if-no-files-found: error
           retention-days: 30
+      - name: Download uploaded advisory report using existing v4 reader
+        if: success()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pub-security-report
+          path: artifact-roundtrip
+      - name: Require byte-identical artifact round trip
+        if: success()
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          assert Path('security-artifacts/pub-advisories.json').read_bytes() == Path('artifact-roundtrip/pub-advisories.json').read_bytes()
+          PYCODE
