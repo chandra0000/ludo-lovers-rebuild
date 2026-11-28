@@ -632,6 +632,7 @@ class _MatchScreenState extends State<MatchScreen>
                   boardBuilder: (context, scale) => Transform.translate(
                     offset: Offset(_captureShake, 0),
                     child: MatchBoardArtwork(
+                      canvasScale: scale,
                       overlays: [
                         const MatchBoardFocusFrame(),
                         const MatchSafeStarLayer(),

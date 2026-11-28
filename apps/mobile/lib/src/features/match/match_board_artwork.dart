@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 
 import 'debug_board_overlay.dart';
+import '../../theme/app_typography.dart';
 
 /// Renders the approved, pixel-exact board crop at its original canvas
 /// location. Pawns continue using the existing 576x1024 board coordinates.
-class MatchBoardArtwork extends StatelessWidget {
+class MatchBoardArtwork extends StatefulWidget {
   const MatchBoardArtwork({
     super.key,
     this.overlays = const [],
+    this.canvasScale = 1,
     this.image = const AssetImage(assetPath),
     this.showDebugOverlay = const bool.fromEnvironment('LUDO_DEBUG_BOARD'),
-  });
+  }) : assert(canvasScale > 0);
 
   /// Debug-only artwork calibration; never shown in profile/release builds.
   final bool showDebugOverlay;
 
+  final double canvasScale;
   final List<Widget> overlays;
   final ImageProvider image;
 
@@ -33,9 +36,33 @@ class MatchBoardArtwork extends StatelessWidget {
   );
 
   @override
+  State<MatchBoardArtwork> createState() => _MatchBoardArtworkState();
+}
+
+class _MatchBoardArtworkState extends State<MatchBoardArtwork> {
+  var _attempt = 0;
+  var _retrying = false;
+
+  Future<void> _retry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+    try {
+      await widget.image.evict();
+    } catch (error) {
+      debugPrint('Board artwork cache eviction failed: $error');
+    }
+    if (!mounted) return;
+    setState(() {
+      _attempt++;
+      _retrying = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Image(
-      image: image,
+      key: ValueKey(_attempt),
+      image: widget.image,
       fit: BoxFit.fill,
       gaplessPlayback: true,
       filterQuality: FilterQuality.medium,
@@ -58,12 +85,45 @@ class MatchBoardArtwork extends StatelessWidget {
         visible: frame != null,
       ),
       errorBuilder: (context, error, stackTrace) => _buildCanvas(
-        const ColoredBox(
-          color: Color(0xFF211A0D),
+        ColoredBox(
+          color: const Color(0xFF211A0D),
           child: Center(
-            child: Text(
-              'Approved board artwork could not be loaded.',
-              style: TextStyle(color: Colors.white),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(12 / widget.canvasScale),
+              child: Semantics(
+                liveRegion: true,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Board image unavailable.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.body.copyWith(
+                        fontSize: 14 / widget.canvasScale,
+                      ),
+                    ),
+                    SizedBox(height: 8 / widget.canvasScale),
+                    FilledButton(
+                      key: const Key('retry_board_artwork'),
+                      onPressed: _retrying ? null : _retry,
+                      style: FilledButton.styleFrom(
+                        minimumSize: Size(
+                          48 / widget.canvasScale,
+                          48 / widget.canvasScale,
+                        ),
+                        textStyle: AppTypography.button.copyWith(
+                          fontSize: 16 / widget.canvasScale,
+                        ),
+                      ),
+                      child: Semantics(
+                        label: 'Retry board image',
+                        excludeSemantics: true,
+                        child: const Text('Retry', textAlign: TextAlign.center),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -77,23 +137,23 @@ class MatchBoardArtwork extends StatelessWidget {
       children: [
         const Positioned.fill(child: ColoredBox(color: Color(0xFF0C0A10))),
         Positioned.fromRect(
-          rect: artworkRect,
+          rect: MatchBoardArtwork.artworkRect,
           child: RepaintBoundary(
             key: const Key('board_artwork'),
             child: artwork,
           ),
         ),
-        if (overlays.isNotEmpty)
+        if (widget.overlays.isNotEmpty)
           Positioned.fill(
             child: Visibility(
               visible: visible,
               maintainState: true,
               maintainAnimation: true,
               maintainSize: true,
-              child: Stack(children: overlays),
+              child: Stack(children: widget.overlays),
             ),
           ),
-        if (visible && showDebugOverlay && debugBoardOverlayEnabled)
+        if (visible && widget.showDebugOverlay && debugBoardOverlayEnabled)
           const Positioned.fill(child: DebugBoardOverlay()),
       ],
     );
