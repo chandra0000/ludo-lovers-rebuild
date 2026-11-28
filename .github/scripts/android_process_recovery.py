@@ -115,16 +115,22 @@ def unchanged_match(before, after, count):
 
 
 def launch():
-    native.adb('shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity')
+    output = native.adb('shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity')
+    with (OUT / 'launches.jsonl').open('a') as log:
+        log.write(json.dumps({'output': output}) + '\n')
+    if 'Error' in output:
+        raise RuntimeError('Android rejected application launch: ' + output)
 
 
 def reach_home():
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
         nodes = ready_nodes()
-        if any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
+        if any(n.get('package') == PACKAGE and
+               'PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
             return
-        native.tap_label('SKIP', nodes)
+        # Current production startup navigates directly to Home. Do not send
+        # legacy SKIP taps into an unrelated Android/launcher window.
         time.sleep(.2)
     raise TimeoutError('Normal startup did not reach home')
 
@@ -174,6 +180,9 @@ def main():
     report = {'status': 'failed', 'fixture': 'none: production randomness/native preferences',
               'renderer': 'Flutter default; emulator SwANGLE', 'buildMode': 'normal debug APK',
               'cases': []}
+    live_log = (OUT / 'live-logcat.txt').open('w')
+    logger = subprocess.Popen(['adb', '-s', native.SERIAL, 'logcat', '-v', 'threadtime'],
+                              stdout=live_log, stderr=subprocess.STDOUT)
     try:
         native.adb('install', '-r', 'build/app/outputs/flutter-apk/app-debug.apk', timeout=60)
         (OUT / 'device-properties.txt').write_text(native.adb('shell', 'getprop'))
@@ -189,6 +198,13 @@ def main():
             report['diagnosticError'] = repr(diagnostic_error)
         raise
     finally:
+        logger.terminate()
+        try:
+            logger.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.kill()
+            logger.wait(timeout=5)
+        live_log.close()
         (OUT / 'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
         try:
             (OUT / 'logcat.txt').write_text(native.adb('logcat', '-d', '-t', '2500'))

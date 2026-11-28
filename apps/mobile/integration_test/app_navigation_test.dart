@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -6,6 +8,8 @@ import 'package:ludo_lovers/src/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../test/support/local_mode_navigation.dart';
 import '../test/support/setup_navigation.dart';
+import '../test/support/wait_for_board_artwork.dart';
+import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'support/gameplay_recording.dart';
 
 void main() {
@@ -62,11 +66,27 @@ void main() {
     );
     expect(errors, isEmpty, reason: 'Installed capture $name asset readiness');
     await tester.pump();
+    if (find.byType(MatchScreen).evaluate().isNotEmpty) {
+      await waitForBoardArtwork(tester);
+    }
     if (defaultTargetPlatform == TargetPlatform.android) {
       // Capture the actual Android display without replacing Flutter's surface.
-      debugPrint('LUDO_NATIVE_CAPTURE:$name');
-      await tester
-          .runAsync(() => Future<void>.delayed(const Duration(seconds: 3)));
+      await tester.runAsync(() async {
+        final ack = File(
+          '/data/user/0/com.ludolovers.ludo_lovers/cache/ludo-native-capture-$name',
+        );
+        if (await ack.exists()) await ack.delete();
+        debugPrint('LUDO_NATIVE_CAPTURE:$name');
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        while (!await ack.exists()) {
+          if (DateTime.now().isAfter(deadline)) {
+            throw TimeoutException(
+              'Native screenshot was not acknowledged: $name',
+            );
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        }
+      });
       return;
     }
     if (!surfaceConverted) {
