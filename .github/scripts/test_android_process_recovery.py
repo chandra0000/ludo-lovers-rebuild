@@ -1,8 +1,12 @@
 import copy
 import json
 import unittest
+from unittest.mock import patch
+import subprocess
+import tempfile
+from pathlib import Path
 
-from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match
+from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match, ready_nodes
 
 
 def snapshot(count=2, dice=6):
@@ -15,6 +19,17 @@ def snapshot(count=2, dice=6):
 
 
 class RecoveryContractTest(unittest.TestCase):
+    def test_first_window_xml_unavailable_is_bounded_readiness_not_app_crash(self):
+        nodes = ['ready window']
+        with tempfile.TemporaryDirectory() as folder:
+            with patch('android_process_recovery.OUT', Path(folder)):
+                with patch('android_native_qa.ui_nodes', side_effect=[
+                    subprocess.CalledProcessError(1, ['adb', 'cat', 'window.xml']), nodes,
+                ]):
+                    self.assertEqual([], ready_nodes())
+                    self.assertEqual(nodes, ready_nodes())
+                    self.assertIn('CalledProcessError', (Path(folder) / 'ui-readiness.jsonl').read_text())
+
     def test_destructive_actions_require_actual_emulator(self):
         require_disposable_emulator('emulator-5554', '1\n')
         for serial, qemu in [('physical-device', '1'), ('emulator-5554', '0')]:

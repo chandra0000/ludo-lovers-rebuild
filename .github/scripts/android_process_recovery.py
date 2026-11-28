@@ -49,10 +49,21 @@ def wait_snapshot(predicate, seconds=15):
     raise TimeoutError('Native saved state did not reach expected condition: ' + repr(last))
 
 
+def ready_nodes():
+    try:
+        return native.ui_nodes()
+    except (subprocess.SubprocessError, ET.ParseError) as error:
+        # UIAutomator may start before Android exposes its first window/XML.
+        # Retain each failure and let the caller's original deadline bound it.
+        with (OUT / 'ui-readiness.jsonl').open('a') as log:
+            log.write(json.dumps({'error': repr(error)}) + '\n')
+        return []
+
+
 def find_action(label, seconds=30, scroll=False):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        nodes = native.ui_nodes()
+        nodes = ready_nodes()
         if native.tap_label(label, nodes):
             return
         if scroll:
@@ -109,7 +120,7 @@ def launch():
 def reach_home():
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
-        nodes = native.ui_nodes()
+        nodes = ready_nodes()
         if any('PLAY NOW' in (n.get('text', '') + n.get('content-desc', '')) for n in nodes):
             return
         native.tap_label('SKIP', nodes)
