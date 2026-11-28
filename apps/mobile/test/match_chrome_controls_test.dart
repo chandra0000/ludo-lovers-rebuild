@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   Future<void> pumpMatch(WidgetTester tester) async {
@@ -9,6 +10,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(393, 873);
     await tester.pumpWidget(const MaterialApp(home: MatchScreen()));
+    await waitForBoardArtwork(tester);
     await tester.pump();
   }
 

@@ -13,6 +13,8 @@ import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/presentation/luxury_dice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'support/load_sdk_fonts.dart';
+import 'support/wait_for_board_artwork.dart';
+import 'package:ludo_lovers/src/features/match/match_assets.dart';
 
 class _SlowBoard extends ImageProvider<_SlowBoard> {
   final frame = Completer<ImageInfo>();
@@ -35,6 +37,9 @@ class _SlowBoard extends ImageProvider<_SlowBoard> {
       }
     });
     frame.complete(ImageInfo(image: bitmap!));
+    if (find.byType(MatchScreen).evaluate().isNotEmpty) {
+      await waitForBoardArtwork(tester);
+    }
     await tester.pump();
     await tester.pump();
     // Decode publishes the frame, readiness posts after paint, then HUD rebuilds.
@@ -74,17 +79,28 @@ void main() {
       );
       await tester.runAsync(
         () => precacheImage(
-          const AssetImage('assets/images/branding/ludo_lovers_icon.webp'),
+          MatchAssets.logo,
           tester.element(find.byType(MatchScreen)),
         ),
       );
       await tester.pump(const Duration(seconds: 1));
       expect(tester.takeException(), isNull);
-      final boardRect = tester.getRect(find.byKey(const Key('board_stage')));
-      final labelRect = tester.getRect(find.text('Preparing the board…'));
-      expect(boardRect.contains(labelRect.topLeft), isTrue);
-      expect(boardRect.contains(labelRect.bottomRight), isTrue);
+      final screen = Offset.zero & size;
+      final labelRect = tester.getRect(find.text('Preparing your match…'));
+      expect(screen.contains(labelRect.topLeft), isTrue);
+      expect(screen.contains(labelRect.bottomRight), isTrue);
       expect(labelRect.height, greaterThanOrEqualTo(32));
+      expect(
+        tester
+            .widget<Opacity>(find.byKey(const Key('prepared_match_scene')))
+            .opacity,
+        0,
+      );
+      expect(find.byKey(const Key('roll_dice')).hitTestable(), findsNothing);
+      expect(
+        tester.getSize(find.byKey(const Key('preparation_exit'))).shortestSide,
+        greaterThanOrEqualTo(48),
+      );
       expect(
         tester
             .widget<LuxuryDiceButton>(find.byKey(const Key('animated_dice')))

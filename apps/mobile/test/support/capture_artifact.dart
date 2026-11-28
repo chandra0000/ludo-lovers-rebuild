@@ -30,6 +30,8 @@ Future<void> captureArtifact(
   );
   expect(errors, orderedEquals(expectedImageErrors));
   await tester.pump(const Duration(milliseconds: 250));
+  await tester.pump();
+  await tester.pump();
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
   await tester.runAsync(() async {
     final image = await boundary

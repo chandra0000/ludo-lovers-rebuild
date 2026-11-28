@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'support/wait_for_board_artwork.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/features/setup/mode_selection_screen.dart';
@@ -115,6 +116,7 @@ void main() {
       await tester.tap(start);
       await tester.pumpAndSettle();
       expect(find.byType(MatchScreen), findsOneWidget);
+      await waitForBoardArtwork(tester);
       final saved = (await const SavedMatchStore().load())!;
       expect(saved.game.configuration.activePlayers, hasLength(count));
       expect(saved.aiPlayers, isEmpty);

@@ -5,6 +5,7 @@ import 'package:ludo_lovers/src/features/home/home_screen.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
+import 'wait_for_board_artwork.dart';
 
 /// Shared by fast widget regression and installed Android/iOS smoke tests.
 Future<void> verifyLocalModeNavigation(
@@ -74,6 +75,7 @@ Future<void> verifyLocalModeNavigation(
     await tester.tap(start);
     await settled();
     expect(find.byKey(const Key('board_artwork')), findsOneWidget);
+    await waitForBoardArtwork(tester);
     expect(find.byKey(const Key('roll_dice')), findsOneWidget);
     final initial = (await const SavedMatchStore().load())!;
     expect(initial.game.configuration.mode, fixture.$1);
@@ -104,6 +106,7 @@ Future<void> verifyLocalModeNavigation(
     expect(find.byKey(const Key('resume_saved_match')), findsOneWidget);
     await tap(const Key('resume_saved_match'));
     expect(find.byType(MatchScreen), findsOneWidget);
+    await waitForBoardArtwork(tester);
     expect(
       (await const SavedMatchStore().load())!.game.configuration.mode,
       fixture.$1,

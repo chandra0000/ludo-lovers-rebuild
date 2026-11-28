@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ludo_lovers/src/features/match/match_assets.dart';
 
 /// Wait for the real decoder before interacting with a visible pawn.
 Future<void> waitForBoardArtwork(WidgetTester tester) async {
@@ -10,11 +11,14 @@ Future<void> waitForBoardArtwork(WidgetTester tester) async {
   );
   final errors = <Object>[];
   await tester.runAsync(
-    () => precacheImage(
-      image.image,
-      context,
-      onError: (error, stack) => errors.add(error),
-    ).timeout(const Duration(seconds: 10)),
+    () => Future.wait([
+      for (final provider in [image.image, MatchAssets.logo])
+        precacheImage(
+          provider,
+          context,
+          onError: (error, stack) => errors.add(error),
+        ),
+    ]).timeout(const Duration(seconds: 10)),
   );
   expect(errors, isEmpty);
   await tester.pump();

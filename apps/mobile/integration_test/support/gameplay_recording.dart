@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/app.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
+import 'package:ludo_lovers/src/features/match/match_assets.dart';
+import 'package:ludo_lovers/src/features/match/royal_backdrop.dart';
+import 'package:ludo_lovers/src/theme/app_typography.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/match_player_profile.dart';
 import 'package:ludo_lovers/src/game/domain/persistence/saved_match.dart';
@@ -71,6 +74,70 @@ void registerGameplayRecording({bool realTime = true}) {
         List<int> rolls, {
         Set<PlayerColor> ai = const {},
       }) async {
+        if (snapshots.isNotEmpty) {
+          await tester.pumpWidget(
+            Builder(
+              builder: (context) {
+                final app = const LudoLoversApp().build(context) as MaterialApp;
+                return MaterialApp(
+                  theme: app.theme,
+                  debugShowCheckedModeBanner: false,
+                  home: Scaffold(
+                    body: RoyalBackdrop(
+                      child: SafeArea(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const ClipOval(
+                                  child: Image(
+                                    image: MatchAssets.logo,
+                                    width: 88,
+                                    height: 88,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                const Text(
+                                  'SEEDED QA SCENARIO',
+                                  style: AppTypography.status,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  label.startsWith('staged-capture')
+                                      ? 'Capture and AI demonstration'
+                                      : 'Victory and rematch demonstration',
+                                  style: AppTypography.status,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Positions and AI seats are reset for this scenario.',
+                                  style: AppTypography.body,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const Offstage(
+                                  child: Image(
+                                    image: MatchAssets.board,
+                                    width: 1,
+                                    height: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+          mark('qa-transition-$label');
+          await wait(900);
+        }
         snapshots.clear();
         var nextRoll = 0;
         final profiles = MatchPlayerProfile.local(
@@ -135,10 +202,10 @@ void registerGameplayRecording({bool realTime = true}) {
           find.ancestor(of: board, matching: find.byType(Image)),
         );
         await tester.runAsync(
-          () => precacheImage(
-            image.image,
-            tester.element(board),
-          ).timeout(const Duration(seconds: 10)),
+          () => Future.wait([
+            for (final provider in [image.image, MatchAssets.logo])
+              precacheImage(provider, tester.element(board)),
+          ]).timeout(const Duration(seconds: 10)),
         );
         await tester.pump();
         await tester.pump();
