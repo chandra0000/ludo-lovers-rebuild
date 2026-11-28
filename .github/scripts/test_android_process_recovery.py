@@ -1,0 +1,60 @@
+import copy
+import json
+import unittest
+
+from android_process_recovery import decode_preferences, require_disposable_emulator, unchanged_match
+
+
+def snapshot(count=2, dice=6):
+    roster = ['orange', 'magenta'] if count == 2 else ['orange', 'green', 'magenta']
+    config = dict(id='local-current', version=2, activePlayers=roster)
+    return dict(schemaVersion=4, configuration=config, aiPlayers=[], profiles=['stable identity'],
+                game=dict(configuration=config, winner=None, activePlayer='orange',
+                          players=[dict(pawnProgress=[-1] * 4) for _ in range(4)],
+                          stateVersion=1, appliedCommandIds=['match-0-roll'], diceValue=dice))
+
+
+class RecoveryContractTest(unittest.TestCase):
+    def test_destructive_actions_require_actual_emulator(self):
+        require_disposable_emulator('emulator-5554', '1\n')
+        for serial, qemu in [('physical-device', '1'), ('emulator-5554', '0')]:
+            with self.assertRaises(RuntimeError):
+                require_disposable_emulator(serial, qemu)
+
+    def test_native_xml_is_required(self):
+        value = snapshot()
+        xml = '<map><string name="flutter.saved_local_match_v1">' + json.dumps(value) + '</string></map>'
+        self.assertEqual(value, decode_preferences(xml))
+        with self.assertRaises(ValueError):
+            decode_preferences('<map/>')
+
+    def test_exact_restoration_and_single_no_move_pass(self):
+        for count in [2, 3]:
+            before = snapshot(count)
+            self.assertEqual('identical', unchanged_match(before, copy.deepcopy(before), count))
+            before = snapshot(count, 3)
+            after = copy.deepcopy(before)
+            after['game'].update(stateVersion=2, diceValue=None,
+                                 activePlayer=before['configuration']['activePlayers'][1],
+                                 appliedCommandIds=['match-0-roll', 'match-1-pass'])
+            self.assertEqual('one-authorized-no-move-pass', unchanged_match(before, after, count))
+
+    def test_illegal_recovery_mutations_fail(self):
+        before = snapshot()
+        for mutation in [
+            lambda s: s['game'].update(stateVersion=3),
+            lambda s: s['game'].update(diceValue=4),
+            lambda s: s['game'].update(activePlayer='magenta'),
+            lambda s: s.update(profiles=['different identity']),
+            lambda s: s.update(aiPlayers=['magenta']),
+            lambda s: s['game']['players'][0].update(pawnProgress=[0, -1, -1, -1]),
+            lambda s: s['game'].update(appliedCommandIds=['match-0-roll', 'match-0-roll']),
+        ]:
+            after = copy.deepcopy(before)
+            mutation(after)
+            with self.assertRaises(AssertionError):
+                unchanged_match(before, after, 2)
+
+
+if __name__ == '__main__':
+    unittest.main()
