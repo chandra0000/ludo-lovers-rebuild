@@ -7,6 +7,7 @@ import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -32,6 +33,7 @@ void main() {
     await tester.tap(find.text('OPEN'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 301));
+    await waitForBoardArtwork(tester);
   }
 
   Future<void> openExit(WidgetTester tester) async {

@@ -10,9 +10,13 @@ class CachedLudoBoard extends StatefulWidget {
     super.key,
     required this.canvasScale,
     this.overlays = const [],
+    this.image = const AssetImage(MatchBoardArtwork.assetPath),
+    this.onReadinessChanged,
   });
   final double canvasScale;
   final List<Widget> overlays;
+  final ImageProvider image;
+  final ValueChanged<bool>? onReadinessChanged;
 
   @override
   State<CachedLudoBoard> createState() => _CachedLudoBoardState();
@@ -25,15 +29,15 @@ class _CachedLudoBoardState extends State<CachedLudoBoard> {
     super.didChangeDependencies();
     if (_warmed) return;
     _warmed = true;
-    for (final asset in [
-      MatchBoardArtwork.assetPath,
-      'assets/images/branding/ludo_lovers_icon.webp',
+    for (final image in <ImageProvider>[
+      widget.image,
+      const AssetImage('assets/images/branding/ludo_lovers_icon.webp'),
       for (final name in ['aldo', 'you', 'emma', 'bob'])
-        'assets/images/board/extracted/avatar_$name.webp',
+        AssetImage('assets/images/board/extracted/avatar_$name.webp'),
     ]) {
       unawaited(
         precacheImage(
-          AssetImage(asset),
+          image,
           context,
           onError: (error, trace) => debugPrint('Match asset warmup: $error'),
         ),
@@ -44,6 +48,8 @@ class _CachedLudoBoardState extends State<CachedLudoBoard> {
   @override
   Widget build(BuildContext context) => RepaintBoundary(
         child: MatchBoardArtwork(
+          image: widget.image,
+          onReadinessChanged: widget.onReadinessChanged,
           canvasScale: widget.canvasScale,
           overlays: widget.overlays,
         ),

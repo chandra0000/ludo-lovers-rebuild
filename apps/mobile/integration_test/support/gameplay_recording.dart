@@ -130,6 +130,19 @@ void registerGameplayRecording({bool realTime = true}) {
           ),
         );
         mark(label);
+        final board = find.byKey(const Key('board_artwork'));
+        final image = tester.widget<Image>(
+          find.ancestor(of: board, matching: find.byType(Image)),
+        );
+        await tester.runAsync(
+          () => precacheImage(
+            image.image,
+            tester.element(board),
+          ).timeout(const Duration(seconds: 10)),
+        );
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
         await wait(2000);
       }
 

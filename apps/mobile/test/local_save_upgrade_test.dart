@@ -26,6 +26,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('resume_saved_match')));
       await tester.pumpAndSettle();
+      await waitForBoardArtwork(tester);
       final restored = tester.widget<MatchScreen>(find.byType(MatchScreen));
       expect(restored.initialGame!.configuration.activePlayers.length, count);
       expect(restored.initialGame!.configuration.version, 2);

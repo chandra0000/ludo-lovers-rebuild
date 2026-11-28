@@ -1,3 +1,4 @@
+import 'support/wait_for_board_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
@@ -28,6 +29,7 @@ void main() {
           ),
         ),
       );
+      await waitForBoardArtwork(tester);
 
       final blockedPawn = find.byKey(const Key('pawn_orange_0'));
       final onlyLegalPawn = find.byKey(const Key('pawn_orange_1'));

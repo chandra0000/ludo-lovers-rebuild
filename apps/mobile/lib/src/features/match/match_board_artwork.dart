@@ -12,6 +12,7 @@ class MatchBoardArtwork extends StatefulWidget {
     this.canvasScale = 1,
     this.image = const AssetImage(assetPath),
     this.showDebugOverlay = const bool.fromEnvironment('LUDO_DEBUG_BOARD'),
+    this.onReadinessChanged,
   }) : assert(canvasScale > 0);
 
   /// Debug-only artwork calibration; never shown in profile/release builds.
@@ -20,6 +21,7 @@ class MatchBoardArtwork extends StatefulWidget {
   final double canvasScale;
   final List<Widget> overlays;
   final ImageProvider image;
+  final ValueChanged<bool>? onReadinessChanged;
 
   static const assetPath = 'assets/images/board/extracted/board_exact.webp';
   static const _referenceWidth = 864.0;
@@ -42,6 +44,19 @@ class MatchBoardArtwork extends StatefulWidget {
 class _MatchBoardArtworkState extends State<MatchBoardArtwork> {
   var _attempt = 0;
   var _retrying = false;
+  bool? _reportedReady;
+  int _readinessGeneration = 0;
+
+  void _reportReadiness(bool ready) {
+    if (_reportedReady == ready) return;
+    _reportedReady = ready;
+    final generation = ++_readinessGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && generation == _readinessGeneration) {
+        widget.onReadinessChanged?.call(ready);
+      }
+    });
+  }
 
   Future<void> _retry() async {
     if (_retrying) return;
@@ -64,21 +79,14 @@ class _MatchBoardArtworkState extends State<MatchBoardArtwork> {
       key: ValueKey(_attempt),
       image: widget.image,
       fit: BoxFit.fill,
-      gaplessPlayback: true,
+      gaplessPlayback: false,
       filterQuality: FilterQuality.medium,
       frameBuilder: (context, artwork, frame, _) => _buildCanvas(
         frame == null
-            ? const ColoredBox(
-                color: Color(0xFF21162D),
+            ? ColoredBox(
+                color: const Color(0xFF21162D),
                 child: Center(
-                  child: Text(
-                    'Preparing the board…',
-                    style: TextStyle(
-                      color: Color(0xFFFFE3A0),
-                      fontSize: 26,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
+                  child: _BoardPreparingLabel(canvasScale: widget.canvasScale),
                 ),
               )
             : artwork,
@@ -133,6 +141,7 @@ class _MatchBoardArtworkState extends State<MatchBoardArtwork> {
   }
 
   Widget _buildCanvas(Widget artwork, {required bool visible}) {
+    _reportReadiness(visible);
     return Stack(
       children: [
         const Positioned.fill(child: ColoredBox(color: Color(0xFF0C0A10))),
@@ -156,6 +165,30 @@ class _MatchBoardArtworkState extends State<MatchBoardArtwork> {
         if (visible && widget.showDebugOverlay && debugBoardOverlayEnabled)
           const Positioned.fill(child: DebugBoardOverlay()),
       ],
+    );
+  }
+}
+
+class _BoardPreparingLabel extends StatelessWidget {
+  const _BoardPreparingLabel({required this.canvasScale});
+  final double canvasScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      child: Padding(
+        padding: EdgeInsets.all(16 / canvasScale),
+        child: Text(
+          'Preparing the board…',
+          textAlign: TextAlign.center,
+          style: AppTypography.status.copyWith(
+            color: const Color(0xFFFFE3A0),
+            fontSize: 16 / canvasScale,
+            decoration: TextDecoration.none,
+          ),
+        ),
+      ),
     );
   }
 }

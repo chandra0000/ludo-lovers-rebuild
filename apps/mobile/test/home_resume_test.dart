@@ -6,6 +6,7 @@ import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/persistence/saved_match.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 import 'package:ludo_lovers/src/game/domain/player_color.dart';
+import 'support/wait_for_board_artwork.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ void main() {
     expect(find.byKey(const Key('resume_saved_match')), findsOneWidget);
     await tester.tap(find.byKey(const Key('resume_saved_match')));
     await tester.pumpAndSettle();
+    await waitForBoardArtwork(tester);
 
     expect(find.byKey(const Key('turn_status')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('GREEN · YOUR TURN')), findsOneWidget);

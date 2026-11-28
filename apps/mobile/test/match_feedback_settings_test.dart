@@ -1,3 +1,4 @@
+import 'support/wait_for_board_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,6 +71,7 @@ void main() {
         ),
       ),
     );
+    await waitForBoardArtwork(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('more_button')));
     await tester.pumpAndSettle();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../support/wait_for_board_artwork.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ludo_lovers/src/game/domain/ludo_game.dart';
 import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
@@ -84,6 +85,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final won = quick([56, 55, -1, -1]).roll(1).movePawn(1);
     await tester.pumpWidget(MaterialApp(home: MatchScreen(initialGame: won)));
+    await waitForBoardArtwork(tester);
     await tester.pumpAndSettle();
     expect(
       find.text('QUICK'),
