@@ -154,7 +154,16 @@ class Recorder:
                 # API33 may hang in MediaCodec release AFTER MOOV/fsync/close.
                 # Terminate only after PID-scoped durable-file evidence matches.
                 if result is None:
-                    adb('shell', 'kill', '-9', str(self.pid))
+                    try:
+                        adb('shell', 'kill', '-9', str(self.pid))
+                    except subprocess.CalledProcessError:
+                        # Natural codec exit can race the final kill. Accept
+                        # only a responsive device proving this PID exited;
+                        # durable MOOV/fsync/file-size evidence already exists.
+                        status = adb('shell', f'if kill -0 {self.pid} 2>/dev/null; '
+                                     'then echo alive; else echo exited; fi').strip()
+                        if status != 'exited':
+                            raise
                     # The shell transport can retain an inherited output FD
                     # even after remote kill. Close only this recording client.
                     self.close()

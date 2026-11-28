@@ -77,6 +77,35 @@ class DisplayReadinessChecks(unittest.TestCase):
 
 
 class RecorderChecks(unittest.TestCase):
+    def test_finalized_recorder_exiting_before_kill_still_pulls(self):
+        recorder = qa.Recorder()
+        recorder.pid = 123
+        recorder.process = Mock()
+        recorder.process.poll.return_value = None
+        failure = subprocess.CalledProcessError(1, ['kill', '-9'])
+        with patch.object(qa, 'VIDEO'), \
+                patch.object(recorder, 'finalized_file_size', return_value=2048), \
+                patch.object(recorder, 'close') as close, \
+                patch.object(qa, 'adb', side_effect=['', failure, 'exited', '']) as adb:
+            recorder.stop()
+            self.assertTrue(recorder.stopped)
+            self.assertEqual(adb.call_args_list[-1].args[0], 'pull')
+            close.assert_called_once()
+
+    def test_failed_final_kill_with_live_pid_does_not_pull(self):
+        recorder = qa.Recorder()
+        recorder.pid = 123
+        recorder.process = Mock()
+        recorder.process.poll.return_value = None
+        failure = subprocess.CalledProcessError(1, ['kill', '-9'])
+        with patch.object(qa, 'VIDEO'), \
+                patch.object(recorder, 'finalized_file_size', return_value=2048), \
+                patch.object(qa, 'adb', side_effect=['', failure, 'alive']) as adb:
+            with self.assertRaises(subprocess.CalledProcessError):
+                recorder.stop()
+            self.assertFalse(recorder.stopped)
+            self.assertFalse(any(call.args[0] == 'pull' for call in adb.call_args_list))
+
     def test_sigint_and_process_exit_precede_pull_and_stop_is_idempotent(self):
         recorder = qa.Recorder()
         recorder.pid = 123
