@@ -57,7 +57,7 @@ jobs:
         working-directory: apps/mobile
         run: python3 tool/generate_branding.py --apply
       - name: Cache pinned Android Gradle dependencies
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
@@ -95,7 +95,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: apps/mobile/test-artifacts/baseline-apk
       - name: Upload updated normal installed-app APK
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-branded-normal-debug-apk-${{ matrix.viewport }}
           path: apps/mobile/build/app/outputs/flutter-apk/app-branding-debug.apk
@@ -138,7 +138,7 @@ jobs:
           timeout 10s adb -s emulator-5554 shell getprop > apps/mobile/test-artifacts/gameplay/device-properties-after-exit.txt 2>&1 || true
       - name: Upload recording, assertions and live diagnostics
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-gameplay-android-seeded-${{ matrix.viewport }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
@@ -146,7 +146,7 @@ jobs:
           if-no-files-found: error
       - name: Upload installed Android emulator screenshots
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-recording-native-screenshots-${{ matrix.viewport }}
           path: apps/mobile/test-artifacts/native/*.png
@@ -169,7 +169,7 @@ jobs:
           timeout 15s adb -s emulator-5554 logcat -d -t 3000 > emulator-diagnostics/logcat.txt 2>&1 || true
       - name: Upload emulator diagnostics
         if: failure() || cancelled()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ludo-recording-failure-diagnostics-${{ matrix.viewport }}
           path: emulator-diagnostics/

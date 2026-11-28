@@ -99,3 +99,26 @@ The local simulation receipt's sourceCommit is the local merge checkout; its
 applicationLibTree equals this validated baseline and its runnerBlob exactly
 matches the committed runner. Dedicated CI reruns the published revision and
 uploads an independent exact-checkout receipt.
+
+## Refreshed integration and diagnosed CI failure
+
+PR99 merged at5d0d755803cf90bcbfa09552454fa0e1c03e5620 after foundation
+46090758739, security46090758723 and default-renderer checkpoint46091299727
+passed on95af1eac50db8dec98d82bb5ef2e7ac1e7f60abe. PR98 merged at
+f100a3f17708fddcf1c0c9ac567c2e26345d49f5 after foundation46092530280,
+platform46092530267 and security46092530291 passed. Security also proved a
+byte-identical upload7/download4 advisory-report round trip.
+
+The first simulation CI head22224c3 passed the full3030-match workflow46091190316,
+foundation46091190277 and security46091190303, but Android debug job140812214751
+failed before compilation on Maven HTTP429 for Kotlin dependencies. That failure
+is preserved, not relabeled as success. PR110 adds the missing Gradle cache to
+cross-platform Android using the existing pinned paths/key. Refreshed simulation
+work includes that mitigation and current merged action versions; require fresh
+exact-head CI before merge. PR110 must be merged first.
+
+Cross-platform Android builds a debug APK; it is not an installed Android test.
+Installed Android evidence comes from the checkpoint/recording workflow. macOS
+includes installed iPhone simulator navigation. No emulator evidence is physical.
+The Supabase connector currently lists zero projects, so hosted Auth/SQL/RLS and
+two-client staging acceptance are blocked; no production credentials are present.
