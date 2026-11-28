@@ -23,6 +23,44 @@ def adb(*args, timeout=15, binary=False):
                                    text=not binary)
 
 
+def wait_for_display(seconds=30):
+    """Require responsive WindowManager before installation/recording, not just ADB."""
+    deadline = time.monotonic() + seconds
+    transcript = VIDEO / 'display-readiness.jsonl'
+    while time.monotonic() < deadline:
+        values = []
+        for probe in ['size', 'density']:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            command = ['adb', '-s', SERIAL, 'shell', 'wm', probe]
+            try:
+                result = subprocess.run(command, capture_output=True, text=True,
+                                        timeout=min(5, remaining), check=False)
+                entry = {'probe': probe, 'code': result.returncode,
+                         'stdout': result.stdout, 'stderr': result.stderr}
+                pattern = r'(?:Physical|Override) ' + probe + r':\s*(\d+x\d+|\d+)'
+                matches = re.findall(pattern, result.stdout)
+                if result.returncode == 0 and matches:
+                    values.append((probe, matches[-1], result.stdout))
+            except subprocess.TimeoutExpired as error:
+                entry = {'probe': probe, 'timeout': True,
+                         'stdout': str(error.stdout), 'stderr': str(error.stderr)}
+            with transcript.open('a') as log:
+                log.write(json.dumps(entry) + '\n')
+        if len(values) == 2:
+            expected = os.environ.get('LUDO_CAPTURE_SIZE')
+            if expected and values[0][1] != expected:
+                raise RuntimeError('Android display differs from requested viewport: '
+                                   + values[0][1] + ' != ' + expected)
+            return '\n'.join(value[2].strip() for value in values) + '\n'
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            time.sleep(min(1, remaining))
+    raise RuntimeError('Android WindowManager not ready within bounded display probe; '
+                       'see display-readiness.jsonl (application not installed)')
+
+
 def screenshot(name):
     if not re.fullmatch(r'[a-z0-9-]+', name):
         raise ValueError('Invalid capture name')
@@ -116,7 +154,16 @@ class Recorder:
                 # API33 may hang in MediaCodec release AFTER MOOV/fsync/close.
                 # Terminate only after PID-scoped durable-file evidence matches.
                 if result is None:
-                    adb('shell', 'kill', '-9', str(self.pid))
+                    try:
+                        adb('shell', 'kill', '-9', str(self.pid))
+                    except subprocess.CalledProcessError:
+                        # Natural codec exit can race the final kill. Accept
+                        # only a responsive device proving this PID exited;
+                        # durable MOOV/fsync/file-size evidence already exists.
+                        status = adb('shell', f'if kill -0 {self.pid} 2>/dev/null; '
+                                     'then echo alive; else echo exited; fi').strip()
+                        if status != 'exited':
+                            raise
                     # The shell transport can retain an inherited output FD
                     # even after remote kill. Close only this recording client.
                     self.close()
@@ -271,7 +318,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     VIDEO.mkdir(parents=True, exist_ok=True)
     (VIDEO / 'device-properties.txt').write_text(adb('shell', 'getprop'))
-    (VIDEO / 'display.txt').write_text(adb('shell', 'wm size; wm density'))
+    (VIDEO / 'display.txt').write_text(wait_for_display())
     recorder = Recorder()
     events = []
     chunks = StateChunks()

@@ -4,6 +4,8 @@ import json
 import importlib.util
 from pathlib import Path
 import unittest
+import subprocess
+import tempfile
 from unittest.mock import Mock, patch
 
 spec = importlib.util.spec_from_file_location(
@@ -12,7 +14,98 @@ qa = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(qa)
 
 
+class DisplayReadinessChecks(unittest.TestCase):
+    def result(self, output, code=0, error=''):
+        return subprocess.CompletedProcess([], code, output, error)
+
+    def test_transient_failure_is_logged_then_both_services_must_reply(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(qa, 'VIDEO', Path(directory)), \
+                    patch.dict(qa.os.environ, {'LUDO_CAPTURE_SIZE': '360x800'}), \
+                    patch.object(qa.time, 'sleep'), \
+                    patch.object(qa.subprocess, 'run', side_effect=[
+                        self.result('', 255, 'WindowManager unavailable'),
+                        self.result('Physical density: 160'),
+                        self.result('Physical size: 1080x1920\nOverride size: 360x800'),
+                        self.result('Physical density: 420\nOverride density: 160'),
+                    ]) as run:
+                text = qa.wait_for_display()
+                self.assertIn('Override size: 360x800', text)
+                self.assertEqual(run.call_count, 4)
+                entries = [json.loads(x) for x in
+                           (Path(directory) / 'display-readiness.jsonl').read_text().splitlines()]
+                self.assertEqual(entries[0]['code'], 255)
+                self.assertEqual(entries[0]['stderr'], 'WindowManager unavailable')
+
+    def test_permanent_failure_is_bounded_and_keeps_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(qa, 'VIDEO', Path(directory)), \
+                    patch.object(qa.time, 'monotonic', side_effect=[0, 0, 1, 2, 29, 30]), \
+                    patch.object(qa.time, 'sleep'), \
+                    patch.object(qa.subprocess, 'run', return_value=self.result('', 255, 'offline')) as run:
+                with self.assertRaisesRegex(RuntimeError, 'application not installed'):
+                    qa.wait_for_display()
+                self.assertEqual(run.call_count, 2)
+                self.assertIn('offline', (Path(directory) / 'display-readiness.jsonl').read_text())
+
+    def test_wrong_viewport_is_rejected_without_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(qa, 'VIDEO', Path(directory)), \
+                    patch.dict(qa.os.environ, {'LUDO_CAPTURE_SIZE': '360x800'}), \
+                    patch.object(qa.subprocess, 'run', side_effect=[
+                        self.result('Physical size: 1080x1920'),
+                        self.result('Physical density: 420'),
+                    ]):
+                with self.assertRaisesRegex(RuntimeError, 'requested viewport'):
+                    qa.wait_for_display()
+
+    def test_timeout_output_is_retained_and_next_attempt_can_recover(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(qa, 'VIDEO', Path(directory)), \
+                    patch.dict(qa.os.environ, {'LUDO_CAPTURE_SIZE': '360x800'}), \
+                    patch.object(qa.time, 'sleep'), \
+                    patch.object(qa.subprocess, 'run', side_effect=[
+                        subprocess.TimeoutExpired(['adb'], 5, output='slow service', stderr='probe timeout'),
+                        self.result('Physical density: 160'),
+                        self.result('Physical size: 360x800'),
+                        self.result('Physical density: 160'),
+                    ]):
+                self.assertIn('360x800', qa.wait_for_display())
+                entries = (Path(directory) / 'display-readiness.jsonl').read_text()
+                self.assertIn('probe timeout', entries)
+                self.assertIn('"timeout": true', entries)
+
+
 class RecorderChecks(unittest.TestCase):
+    def test_finalized_recorder_exiting_before_kill_still_pulls(self):
+        recorder = qa.Recorder()
+        recorder.pid = 123
+        recorder.process = Mock()
+        recorder.process.poll.return_value = None
+        failure = subprocess.CalledProcessError(1, ['kill', '-9'])
+        with patch.object(qa, 'VIDEO'), \
+                patch.object(recorder, 'finalized_file_size', return_value=2048), \
+                patch.object(recorder, 'close') as close, \
+                patch.object(qa, 'adb', side_effect=['', failure, 'exited', '']) as adb:
+            recorder.stop()
+            self.assertTrue(recorder.stopped)
+            self.assertEqual(adb.call_args_list[-1].args[0], 'pull')
+            close.assert_called_once()
+
+    def test_failed_final_kill_with_live_pid_does_not_pull(self):
+        recorder = qa.Recorder()
+        recorder.pid = 123
+        recorder.process = Mock()
+        recorder.process.poll.return_value = None
+        failure = subprocess.CalledProcessError(1, ['kill', '-9'])
+        with patch.object(qa, 'VIDEO'), \
+                patch.object(recorder, 'finalized_file_size', return_value=2048), \
+                patch.object(qa, 'adb', side_effect=['', failure, 'alive']) as adb:
+            with self.assertRaises(subprocess.CalledProcessError):
+                recorder.stop()
+            self.assertFalse(recorder.stopped)
+            self.assertFalse(any(call.args[0] == 'pull' for call in adb.call_args_list))
+
     def test_sigint_and_process_exit_precede_pull_and_stop_is_idempotent(self):
         recorder = qa.Recorder()
         recorder.pid = 123
