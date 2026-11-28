@@ -54,6 +54,7 @@ class BoardGeometry {
   static const int trackLength = 52;
   static const int playerTrackLength = 51;
   static const int homeLaneLength = 5;
+  static const int finishProgress = playerTrackLength + homeLaneLength;
 
   static const double sourceWidth = 810;
   static const double sourceHeight = 1440;
@@ -341,12 +342,12 @@ class BoardGeometry {
       throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
     }
     if (progress == -1) return yardPosition(color, pawnIndex);
-    if (progress < -1 || progress > 56) {
-      throw RangeError.range(progress, -1, 56, 'progress');
+    if (progress < -1 || progress > finishProgress) {
+      throw RangeError.range(progress, -1, finishProgress, 'progress');
     }
-    if (progress == 56) return finishPosition;
+    if (progress == finishProgress) return finishPosition;
     if (progress < playerTrackLength) {
-      return trackPosition((seats[color]!.entryIndex + progress) % trackLength);
+      return trackPosition(physicalTrackCell(color, progress));
     }
     return homeLanePosition(color, progress - playerTrackLength);
   }

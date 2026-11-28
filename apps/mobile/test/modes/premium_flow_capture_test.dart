@@ -124,11 +124,14 @@ void main() {
       pawnProgress: {
         PlayerColor.orange: [55, 56, 56, 56],
       },
-    ).roll(1);
-    await mount(tester, MatchScreen(initialGame: game));
+    );
+    await mount(tester, MatchScreen(initialGame: game, rollDice: () => 1));
     await waitForBoardArtwork(tester);
-    await tester.tap(find.byKey(const Key('pawn_orange_0')));
+    await tester.tap(find.byKey(const Key('roll_dice')));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Victory!'), findsOneWidget);
     await capture(tester, 'flow-winning');
     await tester.tap(find.text('PLAY AGAIN'));
     await tester.pumpAndSettle();

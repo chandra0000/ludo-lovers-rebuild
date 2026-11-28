@@ -19,6 +19,7 @@ class MatchPawnLayer extends StatelessWidget {
   const MatchPawnLayer({
     super.key,
     required this.game,
+    this.beforeLanding,
     required this.animations,
     required this.canvasScale,
     required this.isTurnResolutionPending,
@@ -33,6 +34,9 @@ class MatchPawnLayer extends StatelessWidget {
   });
 
   final LudoGame game;
+
+  /// Keep pre-move positions visible until the authoritative move lands.
+  final LudoGame? beforeLanding;
   final MatchAnimationLifecycle animations;
   final double canvasScale;
   final bool isTurnResolutionPending;
@@ -51,10 +55,10 @@ class MatchPawnLayer extends StatelessWidget {
       );
 
   NormalizedBoardPoint _pawnPosition(
-    PlayerColor color,
+    LudoPlayer player,
     int pawnIndex,
   ) {
-    final player = game.players.firstWhere((item) => item.color == color);
+    final color = player.color;
     return PawnAnimator.position(
       color: color,
       pawnIndex: pawnIndex,
@@ -70,7 +74,8 @@ class MatchPawnLayer extends StatelessWidget {
   List<Widget> _buildPawnsWithClusters(double canvasScale) {
     // Index players once per frame instead of searching for each pawn.
     final playersByColor = {
-      for (final player in game.players) player.color: player,
+      for (final player in (beforeLanding ?? game).players)
+        player.color: player,
     };
     final clusters = <int, List<({PlayerColor color, int pawnIndex})>>{};
     for (final color in game.configuration.activePlayers) {
@@ -78,7 +83,7 @@ class MatchPawnLayer extends StatelessWidget {
       for (var pawnIndex = 0;
           pawnIndex < player.pawnProgress.length;
           pawnIndex++) {
-        final point = _pawnPosition(color, pawnIndex);
+        final point = _pawnPosition(player, pawnIndex);
         final key = PawnLayoutSolver.clusterKey(point);
         clusters.putIfAbsent(key, () => []).add(
           (color: color, pawnIndex: pawnIndex),
@@ -96,9 +101,18 @@ class MatchPawnLayer extends StatelessWidget {
       });
     }
     final legalIndices = game.legalPawnIndices().toSet();
-    return [
-      for (final color in game.configuration.activePlayers)
-        for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++)
+    final idlePawns = <Widget>[];
+    final movablePawns = <Widget>[];
+    for (final color in game.configuration.activePlayers) {
+      for (var pawnIndex = 0; pawnIndex < 4; pawnIndex++) {
+        final canMove = !animations.isDiceAnimating &&
+            !animations.movement.isAnimating &&
+            !isTurnResolutionPending &&
+            !aiPlayers.contains(color) &&
+            color == game.activePlayer &&
+            legalIndices.contains(pawnIndex);
+        final layer = canMove ? movablePawns : idlePawns;
+        layer.add(
           _buildPawn(
             color,
             pawnIndex,
@@ -106,8 +120,12 @@ class MatchPawnLayer extends StatelessWidget {
             clusters,
             legalIndices,
             canvasScale,
+            canMove: canMove,
           ),
-    ];
+        );
+      }
+    }
+    return [...idlePawns, ...movablePawns];
   }
 
   Widget _buildPawn(
@@ -116,10 +134,14 @@ class MatchPawnLayer extends StatelessWidget {
     LudoPlayer player,
     Map<int, List<({PlayerColor color, int pawnIndex})>> clusters,
     Set<int> legalIndices,
-    double canvasScale,
-  ) {
-    final progress = player.pawnProgress[pawnIndex];
-    final normalized = _pawnPosition(color, pawnIndex);
+    double canvasScale, {
+    required bool canMove,
+  }) {
+    final progress =
+        animations.pawn.color == color && animations.pawn.pawnIndex == pawnIndex
+            ? animations.pawn.endProgress
+            : player.pawnProgress[pawnIndex];
+    final normalized = _pawnPosition(player, pawnIndex);
     final canvasPoint = BoardGeometry.canvasPosition(normalized);
     final occupants = clusters[PawnLayoutSolver.clusterKey(normalized)] ??
         [
@@ -134,11 +156,6 @@ class MatchPawnLayer extends StatelessWidget {
     final size = stacked ? 16.0 : (progress == -1 ? 30.0 : 27.0);
     final isHumanTurn =
         !aiPlayers.contains(color) && color == game.activePlayer;
-    final canMove = !animations.isDiceAnimating &&
-        !animations.movement.isAnimating &&
-        !isTurnResolutionPending &&
-        isHumanTurn &&
-        legalIndices.contains(pawnIndex);
     final canExplainInvalidMove = !animations.isDiceAnimating &&
         !animations.movement.isAnimating &&
         !isTurnResolutionPending &&
@@ -173,6 +190,7 @@ class MatchPawnLayer extends StatelessWidget {
       GlobalKey<ShakeFeedbackWrapperState>.new,
     );
     return Positioned(
+      key: ValueKey((color, pawnIndex)),
       left: tapPosition.dx - hitTargetWidth / 2,
       top: tapPosition.dy - hitTargetHeight / 2,
       width: hitTargetWidth,
