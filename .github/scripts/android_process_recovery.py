@@ -72,6 +72,16 @@ def unchanged_match(before, after, count):
         assert game['winner'] is None
         assert all(p['pawnProgress'] == [-1] * 4 for p in game['players'])
         assert len(set(game['appliedCommandIds'])) == len(game['appliedCommandIds'])
+        assert sum(c.endswith('-roll') for c in game['appliedCommandIds']) == 1
+        if game['stateVersion'] == 1:
+            assert game['diceValue'] in range(1, 7)
+            assert game['activePlayer'] == 'orange'
+            assert len(game['appliedCommandIds']) == 1
+        else:
+            assert game['stateVersion'] == 2 and game['diceValue'] is None
+            assert game['activePlayer'] == roster[1]
+            assert len(game['appliedCommandIds']) == 2
+            assert sum(c.endswith('-pass') for c in game['appliedCommandIds']) == 1
     b, a = before['game'], after['game']
     assert b['stateVersion'] in (1, 2), 'One real roll, at most its no-move pass'
     assert len(b['appliedCommandIds']) == b['stateVersion']

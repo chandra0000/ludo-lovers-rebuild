@@ -55,6 +55,17 @@ class RecoveryContractTest(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 unchanged_match(before, after, 2)
 
+    def test_identically_invalid_state_is_not_accepted(self):
+        for mutation in [
+            lambda s: s['game'].update(diceValue=0),
+            lambda s: s['game'].update(activePlayer='magenta'),
+            lambda s: s['game'].update(stateVersion=2, appliedCommandIds=['a-roll', 'b-roll']),
+        ]:
+            invalid = snapshot()
+            mutation(invalid)
+            with self.assertRaises(AssertionError):
+                unchanged_match(invalid, copy.deepcopy(invalid), 2)
+
 
 if __name__ == '__main__':
     unittest.main()
