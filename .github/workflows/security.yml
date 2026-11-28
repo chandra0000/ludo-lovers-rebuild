@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Test fail-closed advisory handling
@@ -62,3 +62,16 @@ jobs:
           path: security-artifacts/*.json
           if-no-files-found: error
           retention-days: 30
+      - name: Download uploaded advisory report using existing v4 reader
+        if: success()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pub-security-report
+          path: artifact-roundtrip
+      - name: Require byte-identical artifact round trip
+        if: success()
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          assert Path('security-artifacts/pub-advisories.json').read_bytes() == Path('artifact-roundtrip/pub-advisories.json').read_bytes()
+          PYCODE

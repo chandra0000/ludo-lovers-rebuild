@@ -39,6 +39,37 @@ void main() {
     expect(animations.diceRollId, 0);
   });
 
+  test('multiple captures share impact and end at the last yard arrival', () {
+    final timeline = MatchAnimationLifecycle(
+      vsync: const TestVSync(),
+      onMovementTick: () {},
+      onMovementStatus: (_) {},
+    );
+    addTearDown(timeline.dispose);
+    timeline.configurePawnMovement(
+      color: PlayerColor.orange,
+      pawnIndex: 0,
+      startProgress: 4,
+      endProgress: 5,
+      stepCount: 1,
+      retreats: const {(PlayerColor.green, 1): 44, (PlayerColor.blue, 2): 18},
+      reduceMotion: false,
+    );
+    expect(timeline.approachMs, 180);
+    expect(timeline.movement.duration!.inMilliseconds, 180 + 70 + 45 * 48);
+    final duration = timeline.movement.duration!.inMilliseconds;
+    timeline.movement.value = 249 / duration;
+    expect(timeline.retreatFraction(44), 0);
+    timeline.movement.value = (250 + 48) / duration;
+    expect(timeline.retreatFraction(44), closeTo(1 / 45, .00001));
+    timeline.movement.value = 0.5;
+    expect(timeline.retreatFraction(18), 1);
+    expect(timeline.approach, 1);
+    expect(timeline.captures.length, 2);
+    timeline.resetForNewMatch();
+    expect(timeline.captures, isEmpty);
+  });
+
   test('movement completion clears the transient pawn and feedback', () {
     final animations = MatchAnimationLifecycle(
       vsync: const TestVSync(),

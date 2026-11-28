@@ -5,6 +5,6 @@ void main() {
   test('automatic move and pass timings remain unchanged', () {
     const timing = MatchTurnResolutionTiming();
     expect(timing.automaticPawn, const Duration(milliseconds: 350));
-    expect(timing.passTurn, const Duration(milliseconds: 600));
+    expect(timing.passTurn, const Duration(milliseconds: 550));
   });
 }

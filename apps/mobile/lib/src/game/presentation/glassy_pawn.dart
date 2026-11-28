@@ -76,6 +76,16 @@ class _GlassyConePainter extends CustomPainter {
       );
     }
 
+    if (isMovable) {
+      canvas.drawOval(
+        baseRect.inflate(w * .12),
+        Paint()
+          ..color = const Color(0xFFFFEEAD)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * .07,
+      );
+    }
+
     // Contact occlusion keeps the piece grounded without changing its
     // geometry or introducing textures / additional GPU allocations.
     canvas.drawOval(

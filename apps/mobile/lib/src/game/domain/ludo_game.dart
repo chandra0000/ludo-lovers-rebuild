@@ -7,7 +7,7 @@ import 'team_up_policy.dart';
 
 const int sharedTrackLength = BoardGeometry.trackLength;
 const int playerTrackLength = BoardGeometry.playerTrackLength;
-const int finishProgress = 56;
+const int finishProgress = BoardGeometry.finishProgress;
 
 /// Immutable, named rules configuration. Profiles are versioned so a saved
 /// match can retain the exact rules under which it was started.
