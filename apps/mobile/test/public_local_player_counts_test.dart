@@ -141,7 +141,7 @@ void main() {
     });
   }
 
-  test('old four-seat saves and preview profiles keep their versions', () {
+  test('old four-seat saves and public profiles keep their versions', () {
     expect(MatchConfiguration.compatibility.version, 1);
     expect(
       MatchConfiguration.fromJson(MatchConfiguration.compatibility.toJson())
@@ -156,9 +156,18 @@ void main() {
       }),
       throwsFormatException,
     );
-    expect(() => ModeRegistry.create(MatchMode.classic), throwsStateError);
-    expect(() => ModeRegistry.create(MatchMode.quick), throwsStateError);
-    expect(() => ModeRegistry.create(MatchMode.teamUp), throwsStateError);
+    for (final count in [2, 3, 4]) {
+      final classic =
+          ModeRegistry.create(MatchMode.classic, playerCount: count);
+      final quick = ModeRegistry.create(MatchMode.quick, playerCount: count);
+      expect(classic.ruleProfile, LudoRuleProfile.classicV1);
+      expect(quick.ruleProfile, LudoRuleProfile.quickV1);
+      expect(classic.configuration.activePlayers, hasLength(count));
+      expect(quick.configuration.activePlayers, hasLength(count));
+    }
+    final team = ModeRegistry.create(MatchMode.teamUp);
+    expect(team.ruleProfile, LudoRuleProfile.teamUpV1);
+    expect(team.configuration.activePlayers, PlayerColor.turnOrder);
     expect(
       () => MatchConfiguration.fromJson({
         'id': 'local-current',

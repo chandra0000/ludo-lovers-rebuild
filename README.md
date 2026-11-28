@@ -2,9 +2,18 @@
 
 A clean, Android-first Flutter implementation of Ludo Lovers.
 
-## First milestone
+## Developing a local match feature
 
-Deliver one reliable local four-player match with a stable first frame, faithful board artwork rendering, deterministic pawn coordinates, animated game pieces, and automated rule/UI tests. Additional modes and online services are out of scope until this foundation is accepted.
+Start in `apps/mobile`. Classic, Quick, VS Computer and Team Up share the match presentation. Mode availability is controlled by the mode registry.
+
+| When changing | Start here (relative to apps/mobile) | Verify |
+|---|---|---|
+| Shared route, home lanes or safe squares | `lib/src/game/domain/board_geometry.dart` | Board topology, pixel anchors and safe-cell tests |
+| Legal moves, captures or turn order | `lib/src/game/domain/ludo_game.dart` and `team_up_policy.dart` | Rule profile tests, deterministic replay and saved-match recovery |
+| Computer decisions | `lib/src/game/domain/ai/seeded_ludo_ai.dart` | Seeded choices against engine-legal moves |
+| Player controls, dice and turn feedback | `lib/src/features/match/` and `lib/src/game/presentation/` | Widget tests, installed gameplay and reduced-motion checks |
+
+Route player actions through `MatchSession`. Use the existing versioned rule profiles when opening saved games. Verify a release candidate on its commit using the [device acceptance and performance protocol](docs/DEVICE_ACCEPTANCE_AND_PERFORMANCE.md).
 
 ## Product constraints
 

@@ -54,6 +54,7 @@ class BoardGeometry {
   static const int trackLength = 52;
   static const int playerTrackLength = 51;
   static const int homeLaneLength = 5;
+  static const int finishProgress = playerTrackLength + homeLaneLength;
 
   static const double sourceWidth = 810;
   static const double sourceHeight = 1440;
@@ -177,7 +178,10 @@ class BoardGeometry {
   static const Set<int> starTrackCells = <int>{8, 21, 34, 47};
 
   /// All safe shared-track cells for the current board artwork.
-  static const Set<int> safeTrackCells = <int>{0, 8, 13, 21, 26, 34, 39, 47};
+  static const Set<int> safeTrackCells = <int>{
+    ...startTrackCells,
+    ...starTrackCells,
+  };
   static const BoardCell finishCell = BoardCell(7, 7);
 
   static const Map<PlayerColor, PlayerBoardSeat> seats =
@@ -341,12 +345,12 @@ class BoardGeometry {
       throw RangeError.range(pawnIndex, 0, 3, 'pawnIndex');
     }
     if (progress == -1) return yardPosition(color, pawnIndex);
-    if (progress < -1 || progress > 56) {
-      throw RangeError.range(progress, -1, 56, 'progress');
+    if (progress < -1 || progress > finishProgress) {
+      throw RangeError.range(progress, -1, finishProgress, 'progress');
     }
-    if (progress == 56) return finishPosition;
+    if (progress == finishProgress) return finishPosition;
     if (progress < playerTrackLength) {
-      return trackPosition((seats[color]!.entryIndex + progress) % trackLength);
+      return trackPosition(physicalTrackCell(color, progress));
     }
     return homeLanePosition(color, progress - playerTrackLength);
   }
@@ -378,7 +382,13 @@ class BoardGeometry {
           _yardSockets[color]?.length != 4) {
         return false;
       }
+      final exit = physicalTrackCell(color, playerTrackLength - 1);
+      var previous = sharedTrack[exit];
       for (final cell in seat.homeLane) {
+        final dx = (cell.column - previous.column).abs();
+        final dy = (cell.row - previous.row).abs();
+        if (dx + dy != 1) return false;
+        previous = cell;
         if (!cell.isInside ||
             trackCells.contains(cell) ||
             cell == finishCell ||
@@ -394,6 +404,14 @@ class BoardGeometry {
     }
 
     for (var index = 0; index < trackLength; index++) {
+      if (cornerConnectorIndexes.contains(index)) {
+        final from = sharedTrack[index];
+        final to = sharedTrack[(index + 1) % trackLength];
+        if ((to.column - from.column).abs() != 1 ||
+            (to.row - from.row).abs() != 1) {
+          return false;
+        }
+      }
       final point = trackPosition(index);
       if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) {
         return false;

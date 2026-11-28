@@ -8,6 +8,19 @@ class LudoLoversApp extends StatelessWidget {
   const LudoLoversApp({super.key, this.onFirstViewReady});
   final VoidCallback? onFirstViewReady;
 
+  static Widget _pressFeedback(
+    BuildContext context,
+    Set<WidgetState> states,
+    Widget? child,
+  ) =>
+      AnimatedScale(
+        scale: states.contains(WidgetState.pressed) ? .95 : 1,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 80),
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
     const gold = Color(0xFFFFC857);
@@ -28,24 +41,28 @@ class LudoLoversApp extends StatelessWidget {
           style: FilledButton.styleFrom(
             textStyle: AppTypography.button,
             minimumSize: const Size(48, 48),
+            foregroundBuilder: _pressFeedback,
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             textStyle: AppTypography.button,
             minimumSize: const Size(48, 48),
+            foregroundBuilder: _pressFeedback,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             textStyle: AppTypography.button,
             minimumSize: const Size(48, 48),
+            foregroundBuilder: _pressFeedback,
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             textStyle: AppTypography.button,
             minimumSize: const Size(48, 48),
+            foregroundBuilder: _pressFeedback,
           ),
         ),
         scaffoldBackgroundColor: const Color(0xFF080808),

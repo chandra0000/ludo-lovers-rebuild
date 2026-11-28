@@ -172,7 +172,9 @@ class SeededLudoAi {
         final distance =
             (trackCell - opponentTrackCell + BoardGeometry.trackLength) %
                 BoardGeometry.trackLength;
-        if (distance >= 1 && distance <= 6) {
+        if (distance >= 1 &&
+            distance <= 6 &&
+            progress + distance < playerTrackLength) {
           return true;
         }
       }

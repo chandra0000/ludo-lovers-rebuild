@@ -20,7 +20,12 @@ concurrency:
 
 jobs:
   android-recording:
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [320x640, 360x800, 393x873, 430x932]
     env:
+      LUDO_CAPTURE_SIZE: ${{ matrix.viewport }}
       LUDO_GAMEPLAY_RECORDING: "true"
       LUDO_BRANDING_RECORDING: "true"
       LUDO_SOFTWARE_RENDERING: "true"
@@ -29,7 +34,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
@@ -52,7 +57,7 @@ jobs:
         working-directory: apps/mobile
         run: python3 tool/generate_branding.py --apply
       - name: Cache pinned Android Gradle dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
@@ -92,7 +97,7 @@ jobs:
       - name: Upload updated normal installed-app APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-branded-normal-debug-apk
+          name: ludo-branded-normal-debug-apk-${{ matrix.viewport }}
           path: apps/mobile/build/app/outputs/flutter-apk/app-branding-debug.apk
           retention-days: 30
           if-no-files-found: error
@@ -119,7 +124,7 @@ jobs:
           disable-animations: false
           working-directory: apps/mobile
           script: |
-            adb -s emulator-5554 shell wm size 360x800
+            adb -s emulator-5554 shell wm size ${{ matrix.viewport }}
             adb -s emulator-5554 shell wm density 160
             bash ../../.github/scripts/android_integration.sh
             python3 ../../.github/scripts/verify_gameplay_video.py test-artifacts/gameplay/gameplay-android.mp4
@@ -135,7 +140,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-gameplay-android-seeded-${{ github.event.pull_request.head.sha || github.sha }}
+          name: ludo-gameplay-android-seeded-${{ matrix.viewport }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/mobile/test-artifacts/gameplay/
           retention-days: 30
           if-no-files-found: error
@@ -143,7 +148,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-recording-native-screenshots
+          name: ludo-recording-native-screenshots-${{ matrix.viewport }}
           path: apps/mobile/test-artifacts/native/*.png
           if-no-files-found: error
       - name: Collect emulator diagnostics on failure
@@ -166,6 +171,6 @@ jobs:
         if: failure() || cancelled()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ludo-recording-failure-diagnostics
+          name: ludo-recording-failure-diagnostics-${{ matrix.viewport }}
           path: emulator-diagnostics/
           if-no-files-found: warn

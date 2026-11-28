@@ -85,12 +85,14 @@ class PlayerProfileCard extends StatelessWidget {
                           child: Text(
                             slot.participating
                                 ? profile.displayName
-                                : 'EMPTY / WAITING',
+                                : color.name.toUpperCase(),
                             key: Key('profile_name_${color.name}'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style:
-                                AppTypography.playerName.copyWith(height: 1.1),
+                            style: AppTypography.playerName.copyWith(
+                              height: 1.1,
+                              color: isActive ? const Color(0xFFFFE3A0) : null,
+                            ),
                           ),
                         ),
                       ],
@@ -131,7 +133,17 @@ class PlayerProfileCard extends StatelessWidget {
                                                 alignment: Alignment.center,
                                                 children: [
                                                   Icon(
-                                                    Icons.smart_toy_outlined,
+                                                    switch (color) {
+                                                      PlayerColor.orange =>
+                                                        Icons
+                                                            .smart_toy_outlined,
+                                                      PlayerColor.green =>
+                                                        Icons.android,
+                                                      PlayerColor.magenta => Icons
+                                                          .precision_manufacturing,
+                                                      PlayerColor.blue =>
+                                                        Icons.rocket_launch,
+                                                    },
                                                     key: Key(
                                                       'robot_${color.name}',
                                                     ),
