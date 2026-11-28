@@ -48,6 +48,15 @@ jobs:
       - name: Restore approved native branding after scaffolding
         working-directory: apps/mobile
         run: python3 tool/generate_branding.py --apply
+      - name: Reuse pinned Android dependency cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/pubspec.lock', 'apps/mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: Build Android debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
