@@ -9,6 +9,7 @@ import '../../game/domain/player_color.dart';
 import '../../game/domain/match_player_profile.dart';
 import '../../game/domain/player_name.dart';
 import '../../game/infrastructure/persistence/player_name_preferences.dart';
+import '../../game/infrastructure/persistence/ai_difficulty_preferences.dart';
 import '../match/match_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
@@ -18,11 +19,13 @@ class GameSetupScreen extends StatefulWidget {
     this.allowInternalModes = ModeRegistry.internalBuild,
     this.initialPlayerCount = 4,
     this.preferComputer = false,
+    this.aiPreferences = const AiDifficultyPreferences(),
   });
   final MatchMode mode;
   final bool allowInternalModes;
   final int initialPlayerCount;
   final bool preferComputer;
+  final AiDifficultyPreferences aiPreferences;
 
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
@@ -35,6 +38,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       MatchConfiguration.local(widget.mode, playerCount: _playerCount)
           .activePlayers;
   LudoAiDifficulty _aiDifficulty = LudoAiDifficulty.medium;
+  bool _difficultyEdited = false;
 
   Set<PlayerColor> get _aiPlayers => _activeColors.skip(_humanPlayers).toSet();
 
@@ -62,6 +66,18 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     }
     _playerCount = widget.initialPlayerCount;
     _loadNames();
+    _loadDifficulty();
+  }
+
+  Future<void> _loadDifficulty() async {
+    try {
+      final difficulty = await widget.aiPreferences.load();
+      if (mounted && !_difficultyEdited && !_starting) {
+        setState(() => _aiDifficulty = difficulty);
+      }
+    } catch (error) {
+      debugPrint('Could not load preferred AI difficulty: $error');
+    }
   }
 
   Future<void> _loadNames() async {
@@ -129,6 +145,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
+    final configuredGame = ModeRegistry.create(
+      widget.mode,
+      playerCount: _playerCount,
+      allowInternal: widget.allowInternalModes,
+    );
+    final difficulty = _aiDifficulty;
+    final profiles =
+        MatchPlayerProfile.local(aiPlayers: aiPlayers, names: names);
     setState(() => _starting = true);
     try {
       try {
@@ -142,20 +166,32 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
           );
         }
       }
+      if (withAi) {
+        try {
+          await widget.aiPreferences
+              .save(difficulty)
+              .timeout(const Duration(seconds: 2));
+        } catch (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'AI preference could not be saved. This match still uses your selection.',
+                ),
+              ),
+            );
+          }
+        }
+      }
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => MatchScreen(
-            initialGame: ModeRegistry.create(
-              widget.mode,
-              playerCount: _playerCount,
-              allowInternal: widget.allowInternalModes,
-            ),
+            initialGame: configuredGame,
             aiPlayers: aiPlayers,
             aiSeed: 20261110,
-            aiDifficulty: _aiDifficulty,
-            profiles:
-                MatchPlayerProfile.local(aiPlayers: aiPlayers, names: names),
+            aiDifficulty: difficulty,
+            profiles: profiles,
           ),
         ),
       );
@@ -279,17 +315,19 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       ),
                     )
                     .toList(),
-                onChanged: (count) {
-                  if (count != null) {
-                    setState(() {
-                      _playerCount = count;
-                      _humanPlayers = _humanPlayers.clamp(
-                        1,
-                        count - (widget.preferComputer ? 1 : 0),
-                      );
-                    });
-                  }
-                },
+                onChanged: _starting
+                    ? null
+                    : (count) {
+                        if (!_starting && count != null) {
+                          setState(() {
+                            _playerCount = count;
+                            _humanPlayers = _humanPlayers.clamp(
+                              1,
+                              count - (widget.preferComputer ? 1 : 0),
+                            );
+                          });
+                        }
+                      },
               ),
             _nameEditor(),
             const SizedBox(height: 12),
@@ -308,6 +346,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     : 'INTERNAL PREVIEW',
                 onTap: () => _startMatch(withAi: false),
                 buttonKey: const Key('start_local_match'),
+                busy: _starting,
               ),
             const SizedBox(height: 16),
             Card(
@@ -357,17 +396,50 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _humanPlayers = value);
-                            }
-                          },
+                          onChanged: _starting
+                              ? null
+                              : (value) {
+                                  if (!_starting && value != null) {
+                                    setState(() => _humanPlayers = value);
+                                  }
+                                },
                         ),
                       ],
                     ),
-                    Text(
-                      '${_playerCount - _humanPlayers} AI opponent(s) · '
-                      '${_activeColors.map((color) => color.name.toUpperCase()).join(' → ')}',
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text:
+                                '${_playerCount - _humanPlayers} AI opponent(s) · ',
+                          ),
+                          for (var index = 0;
+                              index < _activeColors.length;
+                              index++) ...[
+                            if (index > 0)
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward,
+                                    size: MediaQuery.textScalerOf(context)
+                                        .scale(14),
+                                    color: const Color(0xFFFFF4DF),
+                                  ),
+                                ),
+                              ),
+                            TextSpan(
+                              text: _activeColors[index].name.toUpperCase(),
+                            ),
+                          ],
+                        ],
+                      ),
+                      semanticsLabel:
+                          '${_playerCount - _humanPlayers} AI opponent(s). Turn order: '
+                          '${_activeColors.map((color) => color.name.toUpperCase()).join(', then ')}.',
                       style: const TextStyle(
                         color: Color(0xFFFFF4DF),
                         fontSize: 14,
@@ -400,11 +472,16 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _aiDifficulty = value);
-                            }
-                          },
+                          onChanged: _starting
+                              ? null
+                              : (value) {
+                                  if (!_starting && value != null) {
+                                    setState(() {
+                                      _difficultyEdited = true;
+                                      _aiDifficulty = value;
+                                    });
+                                  }
+                                },
                         ),
                       ],
                     ),
@@ -427,8 +504,9 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       width: double.infinity,
                       child: FilledButton(
                         key: const Key('start_ai_match'),
-                        onPressed: () => _startMatch(withAi: true),
-                        child: const Text('START VS AI'),
+                        onPressed:
+                            _starting ? null : () => _startMatch(withAi: true),
+                        child: Text(_starting ? 'Starting…' : 'START VS AI'),
                       ),
                     ),
                   ],
@@ -442,6 +520,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 subtitle: 'Pair up with a teammate for a two-versus-two match.',
                 enabled: true,
                 label: '2 VS 2',
+                busy: _starting,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) =>
@@ -464,6 +543,7 @@ class _ModeCard extends StatelessWidget {
     required this.label,
     this.onTap,
     this.buttonKey,
+    this.busy = false,
   });
 
   final String title;
@@ -472,6 +552,7 @@ class _ModeCard extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final Key? buttonKey;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -519,8 +600,8 @@ class _ModeCard extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     key: buttonKey,
-                    onPressed: onTap,
-                    child: const Text('START LOCAL MATCH'),
+                    onPressed: busy ? null : onTap,
+                    child: Text(busy ? 'Starting…' : 'START LOCAL MATCH'),
                   ),
                 ),
               ],

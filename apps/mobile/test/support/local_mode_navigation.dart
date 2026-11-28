@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ludo_lovers/src/features/home/home_screen.dart';
 import 'package:ludo_lovers/src/features/match/match_screen.dart';
 import 'package:ludo_lovers/src/game/domain/match_configuration.dart';
+import 'package:ludo_lovers/src/game/domain/ai/seeded_ludo_ai.dart';
 import 'package:ludo_lovers/src/game/infrastructure/persistence/saved_match_store.dart';
 import 'wait_for_board_artwork.dart';
 
@@ -118,6 +119,35 @@ Future<void> verifyLocalModeNavigation(
     await leave(); // resume -> Home
     expect(find.byKey(const Key('open_mode_selection')), findsOneWidget);
   }
+  // Re-enter a fresh setup to prove preference restoration through the live UI.
+  await tap(const Key('open_mode_selection'));
+  await tap(const Key('mode_compatibility'));
+  final difficulty = find.byKey(const Key('ai_difficulty'));
+  await tester.ensureVisible(difficulty);
+  await settled();
+  await tester.tap(difficulty);
+  await settled();
+  await tester.tap(find.text('HARD').last);
+  await settled();
+  await tap(const Key('start_ai_match'));
+  await waitForBoardArtwork(tester);
+  expect(
+    tester.widget<MatchScreen>(find.byType(MatchScreen)).aiDifficulty,
+    LudoAiDifficulty.hard,
+  );
+  expect(
+    (await const SavedMatchStore().load())!.aiDifficulty,
+    LudoAiDifficulty.hard,
+  );
+  await leave();
+  await tester.pageBack();
+  await settled();
+  await tap(const Key('mode_compatibility'));
+  expect(
+    tester.widget<DropdownButton<LudoAiDifficulty>>(difficulty).value,
+    LudoAiDifficulty.hard,
+  );
+  await capture?.call('native-preferred-ai-difficulty-setup');
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump();
   expect(tester.takeException(), isNull);
